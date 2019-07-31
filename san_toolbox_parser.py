@@ -12,6 +12,7 @@ from files_operations import create_folder, check_valid_path
 santoolbox_path = "C:\\Program Files (x86)\\SAN Toolbox - Reloaded\\san toolbox.exe"
 
 
+
 def create_parsed_dirs(customer_title, project_path):
     """
     Function to create three folders.
