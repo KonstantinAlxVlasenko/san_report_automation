@@ -1,0 +1,11 @@
+# os.path.basename(path) - базовое имя пути (эквивалентно os.path.split(path). имя файла
+# os.path.normpath(path) - нормализует путь, убирая избыточные разделители и ссылки на предыдущие директории. На Windows преобразует прямые слеши в обратные.
+# os.path.dirname(path) - возвращает имя директории пути path.
+
+http.proxy=http://web-proxy.emea.hpqcorp.net:8080
+git config --global --list
+git config --global --unset https.proxy
+git config --global http.proxy http://proxyUsername:proxyPassword@proxy.server.com:port
+
+git config --unset http.proxy
+git config --unset https.proxy
