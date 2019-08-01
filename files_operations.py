@@ -7,18 +7,24 @@ from os import makedirs
 
 
 # function to create any folder with 'path' 
-def create_folder(path):    
+def create_folder(path):
+    
+    info = f'Make directory {os.path.basename(path)}'
+    print(info, end= '')    
     if not os.path.exists(path):        
         try:
             os.makedirs(path)
         except OSError:
+            print('FAIL'.rjust(125-len(info), '.'))
             print(f'Not possible create directory {path}.')
             print('Code execution finished')
             sys.exit()
         else:
-            print(f'Successfully created directory {path}.')
+            # print(f'Successfully created directory {path}.')
+            print('OK'.rjust(125-len(info), '.'))
     else:
-        print(f'Directory {path} already exists.')
+        # print(f'Directory {path} already exists.')
+        print('SKIP'.rjust(125-len(info), '.'))
         
         
 # function to check if folder exist
@@ -60,11 +66,21 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
         print('OK'.rjust(str_length-len(info), '.'))
 
 
-# function to import corresponding columns from san_assessment_init_file.xlsx file  
-def columns_import(column_name, switch_init_file):
+# function to import corresponding columns from san_automation_info.xlsx file  
+def columns_import(column_name, max_title):
     
-    print(f'Importing {column_name} columns group for port_online_df DataFrame')
-    columns = pd.read_excel(switch_init_file, sheet_name = 'Sheet2', usecols =[column_name], squeeze=True)
-    columns = columns.dropna().tolist()
+    init_file = 'san_automation_info.xlsx'
+    # information string length in terminal
+    str_length = max_title + 46
+    
+    info = f'\nImporting {column_name} columns group from {init_file}'
+    print(info, end = ' ')
+    try:
+        columns = pd.read_excel(init_file, sheet_name = 'parameters', usecols =[column_name], squeeze=True)
+        columns = columns.dropna().tolist()
+    except:
+        print('FAIL'.rjust(str_length-len(info), '.'))
+    else:
+        print('OK'.rjust(str_length-len(info), '.'))
     
     return columns

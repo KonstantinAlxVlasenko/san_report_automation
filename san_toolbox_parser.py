@@ -5,6 +5,7 @@ import subprocess
 import sys
 from os import walk
 from files_operations import create_folder, check_valid_path
+from datetime import date
 
 '''Module to find configuration data and parse it with SANToolbox tool'''
 
@@ -23,17 +24,22 @@ def create_parsed_dirs(customer_title, project_path):
     """
     
     # check if project folders exist
-    check_valid_path(project_path)   
+    check_valid_path(project_path)
     
+    # current date
+    current_date = str(date.today())   
+    
+    print(f'\n\nCREATING REQUIRED DIRECTORIES ...\n')
+    print(f'Project folder {project_path}')
     # define folder and subfolders to save configuration data (supportsave and ams_maps files)
-    santoolbox_parsed_dir = f'{customer_title}_santoolbox_parsed_data'
+    santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}_' + current_date
     santoolbox_parsed_sshow_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')
     santoolbox_parsed_others_path = os.path.join(project_path, santoolbox_parsed_dir, 'others')
     create_folder(santoolbox_parsed_sshow_path)
     create_folder(santoolbox_parsed_others_path)  
         
     # define folder san_assessment_report to save excel file with parsed configuration data
-    san_assessment_report_dir = f'{customer_title}_report'
+    san_assessment_report_dir = f'report_{customer_title}_' + current_date
     san_assessment_report_path = os.path.join(os.path.normpath(project_path), san_assessment_report_dir)   
     create_folder(san_assessment_report_path)
 
@@ -47,7 +53,8 @@ def create_files_list_to_parse(ssave_path):
     Configuration file for Active CP has bigger size
     """
     
-    print(f'\nChecking {ssave_path} folder for configuration data')
+    print(f'\n\nCHECCKING CONFIGURATION DATA ...\n')
+    print(f'Configuration data folder {ssave_path}')
 
     # check if ssave_path folder exist
     check_valid_path(ssave_path)
@@ -128,7 +135,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     # configuration set counter
     count_config_set = 1
     
-    print('\nProcessing configuration files with SANToolbox ...')
+    print('\n\nPROCESSING CONFIGURATION FILES WITH SANTOOLBOX ... \n')
     print(f'Parsed configuration files is moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
     
     # going throgh each configuration set (switch) in unpased list
@@ -161,8 +168,8 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
             ams_maps_filenames_lst_tmp.append(None)
         
         # append parsed configuration data filenames and filepaths to the final lists 
-        parsed_files_lst.append([parsed_sshow_file, tuple(ams_maps_files_lst_tmp)])
-        parsed_filenames_lst.append([parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])
+        parsed_files_lst.append([switchname, parsed_sshow_file, tuple(ams_maps_files_lst_tmp)])
+        parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])
         
         # configuration set (switch) counter
         count_config_set += 1         
@@ -224,6 +231,6 @@ def santoolbox_parser(file, path_to_move_parsed_data, max_title):
         else:
             print('OK'.rjust(str_length-len(info), '.'))
     else:
-        print('PASS'.rjust(str_length-len(info), '.'))
+        print('SKIP'.rjust(str_length-len(info), '.'))
     
     return os.path.normpath(os.path.join(path_to_move_parsed_data, filename))

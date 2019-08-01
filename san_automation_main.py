@@ -1,6 +1,7 @@
 import pandas as pd
 from files_operations import save_xlsx_file
 from san_toolbox_parser import create_parsed_dirs, create_files_list_to_parse, santoolbox_process
+from san_switch_params import chassis_params_extract
 
 """
 Main module to run
@@ -16,7 +17,8 @@ project_folder = r'C:\Users\vlasenko\Documents\01.CUSTOMERS\Megafon\All SANs\STF
 # Customer name
 customer_name = r'stf_cust'
 
-print(f'\nAssessment for SANs for {customer_name}\n'.center(120, '-'))
+print('\n\n')
+print(f'ASSESSMENT FOR SAN {customer_name}'.center(125, '.')) 
 
 def config_data_check():
     
@@ -34,12 +36,20 @@ def config_data_check():
     # returns list with parsed data
     parsed_lst, parsed_filenames_lst = santoolbox_process(unparsed_lst, dir_parsed_sshow, dir_parsed_others, max_title)
     # # export parsed config filenames to DataFrame
-    parsed_filenames_df = pd.DataFrame(parsed_filenames_lst, columns = ['sshow', 'amsmaps'])
+    parsed_filenames_df = pd.DataFrame(parsed_filenames_lst, columns = ['switch_name', 'sshow_config', 'ams_maps_log_config'])
     # save unparsed DataFrame to serice report excel file
     save_xlsx_file(parsed_filenames_df, 'parsed_files', customer_name, 'service', dir_report, max_title)
 
-    return parsed_lst
+    return parsed_lst, max_title
+
+def switch_params_check(parsed_lst, max_title):
+    
+    chassis_params_extract(parsed_lst, max_title)
+    
+    
 
 if __name__ == "__main__":
-    config_data_check()
-    print('\nExecution successfully finished')
+    config_data, max_title = config_data_check()
+    switch_params_check(config_data, max_title)
+    
+    print('\nExecution successfully finished\n')
