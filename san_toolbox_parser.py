@@ -32,7 +32,7 @@ def create_parsed_dirs(customer_title, project_path):
     print(f'\n\nCREATING REQUIRED DIRECTORIES ...\n')
     print(f'Project folder {project_path}')
     # define folder and subfolders to save configuration data (supportsave and ams_maps files)
-    santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}_' + current_date
+    santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
     santoolbox_parsed_sshow_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')
     santoolbox_parsed_others_path = os.path.join(project_path, santoolbox_parsed_dir, 'others')
     create_folder(santoolbox_parsed_sshow_path)
