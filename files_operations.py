@@ -58,8 +58,12 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
         if sheet_title in workbook.sheetnames:
             import_df = pd.read_excel(file_path, sheet_name=sheet_title)
             if not data_frame.equals(import_df):
-                del workbook[sheet_title]
-                workbook.save(file_path)                                
+                if len(workbook.sheetnames) != 1:
+                    file_mode = 'a' 
+                    del workbook[sheet_title]
+                    workbook.save(file_path)
+                else:
+                    file_mode = 'w'                                                    
                 export_dataframe(file_path, data_frame, sheet_title, file_mode,string_length)
             else:
                 print('SKIP'.rjust(str_length-len(info), '.'))
