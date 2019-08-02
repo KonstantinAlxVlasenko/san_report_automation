@@ -26,12 +26,12 @@ def chassis_params_extract(all_config_data, max_title):
         info = f'[{switch_counter} of {switch_num}]: {switch_name} chassis parameters check'
         print(info, end =" ")
         print('OK'.rjust(str_length-len(info), '.'))
-        with open(sshow_file, encoding='utf-8', errors='ignore') as file:
-            print(info, end =" ")
-            line = file.readline
-            while not re.search(r'[Configuration upload Information]', line):
-                line = file.readline()
-            while not re.search(r'[Chassis Configuration End]',line):
-                line = file.readline()
+        # with open(sshow_file, encoding='utf-8', errors='ignore') as file:
+        #     print(info, end =" ")
+        #     line = file.readline
+        #     while not re.search(r'[Configuration upload Information]', line):
+        #         line = file.readline()
+        #     while not re.search(r'[Chassis Configuration End]',line):
+        #         line = file.readline()
         
         switch_counter += 1

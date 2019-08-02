@@ -59,7 +59,7 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
             import_df = pd.read_excel(file_path, sheet_name=sheet_title)
             if not data_frame.equals(import_df):
                 if len(workbook.sheetnames) != 1:
-                    file_mode = 'a' 
+                    # file_mode = 'a' 
                     del workbook[sheet_title]
                     workbook.save(file_path)
                 else:
