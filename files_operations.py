@@ -1,5 +1,6 @@
 import sys
 import os.path
+import openpyxl
 import pandas as pd
 from os import makedirs
 
@@ -46,24 +47,42 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
     # information string
     info = f'\nExporting {sheet_title} to {file_name}'
     print(info, end =" ")
+    string_length = str_length-len(info)
     file_path = os.path.join(report_path, file_name)
     
     # pd.ExcelWriter has only two file open modes
     # if file doesn't exist it has be opened in "w" mode
     if os.path.isfile(file_path):
         file_mode = 'a'
+        workbook = openpyxl.load_workbook(file_path)
+        if sheet_title in workbook.sheetnames:
+            import_df = pd.read_excel(file_path, sheet_name=sheet_title)
+            if not data_frame.equals(import_df):
+                del workbook[sheet_title]
+                workbook.save(file_path)                                
+                export_dataframe(file_path, data_frame, sheet_title, file_mode,string_length)
+            else:
+                print('SKIP'.rjust(str_length-len(info), '.'))
+        else:
+            export_dataframe(file_path, data_frame, sheet_title, file_mode,string_length)                    
     else:
         file_mode = 'w'
+        export_dataframe(file_path, data_frame, sheet_title, file_mode,string_length)
         
+
+
+def export_dataframe(file_path, data_frame, sheet_title, file_mode, string_length):
+    
     try:
         with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:
             data_frame.to_excel(writer, sheet_name=sheet_title, index=False)
     except PermissionError:
-        print('FAIL'.rjust(str_length-len(info), '.'))
+        print('FAIL'.rjust(string_length, '.'))
         print('Permission denied. Close the file.')
         sys.exit()
     else:
-        print('OK'.rjust(str_length-len(info), '.'))
+        print('OK'.rjust(string_length, '.'))
+    
 
 
 # function to import corresponding columns from san_automation_info.xlsx file  
