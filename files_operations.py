@@ -40,6 +40,11 @@ def check_valid_path(path):
 # saving data to excel file
 def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_path, max_title):
     
+    """Check if excel file exists, check if dataframe sheet in file, 
+    if new dataframe is equal to one in excel file than skip,
+    otherwise delete sheetname with stored datadrame and save new dataframe 
+    """
+    
     # information string length in terminal
     str_length = max_title + 46
     # construct excel filename
@@ -47,45 +52,52 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
     # information string
     info = f'\nExporting {sheet_title} to {file_name}'
     print(info, end =" ")
-    string_length = str_length-len(info)
+    str_length_status = str_length-len(info)
     file_path = os.path.join(report_path, file_name)
     
     # pd.ExcelWriter has only two file open modes
-    # if file doesn't exist it has be opened in "w" mode
+    # if file doesn't exist it has be opened in "w" mode otherwise in "a"
+    
     if os.path.isfile(file_path):
         file_mode = 'a'
+        # open existing excel file
         workbook = openpyxl.load_workbook(file_path)
         if sheet_title in workbook.sheetnames:
+            # import stored data in excel file do dataframe
             import_df = pd.read_excel(file_path, sheet_name=sheet_title)
+            # check if new dataframe and stored in excelfile are equal
             if not data_frame.equals(import_df):
-                if len(workbook.sheetnames) != 1:
-                    # file_mode = 'a' 
+                # if dataframes are not equal delete sheet
+                # after sheet removal excel file must contain at least one sheet
+                if len(workbook.sheetnames) != 1:                    
                     del workbook[sheet_title]
                     workbook.save(file_path)
                 else:
-                    file_mode = 'w'                                                    
-                export_dataframe(file_path, data_frame, sheet_title, file_mode,string_length)
+                    file_mode = 'w'
+                # export new dataframe
+                export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)
+            # if dataframes are equal then skip
             else:
                 print('SKIP'.rjust(str_length-len(info), '.'))
         else:
-            export_dataframe(file_path, data_frame, sheet_title, file_mode,string_length)                    
+            export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)                    
     else:
         file_mode = 'w'
-        export_dataframe(file_path, data_frame, sheet_title, file_mode,string_length)
+        export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)
         
 
-
-def export_dataframe(file_path, data_frame, sheet_title, file_mode, string_length):
+# export DataFrame to excel file
+def export_dataframe(file_path, data_frame, sheet_title, file_mode, str_length_status):
     
     try:
         with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:
             data_frame.to_excel(writer, sheet_name=sheet_title, index=False)
     except PermissionError:
-        print('FAIL'.rjust(string_length, '.'))
+        print('FAIL'.rjust(str_length_status, '.'))
         print('Permission denied. Close the file.')
         sys.exit()
     else:
-        print('OK'.rjust(string_length, '.'))
+        print('OK'.rjust(str_length_status, '.'))
     
 
 
