@@ -42,7 +42,7 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
     
     """Check if excel file exists, check if dataframe sheet in file, 
     if new dataframe is equal to one in excel file than skip,
-    otherwise delete sheetname with stored datadrame and save new dataframe 
+    otherwise delete sheetname with stored dataframe and save new dataframe 
     """
     
     # information string length in terminal
@@ -52,12 +52,12 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
     # information string
     info = f'\nExporting {sheet_title} to {file_name}'
     print(info, end =" ")
+    # length of status string (OK, FAIL, SKIP). Full string length - current operation info string length 
     str_length_status = str_length-len(info)
     file_path = os.path.join(report_path, file_name)
     
     # pd.ExcelWriter has only two file open modes
-    # if file doesn't exist it has be opened in "w" mode otherwise in "a"
-    
+    # if file doesn't exist it has be opened in "w" mode otherwise in "a"    
     if os.path.isfile(file_path):
         file_mode = 'a'
         # open existing excel file
@@ -99,7 +99,6 @@ def export_dataframe(file_path, data_frame, sheet_title, file_mode, str_length_s
     else:
         print('OK'.rjust(str_length_status, '.'))
     
-
 
 # function to import corresponding columns from san_automation_info.xlsx file  
 def columns_import(column_name, max_title):
