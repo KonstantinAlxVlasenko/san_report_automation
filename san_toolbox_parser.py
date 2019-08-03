@@ -58,15 +58,7 @@ def create_files_list_to_parse(ssave_path):
 
     # check if ssave_path folder exist
     check_valid_path(ssave_path)
-
-    """    
-    # # no need in this lists at the moment!!!!!!!!!!!!!!!!!
-    # # supportshow unparsed files list
-    # sshow_unparsed_lst = []
-    # # ams_maps config data list
-    # ams_maps_unparsed_lst = []
-    """
-    
+   
     # list to save unparsed configuration data files
     unparsed_files_lst = []
     
@@ -108,12 +100,6 @@ def create_files_list_to_parse(ssave_path):
         # if supportshow found but there is no ams_maps files then empty ams_maps list appended to config set 
         if sshow_file_path:
             unparsed_files_lst.append([sshow_file_path, tuple(ams_maps_files_lst_tmp)])
-            
-            """
-            # # no need in this lists at the moment!!!!!!!!!!!!!!!!!!!!!!
-            # sshow_unparsed_lst.append(sshow_file_path)
-            # ams_maps_unparsed_lst.append(tuple(ams_maps_files_lst_tmp))
-            """
             
     sshow_num = len(unparsed_files_lst)
     print(f'SSHOW_SYS: {sshow_num}, AMS_MAPS_LOG: {ams_maps_num}, Total: {sshow_num+ams_maps_num} configuration files.')
