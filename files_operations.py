@@ -16,16 +16,14 @@ def create_folder(path):
         try:
             os.makedirs(path)
         except OSError:
-            print('FAIL'.rjust(125-len(info), '.'))
+            status_info('fail', 82, len(info))
             print(f'Not possible create directory {path}.')
             print('Code execution finished')
             sys.exit()
         else:
-            # print(f'Successfully created directory {path}.')
-            print('OK'.rjust(125-len(info), '.'))
+            status_info('ok', 82, len(info))
     else:
-        # print(f'Directory {path} already exists.')
-        print('SKIP'.rjust(125-len(info), '.'))
+        status_info('skip', 82, len(info))
         
         
 # function to check if folder exist
@@ -33,27 +31,22 @@ def check_valid_path(path):
     path = os.path.normpath(path)
     if not os.path.isdir(path):
         print(f"{path} folder doesn't exist")
-        print('Code execution finished')
+        print('Code execution exit')
         sys.exit()
         
 
-# saving data to excel file
-def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_path, max_title):
-    
-    """Check if excel file exists, check if dataframe sheet in file, 
+# saving DataFrame to excel file
+def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_path, max_title):   
+    """Check if excel file exists, check if dataframe sheet is in file, 
     if new dataframe is equal to one in excel file than skip,
-    otherwise delete sheetname with stored dataframe and save new dataframe 
+    otherwise delete sheet with stored dataframe (if sheet tabs number > 1)
+    and save new dataframe 
     """
-    
-    # information string length in terminal
-    str_length = max_title + 46
     # construct excel filename
     file_name = customer_name + '_' + report_type + '_' + 'report'+'.xlsx'
     # information string
     info = f'\nExporting {sheet_title} to {file_name}'
     print(info, end =" ")
-    # length of status string (OK, FAIL, SKIP). Full string length - current operation info string length 
-    str_length_status = str_length-len(info)
     file_path = os.path.join(report_path, file_name)
     
     # pd.ExcelWriter has only two file open modes
@@ -75,46 +68,49 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
                 else:
                     file_mode = 'w'
                 # export new dataframe
-                export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)
+                # export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)
             # if dataframes are equal then skip
             else:
-                print('SKIP'.rjust(str_length-len(info), '.'))
-        else:
-            export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)                    
+                file_mode = None
+                status_info('skip', max_title, len(info), 1)                  
     else:
         file_mode = 'w'
-        export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)
-        
-
-# export DataFrame to excel file
-def export_dataframe(file_path, data_frame, sheet_title, file_mode, str_length_status):
     
-    try:
-        with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:
-            data_frame.to_excel(writer, sheet_name=sheet_title, index=False)
-    except PermissionError:
-        print('FAIL'.rjust(str_length_status, '.'))
-        print('Permission denied. Close the file.')
-        sys.exit()
-    else:
-        print('OK'.rjust(str_length_status, '.'))
+    # if required export DataFrame to the new sheet
+    if file_mode:
+        try:
+            with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:
+                data_frame.to_excel(writer, sheet_name=sheet_title, index=False)
+        except PermissionError:
+            status_info('fail', max_title, len(info), 1)
+            print('Permission denied. Close the file.')
+            sys.exit()
+        else:
+            status_info('ok', max_title, len(info), 1)        
+    
+# print current operation status ('OK', 'SKIP', 'FAIL')
+def status_info(status, max_title, len_info_string, shift=0):
+    
+    # information + operation status string length in terminal
+    str_length = max_title + 45 + shift
+    status = status.upper()
+    print(status.rjust(str_length - len_info_string, '.'))
     
 
 # function to import corresponding columns from san_automation_info.xlsx file  
-def columns_import(column_name, max_title):
+def columns_import(sheet_title, column_name, max_title):
     
     init_file = 'san_automation_info.xlsx'
-    # information string length in terminal
-    str_length = max_title + 46
     
     info = f'\nImporting {column_name} columns group from {init_file}'
     print(info, end = ' ')
     try:
-        columns = pd.read_excel(init_file, sheet_name = 'parameters', usecols =[column_name], squeeze=True)
+        columns = pd.read_excel(init_file, sheet_name = sheet_title, usecols =[column_name], squeeze=True)
         columns = columns.dropna().tolist()
     except:
-        print('FAIL'.rjust(str_length-len(info), '.'))
+        status_info('fail', max_title, len(info), 1)
     else:
-        print('OK'.rjust(str_length-len(info), '.'))
+        status_info('ok', max_title, len(info), 1)
+        print('\n')
     
     return columns

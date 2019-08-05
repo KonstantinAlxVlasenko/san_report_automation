@@ -1,5 +1,5 @@
 import pandas as pd
-from files_operations import save_xlsx_file
+from files_operations import save_xlsx_file, columns_import
 from san_toolbox_parser import create_parsed_dirs, create_files_list_to_parse, santoolbox_process
 from san_switch_params import chassis_params_extract
 
@@ -40,16 +40,24 @@ def config_data_check():
     # save unparsed DataFrame to serice report excel file
     save_xlsx_file(parsed_filenames_df, 'parsed_files', customer_name, 'service', dir_report, max_title)
 
-    return parsed_lst, max_title
+    return parsed_lst, dir_report, max_title
 
-def switch_params_check(parsed_lst, max_title):
+def switch_params_check(parsed_lst, dir_report, max_title):
     
-    chassis_params_extract(parsed_lst, max_title)
+    
+    chassis_columns = columns_import('columns', 'chassis_columns', max_title)
+    chassis_params_fabric_lst = chassis_params_extract(parsed_lst, max_title)
+    
+    chassis_params_fabric_df = pd.DataFrame(chassis_params_fabric_lst, columns= chassis_columns)
+    
+    save_xlsx_file(chassis_params_fabric_df, 'chassis_params', customer_name, 'service', dir_report, max_title)
+    
+    
     
     
 
 if __name__ == "__main__":
-    config_data, max_title = config_data_check()
-    switch_params_check(config_data, max_title)
+    config_data, dir_report, max_title = config_data_check()
+    switch_params_check(config_data, dir_report, max_title)
     
     print('\nExecution successfully finished\n')

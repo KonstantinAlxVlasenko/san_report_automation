@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import sys
 from os import walk
-from files_operations import create_folder, check_valid_path
+from files_operations import create_folder, check_valid_path, status_info
 from datetime import date
 
 '''Module to find configuration data and parse it with SANToolbox tool'''
@@ -103,6 +103,10 @@ def create_files_list_to_parse(ssave_path):
             
     sshow_num = len(unparsed_files_lst)
     print(f'SSHOW_SYS: {sshow_num}, AMS_MAPS_LOG: {ams_maps_num}, Total: {sshow_num+ams_maps_num} configuration files.')
+    
+    if sshow_num == 0:
+        print('\nNo confgiguration data found')
+        sys.exit()
               
     return unparsed_files_lst, max(filename_size)
 
@@ -118,21 +122,19 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     parsed_filenames_lst = []
     # number of configuration data sets (one set is config files for one switch)
     config_set_num = len(all_files_to_parse_lst)
-    # configuration set counter
-    count_config_set = 1
     
     print('\n\nPROCESSING CONFIGURATION FILES WITH SANTOOLBOX ... \n')
     print(f'Parsed configuration files is moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
     
     # going throgh each configuration set (switch) in unpased list
-    for switch_files_to_parse_lst in all_files_to_parse_lst:
+    for i,switch_files_to_parse_lst in enumerate(all_files_to_parse_lst):
         
         # extracts switchname from supportshow filename
         switchname = re.search(r'^([\w-]+)(-\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})?-S\dcp-\d+.SSHOW_SYS.txt.gz$', 
                                 os.path.basename(switch_files_to_parse_lst[0])).group(1)
         # number of ams_maps_log files in current configuration set (switch)
         ams_maps_config_num = len(switch_files_to_parse_lst[1])
-        print(f'[{count_config_set} of {config_set_num}]: {switchname} switch has {ams_maps_config_num+1} configs ...')
+        print(f'[{i+1} of {config_set_num}]: {switchname}. Number of configs: {ams_maps_config_num+1} ...')
         
         # calling santoolbox_parser function which parses SHOW_SYS file with SANToolbox
         parsed_sshow_file = santoolbox_parser(switch_files_to_parse_lst[0], path_to_move_parsed_sshow, max_title)
@@ -155,10 +157,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         
         # append parsed configuration data filenames and filepaths to the final lists 
         parsed_files_lst.append([switchname, parsed_sshow_file, tuple(ams_maps_files_lst_tmp)])
-        parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])
-        
-        # configuration set (switch) counter
-        count_config_set += 1         
+        parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])    
     
     return parsed_files_lst, parsed_filenames_lst
 
@@ -166,11 +165,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
 def santoolbox_parser(file, path_to_move_parsed_data, max_title):
     """
     Function to process unparsed ".SSHOW_SYS.txt.gz" and  "AMS_MAPS_LOG.txt.gz" files with SANToolbox.
-    """
-    
-    # information string length in terminal
-    str_length = max_title + 45
-    
+    """  
     # split filepath to directory and filename
     filedir, filename = os.path.split(file)
     if filename.endswith(".SSHOW_SYS.txt.gz"):
@@ -194,13 +189,13 @@ def santoolbox_parser(file, path_to_move_parsed_data, max_title):
         try:
             subprocess.call(f'"{santoolbox_path}" -{option} "{file}"', shell=True)
         except subprocess.CalledProcessError:
-            print('FAIL'.rjust(str_length-len(info), '.'))
+            status_info('fail', max_title, len(info))
         except OSError:
-            print('FAIL'.rjust(str_length-len(info), '.'))
+            status_info('fail', max_title, len(info))
             print('SANToolbox program is not found ')
             sys.exit()
         else:
-            print('OK'.rjust(str_length-len(info), '.'))
+            status_info('ok', max_title, len(info))
         
         # moving file to destination config folder
         info = ' '*16+f'{filename} moving'
@@ -208,15 +203,15 @@ def santoolbox_parser(file, path_to_move_parsed_data, max_title):
         try:
             shutil.move(os.path.join(filedir, filename),path_to_move_parsed_data)
         except shutil.Error:
-            print('FAIL'.rjust(str_length-len(info), '.'))
+            status_info('fail', max_title, len(info))
             sys.exit()
         except FileNotFoundError:
-            print('FAIL'.rjust(str_length-len(info), '.'))
+            status_info('fail', max_title, len(info))
             print('The system cannot find the file specified.\nCHECK that SANToolbox is CLOSED before run the script.')
             sys.exit()
         else:
-            print('OK'.rjust(str_length-len(info), '.'))
+            status_info('ok', max_title, len(info))
     else:
-        print('SKIP'.rjust(str_length-len(info), '.'))
+        status_info('skip', max_title, len(info))
     
     return os.path.normpath(os.path.join(path_to_move_parsed_data, filename))
