@@ -1,7 +1,7 @@
 import pandas as pd
 from files_operations import save_xlsx_file, columns_import
 from san_toolbox_parser import create_parsed_dirs, create_files_list_to_parse, santoolbox_process
-from san_switch_params import chassis_params_extract
+from san_chassis_params import chassis_params_extract
 
 """
 Main module to run
