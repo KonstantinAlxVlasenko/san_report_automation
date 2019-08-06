@@ -2,6 +2,7 @@ import pandas as pd
 from files_operations import save_xlsx_file, columns_import
 from san_toolbox_parser import create_parsed_dirs, create_files_list_to_parse, santoolbox_process
 from san_chassis_params import chassis_params_extract
+from san_switch_params import switch_params_configshow_extract
 
 """
 Main module to run
@@ -51,6 +52,16 @@ def switch_params_check(parsed_lst, dir_report, max_title):
     chassis_params_fabric_df = pd.DataFrame(chassis_params_fabric_lst, columns= chassis_columns)
     
     save_xlsx_file(chassis_params_fabric_df, 'chassis_params', customer_name, 'service', dir_report, max_title)
+    
+
+    
+    switch_columns_configshow = columns_import('columns', 'switch_columns_configshow', max_title)
+
+    switch_params_configshow_lst = switch_params_configshow_extract(chassis_params_fabric_lst, chassis_columns, max_title)
+    
+    switch_columns_configshow_df = pd.DataFrame(switch_params_configshow_lst, columns = switch_columns_configshow)
+    
+    save_xlsx_file(switch_columns_configshow_df, 'switch_params_configshow', customer_name, 'service', dir_report, max_title)
     
     
     

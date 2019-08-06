@@ -3,6 +3,7 @@ import os.path
 import openpyxl
 import pandas as pd
 from os import makedirs
+from datetime import date
 
 '''Module to perform operations with files (create folder, save data to excel file, import data from excel file)'''
 
@@ -42,8 +43,9 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
     otherwise delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
     """
+    current_date = str(date.today())
     # construct excel filename
-    file_name = customer_name + '_' + report_type + '_' + 'report'+'.xlsx'
+    file_name = customer_name + '_' + report_type + '_' + 'report_' + current_date + '.xlsx'
     # information string
     info = f'\nExporting {sheet_title} to {file_name}'
     print(info, end =" ")
