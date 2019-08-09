@@ -1,6 +1,7 @@
 import sys
 import os.path
 import openpyxl
+import re
 import pandas as pd
 from os import makedirs
 from datetime import date
@@ -8,11 +9,12 @@ from datetime import date
 '''Module to perform operations with files (create folder, save data to excel file, import data from excel file)'''
 
 
-# function to create any folder with 'path' 
 def create_folder(path):
-    
+    """Function to create any folder with 'path' 
+    """    
     info = f'Make directory {os.path.basename(path)}'
-    print(info, end= '')    
+    print(info, end= '')
+    # if folder not exist create 
     if not os.path.exists(path):        
         try:
             os.makedirs(path)
@@ -23,26 +25,29 @@ def create_folder(path):
             sys.exit()
         else:
             status_info('ok', 82, len(info))
+    # otherwise print 'SKIP' status
     else:
         status_info('skip', 82, len(info))
         
         
-# function to check if folder exist
 def check_valid_path(path):
+    """Function to check if folder exist
+    """
     path = os.path.normpath(path)
     if not os.path.isdir(path):
         print(f"{path} folder doesn't exist")
         print('Code execution exit')
         sys.exit()
         
-
+        
 # saving DataFrame to excel file
-def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_path, max_title):   
+def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'service'):   
     """Check if excel file exists, check if dataframe sheet is in file, 
     if new dataframe is equal to one in excel file than skip,
     otherwise delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
-    """
+    """    
+    customer_name, report_path, max_title = report_data_lst      
     current_date = str(date.today())
     # construct excel filename
     file_name = customer_name + '_' + report_type + '_' + 'report_' + current_date + '.xlsx'
@@ -66,7 +71,12 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
                 # after sheet removal excel file must contain at least one sheet
                 if len(workbook.sheetnames) != 1:                    
                     del workbook[sheet_title]
-                    workbook.save(file_path)
+                    try:
+                        workbook.save(file_path)
+                    except PermissionError:
+                        status_info('fail', max_title, len(info), 1)
+                        print('Permission denied. Close the file.')
+                        sys.exit()
                 else:
                     file_mode = 'w'
                 # export new dataframe
@@ -90,29 +100,77 @@ def save_xlsx_file(data_frame, sheet_title, customer_name, report_type, report_p
         else:
             status_info('ok', max_title, len(info), 1)        
     
-# print current operation status ('OK', 'SKIP', 'FAIL')
+
 def status_info(status, max_title, len_info_string, shift=0):
-    
+    """Function to print current operation status ('OK', 'SKIP', 'FAIL')
+    """    
     # information + operation status string length in terminal
     str_length = max_title + 45 + shift
     status = status.upper()
+    # status info aligned to the right side
+    # space between current operation information and status of its execution filled with dots
     print(status.rjust(str_length - len_info_string, '.'))
-    
 
-# function to import corresponding columns from san_automation_info.xlsx file  
-def columns_import(sheet_title, column_name, max_title):
-    
-    init_file = 'san_automation_info.xlsx'
-    
-    info = f'\nImporting {column_name} columns group from {init_file}'
+ 
+def columns_import(sheet_title, max_title, *args):
+    """Function to import corresponding columns from san_automation_info.xlsx file
+    Can import several columns
+    """
+    # file to store all required data to process configuratin files
+    init_file = 'san_automation_info.xlsx'   
+    info = f'\nImporting {args} columns group from {init_file} file {sheet_title} tab'
     print(info, end = ' ')
+    # try read data in excel
     try:
-        columns = pd.read_excel(init_file, sheet_name = sheet_title, usecols =[column_name], squeeze=True)
-        columns = columns.dropna().tolist()
-    except:
+        columns = pd.read_excel(init_file, sheet_name = sheet_title, usecols =args, squeeze=True)
+    except FileNotFoundError:
         status_info('fail', max_title, len(info), 1)
+        print(f'File not found. Check if file {init_file} exist.')
+        sys.exit()
     else:
+        # if number of columns to read > 1 than returns corresponding number of lists
+        if len(args)>1:
+            columns_names = [columns[arg].dropna().tolist() if not columns[arg].empty else None for arg in args]
+        else:
+            columns_names = columns.dropna().tolist()
         status_info('ok', max_title, len(info), 1)
-        print('\n')
     
-    return columns
+    return columns_names
+
+def data_extract_objects(sheet_title, max_title):
+    """Function imports parameters names and regex tepmplates
+    to extract required data from configuration files   
+    """
+    # imports keys to extract switch parameters from tmp dictionary
+    params_names, params_add_names = columns_import(sheet_title, max_title, 'params', 'params_add')
+    # imports base names for compile and match templates and creates corresonding names
+    keys = columns_import(sheet_title, max_title, 're_names')
+    comp_keys = [key+'_comp' for key in keys]
+    match_keys = [key + '_match' for key in keys]
+    # imports string for regular expressions
+    comp_values = columns_import(sheet_title,  max_title, 'comp_values')
+    # creates regular expressions
+    comp_values_re = [re.compile(element) for element in comp_values]
+    # creates dictionary with regular expressions  
+    comp_dct = dict(zip(comp_keys, comp_values_re))
+    
+    return params_names, params_add_names, comp_keys, match_keys, comp_dct
+
+
+def export_lst_to_excel(data_lst, report_data_lst, sheet_title_export, sheet_title_import = None, 
+                        columns = columns_import, columns_title_import = 'columns'):
+    """Function to export list to DataFrame and then save it to excel report file
+    returns DataFrame
+    """    
+    _, _, max_title = report_data_lst 
+    
+    # checks if columns were passed to function as a list
+    if isinstance(columns, list):
+        columns_title = columns
+    # if not (default) then import columns from excel file
+    else:
+        columns_title =columns(sheet_title_import, max_title, columns_title_import)
+    data_df = pd.DataFrame(data_lst, columns= columns_title)
+    save_xlsx_file(data_df, sheet_title_export, report_data_lst)
+    
+    return data_df 
