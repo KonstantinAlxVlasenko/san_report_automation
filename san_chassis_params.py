@@ -160,7 +160,7 @@ def chassis_params_extract(all_config_data, max_title):
                     memory = str(memory)                            
                          
 
-        # chassis_params_keys order ('configname', 'switchname', 'snmp_server', 'syslog_server', 'timezone_h:m')
+        # chassis_params_add order ('configname', 'switchname', 'snmp_server', 'syslog_server', 'timezone_h:m')
         # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
         chassis_params_values = (sshow_file, ams_maps_file, switch_name, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash)
         
