@@ -1,5 +1,5 @@
 import pandas as pd
-from files_operations import columns_import, export_lst_to_excel
+from files_operations import export_lst_to_excel
 from san_toolbox_parser import create_parsed_dirs, create_files_list_to_parse, santoolbox_process
 from san_chassis_params import chassis_params_extract
 from san_switch_params import switch_params_configshow_extract
@@ -64,13 +64,10 @@ def switch_params_check(parsed_lst, report_data_lst, chassis_params = 0, switch_
     if switch_params:
         # switch_columns_configshow = columns_import('columns', 'switch_columns_configshow', max_title)
 
-        chassis_columns = columns_import('chassis', max_title, 'columns')
-        switch_params_configshow_lst = switch_params_configshow_extract(chassis_params_fabric_lst, chassis_columns, max_title)
-        export_lst_to_excel(switch_params_configshow_lst, report_data_lst, 'switch_params', 'switch')
-        # switch_columns_configshow_df = pd.DataFrame(switch_params_configshow_lst, columns = switch_columns_configshow)
-
-        # save_xlsx_file(switch_columns_configshow_df, 'switch_params_configshow', customer_name, 'service', dir_report, max_title)
         
+        switch_params_lst, switchshow_ports_lst = switch_params_configshow_extract(chassis_params_fabric_lst, max_title)
+        export_lst_to_excel(switch_params_lst, report_data_lst, 'switch_params', 'switch')
+        export_lst_to_excel(switchshow_ports_lst, report_data_lst, 'switchshow', 'switch', columns_title_import = 'switchshow_portinfo_columns')
     
     return chassis_params_fabric_lst
 
