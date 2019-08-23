@@ -28,12 +28,14 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, max_title):
         # dictionary with parameters for the current chassis
         chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
         sshow_file = chassis_params_data_dct['configname']
+        chassis_name = chassis_params_data_dct['chassis_name']
         num_ls = int(chassis_params_data_dct["Number_of_LS"]) if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 1
         # when num of logical switches is 0 or None than mode is Non-VF otherwise VF
-        ls_mode = (True if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else False)       
+        ls_mode_on = (True if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else False)
+        ls_mode = ('ON' if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 'OFF')       
         
         # current operation information string
-        info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["switchname"]} switches_configshow parameters check. Number of LS: {chassis_params_data_dct["Number_of_LS"]}'
+        info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch parameters check. Number of LS: {chassis_params_data_dct["Number_of_LS"]}'
         print(info, end =" ")
         
         # check each logical switch in chassis
@@ -47,6 +49,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, max_title):
                 # check file until all groups of parameters extracted
                 while not all(collected.values()):
                     line = file.readline()
+                    
                     if not line:
                         break
                     # configshow section start
@@ -67,8 +70,8 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, max_title):
                     # switchshow section start
                     if re.search(r'^(SWITCHCMD /fabos/bin/)?switchshow\s*:$', line):
                         collected['switchshow'] = True
-                        if ls_mode:
-                            while not re.search(fr'^CURRENT CONTEXT -- {i}, \d+$',line):
+                        if ls_mode_on:
+                            while not re.search(fr'^CURRENT CONTEXT -- {i} *, \d+$',line):
                                 line = file.readline()
                                 if not line:
                                     break
@@ -86,7 +89,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, max_title):
                             # 'switchshow_portinfo_match'
                             if match_dct[match_keys[3]]:
                                 switchshow_port_values, = comp_dct[comp_keys[3]].findall(line)
-                                switchinfo_lst = [sshow_file, i, switch_params_dct.get('switchName', None)]
+                                switchinfo_lst = [sshow_file, chassis_name, i, switch_params_dct.get('switchName', None)]
                                 portinfo_lst =  [value.rstrip() if value else None for value in switchshow_port_values]
                                 switchshow_ports_lst.append([*switchinfo_lst, *portinfo_lst])                                                       
                             if not line:
@@ -94,9 +97,9 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, max_title):
                     # switchshow section end
                     
             # additional values which need to be added to the switch params dictionary 
-            # switch_params_add order ('configname', 'switc_index')
+            # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
             # values axtracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
-            switch_params_values = (sshow_file, str(i))            
+            switch_params_values = (sshow_file, chassis_name, str(i), ls_mode)            
 
             # adding additional parameters and values to the chassis_params_switch_dct
             for switch_param_add, switch_param_value in zip(switch_params_add,  switch_params_values):
@@ -107,7 +110,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, max_title):
                     switch_params_dct[switch_param_add] = switch_param_value
                                         
             # creating list with REQUIRED chassis parameters for the current switch.
-            # if no value in the switch_params_dct for the parameter than None added 
+            # if no value in the switch_params_dct for the parameter then None is added 
             # and appending this list to the list of all switches switch_params_fabric_lst            
             switch_params_lst.append([switch_params_dct.get(switch_param, None) for switch_param in switch_params])
                              

@@ -42,6 +42,11 @@ def create_parsed_dirs(customer_title, project_path):
     san_assessment_report_dir = f'report_{customer_title}_' + current_date
     san_assessment_report_path = os.path.join(os.path.normpath(project_path), san_assessment_report_dir)   
     create_folder(san_assessment_report_path)
+    
+    # define folder to save obects extracted from configuration files
+    data_objects_dir = f'data_objects_{customer_title}'
+    data_objects_path = os.path.join(os.path.normpath(project_path), data_objects_dir)
+    create_folder(data_objects_path)
 
     return santoolbox_parsed_sshow_path, santoolbox_parsed_others_path, san_assessment_report_path
 
@@ -151,13 +156,19 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
                 ams_maps_files_lst_tmp.append(parsed_amsmaps_file)
                 ams_maps_filenames_lst_tmp.append(os.path.basename(parsed_amsmaps_file))
         else:
-            print('No AMS_MAPS configuration found.')
-            ams_maps_files_lst_tmp.append(None)
-            ams_maps_filenames_lst_tmp.append(None)
+            info = ' '*16+'No AMS_MAPS configuration found.'
+            print(info, end =" ")
+            status_info('skip', max_title, len(info))
+            # ams_maps_files_lst_tmp.append(None)
+            # ams_maps_filenames_lst_tmp.append(None)
+            ams_maps_files_lst_tmp = None
+            ams_maps_filenames_lst_tmp = None
         
         # append parsed configuration data filenames and filepaths to the final lists 
-        parsed_files_lst.append([switchname, parsed_sshow_file, tuple(ams_maps_files_lst_tmp)])
-        parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])    
+        parsed_files_lst.append([switchname, parsed_sshow_file, ams_maps_files_lst_tmp])
+        # ams_maps_filenames_str = ', '.join(ams_maps_filenames_lst_tmp) if ams_maps_filenames_lst_tmp else None
+        # parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])
+        parsed_filenames_lst.append([switchname, parsed_sshow_filename, ams_maps_filenames_lst_tmp])    
     
     return parsed_files_lst, parsed_filenames_lst
 

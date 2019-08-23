@@ -7,6 +7,8 @@ from files_operations import status_info, data_extract_objects
 
 
 def chassis_params_extract(all_config_data, max_title):
+    """Function to extract chassis parameters
+    """
         
     print('\n\nEXTRACTING CHASSIS PARAMETERS FROM SUPPORTSHOW CONFIGURATION FILES ...')
     
@@ -24,7 +26,7 @@ def chassis_params_extract(all_config_data, max_title):
         # data unpacking from iter param
         switch_name, sshow_file, ams_maps_file = switch_config_data
         # search control dictionary. continue to check sshow_file until all parameters groups are found
-        collected = {'configshow': False, 'uptime_cpu': False, 'flash': False, 'memory': False, 'dhcp': False}
+        collected = {'configshow': False, 'uptime_cpu': False, 'flash': False, 'memory': False, 'dhcp': False, 'licenses': False}
         # dictionary to store all DISCOVERED chassis parameters
         # collecting data only for the chassis in current loop
         chassis_params_dct = {}
@@ -32,6 +34,9 @@ def chassis_params_extract(all_config_data, max_title):
         snmp_target_set = set()
         syslog_set = set()
         tz_lst = []
+        licenses = []
+        
+        
         
         # current operation information string
         info = f'[{i+1} of {switch_num}]: {switch_name} chassis parameters check'
@@ -44,10 +49,10 @@ def chassis_params_extract(all_config_data, max_title):
                 if not line:
                     break
                 # configshow section start
-                if re.search(r'^\[Configuration upload Information\]$', line):
+                if re.search(r'^(/fabos/cliexec/|/bin/cat /var/log/)?configshow *-?(all)? *:$', line):
                     # when section is found corresponding collected dict values changed to True
                     collected['configshow'] = True
-                    while not re.search(r'^\[Chassis Configuration End\]$',line):
+                    while not re.search(r'^(\[Chassis Configuration End\])|(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
                         line = file.readline()
                         # dictionary with match names as keys and match result of current line with all imported regular expressions as values
                         match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
@@ -83,13 +88,12 @@ def chassis_params_extract(all_config_data, max_title):
                             break
                 # uptime section end
                 # memory section start
-                elif re.search(r'^(/bin/)?cat\s+/proc/meminfo\s*:$', line):
+                elif re.search(r'^(/bin/)?(cat\s+)?/proc/meminfo\s*:$', line):
                     collected['memory'] = True
                     memory_dct = {}
                     while not re.search(r'^real [\w.]+$',line):
                         line = file.readline()
                         match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                        # memory_match = memory_comp.match(line)
                         # 'memory_match'                      
                         if match_dct[match_keys[5]]:
                             memory_dct[match_dct[match_keys[5]].group(1)] = match_dct[match_keys[5]].group(2)
@@ -123,12 +127,26 @@ def chassis_params_extract(all_config_data, max_title):
                             chassis_params_dct[match_dct[match_keys[7]].group(1).rstrip()] = match_dct[match_keys[7]].group(2)                                                      
                         if not line:
                             break  
-                # ipaddrshow section end                            
+                # ipaddrshow section end
+                # licenses section start
+                if re.search(r'^(/fabos/cliexec/)?licenseshow *:$', line):
+                    collected['licenses'] = True
+                    while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
+                        line = file.readline()
+                        match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                        # 'licenses_match'
+                        if match_dct[match_keys[8]]:
+                            licenses.append(match_dct[match_keys[8]].group(1))
+                        elif re.match('^No licenses installed.$', line):
+                            licenses = 'No licenses installed'                                                                            
+                        if not line:
+                            break  
+                # licenses section end                            
                          
         # additional values which need to be added to the chassis params dictionary
-        # chassis_params_add order ('configname', 'switchname', 'snmp_server', 'syslog_server', 'timezone_h:m')
+        # chassis_params_add order (configname, ams_maps_log, chassis_name, snmp_server, syslog_server, timezone_h:m, uptime, cpu_average_load, memory_usage, flash_usage, licenses)
         # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
-        chassis_params_values = (sshow_file, ams_maps_file, switch_name, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash)
+        chassis_params_values = (sshow_file, ams_maps_file, switch_name, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
         
         # adding additional parameters and values to the chassis_params_switch_dct
         for chassis_param_add, chassis_param_value in zip(chassis_params_add,  chassis_params_values):
@@ -139,7 +157,7 @@ def chassis_params_extract(all_config_data, max_title):
                 chassis_params_dct[chassis_param_add] = chassis_param_value
 
         # creating list with REQUIRED chassis parameters for the current switch
-        # if no value in the chassis_params_dct for the parameter than None added  
+        # if no value in the chassis_params_dct for the parameter then None is added  
         # and appending this list to the list of all switches chassis_params_fabric_lst
         chassis_params_fabric_lst.append([chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params])
             
