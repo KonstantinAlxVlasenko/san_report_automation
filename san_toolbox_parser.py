@@ -29,7 +29,7 @@ def create_parsed_dirs(customer_title, project_path):
     # current date
     current_date = str(date.today())   
     
-    print(f'\n\nCREATING REQUIRED DIRECTORIES ...\n')
+    print(f'\n\nSTEP 1. CREATING REQUIRED DIRECTORIES ...\n')
     print(f'Project folder {project_path}')
     # define folder and subfolders to save configuration data (supportsave and ams_maps files)
     santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
@@ -48,7 +48,7 @@ def create_parsed_dirs(customer_title, project_path):
     data_objects_path = os.path.join(os.path.normpath(project_path), data_objects_dir)
     create_folder(data_objects_path)
 
-    return santoolbox_parsed_sshow_path, santoolbox_parsed_others_path, san_assessment_report_path
+    return santoolbox_parsed_sshow_path, santoolbox_parsed_others_path, san_assessment_report_path, data_objects_path
 
 
 def create_files_list_to_parse(ssave_path):
@@ -58,7 +58,7 @@ def create_files_list_to_parse(ssave_path):
     Configuration file for Active CP has bigger size
     """
     
-    print(f'\n\nCHECCKING CONFIGURATION DATA ...\n')
+    print(f'\n\nSTEP 2. CHECKING CONFIGURATION DATA ...\n')
     print(f'Configuration data folder {ssave_path}')
 
     # check if ssave_path folder exist
@@ -128,7 +128,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     # number of configuration data sets (one set is config files for one switch)
     config_set_num = len(all_files_to_parse_lst)
     
-    print('\n\nPROCESSING CONFIGURATION FILES WITH SANTOOLBOX ... \n')
+    print('\n\nSTEP 3. PROCESSING CONFIGURATION FILES WITH SANTOOLBOX ... \n')
     print(f'Parsed configuration files is moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
     
     # going throgh each configuration set (switch) in unpased list
@@ -170,6 +170,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         # parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])
         parsed_filenames_lst.append([switchname, parsed_sshow_filename, ams_maps_filenames_lst_tmp])    
     
+    print('\n')
     return parsed_files_lst, parsed_filenames_lst
 
 
