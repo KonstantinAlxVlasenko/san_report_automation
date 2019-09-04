@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list
+from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, force_extract_check
 
 """Module to extract portFcPortCmdShow information"""
 
@@ -12,14 +12,19 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
     
     print('\n\nSTEP 8. PORTCMD PARAMETERS ...\n')
     
-    *_, max_title = report_data_lst
+    *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['portcmd']
     data_lst = json_to_data(report_data_lst, *data_names)
     portshow_lst, = data_lst
+
+    # data force extract check. 
+    # if data have been extracted already but extract key is ON then data re-extracted
+    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
     # if no data saved than extract data from configurtion files  
-    if not all(data_lst):             
+    if not all(data_lst) or any(force_extract_keys_lst):             
         print('\nEXTRACTING PORTSHOW, PORTLOGINSHOW, PORTSTATSSHOW INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         
         # extract chassis parameters names from init file
@@ -53,7 +58,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                     line = file.readline()
                     if not line:
                         break
-                    # configshow section start
+                    # sshow_port section start
                     if re.search(r'^\| Section: SSHOW_PORT \|$', line):
                         # when section is found corresponding collected dict values changed to True
                         collected['portshow'] = True
@@ -142,7 +147,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                         portcmd_dct[portcmd_param_add] = chassis_slot_port_value               
                                 # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
                                 portshow_lst.append([portcmd_dct.get(portcmd_param, None) for portcmd_param in portcmd_params])
-                                                
+                    # sshow_port section end                            
             status_info('ok', max_title, len(info))
         # save extracted data to json file    
         data_to_json(report_data_lst, data_names, portshow_lst)

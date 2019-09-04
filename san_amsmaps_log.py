@@ -2,7 +2,7 @@ import re
 import pandas as pd
 import os.path
 # from files_operations import columns_import, status_info, data_extract_objects
-from files_operations import status_info, data_extract_objects, data_to_json, json_to_data
+from files_operations import status_info, data_extract_objects, data_to_json, json_to_data, force_extract_check
 
 """Module to extract maps parameters"""
 
@@ -14,14 +14,24 @@ def maps_params_extract(all_config_data, report_data_lst):
     
     print('\n\nSTEP 6. MAPS PARAMETERS ...\n')
     
-    *_, max_title = report_data_lst
+    *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['maps_parameters']
     data_lst = json_to_data(report_data_lst, *data_names)
     maps_params_fabric_lst, = data_lst
     
+    # data force extract check. 
+    # if data have been extracted already but extract key is ON then data re-extracted
+    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # if all(data_lst) and any(force_extract):
+    #     force_extract_lst = [data_name for data_name, force_extract_key in zip(data_names, force_extract) if force_extract_key]
+    #     info = f'Force {", ".join(force_extract_lst)} data extract initialize'
+    #     print(info, end =" ")
+    #     status_info('ok', max_title, len(info))
+    
     # if no data saved than extract data from configurtion files
-    if not all(data_lst):    
+    if not all(data_lst) or any(force_extract_keys_lst):    
         print('\nEXTRACTING MAPS DATA FROM AMS_MAPS_LOG CONFIGURATION FILES ...\n')
         
         # number of switches to check

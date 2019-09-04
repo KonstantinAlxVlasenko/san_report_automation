@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list
+from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, force_extract_check
 
 """Module to extract fabrics information"""
 
@@ -12,14 +12,19 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
     
     print('\n\nSTEP 7. FABRIC PARAMETERS ...\n')
     
-    *_, max_title = report_data_lst
+    *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['fabricshow', 'fcrfabricshow']
     data_lst = json_to_data(report_data_lst, *data_names)
     fabricshow_lst, fcrfabricshow_lst = data_lst
+
+    # data force extract check. 
+    # if data have been extracted already but extract key is ON then data re-extracted
+    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
     # if no data saved than extract data from configurtion files  
-    if not all(data_lst):             
+    if not all(data_lst) or any(force_extract_keys_lst):             
         print('\nEXTRACTING FABRICS INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         
         # extract switch parameters names from init file
@@ -34,7 +39,7 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
         *_, comp_keys, match_keys, comp_dct = data_extract_objects('fabricshow', max_title)  
         
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
-        # checking each chassis for switch level parameters
+        # checking each switch for switch level parameters
         for i, switch_params_data in enumerate(switch_params_lst):       
             # data unpacking from iter param
             # dictionary with parameters for the current switch

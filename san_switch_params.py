@@ -1,24 +1,30 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list
+from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, force_extract_check
 
 """Module to extract switch parameters"""
 
 
 def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst):
-    
+    """Function to extract switch parameters
+    """    
     # report_data_lst = [customer_name, dir_report, dir_data_objects, max_title]
     
     print('\n\nSTEP 5. SWITCH PARAMETERS ...\n')
     
-    *_, max_title = report_data_lst
+    *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['switch_parameters', 'switchshow_ports']
     data_lst = json_to_data(report_data_lst, *data_names)
     switch_params_lst, switchshow_ports_lst = data_lst
     
+    # data force extract check. 
+    # if data have been extracted already but extract key is ON then data re-extracted
+    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    
     # if no data saved than extract data from configurtion files 
-    if not all(data_lst):    
+    if not all(data_lst) or any(force_extract_keys_lst):    
         print('\nEXTRACTING SWITCH PARAMETERS FROM SUPPORTSHOW CONFIGURATION FILES ...\n')   
         
         # extract chassis parameters names from init file

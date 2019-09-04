@@ -48,7 +48,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
     otherwise delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
     """    
-    customer_name, report_path, _, max_title = report_data_lst      
+    customer_name, report_path, _, max_title, report_steps_dct = report_data_lst      
     current_date = str(date.today())
     # construct excel filename
     file_name = customer_name + '_' + report_type + '_' + 'report_' + current_date + '.xlsx'
@@ -57,50 +57,53 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
     print(info, end =" ")
     file_path = os.path.join(report_path, file_name)
     
-    # pd.ExcelWriter has only two file open modes
-    # if file doesn't exist it has be opened in "w" mode otherwise in "a"    
-    if os.path.isfile(file_path):
-        file_mode = 'a'
-        # open existing excel file
-        workbook = openpyxl.load_workbook(file_path)
-        if sheet_title in workbook.sheetnames:
-            # # import stored data in excel file do dataframe
-            # import_df = pd.read_excel(file_path, sheet_name=sheet_title)
-            # # check if new dataframe and stored in excelfile are equal
-            # if not data_frame.equals(import_df):
-            #     # if dataframes are not equal delete sheet
-                # after sheet removal excel file must contain at least one sheet
-            if len(workbook.sheetnames) != 1:                    
-                del workbook[sheet_title]
-                try:
-                    workbook.save(file_path)
-                except PermissionError:
-                    status_info('fail', max_title, len(info))
-                    print('Permission denied. Close the file.')
-                    sys.exit()
-            else:
-                file_mode = 'w'
-                # export new dataframe
-                # export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)
-            # # if dataframes are equal then skip
-            # else:
-            #     file_mode = None
-            #     status_info('skip', max_title, len(info))                  
-    else:
-        file_mode = 'w'
-    
-    # if required export DataFrame to the new sheet
-    if file_mode:
-        try:
-            with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:
-                data_frame.to_excel(writer, sheet_name=sheet_title, index=False)
-        except PermissionError:
-            status_info('fail', max_title, len(info))
-            print('Permission denied. Close the file.')
-            sys.exit()
+    # save DataFrame to excel file if export_to_excel trigger is ON
+    if report_steps_dct[sheet_title][0]:
+        # pd.ExcelWriter has only two file open modes
+        # if file doesn't exist it has be opened in "w" mode otherwise in "a"    
+        if os.path.isfile(file_path):
+            file_mode = 'a'
+            # open existing excel file
+            workbook = openpyxl.load_workbook(file_path)
+            if sheet_title in workbook.sheetnames:
+                # # import stored data in excel file do dataframe
+                # import_df = pd.read_excel(file_path, sheet_name=sheet_title)
+                # # check if new dataframe and stored in excelfile are equal
+                # if not data_frame.equals(import_df):
+                #     # if dataframes are not equal delete sheet
+                    # after sheet removal excel file must contain at least one sheet
+                if len(workbook.sheetnames) != 1:                    
+                    del workbook[sheet_title]
+                    try:
+                        workbook.save(file_path)
+                    except PermissionError:
+                        status_info('fail', max_title, len(info))
+                        print('Permission denied. Close the file.')
+                        sys.exit()
+                else:
+                    file_mode = 'w'
+                    # export new dataframe
+                    # export_dataframe(file_path, data_frame, sheet_title, file_mode,str_length_status)
+                # # if dataframes are equal then skip
+                # else:
+                #     file_mode = None
+                #     status_info('skip', max_title, len(info))                  
         else:
-            status_info('ok', max_title, len(info))        
-    
+            file_mode = 'w'
+        
+        # if required export DataFrame to the new sheet
+        if file_mode:
+            try:
+                with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:
+                    data_frame.to_excel(writer, sheet_name=sheet_title, index=False)
+            except PermissionError:
+                status_info('fail', max_title, len(info))
+                print('Permission denied. Close the file.')
+                sys.exit()
+            else:
+                status_info('ok', max_title, len(info))        
+    else:
+        status_info('skip', max_title, len(info))
 
 def status_info(status, max_title, len_info_string, shift=0):
     """Function to print current operation status ('OK', 'SKIP', 'FAIL')
@@ -113,12 +116,12 @@ def status_info(status, max_title, len_info_string, shift=0):
     print(status.rjust(str_length - len_info_string, '.'))
 
  
-def columns_import(sheet_title, max_title, *args):
+def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_info.xlsx'):
     """Function to import corresponding columns from san_automation_info.xlsx file
     Can import several columns
     """
     # file to store all required data to process configuratin files
-    init_file = 'san_automation_info.xlsx'   
+    # init_file = 'san_automation_info.xlsx'   
     info = f'Importing {args} columns group from {init_file} file {sheet_title} tab'
     print(info, end = ' ')
     # try read data in excel
@@ -163,7 +166,7 @@ def export_lst_to_excel(data_lst, report_data_lst, sheet_title_export, sheet_tit
     """Function to export list to DataFrame and then save it to excel report file
     returns DataFrame
     """    
-    *_, max_title = report_data_lst 
+    *_, max_title, _ = report_data_lst 
     
     # checks if columns were passed to function as a list
     if isinstance(columns, list):
@@ -179,9 +182,8 @@ def export_lst_to_excel(data_lst, report_data_lst, sheet_title_export, sheet_tit
 
 def data_to_json(report_data_list, data_names, *args):
     """Function to export extracted configuration data to JSON file 
-    """
-    
-    customer_name, _, json_data_dir, max_title = report_data_list
+    """   
+    customer_name, _, json_data_dir, max_title, _ = report_data_list
     
     for data_name, data_exported in zip(data_names, args):
         file_name = customer_name + '_' + data_name + '.json'
@@ -199,9 +201,8 @@ def data_to_json(report_data_list, data_names, *args):
             
 def json_to_data(report_data_list, *args):
     """Function to import data from JSON file to data object 
-    """
-    
-    customer_name, _, json_data_dir, max_title = report_data_list
+    """    
+    customer_name, _, json_data_dir, max_title, _ = report_data_list
     data_imported = []
     
     for data_name in args:
@@ -228,6 +229,41 @@ def line_to_list(re_object, line, *args):
     values, = re_object.findall(line)
     values_lst = [value.rstrip() if value else None for value in values]
     return [*args, *values_lst]
-        
+
+
+def update_dct(keys, values, dct, char = ', '):
+    """Function to add param_add:value pairs
+    to the dictionary with discovered parameters
+    """
+    for key, value in zip(keys, values):
+        if value:                
+            if isinstance(value, set) or isinstance(value, list):
+                value = f'{char}'.join(value)
+            dct[key] = value
+    return dct
+
     
-         
+def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xlsx'):
+    """Function imports columns and create dictionary
+    If import only one column then dictionary with keys and empty lists as values created
+    If several columns then first column is keys of dictionary and others are values
+    """    
+    if len(args) == 1:
+        keys = columns_import(sheet_title, max_title, *args, init_file)
+        dct = dict((key, []) for key in keys)
+    elif len(args) > 1:
+        keys, *values = columns_import(sheet_title, max_title, *args, init_file = init_file)        
+        dct ={key: tuple(value) for key, *value in zip(keys, *values)}
+    else:
+        print('Not sufficient data to create dictionary')
+        sys.exit()
+
+    return dct
+
+def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title):
+    if all(data_lst) and any(force_extract_keys_lst):
+        force_extract_names_lst = [data_name for data_name, force_extract_key in zip(data_names, force_extract_keys_lst) if force_extract_key]
+        info = f'Force {", ".join(force_extract_names_lst)} data extract initialize'
+        print(info, end =" ")
+        status_info('ok', max_title, len(info))
+                 

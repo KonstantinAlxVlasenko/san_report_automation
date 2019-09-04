@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 # from files_operations import columns_import, status_info, data_extract_objects
-from files_operations import status_info, data_extract_objects, data_to_json, json_to_data
+from files_operations import status_info, data_extract_objects, data_to_json, json_to_data, force_extract_check
 
 """Module to extract chassis parameters"""
 
@@ -16,14 +16,19 @@ def chassis_params_extract(all_config_data, report_data_lst):
         
     print('\n\nSTEP 4. CHASSIS PARAMETERS ...\n')
 
-    *_, max_title = report_data_lst
+    *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['chassis_parameters']
     data_lst = json_to_data(report_data_lst, *data_names)
     chassis_params_fabric_lst, = data_lst
-
+    
+    # data force extract check. 
+    # if data have been extracted already but extract key is ON then data re-extracted
+    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    
     # if no data than data saved than exttract data from configueation files 
-    if not all(data_lst):
+    if not all(data_lst) or any(force_extract_keys_lst):
         print('\nEXTRACTING CHASSIS PARAMETERS FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         # number of switches to check
         switch_num = len(all_config_data)    
