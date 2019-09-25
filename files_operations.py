@@ -58,7 +58,8 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
     file_path = os.path.join(report_path, file_name)
     
     # save DataFrame to excel file if export_to_excel trigger is ON
-    if report_steps_dct[sheet_title][0]:
+    # and DataFrame is not empty
+    if report_steps_dct[sheet_title][0] and not data_frame.empty:
         # pd.ExcelWriter has only two file open modes
         # if file doesn't exist it has be opened in "w" mode otherwise in "a"    
         if os.path.isfile(file_path):
@@ -71,7 +72,8 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
                 # # check if new dataframe and stored in excelfile are equal
                 # if not data_frame.equals(import_df):
                 #     # if dataframes are not equal delete sheet
-                    # after sheet removal excel file must contain at least one sheet
+                
+                # after sheet removal excel file must contain at least one sheet
                 if len(workbook.sheetnames) != 1:                    
                     del workbook[sheet_title]
                     try:
@@ -103,7 +105,11 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
             else:
                 status_info('ok', max_title, len(info))        
     else:
-        status_info('skip', max_title, len(info))
+        # if DataFrame empty
+        if data_frame.empty:
+            status_info('no data', max_title, len(info))
+        else:            
+            status_info('skip', max_title, len(info))
 
 def status_info(status, max_title, len_info_string, shift=0):
     """Function to print current operation status ('OK', 'SKIP', 'FAIL')
@@ -131,6 +137,10 @@ def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_in
         status_info('fail', max_title, len(info))
         print(f'File not found. Check if file {init_file} exist.')
         sys.exit()
+    except ValueError:
+        status_info('fail', max_title, len(info))
+        print(f'Column {args} not found. Check if column exist in {sheet_title}.')
+        sys.exit()        
     else:
         # if number of columns to read > 1 than returns corresponding number of lists
         if len(args)>1:
@@ -154,7 +164,7 @@ def data_extract_objects(sheet_title, max_title):
     # imports string for regular expressions
     comp_values = columns_import(sheet_title,  max_title, 'comp_values')
     # creates regular expressions
-    comp_values_re = [re.compile(element) for element in comp_values]
+    comp_values_re = [re.compile(fr"{element}") for element in comp_values]
     # creates dictionary with regular expressions  
     comp_dct = dict(zip(comp_keys, comp_values_re))
     
@@ -227,7 +237,10 @@ def line_to_list(re_object, line, *args):
     and combine values with other optional data into list
     """
     values, = re_object.findall(line)
-    values_lst = [value.rstrip() if value else None for value in values]
+    if isinstance(values, tuple) or isinstance(values, list):
+        values_lst = [value.rstrip() if value else None for value in values]
+    else:
+        values_lst = [values.rstrip()]
     return [*args, *values_lst]
 
 
@@ -261,6 +274,8 @@ def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xls
     return dct
 
 def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title):
+    """Function to check if force data extract key is ON
+    """
     if all(data_lst) and any(force_extract_keys_lst):
         force_extract_names_lst = [data_name for data_name, force_extract_key in zip(data_names, force_extract_keys_lst) if force_extract_key]
         info = f'Force {", ".join(force_extract_names_lst)} data extract initialize'

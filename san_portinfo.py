@@ -1,6 +1,7 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, update_dct, dct_from_columns, force_extract_check
+from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data
+from files_operations import  line_to_list, update_dct, dct_from_columns, force_extract_check
 
 """Module to extract port information (sfp transceivers, portcfg, trunk area settings)"""
 
@@ -26,22 +27,24 @@ def portinfo_extract(switch_params_lst, report_data_lst):
     
     # if no data saved than extract data from configurtion files 
     if not all(data_lst) or any(force_extract_keys_lst):    
-        print('\nEXTRACTING SWITCH PORTS INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')   
+        print('\nEXTRACTING SWITCH PORTS SFP, PORTCFG INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')   
         
         # extract chassis parameters names from init file
         switch_columns = columns_import('switch', max_title, 'columns')
         # number of switches to check
         switch_num = len(switch_params_lst)   
-        # list to store only REQUIRED switch parameters
-        # collecting sfpshow data for all switches ports during looping
-        sfpshow_lst = []    
+     
         # data imported from init file to extract values from config file
         params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('portinfo', max_title)
         portcfg_params = columns_import('portinfo', max_title, 'portcfg_params')
-        # dictionary to save portcfg information for all ports in fabric
+        # dictionary to save portcfg ALL information for all ports in fabric
         portcfgshow_dct = dict((key, []) for key in portcfg_params)
+        # list to store only REQUIRED switch parameters
+        # collecting sfpshow data for all switches ports during looping
+        sfpshow_lst = []
         # list to save portcfg information for all ports in fabric
         portcfgshow_lst = []
+
         
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters

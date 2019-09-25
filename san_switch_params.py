@@ -1,6 +1,7 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, force_extract_check
+from files_operations import columns_import, status_info, data_extract_objects, data_to_json
+from files_operations import  json_to_data, line_to_list, force_extract_check, update_dct
 
 """Module to extract switch parameters"""
 
@@ -37,7 +38,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
         # list to store switch ports details 
         switchshow_ports_lst = []    
         # data imported from init file to extract values from config file
-        switch_params, switch_params_add, comp_keys, match_keys, comp_dct = data_extract_objects('switch', max_title)
+        switch_params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('switch', max_title)
         
         # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
         # checking each chassis for switch level parameters
@@ -106,7 +107,11 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                 # 'switchshow_portinfo_match'
                                 if match_dct[match_keys[3]]:
                                     switchinfo_lst = [sshow_file, chassis_name, i, switch_params_dct.get('switchName', None)]
-                                    switchshow_ports_lst.append(line_to_list(comp_dct[comp_keys[3]], line, *switchinfo_lst))                                                       
+                                    switchshow_port_lst = line_to_list(comp_dct[comp_keys[3]], line, *switchinfo_lst)
+                                    # if switch has no slots than slot number is 0
+                                    if not switchshow_port_lst[5]:
+                                        switchshow_port_lst[5] = 0
+                                    switchshow_ports_lst.append(switchshow_port_lst)                                                       
                                 if not line:
                                     break                        
                         # switchshow section end
@@ -115,14 +120,8 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                 # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
                 # values axtracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
                 switch_params_values = (sshow_file, chassis_name, str(i), ls_mode)            
-
-                # adding additional parameters and values to the chassis_params_switch_dct
-                for switch_param_add, switch_param_value in zip(switch_params_add,  switch_params_values):
-                    if switch_param_value:                
-                        # if not isinstance(switch_param_value, str):
-                        #     s = ':' if switch_param_add == 'timezone_h:m' else ', '
-                        #     switch_param_value = f'{s}'.join(switch_param_value)
-                        switch_params_dct[switch_param_add] = switch_param_value
+                # adding additional parameters and values to the switch_params_switch_dct
+                update_dct(params_add, switch_params_values, switch_params_dct)
                                             
                 # creating list with REQUIRED chassis parameters for the current switch.
                 # if no value in the switch_params_dct for the parameter then None is added 

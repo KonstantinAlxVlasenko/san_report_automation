@@ -24,11 +24,6 @@ def maps_params_extract(all_config_data, report_data_lst):
     # if data have been extracted already but extract key is ON then data re-extracted
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
     force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-    # if all(data_lst) and any(force_extract):
-    #     force_extract_lst = [data_name for data_name, force_extract_key in zip(data_names, force_extract) if force_extract_key]
-    #     info = f'Force {", ".join(force_extract_lst)} data extract initialize'
-    #     print(info, end =" ")
-    #     status_info('ok', max_title, len(info))
     
     # if no data saved than extract data from configurtion files
     if not all(data_lst) or any(force_extract_keys_lst):    

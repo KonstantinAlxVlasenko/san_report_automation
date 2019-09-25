@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, force_extract_check
+from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, force_extract_check, update_dct
 
 """Module to extract portFcPortCmdShow information"""
 
@@ -35,7 +35,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
         # collecting data for all switches during looping       
         portshow_lst = []  
         # data imported from init file to extract values from config file
-        portcmd_params, portcmd_params_add, comp_keys, match_keys, comp_dct = data_extract_objects('portcmd', max_title)  
+        portcmd_params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('portcmd', max_title)  
         
         # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
         # checking each chassis for switch level parameters
@@ -77,7 +77,6 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                 connected_wwns = set()
                                 port_ids = set()
                                 port_index = None
-                                # portshow_attr = []
                                 slot_port_lst = line_to_list(comp_dct[comp_keys[0]], line)
                                 while not re.search(r'^portshow +(\d{1,4})$',line):
                                     line = file.readline()
@@ -136,15 +135,10 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                 # additional values which need to be added to the dictionary with all DISCOVERED parameters during current loop iteration
                                 # chassis_slot_port_values order (configname, chassis_name, port_index, slot_num, port_num, port_ids and wwns of connected devices)
                                 # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column                                    
-                                chassis_slot_port_values = [sshow_file, chassis_name, port_index, *slot_port_lst, port_ids, connected_wwns]
-                                        
-                                # adding additional parameters and values to the chassis_params_switch_dct
-                                for portcmd_param_add, chassis_slot_port_value in zip(portcmd_params_add,  chassis_slot_port_values):
-                                    if chassis_slot_port_value:                
-                                        if not isinstance(chassis_slot_port_value, str):
-                                            s = ', '
-                                            chassis_slot_port_value = f'{s}'.join(chassis_slot_port_value)
-                                        portcmd_dct[portcmd_param_add] = chassis_slot_port_value               
+                                chassis_slot_port_values = [sshow_file, chassis_name, port_index, *slot_port_lst, port_ids, connected_wwns]  
+                                # adding additional parameters and values to the portcmd_dct
+                                update_dct(params_add, chassis_slot_port_values, portcmd_dct)
+                                  
                                 # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
                                 portshow_lst.append([portcmd_dct.get(portcmd_param, None) for portcmd_param in portcmd_params])
                     # sshow_port section end                            
