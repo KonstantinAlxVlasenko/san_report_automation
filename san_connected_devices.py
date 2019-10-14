@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data
+from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data
 from files_operations import  line_to_list, update_dct, dct_from_columns, force_extract_check
 
 """Module to extract connected devices information"""
@@ -17,7 +17,7 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
     
     # check if data already have been extracted
     data_names = ['fdmi', 'nsshow', 'nscamshow']
-    data_lst = json_to_data(report_data_lst, *data_names)
+    data_lst = load_data(report_data_lst, *data_names)
     fdmi_lst, nsshow_lst, nscamshow_lst = data_lst
 
     # data force extract check. 
@@ -164,6 +164,6 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
                         # nsshow section end                     
             status_info('ok', max_title, len(info))        
         # save extracted data to json file
-        data_to_json(report_data_lst, data_names, fdmi_lst, nsshow_lst, nscamshow_lst)
+        save_data(report_data_lst, data_names, fdmi_lst, nsshow_lst, nscamshow_lst)
     
     return fdmi_lst, nsshow_lst, nscamshow_lst

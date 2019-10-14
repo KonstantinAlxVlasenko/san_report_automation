@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json, json_to_data, line_to_list, force_extract_check, update_dct
+from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data, line_to_list, force_extract_check, update_dct
 
 """Module to extract portFcPortCmdShow information"""
 
@@ -15,7 +15,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
     *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['portcmd']
-    data_lst = json_to_data(report_data_lst, *data_names)
+    data_lst = load_data(report_data_lst, *data_names)
     portshow_lst, = data_lst
 
     # data force extract check. 
@@ -73,9 +73,8 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                 # dictionary to store all DISCOVERED parameters
                                 # collecting data only for the chassis in current loop
                                 portcmd_dct = {}
-                                # sets to store port_ids and wwns of port connected devices to avoid duplicates
-                                connected_wwns = set()
-                                port_ids = set()
+                                # list to store connected devices port_id and wwn pairs
+                                portid_wwn_lst = []
                                 port_index = None
                                 slot_port_lst = line_to_list(comp_dct[comp_keys[0]], line)
                                 while not re.search(r'^portshow +(\d{1,4})$',line):
@@ -89,9 +88,21 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                     while not re.search(fr'^portloginshow +{int(port_index)}$', line):
                                         line = file.readline()
                                         match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                        # portshow_params_match
                                         if match_dct[match_keys[2]]:
                                             portshow_attr, = comp_dct[comp_keys[2]].findall(line)
-                                            for k, v in zip(portshow_attr[::2], portshow_attr[1::2]):
+                                            # portstate parameter has special processing rule
+                                            if portshow_attr[0] == 'portState':
+                                                portcmd_dct['portState'] = portshow_attr[2]
+                                            # portshow_attr can contain up to 3 parameter name and value pairs
+                                            # parameters name on even positions in the portshow_attr and values on odd 
+                                            else:
+                                                for k, v in zip(portshow_attr[::2], portshow_attr[1::2]):
+                                                    portcmd_dct[k] = v
+                                        # portscn_match has two parameter name and value pairs
+                                        if match_dct[match_keys[6]]:
+                                            portscn_line = line_to_list(comp_dct[comp_keys[6]], line)
+                                            for k, v in zip(portscn_line[::2], portscn_line[1::2]):
                                                 portcmd_dct[k] = v
                                         if not line:
                                             break
@@ -101,12 +112,19 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                     while not re.search(fr'^portregshow +{int(port_index)}$', line):
                                         line = file.readline()
                                         match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                        # connected_wwn_match
                                         if match_dct[match_keys[3]]:
-                                            port_id, wwn = line_to_list(comp_dct[comp_keys[3]], line)
-                                            port_ids.add(port_id)
-                                            connected_wwns.add(wwn)
+                                            # first value in tuple unpacking is fe or fd and not required
+                                            _, port_id, wwn = line_to_list(comp_dct[comp_keys[3]], line)
+                                            portid_wwn_lst.append((port_id, wwn))
                                         if not line:
                                             break
+                                    # sorting connected devices list by poprt_ids
+                                    if len(portid_wwn_lst) != 0:
+                                        portid_wwn_lst = sorted(portid_wwn_lst)
+                                    # adding None as port_id and wwn if no device is connected
+                                    else:
+                                        portid_wwn_lst.append([None]*2)
                                 # portlogin section end
                                 while not re.match(fr'^portstatsshow +{int(port_index)}$', line):
                                     line = file.readline()
@@ -131,20 +149,21 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                             break
                                 # portstatsshow section end
                                 # portFcPortCmdShow section end        
-                                
+
                                 # additional values which need to be added to the dictionary with all DISCOVERED parameters during current loop iteration
                                 # chassis_slot_port_values order (configname, chassis_name, port_index, slot_num, port_num, port_ids and wwns of connected devices)
-                                # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column                                    
-                                chassis_slot_port_values = [sshow_file, chassis_name, port_index, *slot_port_lst, port_ids, connected_wwns]  
-                                # adding additional parameters and values to the portcmd_dct
-                                update_dct(params_add, chassis_slot_port_values, portcmd_dct)
-                                  
-                                # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
-                                portshow_lst.append([portcmd_dct.get(portcmd_param, None) for portcmd_param in portcmd_params])
+                                # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
+                                for port_id, connected_wwn in portid_wwn_lst:
+                                    chassis_slot_port_values = [sshow_file, chassis_name, port_index, *slot_port_lst, port_id, connected_wwn]
+                                    # adding or changing data from chassis_slot_port_values to the DISCOVERED dictionary
+                                    update_dct(params_add, chassis_slot_port_values, portcmd_dct)
+                                    # adding data to the REQUIRED list for each device connected to the port 
+                                    portshow_lst.append([portcmd_dct.get(portcmd_param, None) for portcmd_param in portcmd_params])
+
                     # sshow_port section end                            
             status_info('ok', max_title, len(info))
         # save extracted data to json file    
-        data_to_json(report_data_lst, data_names, portshow_lst)
+        save_data(report_data_lst, data_names, portshow_lst)
         
     return portshow_lst
 

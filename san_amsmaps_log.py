@@ -2,7 +2,7 @@ import re
 import pandas as pd
 import os.path
 # from files_operations import columns_import, status_info, data_extract_objects
-from files_operations import status_info, data_extract_objects, data_to_json, json_to_data, force_extract_check
+from files_operations import status_info, data_extract_objects, load_data, save_data, force_extract_check
 
 """Module to extract maps parameters"""
 
@@ -10,14 +10,14 @@ from files_operations import status_info, data_extract_objects, data_to_json, js
 def maps_params_extract(all_config_data, report_data_lst):
     """Function to extract maps parameters
     """
-    # report_data_lst = [customer_name, dir_report, dir_data_objects, max_title]
+    # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
     
     print('\n\nSTEP 6. MAPS PARAMETERS ...\n')
     
     *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['maps_parameters']
-    data_lst = json_to_data(report_data_lst, *data_names)
+    data_lst = load_data(report_data_lst, *data_names)
     maps_params_fabric_lst, = data_lst
     
     # data force extract check. 
@@ -115,6 +115,6 @@ def maps_params_extract(all_config_data, report_data_lst):
                 print(info, end =" ")
                 status_info('skip', max_title, len(info))
         # save extracted data to json file
-        data_to_json(report_data_lst, data_names, maps_params_fabric_lst)
+        save_data(report_data_lst, data_names, maps_params_fabric_lst)
         
     return maps_params_fabric_lst

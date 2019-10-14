@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 # from files_operations import columns_import, status_info, data_extract_objects
-from files_operations import status_info, data_extract_objects, data_to_json, json_to_data, force_extract_check
+from files_operations import status_info, data_extract_objects, load_data, save_data, force_extract_check
 
 """Module to extract chassis parameters"""
 
@@ -19,7 +19,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
     *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['chassis_parameters']
-    data_lst = json_to_data(report_data_lst, *data_names)
+    data_lst = load_data(report_data_lst, *data_names)
     chassis_params_fabric_lst, = data_lst
     
     # data force extract check. 
@@ -178,6 +178,6 @@ def chassis_params_extract(all_config_data, report_data_lst):
             chassis_params_fabric_lst.append([chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params])                
             status_info('ok', max_title, len(info))
         # save extracted data to json file    
-        data_to_json(report_data_lst, data_names, chassis_params_fabric_lst)
+        save_data(report_data_lst, data_names, chassis_params_fabric_lst)
         
     return chassis_params_fabric_lst

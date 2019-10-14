@@ -1,8 +1,8 @@
 import re
 import pandas as pd
 import itertools
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json 
-from files_operations import json_to_data, line_to_list, force_extract_check, update_dct
+from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data 
+from files_operations import line_to_list, force_extract_check, update_dct
 
 """Module to extract fabric routing information"""
 
@@ -17,7 +17,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
     *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['fcrfabric', 'fcrproxydev', 'fcrphydev', 'lsan', 'fcredge', 'fcrresource']
-    data_lst = json_to_data(report_data_lst, *data_names)
+    data_lst = load_data(report_data_lst, *data_names)
     fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst = data_lst
 
     # data force extract check. 
@@ -225,7 +225,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
             else:
                 status_info('skip', max_title, len(info))
         # save extracted data to json file
-        data_to_json(report_data_lst, data_names, fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst)
+        save_data(report_data_lst, data_names, fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst)
             
     return fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst
 

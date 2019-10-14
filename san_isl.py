@@ -1,7 +1,7 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json
-from files_operations import  json_to_data, line_to_list, force_extract_check, update_dct
+from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data
+from files_operations import  line_to_list, force_extract_check, update_dct
 
 """Module to extract interswitch connection information"""
 
@@ -9,7 +9,7 @@ from files_operations import  json_to_data, line_to_list, force_extract_check, u
 def interswitch_connection_extract(switch_params_lst, report_data_lst):
     """Function to extract interswitch connection information
     """    
-    # report_data_lst = [customer_name, dir_report, dir_data_objects, max_title]
+    # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
     
     print('\n\nSTEP 11. INTERSWITCH CONNECTIONS AND TRUNK PORTS INFORMATION ...\n')
     
@@ -17,7 +17,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
     # check if data already have been extracted
     # data_names = ['isl', 'trunk', 'ag', 'trunkarea']
     data_names = ['isl', 'trunk', 'porttrunkarea']
-    data_lst = json_to_data(report_data_lst, *data_names)
+    data_lst = load_data(report_data_lst, *data_names)
     # isl_lst, trunk_lst, ag_lst, trunkarea_lst = data_lst
     isl_lst, trunk_lst, porttrunkarea_lst = data_lst
     
@@ -159,6 +159,6 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
             else:
                 status_info('skip', max_title, len(info))        
         # save extracted data to json file
-        data_to_json(report_data_lst, data_names, isl_lst, trunk_lst, porttrunkarea_lst)
+        save_data(report_data_lst, data_names, isl_lst, trunk_lst, porttrunkarea_lst)
     
     return isl_lst, trunk_lst, porttrunkarea_lst

@@ -1,5 +1,5 @@
 import sys
-import os.path
+import os
 import openpyxl
 import re
 import json
@@ -190,46 +190,48 @@ def export_lst_to_excel(data_lst, report_data_lst, sheet_title_export, sheet_tit
     return data_df
 
 
-def data_to_json(report_data_list, data_names, *args):
-    """Function to export extracted configuration data to JSON file 
-    """   
-    customer_name, _, json_data_dir, max_title, _ = report_data_list
+# def data_to_json(report_data_list, data_names, *args):
+#     """Function to export extracted configuration data to JSON file 
+#     """   
+#     customer_name, _, json_data_dir, max_title, _ = report_data_list
     
-    for data_name, data_exported in zip(data_names, args):
-        file_name = customer_name + '_' + data_name + '.json'
-        file_path = os.path.join(json_data_dir, file_name)
-        info = f'Exporting {data_name} to {file_name} file'
-        try:
-            print(info, end =" ")
-            with open(file_path, 'w') as file:
-                json.dump(data_exported, file)
-        except:
-            status_info('fail', max_title, len(info))
-        else:
-            status_info('ok', max_title, len(info))
+#     # data_names it's a list of names for data passed as args
+#     for data_name, data_exported in zip(data_names, args):
+#         # create file name and path for json file
+#         file_name = customer_name + '_' + data_name + '.json'
+#         file_path = os.path.join(json_data_dir, file_name)
+#         info = f'Exporting {data_name} to {file_name} file'
+#         try:
+#             print(info, end =" ")
+#             with open(file_path, 'w') as file:
+#                 json.dump(data_exported, file)
+#         except:
+#             status_info('fail', max_title, len(info))
+#         else:
+#             status_info('ok', max_title, len(info))
             
             
-def json_to_data(report_data_list, *args):
-    """Function to import data from JSON file to data object 
-    """    
-    customer_name, _, json_data_dir, max_title, _ = report_data_list
-    data_imported = []
+# def json_to_data(report_data_list, *args):
+#     """Function to import data from JSON file to data object 
+#     """    
+#     customer_name, _, json_data_dir, max_title, _ = report_data_list
+#     data_imported = []
     
-    for data_name in args:
-        file_name = customer_name + '_' + data_name + '.json'
-        file_path = os.path.join(json_data_dir, file_name)        
-        info = f'Importing {data_name} from {file_name} file'
-        print(info, end =" ")
-        try:  
-            with open(file_path, 'r') as file:
-                data_imported.append(json.load(file))
-        except:
-            status_info('no data', max_title, len(info))
-            data_imported.append(None)
-        else:
-            status_info('ok', max_title, len(info))
+#     for data_name in args:
+#         file_name = customer_name + '_' + data_name + '.json'
+#         file_path = os.path.join(json_data_dir, file_name)        
+#         info = f'Importing {data_name} from {file_name} file'
+#         print(info, end =" ")
+#         try:  
+#             with open(file_path, 'r') as file:
+#                 data_imported.append(json.load(file))
+#         except:
+#             status_info('no data', max_title, len(info))
+#             data_imported.append(None)
+#         else:
+#             status_info('ok', max_title, len(info))
     
-    return data_imported
+#     return data_imported
 
 
 def line_to_list(re_object, line, *args):
@@ -275,10 +277,125 @@ def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xls
 
 def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title):
     """Function to check if force data extract key is ON
+    If all data from data list are present and True(non-zero) but extract key is ON
+    Then function prints for which data force extraction has been initiated
+    Returns list with data check results 
     """
-    if all(data_lst) and any(force_extract_keys_lst):
+    # list to store data check results
+    data_check = []
+    # check each data in data_lst
+    for data in data_lst:
+        # for DataFrame method empty is used to check if DataFrame has data
+        if isinstance(data, pd.DataFrame):
+            data_check.append(not data.empty)
+        # for other types of data no special method needed
+        else:
+            data_check.append(data)
+
+    # when all data are not empty but force exctract is ON
+    # print data names for which extraction is forced
+    if all(data_check) and any(force_extract_keys_lst):
+        # list for which data extraction is forced
         force_extract_names_lst = [data_name for data_name, force_extract_key in zip(data_names, force_extract_keys_lst) if force_extract_key]
         info = f'Force {", ".join(force_extract_names_lst)} data extract initialize'
         print(info, end =" ")
         status_info('ok', max_title, len(info))
-                 
+        
+    return data_check
+        
+        
+
+def save_data(report_data_list, data_names, *args):
+    """Function to export extracted configuration data to JSON or CSV file
+    depending on data passed 
+    """   
+    customer_name, _, json_data_dir, max_title, _ = report_data_list
+    
+    # data_names it's a list of names for data passed as args
+    for data_name, data_exported in zip(data_names, args):
+        file_name = customer_name + '_' + data_name
+        # adding file extenson depending from type of data saved
+        # csv for DataFrame
+        if isinstance(data_exported, pd.DataFrame):
+            file_name += '.csv'
+        # for all other types is json
+        else:
+            # create file name and path for json file
+            file_name += '.json'
+        # full file path
+        file_path = os.path.join(json_data_dir, file_name)
+        info = f'Exporting {data_name} to {file_name} file'
+        try:
+            print(info, end =" ")
+            with open(file_path, 'w') as file:
+                # savng data for DataFrame
+                if isinstance(data_exported, pd.DataFrame):
+                    data_exported.to_csv(file, index=False)
+                # for all other types
+                else:
+                    json.dump(data_exported, file)
+        # display writing data to file status
+        except:
+            status_info('fail', max_title, len(info))
+        else:
+            status_info('ok', max_title, len(info))
+            
+            
+def load_data(report_data_list, *args):
+    """Function to load data from JSON or CSV file to data object
+    Detects wich type of data required to be loaded automaticaly
+    Returns list with imported data 
+    """    
+    customer_name, _, json_data_dir, max_title, _ = report_data_list
+    # list to store loaded data
+    data_imported = []
+    
+    # check real file path
+    for data_name in args:
+        # constructing filenames for json and csv files
+        file_name_json = customer_name + '_' + data_name + '.json'
+        file_path_json = os.path.join(json_data_dir, file_name_json)
+        file_name_csv = customer_name + '_' + data_name + '.csv'
+        file_path_csv = os.path.join(json_data_dir, file_name_csv)
+        # flags file existance
+        file_json = False
+        file_csv = False
+        # check if json file exist
+        if os.path.isfile(file_path_json):
+            file_path = file_path_json
+            file_name = file_name_json
+            file_json = True
+        # check if csv file exist
+        elif os.path.isfile(file_path_csv):
+            file_name = file_name_csv
+            file_path = file_path_csv
+            file_csv = True
+        # if no files exist then dislay info about no data availabilty
+        # and add None to data_imported list
+        else:
+            info = f'Importing {data_name}'
+            print(info, end =" ")
+            status_info('no data', max_title, len(info))
+            data_imported.append(None)
+        
+        # when saved file founded 
+        if any([file_json, file_csv]):                   
+            info = f'Importing {data_name} from {file_name} file'
+            print(info, end =" ")
+            # open file
+            try:  
+                with open(file_path, 'r') as file:
+                    # for json file use load method
+                    if file_json:
+                        data_imported.append(json.load(file))
+                    # for csv file use read_csv method
+                    elif file_csv:
+                        data_imported.append(pd.read_csv(file))
+            # display file load status
+            except:
+                status_info('no data', max_title, len(info))
+                data_imported.append(None)
+            else:
+                status_info('ok', max_title, len(info))
+    
+    return data_imported             

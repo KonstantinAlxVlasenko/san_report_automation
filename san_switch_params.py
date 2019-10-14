@@ -1,7 +1,7 @@
 import re
 import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, data_to_json
-from files_operations import  json_to_data, line_to_list, force_extract_check, update_dct
+from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data
+from files_operations import line_to_list, force_extract_check, update_dct
 
 """Module to extract switch parameters"""
 
@@ -16,7 +16,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
     *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['switch_parameters', 'switchshow_ports']
-    data_lst = json_to_data(report_data_lst, *data_names)
+    data_lst = load_data(report_data_lst, *data_names)
     switch_params_lst, switchshow_ports_lst = data_lst
     
     # data force extract check. 
@@ -98,7 +98,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                 match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # 'switch_switchshow_match'
                                 if match_dct[match_keys[1]]:
-                                    switch_params_dct[match_dct[match_keys[1]].group(1).rstrip()] = match_dct[match_keys[1]].group(2)
+                                    switch_params_dct[match_dct[match_keys[1]].group(1).rstrip()] = match_dct[match_keys[1]].group(2).rstrip()
                                 # 'ls_attr_match'
                                 if match_dct[match_keys[2]]:
                                     ls_attr = comp_dct[comp_keys[2]].findall(line)[0]
@@ -106,12 +106,19 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                         switch_params_dct[k] = v
                                 # 'switchshow_portinfo_match'
                                 if match_dct[match_keys[3]]:
-                                    switchinfo_lst = [sshow_file, chassis_name, i, switch_params_dct.get('switchName', None)]
+                                    switchinfo_lst = [sshow_file, chassis_name, i, 
+                                                      switch_params_dct.get('switchName', None), 
+                                                      switch_params_dct.get('switchWwn', None), 
+                                                      switch_params_dct.get('switchState', None), 
+                                                      switch_params_dct.get('switchMode', None)
+                                                      ]
                                     switchshow_port_lst = line_to_list(comp_dct[comp_keys[3]], line, *switchinfo_lst)
                                     # if switch has no slots than slot number is 0
-                                    if not switchshow_port_lst[5]:
-                                        switchshow_port_lst[5] = 0
-                                    switchshow_ports_lst.append(switchshow_port_lst)                                                       
+                                    if not switchshow_port_lst[8]:
+                                        switchshow_port_lst[8] = 0
+                                    
+                                    switchshow_ports_lst.append(switchshow_port_lst)
+                                                     
                                 if not line:
                                     break                        
                         # switchshow section end
@@ -130,6 +137,6 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                 
             status_info('ok', max_title, len(info))
         # save extracted data to json file
-        data_to_json(report_data_lst, data_names, switch_params_lst, switchshow_ports_lst)
+        save_data(report_data_lst, data_names, switch_params_lst, switchshow_ports_lst)
         
     return switch_params_lst, switchshow_ports_lst
