@@ -97,7 +97,15 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
         if file_mode:
             try:
                 with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:
-                    data_frame.to_excel(writer, sheet_name=sheet_title, index=False)
+                    # check if DataFrame have MultiIndex
+                    # reset index if True
+                    if isinstance(data_frame.index, pd.MultiIndex):
+                        data_frame_flat = data_frame.reset_index()
+                    # keep index if False
+                    else:
+                        data_frame_flat = data_frame.copy()
+                    # saving DataFrame with single Index
+                    data_frame_flat.to_excel(writer, sheet_name=sheet_title, index=False)
             except PermissionError:
                 status_info('fail', max_title, len(info))
                 print('Permission denied. Close the file.')
@@ -190,50 +198,6 @@ def export_lst_to_excel(data_lst, report_data_lst, sheet_title_export, sheet_tit
     return data_df
 
 
-# def data_to_json(report_data_list, data_names, *args):
-#     """Function to export extracted configuration data to JSON file 
-#     """   
-#     customer_name, _, json_data_dir, max_title, _ = report_data_list
-    
-#     # data_names it's a list of names for data passed as args
-#     for data_name, data_exported in zip(data_names, args):
-#         # create file name and path for json file
-#         file_name = customer_name + '_' + data_name + '.json'
-#         file_path = os.path.join(json_data_dir, file_name)
-#         info = f'Exporting {data_name} to {file_name} file'
-#         try:
-#             print(info, end =" ")
-#             with open(file_path, 'w') as file:
-#                 json.dump(data_exported, file)
-#         except:
-#             status_info('fail', max_title, len(info))
-#         else:
-#             status_info('ok', max_title, len(info))
-            
-            
-# def json_to_data(report_data_list, *args):
-#     """Function to import data from JSON file to data object 
-#     """    
-#     customer_name, _, json_data_dir, max_title, _ = report_data_list
-#     data_imported = []
-    
-#     for data_name in args:
-#         file_name = customer_name + '_' + data_name + '.json'
-#         file_path = os.path.join(json_data_dir, file_name)        
-#         info = f'Importing {data_name} from {file_name} file'
-#         print(info, end =" ")
-#         try:  
-#             with open(file_path, 'r') as file:
-#                 data_imported.append(json.load(file))
-#         except:
-#             status_info('no data', max_title, len(info))
-#             data_imported.append(None)
-#         else:
-#             status_info('ok', max_title, len(info))
-    
-#     return data_imported
-
-
 def line_to_list(re_object, line, *args):
     """Function to extract values from line with regex object 
     and combine values with other optional data into list
@@ -302,15 +266,13 @@ def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
         status_info('ok', max_title, len(info))
         
     return data_check
-        
-        
+            
 
 def save_data(report_data_list, data_names, *args):
     """Function to export extracted configuration data to JSON or CSV file
     depending on data passed 
     """   
-    customer_name, _, json_data_dir, max_title, _ = report_data_list
-    
+    customer_name, _, json_data_dir, max_title, _ = report_data_list    
     # data_names it's a list of names for data passed as args
     for data_name, data_exported in zip(data_names, args):
         file_name = customer_name + '_' + data_name
@@ -330,7 +292,15 @@ def save_data(report_data_list, data_names, *args):
             with open(file_path, 'w') as file:
                 # savng data for DataFrame
                 if isinstance(data_exported, pd.DataFrame):
-                    data_exported.to_csv(file, index=False)
+                    # check if DataFrame have MultiIndex
+                    # reset index if True due to MultiIndex is not saved                    
+                    if isinstance(data_exported.index, pd.MultiIndex):
+                        data_exported_flat = data_exported.reset_index()
+                    # keep indexing if False
+                    else:
+                        data_exported_flat = data_exported.copy()
+                    # save single level Index DataFrame to csv
+                    data_exported_flat.to_csv(file, index=False)
                 # for all other types
                 else:
                     json.dump(data_exported, file)

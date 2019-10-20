@@ -48,6 +48,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
             chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
             sshow_file = chassis_params_data_dct['configname']
             chassis_name = chassis_params_data_dct['chassis_name']
+            chassis_wwn = chassis_params_data_dct['chassis_wwn']
             num_ls = int(chassis_params_data_dct["Number_of_LS"]) if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 1
             # when num of logical switches is 0 or None than mode is Non-VF otherwise VF
             ls_mode_on = (True if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else False)
@@ -81,7 +82,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                 match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}                           
                                 # match_keys ['switch_configall_match', 'switch_switchshow_match']
                                 if match_dct[match_keys[0]]:
-                                    switch_params_dct[match_dct[match_keys[0]].group(1).rstrip()] = match_dct[match_keys[0]].group(3)              
+                                    switch_params_dct[match_dct[match_keys[0]].group(1).rstrip()] = match_dct[match_keys[0]].group(3).rstrip()              
                                 if not line:
                                     break
                         # config section end
@@ -106,7 +107,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                         switch_params_dct[k] = v
                                 # 'switchshow_portinfo_match'
                                 if match_dct[match_keys[3]]:
-                                    switchinfo_lst = [sshow_file, chassis_name, i, 
+                                    switchinfo_lst = [sshow_file, chassis_name, chassis_wwn, str(i), 
                                                       switch_params_dct.get('switchName', None), 
                                                       switch_params_dct.get('switchWwn', None), 
                                                       switch_params_dct.get('switchState', None), 
@@ -114,8 +115,8 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                                       ]
                                     switchshow_port_lst = line_to_list(comp_dct[comp_keys[3]], line, *switchinfo_lst)
                                     # if switch has no slots than slot number is 0
-                                    if not switchshow_port_lst[8]:
-                                        switchshow_port_lst[8] = 0
+                                    if not switchshow_port_lst[9]:
+                                        switchshow_port_lst[9] = str(0)
                                     
                                     switchshow_ports_lst.append(switchshow_port_lst)
                                                      
@@ -126,7 +127,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                 # additional values which need to be added to the switch params dictionary 
                 # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
                 # values axtracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
-                switch_params_values = (sshow_file, chassis_name, str(i), ls_mode)            
+                switch_params_values = (sshow_file, chassis_name, chassis_wwn, str(i), ls_mode)            
                 # adding additional parameters and values to the switch_params_switch_dct
                 update_dct(params_add, switch_params_values, switch_params_dct)
                                             

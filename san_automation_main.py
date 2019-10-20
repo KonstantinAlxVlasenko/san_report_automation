@@ -12,6 +12,7 @@ from san_isl import interswitch_connection_extract
 from san_fcr import fcr_extract
 from san_zoning import zoning_extract
 from san_fabrics_labels import fabriclabels_main
+from san_fabric_statistic import fabricstatistics_main
 
 """
 Main module to run
@@ -53,7 +54,9 @@ def main():
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df = zoning(switch_params_lst)
     
     # set fabric names and labels
-    fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)    
+    fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
+    
+    fabric_statistics_df, fabric_statistics_summary_df = fabricstatistics_main(switchshow_ports_df, fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst)    
     
     
     

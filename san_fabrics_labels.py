@@ -7,7 +7,7 @@ from files_operations import save_xlsx_file
 
 """Module to set Fabric names and labels"""
 
-# auxiliary variables for auto_fabrics_labeling function
+# auxiliary global variables for auto_fabrics_labeling function
 # variables changed globally each time function called
 fabric_bb = False
 fabric_num = 0
@@ -25,17 +25,13 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
     # check if data already have been extracted
     data_names = ['fabric_labels']
-    data_lst = load_data(report_data_lst, *data_names)
-    # print('data_lst', data_lst)
-    
+    data_lst = load_data(report_data_lst, *data_names)  
     fabricshow_ag_labels_df, = data_lst
 
     # data force extract check. 
     # if data have been extracted already but extract key is ON then data re-extracted
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
     data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-    
-    # print('data_check', data_check)
     
     # when no data saved or force extract flag is on than extract data from configurtion files  
     if not all(data_check) or any(force_extract_keys_lst):             

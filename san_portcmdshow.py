@@ -44,7 +44,8 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
             # dictionary with parameters for the current chassis
             chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
             sshow_file = chassis_params_data_dct['configname']
-            chassis_name = chassis_params_data_dct['chassis_name']           
+            chassis_name = chassis_params_data_dct['chassis_name']
+            chassis_wwn = chassis_params_data_dct['chassis_wwn']            
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch portshow, portloginshow and statsshow check.'
             print(info, end =" ")
@@ -154,11 +155,13 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                 # chassis_slot_port_values order (configname, chassis_name, port_index, slot_num, port_num, port_ids and wwns of connected devices)
                                 # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
                                 for port_id, connected_wwn in portid_wwn_lst:
-                                    chassis_slot_port_values = [sshow_file, chassis_name, port_index, *slot_port_lst, port_id, connected_wwn]
+                                    chassis_slot_port_values = [sshow_file, chassis_name, chassis_wwn, port_index, *slot_port_lst, port_id, connected_wwn]
+                                    # print('chassis_slot_port_values', chassis_slot_port_values)
                                     # adding or changing data from chassis_slot_port_values to the DISCOVERED dictionary
                                     update_dct(params_add, chassis_slot_port_values, portcmd_dct)
                                     # adding data to the REQUIRED list for each device connected to the port 
                                     portshow_lst.append([portcmd_dct.get(portcmd_param, None) for portcmd_param in portcmd_params])
+                                    # print('portshow_lst', portshow_lst)
 
                     # sshow_port section end                            
             status_info('ok', max_title, len(info))
