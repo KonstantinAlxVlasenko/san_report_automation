@@ -54,7 +54,7 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
             sshow_file, _, switch_index, switch_name, _, switch_role = switch_info_lst[:6]
 
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} fabric information check. Switch role: {switch_role}'
+            info = f'[{i+1} of {switch_num}]: {switch_name} fabric environment. Switch role: {switch_role}'
             print(info, end =" ")
             
             collected = {'fabricshow': False, 'ag_principal': False}

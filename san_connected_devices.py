@@ -63,7 +63,7 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
             sshow_file, _, switch_index, switch_name, switch_mode = switch_info_lst            
                         
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} switch ports information check'
+            info = f'[{i+1} of {switch_num}]: {switch_name} connected devices'
             print(info, end =" ")
                        
             # search control dictionary. continue to check sshow_file until all parameters groups are found

@@ -57,15 +57,15 @@ def fcr_extract(switch_params_lst, report_data_lst):
             # dictionary with parameters for the current switch
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
             switch_info_keys = ['configname', 'chassis_name', 'switch_index', 
-                                'SwitchName', 'switchRole', 'Fabric_ID', 'FC_Router']
+                                'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router']
             switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
             ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
             # data unpacking from iter param
-            sshow_file, *_, switch_name, switch_role, fid, fc_router = switch_info_lst
+            sshow_file, *_, switch_name, switch_wwn, switch_role, fid, fc_router = switch_info_lst
 
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} fabric routing information check. FC Routing: {fc_router}'
+            info = f'[{i+1} of {switch_num}]: {switch_name} fabric routing. FC Routing: {fc_router}'
             print(info, end =" ")
 
             # search control dictionary. continue to check sshow_file until all parameters groups are found                       
@@ -76,7 +76,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
             # check config of FC routers only 
             if fc_router == 'ON':
                 # fcrouter_info_lst contains sshow_file, chassis_name, switch_index, switch_name, switch_fid
-                fcrouter_info_lst = [*switch_info_lst[:4], switch_info_lst[5]]                                        
+                fcrouter_info_lst = [*switch_info_lst[:4], switch_info_lst[6]]                                        
                 with open(sshow_file, encoding='utf-8', errors='ignore') as file:
                     # check file until all groups of parameters extracted
                     while not all(collected.values()):
@@ -87,7 +87,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
                         if switch_role == 'Principal':
                             # fcrfabricshow section start
                             # switchcmd_fcrfabricshow
-                            if re.search(comp_dct[comp_keys[0]], line):
+                            if re.search(comp_dct[comp_keys[0]], line) and not collected['fcrfabric']:
                                 collected['fcrfabric'] = True
                                 if ls_mode_on:
                                     while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid}$',line):
@@ -125,7 +125,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
                             for fcrdev_type in fcrdev_dct.keys():
                                 re_num, fcrdev_lst, slice_index = fcrdev_dct[fcrdev_type]
                                 # switchcmd_fcrproxydevshow_comp
-                                if re.search(comp_dct[comp_keys[re_num]], line):
+                                if re.search(comp_dct[comp_keys[re_num]], line) and not collected[fcrdev_type]:
                                     collected[fcrdev_type] = True                                    
                                     if ls_mode_on:
                                         while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid} *$',line):
@@ -143,7 +143,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
                                             break                                
                             # fcrdevshow section end
                             # lsanzoneshow section start
-                            if re.search(comp_dct[comp_keys[8]], line):
+                            if re.search(comp_dct[comp_keys[8]], line) and not collected['lsanzone'] and not collected['lsanzone']:
                                 collected['lsanzone'] = True
                                 if ls_mode_on:
                                     while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid} *$',line):
@@ -177,7 +177,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
                         
                         # fcredge and fcrresource checked for Principal and Subordinate routers
                         # fcredgeshow section start
-                        if re.search(comp_dct[comp_keys[12]], line):
+                        if re.search(comp_dct[comp_keys[12]], line) and not collected['fcredge']:
                             collected['fcredge'] = True
                             if ls_mode_on:
                                 while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid} *$',line):
@@ -190,13 +190,12 @@ def fcr_extract(switch_params_lst, report_data_lst):
                                 match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # fcredgeshow_match
                                 if match_dct[match_keys[13]]:
-                                    fcredge_lst.append(line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst))                                            
+                                    fcredge_lst.append(line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst, switch_wwn))                                            
                                 if not line:
                                     break   
                         # fcredgeshow section end
                         # fcrresourceshow section start
-                        if re.search(comp_dct[comp_keys[14]], line):
-                            print(line)
+                        if re.search(comp_dct[comp_keys[14]], line) and not collected['fcrresource']:
                             collected['fcrresource'] = True
                             fcrresource_dct = {}
                             if ls_mode_on:

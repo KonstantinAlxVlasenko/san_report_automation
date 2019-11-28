@@ -14,7 +14,7 @@ santoolbox_path = "C:\\Program Files (x86)\\SAN Toolbox - Reloaded\\san toolbox.
 
 
 
-def create_parsed_dirs(customer_title, project_path):
+def create_parsed_dirs(customer_title, project_path, max_title):
     """
     Function to create three folders.
     Folder to save parsed with SANToolbox supportshow data files.
@@ -35,18 +35,18 @@ def create_parsed_dirs(customer_title, project_path):
     santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
     santoolbox_parsed_sshow_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')
     santoolbox_parsed_others_path = os.path.join(project_path, santoolbox_parsed_dir, 'others')
-    create_folder(santoolbox_parsed_sshow_path)
-    create_folder(santoolbox_parsed_others_path)  
+    create_folder(santoolbox_parsed_sshow_path, max_title)
+    create_folder(santoolbox_parsed_others_path, max_title)  
         
     # define folder san_assessment_report to save excel file with parsed configuration data
     san_assessment_report_dir = f'report_{customer_title}_' + current_date
     san_assessment_report_path = os.path.join(os.path.normpath(project_path), san_assessment_report_dir)   
-    create_folder(san_assessment_report_path)
+    create_folder(san_assessment_report_path, max_title)
     
     # define folder to save obects extracted from configuration files
     data_objects_dir = f'data_objects_{customer_title}'
     data_objects_path = os.path.join(os.path.normpath(project_path), data_objects_dir)
-    create_folder(data_objects_path)
+    create_folder(data_objects_path, max_title)
 
     return santoolbox_parsed_sshow_path, santoolbox_parsed_others_path, san_assessment_report_path, data_objects_path
 
@@ -84,7 +84,7 @@ def create_files_list_to_parse(ssave_path):
         sshow_file_path = None
         
         for file in files:
-            if file.endswith(".SSHOW_SYS.txt.gz"):
+            if file.endswith(".SSHOW_SYS.txt.gz") or file.endswith(".SSHOW_SYS.gz"):
                 # var to save current supportshow file size and compare it with next supportshow file size
                 # file with bigger size is Active CP configuration data file
                 sshow_file_size = os.path.getsize(os.path.join(root, file))
@@ -135,7 +135,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     for i,switch_files_to_parse_lst in enumerate(all_files_to_parse_lst):
         
         # extracts switchname from supportshow filename
-        switchname = re.search(r'^([\w-]+)(-\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})?-S\dcp-\d+.SSHOW_SYS.txt.gz$', 
+        switchname = re.search(r'^([\w-]+)(-\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})?-S\d(cp)?-\d+.SSHOW_SYS.(txt.)?gz$', 
                                 os.path.basename(switch_files_to_parse_lst[0])).group(1)
         # number of ams_maps_log files in current configuration set (switch)
         ams_maps_config_num = len(switch_files_to_parse_lst[1])
@@ -182,6 +182,10 @@ def santoolbox_parser(file, path_to_move_parsed_data, max_title):
     filedir, filename = os.path.split(file)
     if filename.endswith(".SSHOW_SYS.txt.gz"):
         ending1 = '.SSHOW_SYS.txt.gz'
+        ending2 = '-SupportShow.txt'
+        option = 'r'
+    elif filename.endswith(".SSHOW_SYS.gz"):
+        ending1 = '.SSHOW_SYS.gz'
         ending2 = '-SupportShow.txt'
         option = 'r'
     elif filename.endswith('AMS_MAPS_LOG.txt.gz'):     

@@ -3,6 +3,7 @@ import os
 import openpyxl
 import re
 import json
+import xlrd
 import pandas as pd
 from os import makedirs
 from datetime import date
@@ -10,25 +11,25 @@ from datetime import date
 '''Module to perform operations with files (create folder, save data to excel file, import data from excel file)'''
 
 
-def create_folder(path):
+def create_folder(path, max_title):
     """Function to create any folder with 'path' 
     """    
     info = f'Make directory {os.path.basename(path)}'
-    print(info, end= '')
+    print(info, end = ' ')
     # if folder not exist create 
     if not os.path.exists(path):        
         try:
             os.makedirs(path)
         except OSError:
-            status_info('fail', 82, len(info))
+            status_info('fail', max_title, len(info))
             print(f'Not possible create directory {path}.')
             print('Code execution finished')
             sys.exit()
         else:
-            status_info('ok', 82, len(info))
+            status_info('ok', max_title, len(info))
     # otherwise print 'SKIP' status
     else:
-        status_info('skip', 82, len(info))
+        status_info('skip', max_title, len(info))
         
         
 def check_valid_path(path):
@@ -44,8 +45,7 @@ def check_valid_path(path):
 # saving DataFrame to excel file
 def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'service'):   
     """Check if excel file exists, check if dataframe sheet is in file, 
-    if new dataframe is equal to one in excel file than skip,
-    otherwise delete sheet with stored dataframe (if sheet tabs number > 1)
+    delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
     """    
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst      
@@ -53,7 +53,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
     # construct excel filename
     file_name = customer_name + '_' + report_type + '_' + 'report_' + current_date + '.xlsx'
     # information string
-    info = f'Exporting {sheet_title} to {file_name}'
+    info = f'Exporting {sheet_title} to {report_type} file'
     print(info, end =" ")
     file_path = os.path.join(report_path, file_name)
     
@@ -113,8 +113,8 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'serv
             else:
                 status_info('ok', max_title, len(info))        
     else:
-        # if DataFrame empty
-        if data_frame.empty:
+        # if save key is on but DataFrame empty
+        if report_steps_dct[sheet_title][0] and data_frame.empty:
             status_info('no data', max_title, len(info))
         else:            
             status_info('skip', max_title, len(info))
@@ -123,7 +123,7 @@ def status_info(status, max_title, len_info_string, shift=0):
     """Function to print current operation status ('OK', 'SKIP', 'FAIL')
     """    
     # information + operation status string length in terminal
-    str_length = max_title + 55 + shift
+    str_length = max_title + 80 + shift
     status = status.upper()
     # status info aligned to the right side
     # space between current operation information and status of its execution filled with dots
@@ -135,12 +135,12 @@ def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_in
     Can import several columns
     """
     # file to store all required data to process configuratin files
-    # init_file = 'san_automation_info.xlsx'   
-    info = f'Importing {args} columns group from {init_file} file {sheet_title} tab'
+    # default init_file  is 'san_automation_info.xlsx'   
+    info = f'Importing {args} from {sheet_title} tab'
     print(info, end = ' ')
     # try read data in excel
     try:
-        columns = pd.read_excel(init_file, sheet_name = sheet_title, usecols =args, squeeze=True)
+        columns = pd.read_excel(init_file, sheet_name = sheet_title, usecols = args, squeeze=True)
     except FileNotFoundError:
         status_info('fail', max_title, len(info))
         print(f'File not found. Check if file {init_file} exist.')
@@ -158,6 +158,32 @@ def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_in
         status_info('ok', max_title, len(info))
     
     return columns_names
+
+
+def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx'):
+    """Function to import dataframe from exel file"""
+    # file to store all required data to process configuratin files
+    # init_file = 'san_automation_info.xlsx'   
+    info = f'Importing {sheet_title} dataframe from {init_file} file'
+    print(info, end = ' ')
+    # try read data in excel
+    try:
+        dataframe = pd.read_excel(init_file, sheet_name = sheet_title)
+    # if file is not found
+    except FileNotFoundError:
+        status_info('fail', max_title, len(info))
+        print(f'File not found. Check if file {init_file} exists.')
+        sys.exit()
+    # if sheet is not found
+    except xlrd.biffh.XLRDError:
+        status_info('fail', max_title, len(info))
+        print(f'Sheet {sheet_title} not found in {init_file}. Check if it exists.')
+        sys.exit()
+    else:
+        status_info('ok', max_title, len(info))
+    
+    return dataframe
+
 
 def data_extract_objects(sheet_title, max_title):
     """Function imports parameters names and regex tepmplates
@@ -224,15 +250,23 @@ def update_dct(keys, values, dct, char = ', '):
     
 def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xlsx'):
     """Function imports columns and create dictionary
-    If import only one column then dictionary with keys and empty lists as values created
-    If several columns then first column is keys of dictionary and others are values
-    """    
+    If only one column imported then dictionary with keys and empty lists as values created
+    If several columns imported then first column is keys of dictionary and others are values
+    """
+    # if one column is passed then create dictionary with keys and empty lists as values for each key
     if len(args) == 1:
         keys = columns_import(sheet_title, max_title, *args, init_file)
         dct = dict((key, []) for key in keys)
-    elif len(args) > 1:
+    # if two columns passed then create dictionary of keys with one value for each key
+    elif len(args) == 2:
         keys, *values = columns_import(sheet_title, max_title, *args, init_file = init_file)        
-        dct ={key: tuple(value) for key, *value in zip(keys, *values)}
+        dct ={key: value[0] for key, *value in zip(keys, *values)}
+    # if morte than two columns passed then create dictionary of keys with list of values for each key
+    elif len(args) > 2:
+        # first column is keys rest columns are in values list of lists
+        keys, *values = columns_import(sheet_title, max_title, *args, init_file = init_file)
+        # dictionary with key and value as list of lists 
+        dct ={key: value for key, *value in zip(keys, *values)}
     else:
         print('Not sufficient data to create dictionary')
         sys.exit()
@@ -252,6 +286,9 @@ def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
         # for DataFrame method empty is used to check if DataFrame has data
         if isinstance(data, pd.DataFrame):
             data_check.append(not data.empty)
+        # for bool type append True (means value is present) no matter if value is True or False
+        elif isinstance(data, bool):
+            data_check.append(True)
         # for other types of data no special method needed
         else:
             data_check.append(data)
@@ -274,6 +311,8 @@ def save_data(report_data_list, data_names, *args):
     """   
     customer_name, _, json_data_dir, max_title, _ = report_data_list    
     # data_names it's a list of names for data passed as args
+    empty_data = None
+
     for data_name, data_exported in zip(data_names, args):
         file_name = customer_name + '_' + data_name
         # adding file extenson depending from type of data saved
@@ -286,31 +325,40 @@ def save_data(report_data_list, data_names, *args):
             file_name += '.json'
         # full file path
         file_path = os.path.join(json_data_dir, file_name)
-        info = f'Exporting {data_name} to {file_name} file'
+        info = f'Saving {data_name} to {file_name} file'
         try:
             print(info, end =" ")
-            with open(file_path, 'w') as file:
+            with open(file_path, 'w', encoding="utf-8") as file:
                 # savng data for DataFrame
                 if isinstance(data_exported, pd.DataFrame):
-                    # check if DataFrame have MultiIndex
-                    # reset index if True due to MultiIndex is not saved                    
-                    if isinstance(data_exported.index, pd.MultiIndex):
-                        data_exported_flat = data_exported.reset_index()
-                    # keep indexing if False
+                    if not data_exported.empty:
+                        # check if DataFrame have MultiIndex
+                        # reset index if True due to MultiIndex is not saved                    
+                        if isinstance(data_exported.index, pd.MultiIndex):
+                            data_exported_flat = data_exported.reset_index()
+                        # keep indexing if False
+                        else:
+                            data_exported_flat = data_exported.copy()
+                        # save single level Index DataFrame to csv
+                        data_exported_flat.to_csv(file, index=False)
                     else:
-                        data_exported_flat = data_exported.copy()
-                    # save single level Index DataFrame to csv
-                    data_exported_flat.to_csv(file, index=False)
+                        empty_data = True
                 # for all other types
                 else:
-                    json.dump(data_exported, file)
+                    if len(data_exported) != 0: 
+                        json.dump(data_exported, file)
+                    else:
+                        empty_data = True
         # display writing data to file status
-        except:
+        except FileNotFoundError:
             status_info('fail', max_title, len(info))
         else:
-            status_info('ok', max_title, len(info))
-            
-            
+            if not empty_data:
+                status_info('ok', max_title, len(info))
+            else:
+                status_info('empty', max_title, len(info))
+                
+                        
 def load_data(report_data_list, *args):
     """Function to load data from JSON or CSV file to data object
     Detects wich type of data required to be loaded automaticaly
@@ -343,18 +391,18 @@ def load_data(report_data_list, *args):
         # if no files exist then dislay info about no data availabilty
         # and add None to data_imported list
         else:
-            info = f'Importing {data_name}'
+            info = f'Loading {data_name}'
             print(info, end =" ")
             status_info('no data', max_title, len(info))
             data_imported.append(None)
         
         # when saved file founded 
         if any([file_json, file_csv]):                   
-            info = f'Importing {data_name} from {file_name} file'
+            info = f'Loading {data_name} from {file_name} file'
             print(info, end =" ")
             # open file
             try:  
-                with open(file_path, 'r') as file:
+                with open(file_path, 'r', encoding="utf-8") as file:
                     # for json file use load method
                     if file_json:
                         data_imported.append(json.load(file))
@@ -367,5 +415,5 @@ def load_data(report_data_list, *args):
                 data_imported.append(None)
             else:
                 status_info('ok', max_title, len(info))
-    
+           
     return data_imported             

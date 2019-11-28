@@ -58,7 +58,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
             sshow_file, _, switch_index, switch_name, switch_role = switch_info_lst[:5]
 
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} zoning information check. Switch role: {switch_role}'
+            info = f'[{i+1} of {switch_num}]: {switch_name} zoning. Switch role: {switch_role}'
             print(info, end =" ")
             
             collected = {'cfgshow': False}

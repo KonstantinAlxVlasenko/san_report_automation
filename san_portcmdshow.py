@@ -47,7 +47,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
             chassis_name = chassis_params_data_dct['chassis_name']
             chassis_wwn = chassis_params_data_dct['chassis_wwn']            
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch portshow, portloginshow and statsshow check.'
+            info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch portshow, portloginshow and statsshow'
             print(info, end =" ")
             
             # search control dictionary. continue to check sshow_file until all parameters groups are found

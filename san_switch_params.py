@@ -55,7 +55,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
             ls_mode = ('ON' if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 'OFF')       
             
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch parameters check. Number of LS: {chassis_params_data_dct["Number_of_LS"]}'
+            info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch parameters. Number of LS: {chassis_params_data_dct["Number_of_LS"]}'
             print(info, end =" ")
             
             # check each logical switch in chassis
@@ -72,7 +72,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                         if not line:
                             break
                         # configshow section start
-                        if re.search(fr'^\[Switch Configuration Begin : {i}\]$', line):
+                        if re.search(fr'^\[Switch Configuration Begin : {i}\]$', line) and not collected['configshow']:
                             # when section is found corresponding collected dict values changed to True
                             collected['configshow'] = True
                             
@@ -87,7 +87,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                     break
                         # config section end
                         # switchshow section start
-                        if re.search(r'^(SWITCHCMD /fabos/bin/)?switchshow\s*:$', line):
+                        if re.search(r'^(SWITCHCMD /fabos/bin/)?switchshow\s*:$', line) and not collected['switchshow']:
                             collected['switchshow'] = True
                             if ls_mode_on:
                                 while not re.search(fr'^CURRENT CONTEXT -- {i} *, \d+$',line):

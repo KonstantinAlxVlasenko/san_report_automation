@@ -45,7 +45,7 @@ def maps_params_extract(all_config_data, report_data_lst):
             # number of ams_maps configs
             num_maps = len(ams_maps_files) if ams_maps_files else 0    
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} MAPS parameters check. Number of AMS_MAPS configs: {num_maps} ...'
+            info = f'[{i+1} of {switch_num}]: {switch_name} MAPS parameters. Number of AMS_MAPS configs: {num_maps} ...'
             print(info)
             
             # checking ams_maps log file for each logical switch

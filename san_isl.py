@@ -49,17 +49,17 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
         # checking each switch for switch level parameters
         for i, switch_params_data in enumerate(switch_params_lst):       
             # data unpacking from iter param
-            # dictionary with parameters for the current chassis
+            # dictionary with parameters for the current switch
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
             switch_info_keys = ['configname', 'chassis_name', 'switch_index', 
-                                'SwitchName', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
+                                'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
             switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
             ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
             sshow_file, _, switch_index, switch_name, *_, switch_mode = switch_info_lst
                         
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} isl, trunk and trunk area ports information check. Switch mode: {switch_mode}'
+            info = f'[{i+1} of {switch_num}]: {switch_name} isl, trunk and trunk area ports. Switch mode: {switch_mode}'
             print(info, end =" ")           
             # search control dictionary. continue to check sshow_file until all parameters groups are found
             collected = {'isl': False, 'trunk': False, 'trunkarea': False}
@@ -73,7 +73,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                             break
                         # isl section start   
                         # switchcmd_islshow_comp
-                        if re.search(comp_dct[comp_keys[0]], line):
+                        if re.search(comp_dct[comp_keys[0]], line) and not collected['isl']:
                             collected['isl'] = True
                             if ls_mode_on:
                                 while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -98,7 +98,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                         # isl section end
                         # trunk section start   
                         # switchcmd_trunkshow_comp
-                        if re.search(comp_dct[comp_keys[3]], line):
+                        if re.search(comp_dct[comp_keys[3]], line) and not collected['trunk']:
                             collected['trunk'] = True
                             if ls_mode_on:
                                 while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -112,12 +112,12 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                                 if match_dct[match_keys[4]]:
                                     trunk_port = line_to_list(comp_dct[comp_keys[4]], line, *switch_info_lst[:-1])
                                     # if trunk line has trunk number then remove ":" from trunk number
-                                    if trunk_port[7]:
-                                        trunk_port[7] = trunk_port[7].strip(':')
-                                        trunk_num = trunk_port[7]
+                                    if trunk_port[8]:
+                                        trunk_port[8] = trunk_port[8].strip(':')
+                                        trunk_num = trunk_port[8]
                                     # if trunk line has no number then use number from previous line
                                     else:
-                                        trunk_port[7] = trunk_num
+                                        trunk_port[8] = trunk_num
                                     # appending list with only REQUIRED trunk info for the current loop iteration 
                                     # to the list with all trunk port info
                                     trunk_lst.append(trunk_port)
@@ -127,8 +127,8 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                         # trunk section end
                         # porttrunkarea section start
                         # switchcmd_trunkarea_comp
-                        if re.search(comp_dct[comp_keys[5]], line):
-                            collected['porttrunkarea'] = True
+                        if re.search(comp_dct[comp_keys[5]], line) and not collected['trunkarea']:
+                            collected['trunkarea'] = True
                             if ls_mode_on:
                                 while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
                                     line = file.readline()

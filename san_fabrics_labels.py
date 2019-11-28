@@ -1,8 +1,9 @@
 import pandas as pd
 from datetime import date
-from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data 
-from files_operations import line_to_list, force_extract_check, update_dct
+# from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data 
+# from files_operations import line_to_list, force_extract_check, update_dct
 
+from files_operations import load_data, save_data, force_extract_check
 from files_operations import save_xlsx_file
 
 """Module to set Fabric names and labels"""
@@ -108,7 +109,7 @@ def fabricshow_porttype_state(switchshow_ports_df, fabricshow_df):
     
     # crosstab DataFrame contains summary for port states for switches from switchshow
     port_state_df = pd.crosstab(index = [switchshow_df.chassis_name, switchshow_df.switchName, 
-                                         switchshow_df.switchWWN], columns = switchshow_df.state, margins = True)
+                                         switchshow_df.switchWwn], columns = switchshow_df.state, margins = True)
     # DataFrame index need to be sorted before loc operation
     port_state_df.sort_index(inplace=True)
     # only total and online ports number are required
@@ -118,10 +119,10 @@ def fabricshow_porttype_state(switchshow_ports_df, fabricshow_df):
     
     # crosstab DataFrame contains summary for port types for switches from switchshow
     port_type_df = pd.crosstab(index = [switchshow_df.chassis_name, switchshow_df.switchName, 
-                                        switchshow_df.switchWWN], columns = switchshow_df.port_type)
+                                        switchshow_df.switchWwn], columns = switchshow_df.portType)
     
     # concatenating port_type port_state DataFrames by rightjoin
-    porttype_state_df = port_type_df.merge(port_state_df, how='right', on = ['chassis_name', 'switchName', 'switchWWN'])
+    porttype_state_df = port_type_df.merge(port_state_df, how='right', on = ['chassis_name', 'switchName', 'switchWwn'])
     # fill None values with 0
     porttype_state_df.fillna(0, inplace=True)
     # converting all values to integer
@@ -131,7 +132,7 @@ def fabricshow_porttype_state(switchshow_ports_df, fabricshow_df):
     
     # concatenating fabricshow and porttype_state DataFrames by leftjoin
     fabricshow_porttype_state_df = fabricshow_df.merge(porttype_state_df, how='left', 
-                                                       left_on = ['Worldwide_Name'], right_on=['switchWWN'])
+                                                       left_on = ['Worldwide_Name'], right_on=['switchWwn'])
     # fill None values with 0
     fabricshow_porttype_state_df.fillna(0, inplace=True)
     # converting all values to integer

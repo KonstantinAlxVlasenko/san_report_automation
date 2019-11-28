@@ -49,22 +49,22 @@ def portinfo_extract(switch_params_lst, report_data_lst):
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
         for i, switch_params_data in enumerate(switch_params_lst):       
+
             # data unpacking from iter param
-            # dictionary with parameters for the current chassis
+            # dictionary with parameters for the current switch
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            sshow_file = switch_params_data_dct['configname']
-            chassis_name = switch_params_data_dct['chassis_name']
-            ls_mode = switch_params_data_dct['LS_mode']
-            ls_mode_on = True if ls_mode == 'ON' else False
-            switch_index = switch_params_data_dct['switch_index']
-            switch_name = switch_params_data_dct['SwitchName']              
-            switch_info_lst = [sshow_file, chassis_name, switch_index, switch_name]            
+            switch_info_keys = ['configname', 'chassis_name', 'switch_index', 
+                                'SwitchName', 'switchWwn']
+            switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
+            ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+            
+            sshow_file, _, switch_index, switch_name, *_ = switch_info_lst
+            
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} switch ports information check'
+            info = f'[{i+1} of {switch_num}]: {switch_name} ports sfp and cfg'
             print(info, end =" ")           
             # search control dictionary. continue to check sshow_file until all parameters groups are found
             collected = {'sfpshow': False, 'portcfgshow': False}
-    
             with open(sshow_file, encoding='utf-8', errors='ignore') as file:
                 # check file until all groups of parameters extracted
                 while not all(collected.values()):
@@ -72,7 +72,7 @@ def portinfo_extract(switch_params_lst, report_data_lst):
                     if not line:
                         break
                     # sfpshow section start
-                    if re.search(r'^(SWITCHCMD /fabos/cliexec/)?sfpshow -all *:$', line):
+                    if re.search(r'^(SWITCHCMD )?(/fabos/cliexec/)?sfpshow +-all *: *$', line) and not collected['sfpshow']:
                         collected['sfpshow'] = True
                         if ls_mode_on:
                             while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -82,7 +82,6 @@ def portinfo_extract(switch_params_lst, report_data_lst):
                         while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
                             line = file.readline()
                             match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            # 'slot_port_match'
                             if match_dct[match_keys[0]]:
                                 # dictionary to store all DISCOVERED switch ports information
                                 # collecting data only for the logical switch in current loop
@@ -96,8 +95,11 @@ def portinfo_extract(switch_params_lst, report_data_lst):
                                     # power_match
                                     if match_dct[match_keys[1]]:
                                         sfp_power_lst = line_to_list(comp_dct[comp_keys[1]], line)
+                                        # cut off RX or TX Power
                                         sfp_power_value_unit = sfp_power_lst[1:]
                                         for v, k in zip(sfp_power_value_unit[::2], sfp_power_value_unit[1::2]):
+                                            if k == 'uWatts':
+                                                k = 'uW'
                                             key = sfp_power_lst[0] + '_' + k
                                             sfpshow_dct[key] = v
                                     # transceiver_match
@@ -116,23 +118,22 @@ def portinfo_extract(switch_params_lst, report_data_lst):
                                         break
                                     
                                 # additional values which need to be added to the dictionary with all DISCOVERED parameters during current loop iteration
-                                # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column                                    
-                                sfpshow_port_values = [sshow_file, chassis_name, switch_index, switch_name, slot_num, port_num]
-                                        
+                                # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column                                   
+                                sfpshow_port_values = [*switch_info_lst, slot_num, port_num]                                       
                                 # adding additional parameters and values to the sfpshow_dct
                                 update_dct(params_add, sfpshow_port_values, sfpshow_dct)               
                                 # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
                                 sfpshow_lst.append([sfpshow_dct.get(param, None) for param in params])
                     # sfpshow section end
                     # portcfgshow section start
-                    if re.search(r'^(SWITCHCMD /fabos/cliexec/)?portcfgshow *:$', line):
+                    if re.search(r'^(SWITCHCMD )?(/fabos/cliexec/)?portcfgshow *: *$', line) and not collected['portcfgshow']:
                         collected['portcfgshow'] = True
                         if ls_mode_on:
                             while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
                                 line = file.readline()
                                 if not line:
                                     break
-                        while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
+                        while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$|No ports found in switch',line):
                             line = file.readline()
                             match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                             # 'slot_port_line_match'
@@ -146,12 +147,11 @@ def portinfo_extract(switch_params_lst, report_data_lst):
                                 # list with switch and slot information
                                 switch_info_slot_lst = switch_info_lst.copy()
                                 switch_info_slot_lst.append(slot_num)
-
                                 # adding switch and slot information for each port to dictionary
-                                for portcfg_param, switch_info_value in zip(portcfg_params[:5], switch_info_slot_lst):
+                                for portcfg_param, switch_info_value in zip(portcfg_params[:6], switch_info_slot_lst):
                                     portcfgshow_tmp_dct[portcfg_param] = [switch_info_value for i in range(port_nums)]
                                 # adding port numbers to dictionary    
-                                portcfgshow_tmp_dct[portcfg_params[5]] = port_nums_lst                                
+                                portcfgshow_tmp_dct[portcfg_params[6]] = port_nums_lst                                
                                 while not re.match('\r?\n', line):
                                     line = file.readline()
                                     match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
