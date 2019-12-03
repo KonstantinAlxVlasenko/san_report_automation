@@ -51,6 +51,10 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, chassis_colum
 
         # partition aggregated DataFrame to required tables
         isl_report_df, = dataframe_segmentation(isl_aggregated_df, [data_names[0]], chassis_column_usage, max_title)
+        # if no trunks in fabric drop trunk columns
+        if trunk_df.empty:
+            isl_report_df.drop(columns = ['Идентификатор транка', 'Deskew', 'Master'], inplace = True)
+        # check if IFL table required
         if not fcredge_df.empty:
             ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[1]], chassis_column_usage, max_title)
         else:
@@ -77,6 +81,8 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, ch
     As parameters function get DataFrame to be partitioned and
     list of allocated DataFrames names 
     """
+    # sheet name with customer report columns
+    customer_report_columns_sheet = 'customer_report'
     # construct columns titles from data_names to use in dct_from_columns function
     tables_names_lst = [
         [data_name.rstrip('_report') + '_eng', data_name.rstrip('_report')+'_ru'] 
@@ -89,7 +95,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, ch
     # data_name is key and two lists with columns names are values for data_columns_names_dct
     for dataframe_name, eng_ru_columns in zip(dataframes_to_create_lst, tables_names_lst):
         data_columns_names_dct[dataframe_name]  = \
-            dct_from_columns('customer_report', max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
+            dct_from_columns(customer_report_columns_sheet, max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
 
     # construct english columns titles from tables_names_lst to use in columns_import function
     tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]
@@ -98,7 +104,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, ch
     # for each data element from data_names list import english columns title
     for dataframe_name, df_eng_column in zip(dataframes_to_create_lst, tables_names_eng_lst):
         # dataframe_name is key and list with columns names is value for data_columns_names_eng_dct
-        data_columns_names_eng_dct[dataframe_name] = columns_import('tables_columns_names', max_title, df_eng_column, init_file = 'san_automation_info.xlsx')
+        data_columns_names_eng_dct[dataframe_name] = columns_import(customer_report_columns_sheet, max_title, df_eng_column, init_file = 'san_automation_info.xlsx')
         # if no need to use chassis information in tables
         if not chassis_column_usage:
             if 'chassis_name' in data_columns_names_eng_dct[dataframe_name]:
@@ -125,9 +131,9 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, chassis_column
     # remove unlabeled fabrics and slice DataFrame to drop unnecessary columns
     fabric_clean_df = fabric_clean(fabric_labels_df)
     # add switchnames to trunk and fcredge DataFrames
-    trunk_df, fcredge_df = switchname_join(fabric_clean_df, trunk_df, fcredge_df)
+    isl_df, trunk_df, fcredge_df = switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df)
     # outer join of isl and trunk DataFrames 
-    isl_aggregated_df = trunk_join(fabric_clean_df, isl_df, trunk_df)
+    isl_aggregated_df = trunk_join(isl_df, trunk_df)
     # adding switchshow port information to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = porttype_join(switchshow_df, isl_aggregated_df, fcredge_df)
     # adding sfp information to isl aggregated DataFrame
@@ -255,7 +261,7 @@ def dataframe_join(left_df, right_df, columns_lst, columns_join_index = None):
     list with names in right DataFrame with, index which used to separate columns names which join operation performed on
     from columns with infromation to join 
     """
-    right_join_df = right_df.loc[:, columns_lst]
+    right_join_df = right_df.loc[:, columns_lst].copy()
     # left join on switch columns
     left_df = left_df.merge(right_join_df, how = 'left', on = columns_lst[:columns_join_index])
     # columns names for connected switch 
@@ -334,13 +340,13 @@ def porttype_join(switchshow_df, isl_aggregated_df, fcredge_df):
     # column names list to slice switchshow DataFrame and join with isl_aggregated Dataframe
     porttype_lst = ['SwitchName', 'switchWwn', 'portIndex', 'slot', 'port', 'speed', 'portType']
     # addition switchshow port information to isl_aggregated DataFrame
-    isl_aggregated_df = dataframe_join(isl_aggregated_df, switchshow_join_df, porttype_lst, 3)
+    isl_aggregated_df = dataframe_join(isl_aggregated_df, switchshow_join_df, porttype_lst, 3)   
     
     # if Fabric Routing is ON
     if not fcredge_df.empty:
         # add portIndex to fcredge
         port_index_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'portIndex']
-        switchshow_portindex_df = switchshow_join_df.loc[:, port_index_lst]
+        switchshow_portindex_df = switchshow_join_df.loc[:, port_index_lst].copy()
         fcredge_df = fcredge_df.merge(switchshow_portindex_df, how = 'left', on= port_index_lst[:-1])
         # drop slot and port columns to avoid duplicate columns after dataframe function 
         fcredge_df.drop(columns = ['slot', 'port'], inplace = True)
@@ -367,21 +373,23 @@ def fabric_clean(fabricshow_ag_labels_df):
     return fabric_clean_df
 
 
-def switchname_join(fabric_clean_df, trunk_df, fcredge_df):
+def switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df):
     """Function to add switchnames to Trunk and FCREdge DataFrames"""
     # slicing fabric_clean DataFrame 
-    switch_name_df = fabric_clean_df.loc[:, ['switchWwn', 'SwitchName']]
+    switch_name_df = fabric_clean_df.loc[:, ['switchWwn', 'SwitchName']].copy()
     switch_name_df.rename(
             columns={'switchWwn': 'Connected_switchWwn', 'SwitchName': 'Connected_SwitchName'}, inplace=True)
     # adding switchnames to trunk_df
     trunk_df = trunk_df.merge(switch_name_df, how = 'left', on='Connected_switchWwn')
+    # adding switchnames to isl_df
+    isl_df = isl_df.merge(switch_name_df, how = 'left', on='Connected_switchWwn')
     # if Fabric Routing is ON
     if not fcredge_df.empty:
         fcredge_df = fcredge_df.merge(switch_name_df, how = 'left', on='Connected_switchWwn')
         
-    return trunk_df, fcredge_df
+    return isl_df, trunk_df, fcredge_df
 
-def trunk_join(fabric_clean_df, isl_df, trunk_df):
+def trunk_join(isl_df, trunk_df):
     """Join Trunk and ISL DataFrames
     Add switcNames to Trunk and FCREdge DataFrames"""
     # convert numerical data in ISL and TRUNK DataFrames to float
@@ -389,7 +397,7 @@ def trunk_join(fabric_clean_df, isl_df, trunk_df):
     if not trunk_df.empty:
         trunk_df  = trunk_df.astype(dtype = 'float64', errors = 'ignore')
     
-    # List of columns DataFrames are joined on
+    # List of columns DataFrames are joined on     
     join_lst = ['configname',
                 'chassis_name',
                 'switch_index',
@@ -400,10 +408,11 @@ def trunk_join(fabric_clean_df, isl_df, trunk_df):
                 'FC_router',
                 'portIndex',
                 'Connected_portIndex',
+                'Connected_SwitchName',
                 'Connected_switchWwn',
-                'Connected_switchDID',
-                'Connected_SwitchName']        
-    
+                'Connected_switchDID']  
+
+
     # merge updated ISL and TRUNK DataFrames 
     isl_aggregated_df = trunk_df.merge(isl_df, how = 'outer', on = join_lst)
         

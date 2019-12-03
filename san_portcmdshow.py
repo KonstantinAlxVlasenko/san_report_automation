@@ -74,7 +74,9 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                 # dictionary to store all DISCOVERED parameters
                                 # collecting data only for the chassis in current loop
                                 portcmd_dct = {}
-                                # list to store connected devices port_id and wwn pairs
+                                # connected devices wwns in portshow section
+                                connected_wwn_lst = []
+                                # list to store connected devices port_id and wwn pairs in portlogin section
                                 portid_wwn_lst = []
                                 port_index = None
                                 slot_port_lst = line_to_list(comp_dct[comp_keys[0]], line)
@@ -105,6 +107,14 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                             portscn_line = line_to_list(comp_dct[comp_keys[6]], line)
                                             for k, v in zip(portscn_line[::2], portscn_line[1::2]):
                                                 portcmd_dct[k] = v
+                                        # portdistance_match
+                                        if match_dct[match_keys[7]]:
+                                            portdistance_line = line_to_list(comp_dct[comp_keys[7]], line)
+                                            portcmd_dct[portdistance_line[0]] = portdistance_line[1]
+                                        # device_connected_wwn_match
+                                        if match_dct[match_keys[8]]:
+                                            connected_wwn = line_to_list(comp_dct[comp_keys[8]], line)
+                                            connected_wwn_lst.append((portcmd_dct.get('portId'), connected_wwn))
                                         if not line:
                                             break
                                 # portshow section end
@@ -120,9 +130,13 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                             portid_wwn_lst.append((port_id, wwn))
                                         if not line:
                                             break
-                                    # sorting connected devices list by poprt_ids
+                                    # sorting connected devices list by port_ids
                                     if len(portid_wwn_lst) != 0:
                                         portid_wwn_lst = sorted(portid_wwn_lst)
+                                    # if portlogin empty then use connected devices from portshow section
+                                    # applied for E-ports
+                                    elif len(connected_wwn_lst) != 0:
+                                        portid_wwn_lst = connected_wwn_lst.copy()
                                     # adding None as port_id and wwn if no device is connected
                                     else:
                                         portid_wwn_lst.append([None]*2)

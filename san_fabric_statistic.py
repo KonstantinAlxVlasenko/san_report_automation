@@ -165,7 +165,7 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
     # get required columns from portshow DataFrame
     # contains set of connected to the ports WWNs  
     portshow_connected_df = portshow_df.loc[:, ['chassis_name', 'chassis_wwn', 'slot', 'port', 
-                                        'port_id_attached_device', 'wwn_attached_device']]
+                                        'Connected_portId', 'Connected_portWwn']]
     # add connected devices WWNs to supportshow DataFrame 
     switchshow_portshow_df = switchshow_df.merge(portshow_connected_df, how='left', 
                                                     on = ['chassis_name', 'chassis_wwn', 'slot', 'port'])
@@ -178,7 +178,7 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
     device_type_df.drop_duplicates(subset=['PortName'], inplace=True)
     # add to switchshow device type information of connected WWNs 
     switchshow_portshow_devicetype_df = switchshow_portshow_df.merge(device_type_df, 
-                                                                        how='left', left_on = 'wwn_attached_device', right_on= 'PortName')
+                                                                        how='left', left_on = 'Connected_portWwn', right_on= 'PortName')
     # if switch in AG mode then device type must be replaced to Physical instead of NPIV
     mask_ag = switchshow_portshow_devicetype_df.switchMode == 'Access Gateway Mode'
     switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'] = \

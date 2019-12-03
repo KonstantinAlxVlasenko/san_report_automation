@@ -55,12 +55,12 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
             # data unpacking from iter param
             # dictionary with parameters for the current chassis
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            switch_info_keys = ['configname', 'chassis_name', 'switch_index', 
-                                'SwitchName', 'switchMode']
+            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
+                                'SwitchName', 'switchWwn', 'switchMode']
             switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
             ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
-            sshow_file, _, switch_index, switch_name, switch_mode = switch_info_lst            
+            sshow_file, *_, switch_index, switch_name, _, switch_mode = switch_info_lst            
                         
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} connected devices'
@@ -95,7 +95,7 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
                                 # collecting data only for the logical switch in current loop
                                 fdmi_dct = {}
                                 # switch_info and current connected device wwnp
-                                switch_wwnp = line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst[:4])
+                                switch_wwnp = line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst[:6])
                                 # move cursor to one line down to get inside while loop
                                 line = file.readline()                                
                                 # wwnp_local_comp
@@ -140,7 +140,7 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
                                         # collecting data only for the logical switch in current loop
                                         nsshow_port_dct = {}
                                         # switch_info and current connected device wwnp
-                                        switch_pid = line_to_list(comp_dct[comp_keys[7]], line, *switch_info_lst[:4])
+                                        switch_pid = line_to_list(comp_dct[comp_keys[7]], line, *switch_info_lst[:6])
                                         # move cursor to one line down to get inside while loop
                                         line = file.readline()                                
                                         # pid_switchcmd_end_comp

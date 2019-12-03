@@ -180,7 +180,7 @@ def fabric_segmentation(f_s_c_m_i_df, data_names, chassis_column_usage, max_titl
     # data_name is key and two lists with columns names are values for data_columns_names_dct
     for data_name, eng_ru_columns in zip(data_names, tables_names_lst):
         data_columns_names_dct[data_name]  = \
-            dct_from_columns('tables_columns_names', max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
+            dct_from_columns('customer_report', max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
 
     # construct english columns titles from tables_names_lst to use in columns_import function
     tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]

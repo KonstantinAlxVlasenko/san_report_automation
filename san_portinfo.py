@@ -53,12 +53,12 @@ def portinfo_extract(switch_params_lst, report_data_lst):
             # data unpacking from iter param
             # dictionary with parameters for the current switch
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            switch_info_keys = ['configname', 'chassis_name', 'switch_index', 
+            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn']
             switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
             ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
-            sshow_file, _, switch_index, switch_name, *_ = switch_info_lst
+            sshow_file, _, _, switch_index, switch_name, *_ = switch_info_lst
             
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} ports sfp and cfg'
@@ -148,10 +148,10 @@ def portinfo_extract(switch_params_lst, report_data_lst):
                                 switch_info_slot_lst = switch_info_lst.copy()
                                 switch_info_slot_lst.append(slot_num)
                                 # adding switch and slot information for each port to dictionary
-                                for portcfg_param, switch_info_value in zip(portcfg_params[:6], switch_info_slot_lst):
+                                for portcfg_param, switch_info_value in zip(portcfg_params[:7], switch_info_slot_lst):
                                     portcfgshow_tmp_dct[portcfg_param] = [switch_info_value for i in range(port_nums)]
                                 # adding port numbers to dictionary    
-                                portcfgshow_tmp_dct[portcfg_params[6]] = port_nums_lst                                
+                                portcfgshow_tmp_dct[portcfg_params[7]] = port_nums_lst                                
                                 while not re.match('\r?\n', line):
                                     line = file.readline()
                                     match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}

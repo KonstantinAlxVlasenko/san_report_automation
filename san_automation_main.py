@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from files_operations import export_lst_to_excel, columns_import, dct_from_columns
 from san_toolbox_parser import create_parsed_dirs, create_files_list_to_parse, santoolbox_process
 from san_chassis_params import chassis_params_extract
@@ -24,16 +25,28 @@ Define customer name
 File report_info_xlsx
 """
 
+
+print('\n\n')
+
 # global list with constant vars for report operations 
 # (customer name, folder to save report, biggest file name (char number) to print info on screen)
 report_data_lst = []
 # initial max filename title for status represenation
 start_max_title = 60
+
+report_info_dct = dct_from_columns('report', start_max_title, 'name', 'value', init_file = 'report_info.xlsx')
+
+customer_name = os.path.normpath(report_info_dct['customer_name'])
+project_folder = os.path.normpath(report_info_dct['project_folder'])
+ssave_folder = os.path.normpath(report_info_dct['supportsave_folder'])
+
+
+
 # list with extracted customer name, supportsave folder and project folder
-report_info_lst = columns_import('report', start_max_title, 'report_data', init_file = 'report_info.xlsx') 
-customer_name = rf'{report_info_lst[0]}'
-project_folder = rf'{report_info_lst[1]}'
-ssave_folder = rf'{report_info_lst[2]}'
+# report_info_lst = columns_import('report', start_max_title, 'report_data', init_file = 'report_info.xlsx') 
+# customer_name = rf'{report_info_lst[0]}'
+# project_folder = rf'{report_info_lst[1]}'
+# ssave_folder = rf'{report_info_lst[2]}'
 # dictionary with report steps as keys. each keys has two values
 # first value shows if it is required to export extracted data to excel table
 # second value shows if it is required to initiate force data extraction if data have been already extracted
@@ -41,7 +54,8 @@ report_steps_dct = dct_from_columns('service_tables', start_max_title, 'keys', '
 
 
 print('\n\n')
-print(f'ASSESSMENT FOR SAN {customer_name}'.center(125, '.'))
+info = f'ASSESSMENT FOR SAN {customer_name}'
+print(info.center(start_max_title + 80, '.'))
 
 
 def main():
