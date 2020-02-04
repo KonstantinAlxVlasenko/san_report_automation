@@ -26,7 +26,6 @@ Define customer name
 File report_info_xlsx
 """
 
-
 print('\n\n')
 
 # global list with constant vars for report operations 
@@ -35,32 +34,13 @@ report_data_lst = []
 # initial max filename title for status represenation
 start_max_title = 60
 
-# report_info_dct = dct_from_columns('report', start_max_title, 'name', 'value', init_file = 'report_info.xlsx')
-
-# customer_name = report_info_dct['customer_name']
-# project_folder = os.path.normpath(report_info_dct['project_folder'])
-# ssave_folder = os.path.normpath(report_info_dct['supportsave_folder'])
-
-# get report entry from report file
+# get report entry values from report file
 customer_name, project_folder, ssave_folder = report_entry_values(start_max_title)
-
-# report_entry_df = dataframe_import('report', start_max_title, 'report_info.xlsx', ['name', 'value'], 'name')
-# customer_name = report_entry_df.loc['customer_name', 'value']
-# project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
-# ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
-
-# list with extracted customer name, supportsave folder and project folder
-# report_info_lst = columns_import('report', start_max_title, 'report_data', init_file = 'report_info.xlsx') 
-# customer_name = rf'{report_info_lst[0]}'
-# project_folder = rf'{report_info_lst[1]}'
-# ssave_folder = rf'{report_info_lst[2]}'
-
 
 # dictionary with report steps as keys. each keys has two values
 # first value shows if it is required to export extracted data to excel table
 # second value shows if it is required to initiate force data extraction if data have been already extracted
 report_steps_dct = dct_from_columns('service_tables', start_max_title, 'keys', 'export_to_excel', 'force_extract', init_file = 'report_info.xlsx')
-
 
 print('\n\n')
 info = f'ASSESSMENT FOR SAN {customer_name}'

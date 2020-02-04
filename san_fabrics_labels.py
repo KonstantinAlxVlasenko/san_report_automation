@@ -41,7 +41,7 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         fabricshow_porttype_state_df = fabricshow_porttype_state(switchshow_ports_df, fabricshow_df)
 
         # saving DataFrame to Excel if manual labeling required
-        save_xlsx_file(fabricshow_porttype_state_df, 'fabricshow_statistics', report_type = 'analysis')
+        save_xlsx_file(fabricshow_porttype_state_df, 'fabricshow_statistics', report_data_lst, report_type = 'analysis')
         # removing front domain and translate domain switches from DataFrame
         fabricshow_porttype_state_df = fabricshow_porttype_state_df.loc[fabricshow_porttype_state_df.Enet_IP_Addr != '0.0.0.0']
         
