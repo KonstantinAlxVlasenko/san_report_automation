@@ -41,7 +41,7 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         fabricshow_porttype_state_df = fabricshow_porttype_state(switchshow_ports_df, fabricshow_df)
 
         # saving DataFrame to Excel if manual labeling required
-        save_xlsx_file(fabricshow_porttype_state_df, 'fabricshow_statistics', report_data_lst)
+        save_xlsx_file(fabricshow_porttype_state_df, 'fabricshow_statistics', report_type = 'analysis')
         # removing front domain and translate domain switches from DataFrame
         fabricshow_porttype_state_df = fabricshow_porttype_state_df.loc[fabricshow_porttype_state_df.Enet_IP_Addr != '0.0.0.0']
         
@@ -80,7 +80,7 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         if input_yn[0] == 'y':
             fabricshow_summary_df = manual_fabrics_labeling(fabricshow_summary_df, info_labels)
         # saving DataFrame to Excel to check during manual labeling if required
-        save_xlsx_file(fabricshow_summary_df, 'fabricshow_summary', report_data_lst)
+        save_xlsx_file(fabricshow_summary_df, 'fabricshow_summary', report_data_lst, report_type = 'analysis')
         
         # takes all switches working in Native and AG switches
         # merge the in one DataFrame and identify which Fabrics they belong too with fabricshow_summary DataFrame
@@ -91,7 +91,7 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         save_data(report_data_lst, data_names, fabricshow_ag_labels_df)
 
     # saving fabricshow_ag_labels DataFrame to Excel
-    save_xlsx_file(fabricshow_ag_labels_df, 'fabric_labels', report_data_lst)
+    save_xlsx_file(fabricshow_ag_labels_df, 'fabric_labels', report_data_lst, report_type = 'analysis')
 
     return fabricshow_ag_labels_df
     

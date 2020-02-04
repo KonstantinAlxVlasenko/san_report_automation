@@ -6,7 +6,7 @@ from files_operations import force_extract_check, save_xlsx_file, dct_from_colum
 """Module to count Fabric statistics"""
 
 
-def fabricstatistics_main(chassis_column_usage, switchshow_ports_df, fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst):
+def fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst):
     """Main function to count Fabrics statistics
     """
     # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
@@ -32,6 +32,8 @@ def fabricstatistics_main(chassis_column_usage, switchshow_ports_df, fabricshow_
     # flag if fabrics labels was forced to be changed 
     fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
 
+    chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
+
     # when no data saved or force extract flag is on or fabric labels have been changed than 
     # analyze extracted config data  
     if not all(data_check) or any(force_extract_keys_lst) or fabric_labels_change:
@@ -40,9 +42,7 @@ def fabricstatistics_main(chassis_column_usage, switchshow_ports_df, fabricshow_
         if fabric_labels_change and not any(force_extract_keys_lst) and all(data_check):
             info = f'Statistics force counting due to change in Fabrics labeling'
             print(info, end =" ")
-            status_info('ok', max_title, len(info))
-             
-               
+            status_info('ok', max_title, len(info))             
         
         # get labeled switchshow to perform pandas crosstab method
         # to count number of different type of ports values
@@ -121,11 +121,13 @@ def merge_statisctics(chassis_column_usage, portType_df, target_initiator_df,
     # grouping all switches by fabric names and labels 
     # and apply sum function to each group
     statistics_subtotal_df = statistics_subtotal_df.groupby([statistics_subtotal_df.Fabric_name, statistics_subtotal_df.Fabric_label]).sum()
+    # reset index to aviod Multi indexing after groupby operation
+    statistics_subtotal_df.reset_index(inplace = True)
     # droping columns with N:E ration data due to it pointless on fabric level
     statistics_subtotal_df.drop(columns=['N:E_int', 'N:E_bw_int'], inplace=True)
     # re-calculate percentage of occupied ports
     statistics_subtotal_df['%_occupied'] = round(statistics_subtotal_df.Online.div(statistics_subtotal_df.Total_ports_number)*100, 1)
-    statistics_subtotal_df = statistics_subtotal_df.astype('int64')
+    statistics_subtotal_df = statistics_subtotal_df.astype('int64', errors = 'ignore')
     # create statistic DataFrame copy
     fabric_statistics_report_df = statistics_df.copy()
     # drop columns 'switch_index', 'switchWwn', 'N:E_int', 'N:E_bw_int'

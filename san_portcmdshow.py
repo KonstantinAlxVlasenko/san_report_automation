@@ -120,6 +120,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                 # portshow section end
                                 # portlogin section start                                      
                                 if re.match(fr'^portloginshow +{int(port_index)}$', line):
+
                                     while not re.search(fr'^portregshow +{int(port_index)}$', line):
                                         line = file.readline()
                                         match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
@@ -127,6 +128,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                         if match_dct[match_keys[3]]:
                                             # first value in tuple unpacking is fe or fd and not required
                                             _, port_id, wwn = line_to_list(comp_dct[comp_keys[3]], line)
+                                            # port_id = '0x' + port_id
                                             portid_wwn_lst.append((port_id, wwn))
                                         if not line:
                                             break
@@ -147,7 +149,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                         break
                                 # portstatsshow section start
                                 if re.match(fr'^portstatsshow +{int(port_index)}$', line):
-                                    while not re.search(fr'^portstats64show +{int(port_index)}$', line):
+                                    while not re.search(fr'^(portstats64show|portcamshow) +{int(port_index)}$', line):
                                         line = file.readline()
                                         match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                         # port information without virtual channel numbers

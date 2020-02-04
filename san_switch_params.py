@@ -87,7 +87,7 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                                     break
                         # config section end
                         # switchshow section start
-                        if re.search(r'^(SWITCHCMD /fabos/bin/)?switchshow\s*:$', line) and not collected['switchshow']:
+                        if re.search(r'^(SWITCHCMD /fabos/bin/)?switchshow *:$', line) and not collected['switchshow']:
                             collected['switchshow'] = True
                             if ls_mode_on:
                                 while not re.search(fr'^CURRENT CONTEXT -- {i} *, \d+$',line):

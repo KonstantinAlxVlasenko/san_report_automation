@@ -140,14 +140,14 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                                 match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # 'porttrunkarea_match'
                                 if match_dct[match_keys[6]]:
-                                    porttrunkarea_port_lst = line_to_list(comp_dct[comp_keys[6]], line, *switch_info_lst[:4])
+                                    porttrunkarea_port_lst = line_to_list(comp_dct[comp_keys[6]], line, *switch_info_lst[:5])
                                     # due to regular expression master slot appears two times in line
-                                    porttrunkarea_port_lst.pop(8)
+                                    porttrunkarea_port_lst.pop(9)
                                     # for No_light ports port and slot numbers are '--'
-                                    if porttrunkarea_port_lst[9] == '--':
-                                        porttrunkarea_port_lst[8] = '--'
+                                    if porttrunkarea_port_lst[10] == '--':
+                                        porttrunkarea_port_lst[9] = '--'
                                     # if switch has no slots than slot number is 0
-                                    for i in [4, 8]:                                    
+                                    for i in [5, 9]:                                    
                                         if not porttrunkarea_port_lst[i]:
                                             porttrunkarea_port_lst[i] = 0
                                     porttrunkarea_lst.append(porttrunkarea_port_lst)                                                       

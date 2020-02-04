@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from files_operations import export_lst_to_excel, columns_import, dct_from_columns
+from files_operations import export_lst_to_excel, columns_import, dct_from_columns, dataframe_import
 from san_toolbox_parser import create_parsed_dirs, create_files_list_to_parse, santoolbox_process
 from san_chassis_params import chassis_params_extract
 from san_switch_params import switch_params_configshow_extract
@@ -16,6 +16,7 @@ from san_fabrics_labels import fabriclabels_main
 from san_fabric_statistic import fabricstatistics_main
 from san_switch_report_tables import fabric_main
 from san_isl_report_tables import isl_main
+from dataframe_operations import report_entry_values
 
 """
 Main module to run
@@ -34,19 +35,27 @@ report_data_lst = []
 # initial max filename title for status represenation
 start_max_title = 60
 
-report_info_dct = dct_from_columns('report', start_max_title, 'name', 'value', init_file = 'report_info.xlsx')
+# report_info_dct = dct_from_columns('report', start_max_title, 'name', 'value', init_file = 'report_info.xlsx')
 
-customer_name = os.path.normpath(report_info_dct['customer_name'])
-project_folder = os.path.normpath(report_info_dct['project_folder'])
-ssave_folder = os.path.normpath(report_info_dct['supportsave_folder'])
+# customer_name = report_info_dct['customer_name']
+# project_folder = os.path.normpath(report_info_dct['project_folder'])
+# ssave_folder = os.path.normpath(report_info_dct['supportsave_folder'])
 
+# get report entry from report file
+customer_name, project_folder, ssave_folder = report_entry_values(start_max_title)
 
+# report_entry_df = dataframe_import('report', start_max_title, 'report_info.xlsx', ['name', 'value'], 'name')
+# customer_name = report_entry_df.loc['customer_name', 'value']
+# project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
+# ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
 
 # list with extracted customer name, supportsave folder and project folder
 # report_info_lst = columns_import('report', start_max_title, 'report_data', init_file = 'report_info.xlsx') 
 # customer_name = rf'{report_info_lst[0]}'
 # project_folder = rf'{report_info_lst[1]}'
 # ssave_folder = rf'{report_info_lst[2]}'
+
+
 # dictionary with report steps as keys. each keys has two values
 # first value shows if it is required to export extracted data to excel table
 # second value shows if it is required to initiate force data extraction if data have been already extracted
@@ -73,17 +82,17 @@ def main():
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
 
-    switch_params_aggregated_df, chassis_column_usage, fabric_labeled_df, switches_report_df, fabric_report_df, \
+    switch_params_aggregated_df, report_columns_usage_dct, fabric_labeled_df, switches_report_df, fabric_report_df, \
         global_fabric_parameters_report_df, switches_parameters_report_df, licenses_report_df = \
             fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst)
 
 
     fabric_statistics_df, fabric_statistics_summary_df = \
-        fabricstatistics_main(chassis_column_usage, switchshow_ports_df, 
+        fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, 
         fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst)
 
     fabric_clean_df, isl_report_df, ifl_report_df = \
-        isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, chassis_column_usage, 
+        isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
     isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
       
 
@@ -108,8 +117,7 @@ def config_preparation():
     parsed_lst, parsed_filenames_lst = santoolbox_process(unparsed_lst, dir_parsed_sshow, dir_parsed_others, max_title)
     # export parsed config filenames to DataFrame and saves it to excel file
     parsed_lst_columns = ['chassis_name', 'sshow_config', 'ams_maps_log_config']
-    export_lst_to_excel(parsed_filenames_lst, report_data_lst, 'parsed_files', columns = parsed_lst_columns)
-    
+    export_lst_to_excel(parsed_filenames_lst, report_data_lst, 'parsed_files', columns = parsed_lst_columns) 
 
     return parsed_lst #, report_data_lst
 

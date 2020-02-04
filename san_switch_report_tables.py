@@ -1,14 +1,16 @@
+"""Module to generate 'Switches', 'Fabric', 'Fabric global parameters', 'Switches parameters', 'Licenses' customer report tables"""
+
 import pandas as pd
 import numpy as np
 from files_operations import status_info, load_data, save_data 
-from files_operations import force_extract_check, save_xlsx_file, dataframe_import, dct_from_columns, columns_import
-
-"""Module to generate 'Switches', 'Fabric', 'Fabric global parameters', 'Switches parameters', 'Licenses' customer report tables"""
+from files_operations import force_extract_check, save_xlsx_file, dataframe_import
+from dataframe_operations import dataframe_segmentation
 
 
 def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst):
     """Main function to create tables
     """
+
     # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
     
     print('\n\nSTEP 16. FABRIC AND SWITCHES INFORMATION TABLES...\n')
@@ -42,14 +44,15 @@ def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, ma
     
     # flag if fabrics labels was forced to be changed 
     fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
-
+    # initialization chassis information and farbric name columns usage
+    report_columns_usage_dct = {'fabric_name_usage': True, 'chassis_info_usage': True}
     # import data with switch models, firmware and etc
     switch_models_df = dataframe_import('switch_models', max_title)                     
     # clean fabricshow DataFrame from unneccessary data
     fabric_clean_df = fabric_clean(fabricshow_ag_labels_df)
     # create aggregated table by joining DataFrames
-    switch_params_aggregated_df, chassis_column_usage = fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, switch_models_df)
-    save_xlsx_file(switch_params_aggregated_df, 'switch_params_aggregated', report_data_lst, report_type = 'service')
+    switch_params_aggregated_df, report_columns_usage_dct = fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, switch_models_df)
+    save_xlsx_file(switch_params_aggregated_df, 'switch_params_aggregated', report_data_lst, report_type = 'analysis')
 
     # when no data saved or force extract flag is on or fabric labels have been changed than 
     # analyze extracted config data  
@@ -63,7 +66,7 @@ def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, ma
 
         # partition aggregated DataFrame to required tables
         switches_report_df, fabric_report_df, global_fabric_parameters_report_df, \
-            switches_parameters_report_df, licenses_report_df = fabric_segmentation(switch_params_aggregated_df, data_names, chassis_column_usage, max_title)
+            switches_parameters_report_df, licenses_report_df = dataframe_segmentation(switch_params_aggregated_df, data_names, report_columns_usage_dct, max_title)            
 
         # drop rows with empty switch names columns
         fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
@@ -71,7 +74,10 @@ def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, ma
         licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
 
         # parameters are equal for all switches in one fabric
-        global_fabric_parameters_report_df.drop_duplicates(subset=['Фабрика', 'Подсеть'], inplace=True)
+        if report_columns_usage_dct['fabric_name_usage']:
+            global_fabric_parameters_report_df.drop_duplicates(subset=['Фабрика', 'Подсеть'], inplace=True)
+        else:
+            global_fabric_parameters_report_df.drop_duplicates(subset=['Подсеть'], inplace=True)
         global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)      
 
         # create list with partitioned DataFrames
@@ -90,15 +96,15 @@ def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, ma
         
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst, report_type = 'SAN_Assessment_tables')
+        save_xlsx_file(data_frame, data_name, report_data_lst, report_type = 'report')
 
-
-    return switch_params_aggregated_df, chassis_column_usage, fabric_clean_df, switches_report_df, fabric_report_df, \
+    return switch_params_aggregated_df, report_columns_usage_dct, fabric_clean_df, switches_report_df, fabric_report_df, \
         global_fabric_parameters_report_df, switches_parameters_report_df, licenses_report_df
 
 
 def fabric_clean(fabricshow_ag_labels_df):
     """Function to prepare fabricshow_ag_labels DataFrame for join operation"""
+
     # create copy of fabricshow_ag_labels DataFrame
     fabric_clean_df = fabricshow_ag_labels_df.copy()
     # remove switches which are not part of research 
@@ -151,6 +157,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     # set DHCP to 'off' for Directors
     director_type = [42.0, 62.0, 77.0, 120.0, 121.0, 165.0, 166.0]
     f_s_c_m_i_df.loc[f_s_c_m_i_df.switchType.isin(director_type), 'DHCP'] = 'Off'
+    # add empty column FOS suuported to fill manually 
+    f_s_c_m_i_df['FW_Supported'] = pd.Series()
 
     # check if chassis_name and switch_name columns are equal
     # if yes then no need to use chassis information in tables
@@ -160,53 +168,10 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
         chassis_column_usage = False
     else:
         chassis_column_usage = True
+    # Check number of Fabric_names. 
+    # If there is only one Fabric_name then no need to use Fabric_name column in report Dataframes
+    fabric_name_usage = True if f_s_c_m_i_df.Fabric_name.nunique() > 1 else False
+        
+    report_columns_usage_dct = {'fabric_name_usage': fabric_name_usage, 'chassis_info_usage': chassis_column_usage}
     
-    
-
-    return f_s_c_m_i_df, chassis_column_usage
-
-
-def fabric_segmentation(f_s_c_m_i_df, data_names, chassis_column_usage, max_title):
-    """Function to split aggregated table to required DataFrames"""
-    # construct columns titles from data_names to use in dct_from_columns function
-    tables_names_lst = [
-        [data_name.rstrip('_report') + '_eng', data_name.rstrip('_report')+'_ru'] 
-        for data_name in data_names
-        ]      
-
-    # dictionary used to rename DataFrame english columns names to russian
-    data_columns_names_dct = {}
-    # for each data element from data_names list import english and russian columns title
-    # data_name is key and two lists with columns names are values for data_columns_names_dct
-    for data_name, eng_ru_columns in zip(data_names, tables_names_lst):
-        data_columns_names_dct[data_name]  = \
-            dct_from_columns('customer_report', max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
-
-    # construct english columns titles from tables_names_lst to use in columns_import function
-    tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]
-    # dictionary to extract required columns from aggregated DataFrame f_s_c_m_i
-    data_columns_names_eng_dct = {}
-    # for each data element from data_names list import english columns title
-    for data_name, df_eng_column in zip(data_names, tables_names_eng_lst):
-        # data_name is key and list with columns names is value for data_columns_names_eng_dct
-        data_columns_names_eng_dct[data_name] = columns_import('customer_report', max_title, df_eng_column, init_file = 'san_automation_info.xlsx')
-        # if no need to use chassis information in tables
-        if not chassis_column_usage:
-            if 'chassis_name' in data_columns_names_eng_dct[data_name]:
-                data_columns_names_eng_dct[data_name].remove('chassis_name')
-            if 'chassis_wwn' in data_columns_names_eng_dct[data_name]:
-                data_columns_names_eng_dct[data_name].remove('chassis_wwn')
-            
-    # list with partitioned DataFrames
-    fabric_df_lst = []
-    for data_name in data_names:
-        # get required columns from aggregated DataFrame
-        data_frame = f_s_c_m_i_df[data_columns_names_eng_dct[data_name]].copy()
-
-        # translate columns to russian
-        data_frame.rename(columns = data_columns_names_dct[data_name], inplace = True)
-        # add partitioned DataFrame to list
-        fabric_df_lst.append(data_frame)
-
-    return fabric_df_lst
-
+    return f_s_c_m_i_df, report_columns_usage_dct

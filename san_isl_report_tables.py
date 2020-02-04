@@ -1,12 +1,13 @@
+"""Module to generate 'InterSwitch links', 'InterFabric links' customer report tables"""
+
 import pandas as pd
 import numpy as np
 from files_operations import status_info, load_data, save_data 
-from files_operations import force_extract_check, save_xlsx_file, dataframe_import, dct_from_columns, columns_import
+from files_operations import force_extract_check, save_xlsx_file
+from dataframe_operations import dataframe_segmentation
 
-"""Module to generate 'InterSwitch links', 'InterFabric links' customer report tables"""
 
-
-def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, chassis_column_usage, 
+def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
     isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst):
     """Main function to create ISL and IFR report tables"""
     
@@ -31,13 +32,13 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, chassis_colum
     data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)  
     # flag if fabrics labels was forced to be changed 
     fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
-   
+  
     # get aggregated DataFrames
     fabric_clean_df, isl_aggregated_df, fcredge_df = \
-        isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, chassis_column_usage, 
+        isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
         isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df)
     # export DataFrame to excel if required
-    save_xlsx_file(isl_aggregated_df, 'isl_aggregated', report_data_lst, report_type = 'service')
+    save_xlsx_file(isl_aggregated_df, 'isl_aggregated', report_data_lst, report_type = 'analysis')
 
     # when no data saved or force extract flag is on or fabric labels have been changed than 
     # analyze extracted config data  
@@ -50,13 +51,13 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, chassis_colum
             status_info('ok', max_title, len(info))
 
         # partition aggregated DataFrame to required tables
-        isl_report_df, = dataframe_segmentation(isl_aggregated_df, [data_names[0]], chassis_column_usage, max_title)
+        isl_report_df, = dataframe_segmentation(isl_aggregated_df, [data_names[0]], report_columns_usage_dct, max_title)
         # if no trunks in fabric drop trunk columns
         if trunk_df.empty:
             isl_report_df.drop(columns = ['Идентификатор транка', 'Deskew', 'Master'], inplace = True)
         # check if IFL table required
         if not fcredge_df.empty:
-            ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[1]], chassis_column_usage, max_title)
+            ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[1]], report_columns_usage_dct, max_title)
         else:
             ifl_report_df = fcredge_df.copy()
 
@@ -71,63 +72,15 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, chassis_colum
         save_data(report_data_lst, data_names, *data_lst)        
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst, report_type = 'SAN_Assessment_tables')
+        save_xlsx_file(data_frame, data_name, report_data_lst, report_type = 'report')
 
     return fabric_clean_df, isl_report_df, ifl_report_df
 
 
-def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, chassis_column_usage, max_title):
-    """Function to split aggregated table to required DataFrames
-    As parameters function get DataFrame to be partitioned and
-    list of allocated DataFrames names 
-    """
-    # sheet name with customer report columns
-    customer_report_columns_sheet = 'customer_report'
-    # construct columns titles from data_names to use in dct_from_columns function
-    tables_names_lst = [
-        [data_name.rstrip('_report') + '_eng', data_name.rstrip('_report')+'_ru'] 
-        for data_name in dataframes_to_create_lst
-        ]      
-
-    # dictionary used to rename DataFrame english columns names to russian
-    data_columns_names_dct = {}
-    # for each data element from data_names list import english and russian columns title
-    # data_name is key and two lists with columns names are values for data_columns_names_dct
-    for dataframe_name, eng_ru_columns in zip(dataframes_to_create_lst, tables_names_lst):
-        data_columns_names_dct[dataframe_name]  = \
-            dct_from_columns(customer_report_columns_sheet, max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
-
-    # construct english columns titles from tables_names_lst to use in columns_import function
-    tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]
-    # dictionary to extract required columns from aggregated DataFrame f_s_c_m_i
-    data_columns_names_eng_dct = {}
-    # for each data element from data_names list import english columns title
-    for dataframe_name, df_eng_column in zip(dataframes_to_create_lst, tables_names_eng_lst):
-        # dataframe_name is key and list with columns names is value for data_columns_names_eng_dct
-        data_columns_names_eng_dct[dataframe_name] = columns_import(customer_report_columns_sheet, max_title, df_eng_column, init_file = 'san_automation_info.xlsx')
-        # if no need to use chassis information in tables
-        if not chassis_column_usage:
-            if 'chassis_name' in data_columns_names_eng_dct[dataframe_name]:
-                data_columns_names_eng_dct[dataframe_name].remove('chassis_name')
-            if 'chassis_wwn' in data_columns_names_eng_dct[dataframe_name]:
-                data_columns_names_eng_dct[dataframe_name].remove('chassis_wwn')
-            
-    # list with partitioned DataFrames
-    segmented_dataframes_lst = []
-    for dataframe_name in dataframes_to_create_lst:
-        # get required columns from aggregated DataFrame
-        sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy()
-
-        # translate columns to russian
-        sliced_dataframe.rename(columns = data_columns_names_dct[dataframe_name], inplace = True)
-        # add partitioned DataFrame to list
-        segmented_dataframes_lst.append(sliced_dataframe)
-
-    return segmented_dataframes_lst
-
-def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, chassis_column_usage, 
+def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, 
     isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_df):
     """Function to create ISL aggregated DataFrame"""
+
     # remove unlabeled fabrics and slice DataFrame to drop unnecessary columns
     fabric_clean_df = fabric_clean(fabric_labels_df)
     # add switchnames to trunk and fcredge DataFrames
@@ -156,7 +109,9 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, chassis_column
 
 def remove_empty_fabrics(isl_aggregated_df, fcredge_df):
     """Function to remove switches which are not part of research
-    and sort required switches"""
+    and sort required switches
+    """
+
     # drop switches with empty fabric labels
     isl_aggregated_df.dropna(subset=['Fabric_name', 'Fabric_label'], inplace = True)
     # sort switches by switch names 
@@ -175,6 +130,7 @@ def remove_empty_fabrics(isl_aggregated_df, fcredge_df):
 
 def attenuation_calc(isl_aggregated_df):
     """Function to calculate ISL link signal attenuation"""
+
     # switch ports power values column names
     sfp_power_lst = ['RX_Power_dBm', 'TX_Power_dBm', 'RX_Power_uW', 'TX_Power_uW']
     # connected switch ports power values column names
@@ -220,7 +176,9 @@ def max_isl_speed(isl_aggregated_df):
     """Function to evaluate maximum available port speed
     and check if ISL link operates on maximum speed.
     Maximum available link speed is calculated as minimum of next values 
-    speed_chassis1, speed_chassis2, max_sfp_speed_switch1, max_sfp_speed_switch2"""
+    speed_chassis1, speed_chassis2, max_sfp_speed_switch1, max_sfp_speed_switch2
+    """
+
     # columns to check speed
     speed_lst = ['Transceiver_speedMax', 'Connected_Transceiver_speedMax', 
                  'switch_speedMax', 'Connected_switch_speedMax']
@@ -238,6 +196,7 @@ def max_isl_speed(isl_aggregated_df):
 
 def fabriclabel_join(fabric_clean_df, isl_aggregated_df, fcredge_df):
     """Adding Fabric labels and IP addresses to ISL aggregated and FCREdge DataFrame"""
+
     # column names list to slice fabric_clean DataFrame and join with isl_aggregated Dataframe 
     fabric_labels_lst = ['Fabric_name', 'Fabric_label', 'SwitchName', 'switchWwn']
     # addition fabric labels information to isl_aggregated and fcredge DataFrames 
@@ -261,6 +220,7 @@ def dataframe_join(left_df, right_df, columns_lst, columns_join_index = None):
     list with names in right DataFrame with, index which used to separate columns names which join operation performed on
     from columns with infromation to join 
     """
+
     right_join_df = right_df.loc[:, columns_lst].copy()
     # left join on switch columns
     left_df = left_df.merge(right_join_df, how = 'left', on = columns_lst[:columns_join_index])
@@ -278,6 +238,7 @@ def dataframe_join(left_df, right_df, columns_lst, columns_join_index = None):
 
 def portcfg_join(portcfgshow_df, isl_aggregated_df):
     """Adding portcfg information to ISL aggregated DataFrame"""
+
     # column names list to slice portcfg DataFrame and join with isl_aggregated Dataframe
     portcfg_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Octet_Speed_Combo', 'Speed_Cfg',  'Trunk_Port',
                    'Long_Distance', 'VC_Link_Init', 'Locked_E_Port', 'ISL_R_RDY_Mode', 'RSCN_Suppressed',
@@ -291,6 +252,7 @@ def portcfg_join(portcfgshow_df, isl_aggregated_df):
 
 def switch_join(switch_params_aggregated_df, isl_sfp_connected_df):
     """Adding switch licenses, max speed, description"""
+
     # column names list to slice switch_params_aggregated DataFrame and join with isl_aggregated Dataframe
     switch_lst = ['SwitchName', 'switchWwn', 'switchType','licenses', 'switch_speedMax', 'HPE_modelName']   
     # addition switch parameters information to isl_aggregated DataFrame
@@ -300,7 +262,7 @@ def switch_join(switch_params_aggregated_df, isl_sfp_connected_df):
     # check if Trunking lic present on both swithes in ISL link
     switch_trunking_dct = {'licenses' : 'Trunking_license', 'Connected_licenses' : 'Connected_Trunking_license'}
     for lic, trunking_lic in switch_trunking_dct.items():
-        isl_aggregated_df[trunking_lic] = isl_aggregated_df[isl_aggregated_df[lic].notnull()][lic].apply(lambda x: 'Trunking' in x)
+        isl_aggregated_df[trunking_lic] = isl_aggregated_df.loc[isl_aggregated_df[lic].notnull(), lic].apply(lambda x: 'Trunking' in x)
         isl_aggregated_df[trunking_lic].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
        
     return isl_aggregated_df
@@ -308,6 +270,7 @@ def switch_join(switch_params_aggregated_df, isl_sfp_connected_df):
     
 def sfp_join(sfpshow_df, isl_aggregated_df):
     """Adding sfp infromation for both ports of the ISL link"""
+
     # column names list to slice sfphshow DataFrame and join with isl_aggregated Dataframe
     sfp_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Vendor_PN', 'Wavelength_nm',	'Transceiver',	'RX_Power_dBm',	'TX_Power_dBm',	'RX_Power_uW', 'TX_Power_uW']
     # convert sfp power data to float
@@ -324,17 +287,20 @@ def sfp_join(sfpshow_df, isl_aggregated_df):
     # extract tranceivers speed and take max value
     for sfp, sfp_sp_max in sfp_speed_dct.items():
             # extract speed values
-            isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(r'^([\d,]+)_Gbps')
+            isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(r'^([\d,]+)_(?:Gbps|MB)')
             # split string to create list of available speeds
             isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp_sp_max].str.split(',')
             # if list exist (speeds values was found) then choose maximum 
-            isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp_sp_max].apply(lambda x: max([int(sp) for sp in x]) if type(x) == list else np.nan)
+            isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp_sp_max].apply(lambda x: max([int(sp) for sp in x]) if isinstance(x, list) else np.nan)
+            # if speed in Mb/s then convert to Gb/s
+            isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp_sp_max].apply(lambda x: x/100 if x >= 100 else x)
     
     return isl_aggregated_df
     
     
 def porttype_join(switchshow_df, isl_aggregated_df, fcredge_df):
     """Adding slot, port, speed and portType information for both ports of the ISL and IFR link"""
+
     # raname switchName column to allign with isl_aggregated DataFrame
     switchshow_join_df = switchshow_df.rename(columns={'switchName': 'SwitchName'})
     # column names list to slice switchshow DataFrame and join with isl_aggregated Dataframe
@@ -358,6 +324,7 @@ def porttype_join(switchshow_df, isl_aggregated_df, fcredge_df):
 
 def fabric_clean(fabricshow_ag_labels_df):
     """Function to prepare fabricshow_ag_labels DataFrame for join operation"""
+
     # create copy of fabricshow_ag_labels DataFrame
     fabric_clean_df = fabricshow_ag_labels_df.copy()
     # remove switches which are not part of research 
@@ -375,6 +342,7 @@ def fabric_clean(fabricshow_ag_labels_df):
 
 def switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df):
     """Function to add switchnames to Trunk and FCREdge DataFrames"""
+
     # slicing fabric_clean DataFrame 
     switch_name_df = fabric_clean_df.loc[:, ['switchWwn', 'SwitchName']].copy()
     switch_name_df.rename(
@@ -391,7 +359,9 @@ def switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df):
 
 def trunk_join(isl_df, trunk_df):
     """Join Trunk and ISL DataFrames
-    Add switcNames to Trunk and FCREdge DataFrames"""
+    Add switcNames to Trunk and FCREdge DataFrames
+    """
+    
     # convert numerical data in ISL and TRUNK DataFrames to float
     isl_df = isl_df.astype(dtype = 'float64', errors = 'ignore')    
     if not trunk_df.empty:
