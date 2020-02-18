@@ -16,8 +16,9 @@ def report_entry_values(max_title):
     customer_name = report_entry_df.loc['customer_name', 'value']
     project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
     ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
+    blade_folder = os.path.normpath(report_entry_df.loc['blade_showall_folder', 'value'])
 
-    return customer_name, project_folder, ssave_folder
+    return customer_name, project_folder, ssave_folder, blade_folder
 
 
 def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, report_columns_usage_dct, max_title):

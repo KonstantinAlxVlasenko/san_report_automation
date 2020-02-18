@@ -10,7 +10,7 @@ import pandas as pd
 from os import makedirs
 from datetime import date
 
-
+# fo
 def create_folder(path, max_title):
     """Function to create any folder with path"""
 
@@ -31,7 +31,7 @@ def create_folder(path, max_title):
     else:
         status_info('skip', max_title, len(info))
         
-        
+# fo        
 def check_valid_path(path):
     """Function to check if folder exist"""
 
@@ -41,7 +41,7 @@ def check_valid_path(path):
         print('Code execution exit')
         sys.exit()
         
-        
+# dfro 
 # saving DataFrame to excel file
 def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'collection'):   
     """Check if excel file exists, check if dataframe sheet is in file, 
@@ -117,6 +117,8 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
         else:            
             status_info('skip', max_title, len(info))
 
+
+# xxx
 def status_info(status, max_title, len_info_string, shift=0):
     """Function to print current operation status ('OK', 'SKIP', 'FAIL')"""
 
@@ -127,7 +129,8 @@ def status_info(status, max_title, len_info_string, shift=0):
     # space between current operation information and status of its execution filled with dots
     print(status.rjust(str_length - len_info_string, '.'))
 
- 
+
+# dfro 
 def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_info.xlsx'):
     """Function to import corresponding columns from init file.
     Can import several columns.
@@ -165,6 +168,7 @@ def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_in
     return columns_names
 
 
+#  dfro
 def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', columns = None, index_name = None):
     """Function to import dataframe from exel file"""
 
@@ -444,4 +448,34 @@ def load_data(report_data_list, *args):
             else:
                 status_info('ok', max_title, len(info))
            
-    return data_imported             
+    return data_imported
+
+
+def create_files_list(folder, file_extension, max_title):
+    """
+    Function to create list with files. Takes directory to check
+    and file extension as a parameters. Returns list of files with the extension
+    founded in root folder and nested folders.
+    """
+    info = f'Checking {os.path.basename(folder)} for configuration files'
+    print(info, end =" ") 
+
+    # check if ssave_path folder exist
+    check_valid_path(folder)
+   
+    # list to save configuration data files
+    files_lst = []
+
+    # going through all directories inside ssave folder to find configurutaion data
+    for root, _, files in os.walk(folder):
+        for file in files:
+            if file.endswith(file_extension):
+                file_path = os.path.normpath(os.path.join(root, file))
+                files_lst.append(file_path)
+
+    if len(files_lst) == 0:
+        status_info('no data', max_title, len(info))
+    else:
+        status_info('ok', max_title, len(info))
+              
+    return files_lst             

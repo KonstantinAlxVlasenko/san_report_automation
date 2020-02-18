@@ -74,8 +74,8 @@ def fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, fabrics
         save_data(report_data_lst, data_names, fabric_statistics_report_df, fabric_statistics_summary_df, fabric_statistics_df)
     
     # save data to service file if it's required
-    save_xlsx_file(fabric_statistics_report_df, 'Статистика', report_data_lst, report_type = 'SAN_Assessment_tables')
-    save_xlsx_file(fabric_statistics_summary_df, 'Статистика_Итого', report_data_lst, report_type = 'SAN_Assessment_tables')
+    save_xlsx_file(fabric_statistics_report_df, 'Статистика', report_data_lst, report_type = 'report')
+    save_xlsx_file(fabric_statistics_summary_df, 'Статистика_Итого', report_data_lst, report_type = 'report')
         
     return fabric_statistics_df, fabric_statistics_summary_df
 

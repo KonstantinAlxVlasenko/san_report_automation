@@ -17,6 +17,7 @@ from san_fabric_statistic import fabricstatistics_main
 from san_switch_report_tables import fabric_main
 from san_isl_report_tables import isl_main
 from dataframe_operations import report_entry_values
+from san_blades import blade_system_extract
 
 """
 Main module to run
@@ -30,12 +31,13 @@ print('\n\n')
 
 # global list with constant vars for report operations 
 # (customer name, folder to save report, biggest file name (char number) to print info on screen)
+# defined in config_preparation() function
 report_data_lst = []
 # initial max filename title for status represenation
 start_max_title = 60
 
 # get report entry values from report file
-customer_name, project_folder, ssave_folder = report_entry_values(start_max_title)
+customer_name, project_folder, ssave_folder, blade_folder = report_entry_values(start_max_title)
 
 # dictionary with report steps as keys. each keys has two values
 # first value shows if it is required to export extracted data to excel table
@@ -58,6 +60,7 @@ def main():
     isl_df, trunk_df, porttrunkarea_df = interswitch_connection(switch_params_lst)
     fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcrouting(switch_params_lst)
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df = zoning(switch_params_lst)
+    blade_module_df, blade_servers_df = blade_system(blade_folder)
     
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
@@ -184,8 +187,14 @@ def zoning(switch_params_lst):
     
     return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df       
           
-    
-    # return chassis_params_fabric_lst
+
+def blade_system(blade_folder):
+    module_comprehensive_lst, blades_comprehensive_lst = blade_system_extract(blade_folder, report_data_lst)
+    # print(module_comprehensive_lst)
+    blade_module_df = export_lst_to_excel(module_comprehensive_lst, report_data_lst, 'blade_interconnect', 'blades')
+    blade_servers_df = export_lst_to_excel(blades_comprehensive_lst, report_data_lst, 'blade_servers', 'blades', columns_title_import = 'blade_columns')
+
+    return blade_module_df, blade_servers_df
 
 if __name__ == "__main__":
     main()
