@@ -18,6 +18,7 @@ from san_switch_report_tables import fabric_main
 from san_isl_report_tables import isl_main
 from dataframe_operations import report_entry_values
 from san_blades import blade_system_extract
+from san_device_type import device_type_main
 
 """
 Main module to run
@@ -69,6 +70,7 @@ def main():
         global_fabric_parameters_report_df, switches_parameters_report_df, licenses_report_df = \
             fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst)
 
+    device_type_df = device_type_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, alias_df, fdmi_df, blade_servers_df, report_columns_usage_dct, report_data_lst)
 
     fabric_statistics_df, fabric_statistics_summary_df = \
         fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, 
@@ -190,7 +192,6 @@ def zoning(switch_params_lst):
 
 def blade_system(blade_folder):
     module_comprehensive_lst, blades_comprehensive_lst = blade_system_extract(blade_folder, report_data_lst)
-    # print(module_comprehensive_lst)
     blade_module_df = export_lst_to_excel(module_comprehensive_lst, report_data_lst, 'blade_interconnect', 'blades')
     blade_servers_df = export_lst_to_excel(blades_comprehensive_lst, report_data_lst, 'blade_servers', 'blades', columns_title_import = 'blade_columns')
 
