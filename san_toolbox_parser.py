@@ -10,8 +10,7 @@ from datetime import date
 '''Module to find configuration data and parse it with SANToolbox tool'''
 
 # SAN Toolbox.exe path
-santoolbox_path = "C:\\Program Files (x86)\\SAN Toolbox - Reloaded\\san toolbox.exe"
-
+santoolbox_path = os.path.normpath(r"C:\\Program Files\\SAN Toolbox - Reloaded\\SAN Toolbox.exe")
 
 
 def create_parsed_dirs(customer_title, project_path, max_title):

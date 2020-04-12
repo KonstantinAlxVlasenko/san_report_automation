@@ -195,13 +195,15 @@ def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xl
     return dataframe
 
 
-def data_extract_objects(sheet_title, max_title):
+def data_extract_objects(sheet_title, max_title, param_columns = True):
     """Function imports parameters names and regex tepmplates
     to extract required data from configuration files   
     """
-
-    # imports keys to extract switch parameters from tmp dictionary
-    params_names, params_add_names = columns_import(sheet_title, max_title, 'params', 'params_add')
+    if param_columns:
+        # imports keys to extract switch parameters from tmp dictionary
+        params_names, params_add_names = columns_import(sheet_title, max_title, 'params', 'params_add')
+    else:
+        params_names, params_add_names = None, None
     # imports base names for compile and match templates and creates corresonding names
     keys = columns_import(sheet_title, max_title, 're_names')
     comp_keys = [key+'_comp' for key in keys]
@@ -313,15 +315,25 @@ def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     data_check = []
     # check each data in data_lst
     for data in data_lst:
-        # for DataFrame method empty is used to check if DataFrame has data
-        if isinstance(data, pd.DataFrame):
-            data_check.append(not data.empty)
-        # for bool type append True (means value is present) no matter if value is True or False
-        elif isinstance(data, bool):
+        # if data was collected or analyzed before 'load' function returns an object
+        # even if object is empty True is added to data_check lst since there is no
+        # necessity to recollect data 
+        if data is not None:
             data_check.append(True)
-        # for other types of data no special method needed
         else:
-            data_check.append(data)
+            data_check.append(False)
+
+    # for data in data_lst:
+    #     # for DataFrama use True 
+    #     if isinstance(data, pd.DataFrame):
+    #         # data_check.append(True)
+    #         data_check.append(not data.empty)
+    #     # for bool type append True (means value is present) no matter if value is True or False
+    #     elif isinstance(data, bool):
+    #         data_check.append(True)
+    #     # for other types of data no special method needed
+    #     else:
+    #         data_check.append(data)
 
     # when all data are not empty but force exctract is ON
     # print data names for which extraction is forced
@@ -425,7 +437,7 @@ def load_data(report_data_list, *args):
         else:
             info = f'Loading {data_name}'
             print(info, end =" ")
-            status_info('no data', max_title, len(info))
+            status_info('no file', max_title, len(info))
             data_imported.append(None)
         
         # when saved file founded 

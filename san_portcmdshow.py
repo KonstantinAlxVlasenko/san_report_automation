@@ -139,9 +139,9 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                                     # applied for E-ports
                                     elif len(connected_wwn_lst) != 0:
                                         portid_wwn_lst = connected_wwn_lst.copy()
-                                    # adding None as port_id and wwn if no device is connected
+                                    # adding port_id and None wwn if no device is connected or slave trunk link
                                     else:
-                                        portid_wwn_lst.append([None]*2)
+                                        portid_wwn_lst.append([portcmd_dct.get('portId'), None])
                                 # portlogin section end
                                 while not re.match(fr'^portstatsshow +{int(port_index)}$', line):
                                     line = file.readline()
