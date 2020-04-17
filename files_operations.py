@@ -48,22 +48,33 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
     delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
     """
+    customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
 
-    if report_type == 'collection':
+    # if report_type == 'collection':
+    #     report_mark = 'collection'
+    # elif report_type == 'analysis':
+    #     report_mark = 'analysis'
+    # elif report_type == 'report':
+    #     report_mark = 'SAN_Assessment_tables'
+    # else:
+    #     report_mark = 'unknown'
+
+    # check DataFrame report type to save 
+    if report_steps_dct[sheet_title][2] == 'collection':
         report_mark = 'collection'
-    elif report_type == 'analysis':
+    elif report_steps_dct[sheet_title][2] == 'analysis':
         report_mark = 'analysis'
-    elif report_type == 'report':
+    elif report_steps_dct[sheet_title][2] == 'report':
         report_mark = 'SAN_Assessment_tables'
     else:
         report_mark = 'unknown'
 
-    customer_name, report_path, _, max_title, report_steps_dct = report_data_lst      
+          
     current_date = str(date.today())
     # construct excel filename
     file_name = customer_name + '_' + report_mark + '_' + 'report_' + current_date + '.xlsx'
     # information string
-    info = f'Exporting {sheet_title} table to {report_type} file'
+    info = f'Exporting {sheet_title} table to {report_mark} file'
     print(info, end =" ")
     file_path = os.path.join(report_path, file_name)
     

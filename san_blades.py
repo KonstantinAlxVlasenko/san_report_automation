@@ -32,7 +32,9 @@ def blade_system_extract(blade_folder, report_data_lst):
             print('\nEXTRACTING BLADES SYSTEM INFORMATION ...\n')   
             
             # collects files in folder with txt extension
-            blade_configs_lst = create_files_list(blade_folder, '.txt', max_title)
+            txt_files = create_files_list(blade_folder, '.txt', max_title)
+            log_files = create_files_list(blade_folder, '.log', max_title)
+            blade_configs_lst = txt_files + log_files
             # number of files to check
             configs_num = len(blade_configs_lst)  
 
@@ -266,6 +268,7 @@ def blade_system_extract(blade_folder, report_data_lst):
             info = f'Collecting enclosure, interconnect modules, blade servers, hba'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
+    
 
     return module_comprehensive_lst, blades_comprehensive_lst
 

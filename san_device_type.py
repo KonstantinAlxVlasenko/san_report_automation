@@ -18,17 +18,20 @@ def device_type_main(portshow_df, switchshow_ports_df, switch_params_aggregated_
     
     *_, max_title, report_steps_dct = report_data_lst
     # check if data already have been analyzed
-    data_names = ['portshow_aggregated']
+    data_names = [
+        'portshow_aggregated', 'Сервера', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
+        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов'
+        ]
     # loading data if were saved on previous iterations 
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
-    portshow_aggregated_df, = data_lst
+    portshow_aggregated_df, servers_report_df, storage_report_df, library_report_df, hba_report_df, \
+        storage_connection_df,  library_connection_df, server_connection_df = data_lst
     nsshow_unsplit_df = pd.DataFrame()
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
     'fdmi', 'nscamshow', 'nsshow', 'alias', 'blade_servers', 'fabric_labels']
-    
 
     # data force extract check 
     # if data was extracted on previous iterations but force key is ON 
@@ -37,9 +40,6 @@ def device_type_main(portshow_df, switchshow_ports_df, switch_params_aggregated_
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
     # check if data was loaded and not empty (DataFrame might be empty)
     data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-
-    # flag if fabrics labels was forced to be changed 
-    fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
 
     # check force extract keys for data passed to main function as parameters and fabric labels
     # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
@@ -72,15 +72,24 @@ def device_type_main(portshow_df, switchshow_ports_df, switch_params_aggregated_
         # after finish display status
         status_info('ok', max_title, len(info))
 
-        # saving fabric_statistics and fabric_statistics_summary DataFrames to csv file
-        save_data(report_data_lst, data_names, portshow_aggregated_df)
+        servers_report_df, storage_report_df, library_report_df, hba_report_df, \
+            storage_connection_df,  library_connection_df, server_connection_df = \
+                create_report_tables(portshow_aggregated_df, data_names[1:], report_columns_usage_dct, max_title)
 
-        # nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggregated_df, report_data_lst) 
+        # create list with partitioned DataFrames
+        data_lst = [
+            portshow_aggregated_df, servers_report_df, storage_report_df, 
+            library_report_df, hba_report_df, storage_connection_df,  
+            library_connection_df, server_connection_df
+            ]
+
+        # saving data to json or csv file
+        save_data(report_data_lst, data_names, *data_lst)
 
     # save data to service file if it's required
-    save_xlsx_file(portshow_aggregated_df, 'portshow_aggregated', report_data_lst, report_type = 'analysis')
-    save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, report_type = 'analysis')
-    # save_xlsx_file(blade_servers_join_df, 'blade_servers', report_data_lst, report_type = 'analysis')
+    for data_name, data_frame in zip(data_names, data_lst):
+        save_xlsx_file(data_frame, data_name, report_data_lst)
+    save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst)
 
     return portshow_aggregated_df
 
@@ -96,6 +105,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # # prepare nscamshow_df (label fabrics, drop duplicates WWNp)
     # nscamshow_join_df = nscamshow_preparation(nscamshow_df, fabric_labels_df)
 
+    # retrieve storage, host, HBA information from Name Server service and FDMI data
     nsshow_join_df, nsshow_unsplit_df, fabric_labels_df = nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggregated_df, re_pattern_lst)
 
     
@@ -103,9 +113,15 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # add nsshow and aliases to portshow_df
     # portshow_aggregated_df = alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nscamshow_join_df)
 
+    # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
+    # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
+    portshow_aggregated_df = blade_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst)
+    # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias values 
+    portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
 
-    portshow_aggregated_df = blade_fillna(portshow_aggregated_df, blade_servers_df)
+    # calculate virtual channel id for medium priority traffic
+    portshow_aggregated_df = vc_id(portshow_aggregated_df)
 
     # add 'deviceType', 'deviceSubtype' columns
     portshow_aggregated_df = portshow_aggregated_df.reindex(columns=[*portshow_aggregated_df.columns.tolist(), 'deviceType', 'deviceSubtype'])
@@ -122,6 +138,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['type', 'subtype']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
     # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['Connected_oui', 'Connected_portWwn']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
     portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df), axis = 1)
+
+    # fill empty values in portshow_aggregated_df Device_Host_Name column with combination of device class and it's wwnp
+    portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series) if pd.notna(series[['deviceType', 'Connected_portWwn']]).all() else np.nan, axis=1)
 
     return portshow_aggregated_df, nsshow_unsplit_df
 
@@ -204,35 +223,6 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     return alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df
 
 
-# def nscamshow_preparation(nscamshow_df, fabric_labels_df):
-#     """Function to label Remote devices in the Name Server (NS) cache DataFrame"""
-
-#     # create Remote devices in the Name Server (NS) cache DataFrame
-#     nscamshow_lst = ['configname', 'chassis_name', 'chassis_wwn', 'SwitchName', 'switchWwn', 'PortName', 'PortSymb', 'NodeSymb', 'Device_type']
-#     nscamshow_join_df = nscamshow_df.loc[:, nscamshow_lst]
-#     # rename SwitchName columnname
-#     nscamshow_join_df.rename(columns = {'SwitchName': 'switchName'}, inplace = True)
-#     # lowercase SwitchName
-#     nscamshow_lst[3] = nscamshow_lst[3][0].lower() + nscamshow_lst[3][1:] 
-    
-#     # label Remote devices in the Name Server (NS) cache with Fabric labels
-#     nscamshow_join_df = nscamshow_join_df.merge(fabric_labels_df, how = 'left', on = nscamshow_lst[:5])
-#     # drop switch information columns
-#     nscamshow_join_df.drop(columns = nscamshow_lst[:5], inplace= True)
-#     # drop duplicates WWNp
-#     nscamshow_join_df = nscamshow_join_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'])
-
-#     node_symb_pattern = r' *\[?\d*\]? *"([\w -.:/]+)"$'
-#     nscamshow_join_df.PortSymb = nscamshow_join_df.PortSymb.str.extract(node_symb_pattern)
-#     nscamshow_join_df.NodeSymb = nscamshow_join_df.NodeSymb.str.extract(node_symb_pattern)
-#     nscamshow_join_df.PortSymb = nscamshow_join_df.PortSymb.str.strip()
-#     nscamshow_join_df.NodeSymb = nscamshow_join_df.NodeSymb.str.strip()
-#     # # if cell contains white spaces only replace it with None
-#     # nscamshow_join_df[['PortSymb', 'NodeSymb']] = nscamshow_join_df[['PortSymb', 'NodeSymb']].replace(r'^\s*$', np.nan, regex=True)
-    
-#     return nscamshow_join_df
-
-
 def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     """Function to add porttype (Target, Initiator) anf alias to portshow_aggregated DataFrame"""
     
@@ -251,7 +241,7 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     # add aliases to portshow_aggregated_df
     portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 
                                                           on = ['Fabric_name', 'Fabric_label', 'PortName'])
-    
+
     return portshow_aggregated_df
 
 
@@ -264,15 +254,6 @@ def oui_join(portshow_aggregated_df, oui_df):
     portshow_aggregated_df = portshow_aggregated_df.merge(oui_df, how = 'left', on = ['Connected_oui'])
     
     return portshow_aggregated_df
-
-
-# def ag_switches_oui(ag_principal_df):
-#     """Function to allocate oui and vendor information from Access Gateway switches WWNp"""
-
-#     if not ag_principal_df.empty:
-#         return ag_principal_df['AG_Switch_WWN'].str.slice(start = 6)
-#     else:
-#         return ag_principal_df['AG_Switch_WWN']
 
 
 def type_check(series, switches_oui, fdmi_df, blade_servers_df):
@@ -296,22 +277,34 @@ def type_check(series, switches_oui, fdmi_df, blade_servers_df):
             elif (series['Connected_portWwn'][6:] == switches_oui).any():
                 return pd.Series(('SWITCH', series.subtype))
             elif series['switchMode'] == 'Access Gateway Mode' and series['portType'] == 'N-Port':
-                return pd.Series(('SWITCH', 'SWITCH'))
+                return pd.Series(('SWITCH', 'AG'))
             else:
                 return pd.Series(('SRV', series.subtype))
 
+        # check StoreOnce and D2D devices
+        elif pd.notna(series.Device_Model) and 'storeonce' in series['Device_Model'].lower():
+            return pd.Series(('LIB', 'StoreOnce'))
+        elif pd.notna(series.Device_Model) and 'd2d' in series['Device_Model'].lower():
+            return pd.Series(('LIB', 'D2D'))
+
+        # if not d2d than it's storage
+        elif series['type'] == 'STORAGE|LIB':
+            if pd.notna(series.Device_Model) and 'ultrium' in series['Device_Model'].lower():
+                return pd.Series(('LIB', series['subtype'].split('|')[1]))
+            else:
+                return pd.Series(('STORAGE', series['subtype'].split('|')[0]))
         
-        elif (fdmi_df['WWNp'] == series['Connected_portWwn']).any() and series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
-            return pd.Series(('SRV', series['subtype'].split('|')[0]))
-        
+        # check if device server or library
         elif series['type'] == 'SRV|LIB':
             if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
                 return pd.Series(('SRV', series['subtype'].split('|')[0]))
             elif series['Device_type'] in ['Physical Target', 'NPIV Target']:
                 return pd.Series(('LIB', series['subtype'].split('|')[1]))
-            
+        # check if device server or storage
         elif series['type'] == 'SRV|STORAGE':
-            if series['Device_type'] in ['Physical Target', 'NPIV Target']:
+            if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
+                return pd.Series(('SRV', series['subtype'].split('|')[0]))
+            else:
                 return pd.Series(('STORAGE', series['subtype'].split('|')[1]))
             
         elif series['type'] == 'SRV|STORAGE|LIB':
@@ -321,29 +314,12 @@ def type_check(series, switches_oui, fdmi_df, blade_servers_df):
             elif series['Device_type'] in ['Physical Target', 'NPIV Target']:
                 # if Ultrium Nodetype than device is MSL or ESL
                 if not pd.isna(series['NodeSymb']) and 'ultrium' in series['NodeSymb'].lower():
-                    if not pd.isna(series['alias']) and 'esl' in series['alias'].lower():
-                        return pd.Series(('LIB', 'ESL'))
-                    elif not pd.isna(series['alias']) and 'msl' in series['alias'].lower():
-                        return pd.Series(('LIB', 'MSL'))
-                    else:
-                        return pd.Series(('LIB', series['subtype'].split('|')[2]))
-                elif not pd.isna(series['NodeSymb']) and 'msl' in series['NodeSymb'].lower():
-                    return pd.Series(('LIB', 'MSL'))
-                elif not pd.isna(series['NodeSymb']) and 'storeonce' in series['NodeSymb'].lower():
-                    return pd.Series(('LIB', 'STOREONCE'))
-                # if target device is not library than it's storage
-                else:
-                    return pd.Series(series['type'].split('|')[1], series['subtype'].split('|')[1])
-                # elif not pd.isna(series['alias']) and ('so' in series['alias'].lower() or 'store' in series['alias'].lower()):
-                #     return pd.Series(('LIB', 'StoreOnce'))
-            
-            
-            
-#            return pd.Series(('LIB', series['subtype'].split('|')[1]))
-        
-#    elif series['type'] == 'STORAGE|LIB':
-#         if not pd.isna(series['alias']) and 'msl' in series['alias'].lower():
-#             return pd.Series(('LIB', series['subtype'].split('|')[1]))
+                    return pd.Series(('LIB', series['subtype'].split('|')[2]))
+            # if not initiator and not target ultrium than it's storage
+            else:
+                device_type = series['type'].split('|')[1]
+                device_subtype = series['subtype'].split('|')[1]
+                return pd.Series((device_type, device_subtype))
 
     # if device type is not strictly detected 
     if pd.isna(series[['deviceType', 'deviceSubtype']]).any():
@@ -355,13 +331,23 @@ def type_check(series, switches_oui, fdmi_df, blade_servers_df):
         return pd.Series((series['deviceType'], series['deviceSubtype']))
 
 
-def blade_fillna(portshow_aggregated_df, blade_servers_df):
+def blade_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst):
+    """
+    Function to fillna portshow_aggregated_df null values with values from blade_servers_join_df.
+    Hostname, location and HBA infromation
+    """
+
+    # regular expression patterns
+    comp_keys, _, comp_dct = re_pattern_lst
 
     if not blade_servers_df.empty:
         # make copy to avoid changing original DataFrame
         blade_servers_join_df = blade_servers_df.copy()
         # Uppercase Device_Manufacturer column
         blade_servers_join_df.Device_Manufacturer = blade_servers_join_df.Device_Manufacturer.str.upper()
+
+        # hostname_clean_comp
+        blade_servers_join_df.Host_Name = blade_servers_join_df.Host_Name.replace(comp_dct[comp_keys[0]], np.nan, regex=True)
 
         # auxiliary lambda function to combine two columns in DataFrame
         # it combines to columns if both are not null and takes second if first is null
@@ -389,3 +375,111 @@ def blade_fillna(portshow_aggregated_df, blade_servers_df):
         portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)
 
     return portshow_aggregated_df
+
+
+def device_name_fillna(series):
+    """
+    Function to fill empty values in portshow_aggregated_df Device_Host_Name column
+    with combination of device class and it's wwn
+    """
+
+    mask_switch = series['deviceType'] == 'SWITCH'
+    # mask_vc = series['deviceType'] == 'VC'
+    mask_notna = pd.notna(series['Device_Host_Name'])
+    
+    # if device is switch or already has name no action required
+    if mask_switch or mask_notna:
+        return series['Device_Host_Name']
+    
+    return series['deviceType'] + ' ' + series['Connected_portWwn']
+
+
+def vc_id(portshow_aggregated_df):
+    """
+    Function to calculate virtual channel id for medium priority traffic.
+    VC2, VC3, VC4, VC5
+    """
+
+    # extract AreaID from PortID address
+    portshow_aggregated_df['Virtual_Channel'] = portshow_aggregated_df.Connected_portId.str.slice(start=2, stop=4)
+    # convert string AreaID to integer with base 16 (hexadicimal)
+    # vc id defined as remainder of AreaID division by four plus 2
+    portshow_aggregated_df.Virtual_Channel = portshow_aggregated_df.Virtual_Channel.apply(lambda x: int(x, 16)%4 + 2)
+    # add VC to vc_id
+    portshow_aggregated_df.Virtual_Channel = 'VC' + portshow_aggregated_df.Virtual_Channel.astype('str')
+
+    return portshow_aggregated_df
+
+
+def create_report_tables(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title):
+    """Function to create required report DataFrames out of aggregated DataFrame"""
+
+    add_columns_lst = ['FW_Recommeneded', 'Driver_Recommeneded', 'FW_Supported', 'HW_Supported']
+    portshow_aggregated_df = portshow_aggregated_df.reindex(columns=[*portshow_aggregated_df.columns.tolist(), *add_columns_lst])
+    # partition aggregated DataFrame to required tables
+    servers_report_df, storage_report_df, library_report_df, hba_report_df, \
+        storage_connection_df,  library_connection_df, server_connection_df = \
+        dataframe_segmentation(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title)
+    
+    # clean and sort DataFrames
+    servers_report_df = _clean_dataframe(servers_report_df, 'srv')
+    hba_report_df = _clean_dataframe(hba_report_df, 'srv', duplicates = ['Идентификатор порта WWPN'])
+    storage_report_df = _clean_dataframe(storage_report_df, 'stor')
+    library_report_df = _clean_dataframe(library_report_df, 'lib')
+    storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean = True)
+    library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean = True)
+    server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean = True)
+
+    return servers_report_df, storage_report_df, library_report_df, \
+        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df
+    
+
+def _clean_dataframe(df, mask_type, duplicates = ['Имя устройства'], clean = False):
+    """
+    Auxiliary function to sort, remove duplicates and drop columns in cases they are not required in report DataFrame
+    """
+    # list of columns to check if the are empty
+    columns_empty = ['Медленное устройство', 'Подключено через AG', 'Real_device_behind_AG']
+    # list of columns to check if all values are equal
+    columns_unique = ['Режим коммутатора', 'LSAN']
+    # list of columns to sort DataFrame on
+    columns_sort = ['Расположение', 'Имя устройства', 'Имя коммутатора']
+
+    # create mask to filter required class only
+    if mask_type == 'srv':
+        mask = df['Класс устройства'].isin(['SRV', 'BLADE_SRV'])
+    elif mask_type == 'stor':
+        mask = df['Класс устройства'] == 'STORAGE'
+    elif mask_type == 'lib':
+        mask = df['Класс устройства'] == 'LIB'
+
+    # filter DataFrame base on hardware type 
+    df = df.loc[mask].copy()
+    # check if columns required to sort on are in the DataFrame
+    columns_sort = [column for column in columns_sort if column in df.columns]
+    df.sort_values(by = columns_sort, inplace = True)
+
+    # DataFrames are cleaned in two ways
+    # by drop duplicate values in certain columns
+    if duplicates and not clean:
+        df.drop_duplicates(subset = duplicates, inplace = True)
+    # or by drop entire column
+    if clean:
+        # if all values in the column is the same
+        for column in columns_unique:
+            if column in df.columns and df[column].nunique() < 2:
+                df.drop(columns = [column], inplace = True)
+        # if all values are None in the column
+        for column in columns_empty:
+            # if all values are None
+            if column in df.columns and pd.isnull(df[column]).all():
+                df.drop(columns = [column], inplace = True)
+            # if all non None values are 'No'
+            elif column in df.columns and pd.Series(df[column] == 'No', pd.notna(df[column])).all():
+                df.drop(columns = [column], inplace = True)
+
+    return df
+
+
+    
+

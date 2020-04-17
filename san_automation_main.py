@@ -43,7 +43,7 @@ customer_name, project_folder, ssave_folder, blade_folder = report_entry_values(
 # dictionary with report steps as keys. each keys has two values
 # first value shows if it is required to export extracted data to excel table
 # second value shows if it is required to initiate force data extraction if data have been already extracted
-report_steps_dct = dct_from_columns('service_tables', start_max_title, 'keys', 'export_to_excel', 'force_extract', init_file = 'report_info.xlsx')
+report_steps_dct = dct_from_columns('service_tables', start_max_title, 'keys', 'export_to_excel', 'force_extract', 'report_type', init_file = 'report_info.xlsx')
 
 print('\n\n')
 info = f'ASSESSMENT FOR SAN {customer_name}'
@@ -66,11 +66,12 @@ def main():
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
 
-    switch_params_aggregated_df, report_columns_usage_dct, fabric_labeled_df, switches_report_df, fabric_report_df, \
-        global_fabric_parameters_report_df, switches_parameters_report_df, licenses_report_df = \
+    switch_params_aggregated_df, report_columns_usage_dct, fabric_labeled_df = \
             fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst)
 
-    device_type_df = device_type_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, alias_df, fdmi_df, blade_servers_df, report_columns_usage_dct, report_data_lst)
+    device_type_df = \
+        device_type_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, \
+            alias_df, fdmi_df, blade_servers_df, report_columns_usage_dct, report_data_lst)
 
     fabric_statistics_df, fabric_statistics_summary_df = \
         fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, 

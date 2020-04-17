@@ -63,6 +63,7 @@ def device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df):
 
     # drop duplcate WWNs in labeled nscamshow DataFrame with remote devices in the Name Server (NS) cache
     nscamshow_labeled_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
+    nsshow_labeled_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     # set Fabric_name, Fabric_label, PortName as index in order to perform fillna
     nscamshow_labeled_df.set_index(keys = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     nsshow_labeled_df.set_index(keys = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
@@ -106,20 +107,6 @@ def nsshow_clean(nsshow_labeled_df, re_pattern_lst):
         nscamshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
         # remove whitespace from the right and left side
         nscamshow_join_df[symb_column] = nscamshow_join_df[symb_column].str.strip()
-
-    # # extract value from quotaion marks
-    # # symb_clean_comp
-    # nscamshow_join_df.PortSymb = nscamshow_join_df.PortSymb.str.extract(comp_dct[comp_keys[1]])
-    # nscamshow_join_df.PortSymb.replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
-    # nscamshow_join_df.PortSymb.replace(to_replace = r'^\d$', value = np.nan, regex = True, inplace = True)
-    # nscamshow_join_df.PortSymb = nscamshow_join_df.PortSymb.str.strip()
-
-    # nscamshow_join_df.NodeSymb = nscamshow_join_df.NodeSymb.str.extract(comp_dct[comp_keys[1]])
-    # nscamshow_join_df.NodeSymb.replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
-    # nscamshow_join_df.NodeSymb = nscamshow_join_df.NodeSymb.str.strip()
-
-    # # if cell ontains white spaces only replace it with None
-    # nscamshow_join_df[['PortSymb', 'NodeSymb']] = nscamshow_join_df[['PortSymb', 'NodeSymb']].replace(r'^\s*$', np.nan, regex=True)
     
     return nscamshow_join_df
 
@@ -321,9 +308,6 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
     return pd.Series([series[column] for column in nsshow_symb_columns])
 
 
-
-
-
 def hba_fillna(nsshow_join_df, fdmi_labeled_df, re_pattern_lst):
     """Function to fillna values in HBA related columns of local Name Server (NS) DataFrame"""
 
@@ -343,6 +327,7 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, re_pattern_lst):
     fdmi_labeled_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     # set Fabric_name, Fabric_label, PortName as index in order to perform fillna
     fdmi_labeled_df.set_index(keys = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
+    nsshow_join_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     nsshow_join_df.set_index(keys = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     # fillna empty device type cells in nsshow_join DataFrame with values from fdmi DataFrame
     # HBA_Manufacturer, HBA_Model, HBA_Description,	HBA_Driver,	HBA_Firmware, Host_OS

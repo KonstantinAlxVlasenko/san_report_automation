@@ -90,16 +90,15 @@ def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, ma
         # after finish display status
         status_info('ok', max_title, len(info))
 
-        # saving fabric_statistics and fabric_statistics_summary DataFrames to csv file
+        # saving DataFrames to csv file
         save_data(report_data_lst, data_names, *data_lst)
         # save_data(report_data_lst, data_auxillary_names, *data_auxillary_lst)
         
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst, report_type = 'report')
+        save_xlsx_file(data_frame, data_name, report_data_lst)
 
-    return switch_params_aggregated_df, report_columns_usage_dct, fabric_clean_df, switches_report_df, fabric_report_df, \
-        global_fabric_parameters_report_df, switches_parameters_report_df, licenses_report_df
+    return switch_params_aggregated_df, report_columns_usage_dct, fabric_clean_df
 
 
 def fabric_clean(fabricshow_ag_labels_df):
