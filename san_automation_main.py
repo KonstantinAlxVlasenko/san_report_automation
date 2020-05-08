@@ -6,7 +6,7 @@ from san_chassis_params import chassis_params_extract
 from san_switch_params import switch_params_configshow_extract
 from san_amsmaps_log import maps_params_extract
 from san_fabrics import fabricshow_extract
-from san_portcmdshow import portcmdshow_extract
+from san_portcmd import portcmdshow_extract
 from san_portinfo import portinfo_extract
 from san_connected_devices import connected_devices_extract
 from san_isl import interswitch_connection_extract
@@ -18,7 +18,7 @@ from san_switch_report_tables import fabric_main
 from san_isl_report_tables import isl_main
 from dataframe_operations import report_entry_values
 from san_blades import blade_system_extract
-from san_device_type import device_type_main
+from san_analysis_portcmd import portcmd_analysis_main
 
 """
 Main module to run
@@ -70,7 +70,7 @@ def main():
             fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst)
 
     device_type_df = \
-        device_type_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, \
+        portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, \
             alias_df, fdmi_df, blade_servers_df, report_columns_usage_dct, report_data_lst)
 
     fabric_statistics_df, fabric_statistics_summary_df = \

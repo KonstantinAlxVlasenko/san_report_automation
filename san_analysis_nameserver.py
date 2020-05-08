@@ -86,29 +86,30 @@ def nsshow_clean(nsshow_labeled_df, re_pattern_lst):
     # columns of Name Server (NS) registered devices DataFrame
     nsshow_lst = [
         'Fabric_name', 'Fabric_label', 'configname', 'chassis_name', 'chassis_wwn', 
-        'switchName', 'switchWwn', 'PortName', 'PortSymb', 'NodeSymb', 'Device_type', 
+        'switchName', 'switchWwn', 'PortName', 'NodeName', 'PortSymb', 'NodeSymb', 'Device_type', 
         'LSAN', 'Slow_Drain_Device', 'Connected_through_AG', 'Real_device_behind_AG'
         ]
 
-    nscamshow_join_df = nsshow_labeled_df.loc[:, nsshow_lst]
+    nsshow_join_df = nsshow_labeled_df.loc[:, nsshow_lst]
     
-    # nscamshow_join_df['PortSymbOrig'] = nscamshow_join_df['PortSymb']
-    # nscamshow_join_df['NodeSymbOrig'] = nscamshow_join_df['NodeSymb']
+    # nsshow_join_df['PortSymbOrig'] = nsshow_join_df['PortSymb']
+    # nsshow_join_df['NodeSymbOrig'] = nsshow_join_df['NodeSymb']
 
     # columns to clean
     symb_columns = ['PortSymb', 'NodeSymb']
 
+    # clean 'PortSymb' and 'NodeSymb' columns
     for symb_column in symb_columns:
         # symb_clean_comp. removes brackets and quotation marks
-        nscamshow_join_df[symb_column] = nscamshow_join_df[symb_column].str.extract(comp_dct[comp_keys[1]])
+        nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.extract(comp_dct[comp_keys[1]])
         # replace multiple whitespaces with single whitespace
-        nscamshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
+        nsshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
         # replace cells with one digit or whatespaces only with None value
-        nscamshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
+        nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
         # remove whitespace from the right and left side
-        nscamshow_join_df[symb_column] = nscamshow_join_df[symb_column].str.strip()
+        nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
     
-    return nscamshow_join_df
+    return nsshow_join_df
 
 
 def nsshow_symb_split(nsshow_join_df, re_pattern_lst):
@@ -238,7 +239,13 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         if not pd.isnull(port_symb) and match_port_dct[match_keys[16]]:
             match = match_port_dct[match_keys[16]]
             series['Device_Port'] = match.group(4)
-            series['portSymbUsed'] = 'yes'       
+            series['portSymbUsed'] = 'yes'
+    # cna_adapter_match node_symb
+    elif not pd.isnull(node_symb) and match_node_dct[match_keys[19]]:
+        match = match_node_dct[match_keys[19]]
+        series['HBA_Driver'] = match.group(1)
+        series['Device_Port'] = match.group(2)
+        series['nodeSymbUsed'] = 'yes'     
     # storeonce_port_match port_symb
     elif not pd.isnull(port_symb) and match_port_dct[match_keys[8]]:
         match = match_port_dct[match_keys[8]]

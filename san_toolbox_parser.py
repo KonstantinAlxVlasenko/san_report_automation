@@ -57,7 +57,7 @@ def create_files_list_to_parse(ssave_path):
     Configuration file for Active CP has bigger size
     """
     
-    print(f'\n\nSTEP 2. CHECKING CONFIGURATION DATA ...\n')
+    print(f'\n\nSTEP 2. CHECKING SWITCH CONFIGURATION DATA ...\n')
     print(f'Configuration data folder {ssave_path}')
 
     # check if ssave_path folder exist
