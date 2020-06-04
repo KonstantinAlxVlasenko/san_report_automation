@@ -1,33 +1,44 @@
-import re
-import pandas as pd
 import json
 import os
-# from files_operations import columns_import, status_info, data_extract_objects
-from files_operations import status_info, data_extract_objects, load_data, save_data, force_extract_check
+import re
+
+import pandas as pd
+
+from common_operations_filesystem import load_data, save_data
+from common_operations_miscellaneous import (force_extract_check, status_info,
+                                             verify_data)
+from common_operations_servicefile import data_extract_objects
 
 """Module to extract chassis parameters"""
 
 
 def chassis_params_extract(all_config_data, report_data_lst):
-    """Function to extract chassis parameters
-    """
+    """Function to extract chassis parameters"""
     
-    # report_data_lst = [customer_name, dir_report, dir_data_objects, max_title]
-        
-    print('\n\nSTEP 4. CHASSIS PARAMETERS ...\n')
-
+    # report_data_lst contains information: 
+    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
-    # check if data already have been extracted
+
+    # names to save data obtained after current module execution
     data_names = ['chassis_parameters']
+    # service step information
+    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+
+    # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_data_lst, *data_names)
+    # unpacking from the loaded list with data
+    # pylint: disable=unbalanced-tuple-unpacking
     chassis_params_fabric_lst, = data_lst
     
-    # data force extract check. 
-    # if data have been extracted already but extract key is ON then data re-extracted
+    # data force extract check 
+    # list of keys for each data from data_lst representing if it is required 
+    # to re-collect or re-analyze data even they were obtained on previous iterations
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # print data which were loaded but for which force extract flag is on
     force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # if no data than data saved than exttract data from configueation files 
+    # when any of data_lst was not saved or 
+    # force extract flag is on then re-extract data  from configueation files 
     if not all(data_lst) or any(force_extract_keys_lst):
         print('\nEXTRACTING CHASSIS PARAMETERS FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         # number of switches to check
@@ -179,5 +190,8 @@ def chassis_params_extract(all_config_data, report_data_lst):
             status_info('ok', max_title, len(info))
         # save extracted data to json file    
         save_data(report_data_lst, data_names, chassis_params_fabric_lst)
+    # verify if loaded data is empty after first iteration and replace information string with empty list
+    else:
+        chassis_params_fabric_lst, = verify_data(report_data_lst, data_names, *data_lst)
         
     return chassis_params_fabric_lst

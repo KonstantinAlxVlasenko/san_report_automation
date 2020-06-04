@@ -4,14 +4,15 @@ device type (emulex, qlogic, xp, 3par, eva, msa and etc) based on device oui
 and informarion extracted from nameserver
 """
 
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 
 def oui_join(portshow_aggregated_df, oui_df):
     """Function to add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)"""  
     
-    # allocate oui from WWNp
+    # extract oui from WWNp
     portshow_aggregated_df['Connected_oui'] = portshow_aggregated_df.Connected_portWwn.str.slice(start = 6, stop = 14)
     # add device types from oui DataFrame
     portshow_aggregated_df = portshow_aggregated_df.merge(oui_df, how = 'left', on = ['Connected_oui'])
@@ -24,7 +25,6 @@ def type_check(series, switches_oui, blade_servers_df):
     
     # drop rows with empty WWNp values
     blade_hba_df = blade_servers_df.dropna(subset = ['portWwn'])
-
 
     if series[['type', 'subtype']].notnull().all():
         # servers type
@@ -74,11 +74,12 @@ def type_check(series, switches_oui, blade_servers_df):
         elif series['type'] == 'SRV|STORAGE|LIB':
             if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
                 return pd.Series(('SRV', series['subtype'].split('|')[0]))
-            # if target port type 
-            elif series['Device_type'] in ['Physical Target', 'NPIV Target']:
-                # if Ultrium Nodetype than device is MSL or ESL
-                if not pd.isna(series['NodeSymb']) and 'ultrium' in series['NodeSymb'].lower():
-                    return pd.Series(('LIB', series['subtype'].split('|')[2]))
+            # if ultrium type
+            elif not pd.isna(series['NodeSymb']) and 'ultrium' in series['NodeSymb'].lower():
+                return pd.Series(('LIB', series['subtype'].split('|')[2]))
+            # # target port type 
+            # elif series['Device_type'] in ['Physical Target', 'NPIV Target', 'Physical Unknown(initiator/target)']:
+            #     pass
             # if not initiator and not target ultrium than it's storage
             else:
                 device_type = series['type'].split('|')[1]

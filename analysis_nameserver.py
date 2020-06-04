@@ -1,21 +1,16 @@
 """Module to retrieve storage, host, HBA information from Name Server service data"""
 
+
 import re
+
+import numpy as np
 import pandas as pd
-import numpy as np 
-from files_operations import data_extract_objects, save_xlsx_file
 
-def nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggregated_df, re_pattern_lst):
-    
-    # # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
-    # *_, max_title, report_steps_dct = report_data_lst
 
-    # # data imported from init file (regular expression patterns) to extract values from data columns
-    # # re_pattern list contains comp_keys, match_keys, comp_dct
-    # _, _, *re_pattern_lst = data_extract_objects('Device_type', max_title)
+def nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst):
 
     # label DataFrames
-    nsshow_labeled_df, nscamshow_labeled_df, fdmi_labeled_df, fabric_labels_df = fabric_labels(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggregated_df)
+    nsshow_labeled_df, nscamshow_labeled_df, fdmi_labeled_df = fabric_labels(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df)
 
     # local Name Server (NS) Device_type (Initiatir, Target) information fillna 
     nsshow_labeled_df = device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df)
@@ -28,19 +23,15 @@ def nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggrega
     # fillna hba information
     nsshow_join_df = hba_fillna(nsshow_join_df, fdmi_labeled_df, re_pattern_lst)
 
-    # save data to service file if it's required
-    # save_xlsx_file(nsshow_join_df, 'nsshow_aggregated', report_data_lst, report_type = 'analysis')
-    # save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, report_type = 'analysis')
-
-    return nsshow_join_df, nsshow_unsplit_df, fabric_labels_df
+    return nsshow_join_df, nsshow_unsplit_df
 
 
-def fabric_labels(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggregated_df):
+def fabric_labels(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df):
     """Function to label nsshow_df, nscamshow_df, fdmi_df Dataframes with Fabric labels"""
 
     # create fabric labels DataFrame
     fabric_labels_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 'Fabric_name', 'Fabric_label']
-    fabric_labels_df = switch_params_aggregated_df.loc[:, fabric_labels_lst].copy()
+    # fabric_labels_df = switch_params_aggregated_df.loc[:, fabric_labels_lst].copy()
 
     # copy DataFrames
     nsshow_labeled_df = nsshow_df.copy()
@@ -55,7 +46,7 @@ def fabric_labels(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggregated_df)
         # label switches and update DataFrane in the list
         df_lst[i] = df.merge(fabric_labels_df, how = 'left', on = fabric_labels_lst[:5])
 
-    return [*df_lst, fabric_labels_df]
+    return df_lst
 
 
 def device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df):
@@ -204,6 +195,7 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         'HBA_Manufacturer', 'HBA_Model', 'Host_Name', 'Host_OS', 'HBA_Firmware', 'HBA_Driver'
         series['HBA_Manufacturer'] = match.group(1)
         series['HBA_Model'] = match.group(2)
+        'a', 'b', 'c'
         series['HBA_Firmware'] = match.group(3)
         if match.group(4):
             series['HBA_Driver'] = match.group(4).rstrip('.')

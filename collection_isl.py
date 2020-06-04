@@ -1,32 +1,44 @@
-import re
-import pandas as pd
-from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data
-from files_operations import  line_to_list, force_extract_check, update_dct
-
 """Module to extract interswitch connection information"""
+
+
+import re
+
+import pandas as pd
+
+from common_operations_filesystem import load_data, save_data
+from common_operations_miscellaneous import (
+    force_extract_check, line_to_list, status_info, update_dct, verify_data)
+from common_operations_servicefile import columns_import, data_extract_objects
 
 
 def interswitch_connection_extract(switch_params_lst, report_data_lst):
     """Function to extract interswitch connection information
-    """    
-    # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
-    
-    print('\n\nSTEP 11. INTERSWITCH CONNECTIONS AND TRUNK PORTS INFORMATION ...\n')
-    
+    """  
+
+    # report_data_lst contains information: 
+    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
-    # check if data already have been extracted
-    # data_names = ['isl', 'trunk', 'ag', 'trunkarea']
+
+    # names to save data obtained after current module execution
     data_names = ['isl', 'trunk', 'porttrunkarea']
+    # service step information
+    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+
+    # load data if they were saved on previos program execution iteration    
     data_lst = load_data(report_data_lst, *data_names)
-    # isl_lst, trunk_lst, ag_lst, trunkarea_lst = data_lst
+    # unpacking from the loaded list with data
+    # pylint: disable=unbalanced-tuple-unpacking
     isl_lst, trunk_lst, porttrunkarea_lst = data_lst
     
-    # data force extract check. 
-    # if data have been extracted already but extract key is ON then data re-extracted
+    # data force extract check 
+    # list of keys for each data from data_lst representing if it is required 
+    # to re-collect or re-analyze data even they were obtained on previous iterations
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # print data which were loaded but for which force extract flag is on
     force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # if no data saved than extract data from configurtion files 
+    # when any of data_lst was not saved or 
+    # force extract flag is on then re-extract data  from configueation files  
     if not all(data_lst) or any(force_extract_keys_lst):    
         print('\nEXTRACTING INTERSWITCH CONNECTION INFORMATION (ISL, TRUNK, TRUNKAREA) ...\n')   
         
@@ -160,5 +172,8 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                 status_info('skip', max_title, len(info))        
         # save extracted data to json file
         save_data(report_data_lst, data_names, isl_lst, trunk_lst, porttrunkarea_lst)
+    # verify if loaded data is empty after first iteration and replace information string with empty list
+    else:
+        isl_lst, trunk_lst, porttrunkarea_lst = verify_data(report_data_lst, data_names, *data_lst)
     
     return isl_lst, trunk_lst, porttrunkarea_lst

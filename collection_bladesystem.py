@@ -1,9 +1,13 @@
-import re
 import os
+import re
+
 import pandas as pd
-from files_operations import create_files_list
-from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data
-from files_operations import  line_to_list, force_extract_check, update_dct
+
+from common_operations_filesystem import (create_files_list, load_data,
+                                          save_data)
+from common_operations_miscellaneous import (
+    force_extract_check, line_to_list, status_info, update_dct, verify_data)
+from common_operations_servicefile import columns_import, data_extract_objects
 
 """Module to extract blade system information"""
 
@@ -11,22 +15,30 @@ from files_operations import  line_to_list, force_extract_check, update_dct
 def blade_system_extract(blade_folder, report_data_lst):
     """Function to extract blade systems information"""
 
-    # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
-    
-    print('\n\nSTEP 19. BLADE SYSTEM INFORMATION ...\n')
-    
+    # report_data_lst contains information: 
+    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
-    # check if data already have been extracted
+
+    # names to save data obtained after current module execution
     data_names = ['blade_interconnect', 'blade_servers']
+    # service step information
+    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+
+    # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_data_lst, *data_names)
+    # unpacking from the loaded list with data
+    # pylint: disable=unbalanced-tuple-unpacking
     module_comprehensive_lst, blades_comprehensive_lst = data_lst
 
-    # data force extract check. 
-    # if data have been extracted already but extract key is ON then data re-extracted
+    # data force extract check 
+    # list of keys for each data from data_lst representing if it is required 
+    # to re-collect or re-analyze data even they were obtained on previous iterations
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # print data which were loaded but for which force extract flag is on
     force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # if no data saved than extract data from configurtion files 
+    # when any of data_lst was not saved or 
+    # force extract flag is on then re-extract data  from configueation files
     if not all(data_lst) or any(force_extract_keys_lst):
         if blade_folder:    
             print('\nEXTRACTING BLADES SYSTEM INFORMATION ...\n')   
@@ -268,7 +280,10 @@ def blade_system_extract(blade_folder, report_data_lst):
             info = f'Collecting enclosure, interconnect modules, blade servers, hba'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
+            # save empty data to json file
+            save_data(report_data_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst)
+    # verify if loaded data is empty after first iteration and replace information string with empty list
+    else:
+        module_comprehensive_lst, blades_comprehensive_lst = verify_data(report_data_lst, data_names, *data_lst)
     
-
     return module_comprehensive_lst, blades_comprehensive_lst
-

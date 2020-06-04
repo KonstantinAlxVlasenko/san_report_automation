@@ -2,45 +2,41 @@
 
 import pandas as pd
 import numpy as np
-from files_operations import status_info, load_data, save_data 
-from files_operations import force_extract_check, save_xlsx_file, dataframe_import
-from dataframe_operations import dataframe_segmentation
+from common_operations_filesystem import load_data, save_data, save_xlsx_file 
+from common_operations_dataframe import dataframe_segmentation
+from common_operations_servicefile import dataframe_import
+from common_operations_miscellaneous import status_info, force_extract_check
 
-
-def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst):
+def fabric_main(fabricshow_ag_labels_df, chassis_params_df, \
+    switch_params_df, maps_params_df, report_data_lst):
     """Main function to create tables
     """
 
-    # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
-    
-    print('\n\nSTEP 16. FABRIC AND SWITCHES INFORMATION TABLES...\n')
-    
+    # report_data_lst contains information: 
+    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
-    # check if data already have been extracted
+
+    # names to save data obtained after current module execution
     data_names = [
         'Коммутаторы', 'Фабрика', 'Глобальные_параметры_фабрики', 
         'Параметры_коммутаторов', 'Лицензии'
         ]
-
-    # data_auxillary_names = ['fabric_labels_clean', 'fabric_info_aggregated', 'chassis_name_usage']
-    # loading data if were saved on previous iterations 
+    # service step information
+    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    
+    # load data if they were saved on previos program execution iteration 
     data_lst = load_data(report_data_lst, *data_names)
-    # data_auxillary_lst = load_data(report_data_lst, *data_auxillary_names)
-    # chassis_column_usage, = load_data(report_data_lst, 'chassis_column_usage')
-
     # unpacking DataFrames from the loaded list with data
-    switches_report_df, fabric_report_df, global_fabric_parameters_report_df, switches_parameters_report_df, licenses_report_df = data_lst
+    # pylint: disable=unbalanced-tuple-unpacking
+    switches_report_df, fabric_report_df, global_fabric_parameters_report_df, \
+        switches_parameters_report_df, licenses_report_df = data_lst
     
     # data force extract check 
-    # if data have been calculated on previous iterations but force key is ON 
-    # then data re-calculated again and saved
-    # force key for each DataFrame
+    # list of keys for each data from data_lst representing if it is required 
+    # to re-collect or re-analyze data even they were obtained on previous iterations
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # check if data was loaded and not empty
+    # list with True (if data loaded) and/or False (if data was not found and None returned)
     data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-
-    # force_extract_auxillary_keys_lst = [report_steps_dct[data_name][1] for data_name in data_auxillary_names]
-    # data_check_auxillary = force_extract_check(data_auxillary_names, data_auxillary_lst, force_extract_keys_lst, max_title)
     
     # flag if fabrics labels was forced to be changed 
     fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
@@ -51,8 +47,11 @@ def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, ma
     # clean fabricshow DataFrame from unneccessary data
     fabric_clean_df = fabric_clean(fabricshow_ag_labels_df)
     # create aggregated table by joining DataFrames
-    switch_params_aggregated_df, report_columns_usage_dct = fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, switch_models_df)
-    save_xlsx_file(switch_params_aggregated_df, 'switch_params_aggregated', report_data_lst, report_type = 'analysis')
+    switch_params_aggregated_df, report_columns_usage_dct = \
+        fabric_aggregation(fabric_clean_df, chassis_params_df, \
+            switch_params_df, maps_params_df, switch_models_df)
+    save_xlsx_file(switch_params_aggregated_df, 'switch_params_aggregated', \
+        report_data_lst, report_type = 'analysis')
 
     # when no data saved or force extract flag is on or fabric labels have been changed than 
     # analyze extracted config data  
@@ -66,7 +65,9 @@ def fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, ma
 
         # partition aggregated DataFrame to required tables
         switches_report_df, fabric_report_df, global_fabric_parameters_report_df, \
-            switches_parameters_report_df, licenses_report_df = dataframe_segmentation(switch_params_aggregated_df, data_names, report_columns_usage_dct, max_title)            
+            switches_parameters_report_df, licenses_report_df = \
+                dataframe_segmentation(switch_params_aggregated_df, data_names, \
+                    report_columns_usage_dct, max_title)            
 
         # drop rows with empty switch names columns
         fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
@@ -158,6 +159,12 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     f_s_c_m_i_df.loc[f_s_c_m_i_df.switchType.isin(director_type), 'DHCP'] = 'Off'
     # add empty column FOS suuported to fill manually 
     f_s_c_m_i_df['FW_Supported'] = pd.Series()
+
+    # license check
+    license_dct = {'Trunking_license': 'Trunking', 'Fabric_Vision_license': 'Fabric Vision'}
+    for lic_check, lic_name in license_dct.items():
+        f_s_c_m_i_df[lic_check] = f_s_c_m_i_df.loc[f_s_c_m_i_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)
+        f_s_c_m_i_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
 
     # check if chassis_name and switch_name columns are equal
     # if yes then no need to use chassis information in tables

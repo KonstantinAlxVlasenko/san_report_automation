@@ -6,7 +6,7 @@ Module to create tables
 """
 
 import pandas as pd
-from dataframe_operations import dataframe_segmentation
+from common_operations_dataframe import dataframe_segmentation
 
 
 def create_report_tables(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title):
@@ -34,7 +34,7 @@ def create_report_tables(portshow_aggregated_df, data_names, report_columns_usag
         hba_report_df, storage_connection_df,  library_connection_df, server_connection_df
     
 
-def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя устройства'], clean = False):
+def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя устройства', 'Имя группы псевдонимов'], clean = False):
     """
     Auxiliary function to sort, remove duplicates and drop columns in cases they are not required in report DataFrame
     """
@@ -44,8 +44,8 @@ def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя ус
     columns_unique = ['Режим коммутатора', 'LSAN']
     # list of columns to sort DataFrame on
     columns_sort = [
-        'Расположение', 'Имя устройства', 'Порт устройства', 
-        'Фабрика',	'Подсеть', 'Имя коммутатора', 'Идентификатор порта WWPN'
+        'Фабрика', 'Расположение', 'Имя устройства', 'Порт устройства', 
+        'Подсеть', 'Имя коммутатора', 'Идентификатор порта WWPN'
         ]
 
     # create mask to filter required class only

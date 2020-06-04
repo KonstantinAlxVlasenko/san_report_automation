@@ -1,12 +1,12 @@
-import pandas as pd
-from datetime import date
-# from files_operations import columns_import, status_info, data_extract_objects, load_data, save_data 
-# from files_operations import line_to_list, force_extract_check, update_dct
-
-from files_operations import load_data, save_data, force_extract_check
-from files_operations import save_xlsx_file
-
 """Module to set Fabric names and labels"""
+
+
+from datetime import date
+
+import pandas as pd
+
+from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_miscellaneous import force_extract_check
 
 # auxiliary global variables for auto_fabrics_labeling function
 # variables changed globally each time function called
@@ -19,22 +19,30 @@ called = False
 def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst):
     """Function to set Fabric labels
     """
-    # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
-    
-    print('\n\nSTEP 15. FABRIC NAMES AND LABELS IDENTIFICATION...\n')
-    
+
+    # report_data_lst contains information: 
+    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
-    # check if data already have been extracted
+
+    # names to save data obtained after current module execution
     data_names = ['fabric_labels']
-    data_lst = load_data(report_data_lst, *data_names)  
+    # service step information
+    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+
+    # load data if they were saved on previos program execution iteration
+    data_lst = load_data(report_data_lst, *data_names)
+    # unpacking DataFrames from the loaded list with data
+    # pylint: disable=unbalanced-tuple-unpacking
     fabricshow_ag_labels_df, = data_lst
 
-    # data force extract check. 
-    # if data have been extracted already but extract key is ON then data re-extracted
+    # data force extract check 
+    # list of keys for each data from data_lst representing if it is required 
+    # to re-collect or re-analyze data even they were obtained on previous iterations 
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # list with True (if data loaded) and/or False (if data was not found and None returned)
     data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # when no data saved or force extract flag is on than extract data from configurtion files  
+    # when no data saved or force extract flag is on analyze extracted config data
     if not all(data_check) or any(force_extract_keys_lst):             
         print('\nSETTING UP FABRICS NAMES AND LABELS  ...\n')
     
@@ -66,10 +74,10 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
 
         # service file name for detailed information
         current_date = str(date.today())
-        file_name = customer_name + '_service_report_' + current_date + '.xlsx'
+        file_name = customer_name + '_analysis_report_' + current_date + '.xlsx'
         print('\nAutomatic fabrics labeling\n')
         print(fabricshow_summary_df.loc[:, info_labels])
-        print(f"\nFor detailed switch port types and numbers statistic in each fabric check '{file_name}' service file 'fabricshow_statistics' sheet in\n{report_path} directory")
+        print(f"\nFor detailed switch port types and numbers statistic in each fabric check '{file_name}' file 'fabricshow_statistics' sheet in\n{report_path} directory")
         print('WARNING! CLOSE file after check\n')
         
         # ask user if Automatic Fabric labeling need to be corrected 
@@ -102,6 +110,7 @@ def fabricshow_porttype_state(switchshow_ports_df, fabricshow_df):
     and online ports by crosstab switchshow DataFrame and
     joining with fabricshow DataFrame
     """
+
     # switchshow DataFrame contains Online switches operating in Native mode
     switchshow_df = switchshow_ports_df.loc[(switchshow_ports_df.switchState == 'Online') & 
                                          (switchshow_ports_df.switchMode == 'Native')

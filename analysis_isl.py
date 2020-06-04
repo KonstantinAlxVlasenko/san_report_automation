@@ -1,34 +1,38 @@
 """Module to generate 'InterSwitch links', 'InterFabric links' customer report tables"""
 
-import pandas as pd
+
 import numpy as np
-from files_operations import status_info, load_data, save_data 
-from files_operations import force_extract_check, save_xlsx_file
-from dataframe_operations import dataframe_segmentation, dataframe_join
+import pandas as pd
+
+from common_operations_dataframe import dataframe_join, dataframe_segmentation
+from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_miscellaneous import force_extract_check, status_info
 
 
 def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
     isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst):
     """Main function to create ISL and IFR report tables"""
     
-    # report_data_lst contains [customer_name, dir_report, dir_data_objects, max_title]
-    
-    print('\n\nSTEP 18. INTERSWITCH AND INTERFABRIC TABLES...\n')
-    
+   # report_data_lst contains information: 
+   # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
-    # check if data already have been extracted
+
+    # names to save data obtained after current module execution
     data_names = ['Межкоммутаторные_соединения', 'Межфабричные_соединения']
+    # service step information
+    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    
     # loading data if were saved on previous iterations 
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
+    # pylint: disable=unbalanced-tuple-unpacking
     isl_report_df, ifl_report_df = data_lst
 
     # data force extract check 
-    # if data have been calculated on previous iterations but force key is ON 
-    # then data re-calculated again and saved
-    # force key for each DataFrame
+    # list of keys for each data from data_lst representing if it is required 
+    # to re-collect or re-analyze data even they were obtained on previous iterations 
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # check if data was loaded and not empty
+    # list with True (if data loaded) and/or False (if data was not found and None returned)
     data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)  
     # flag if fabrics labels was forced to be changed 
     fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
