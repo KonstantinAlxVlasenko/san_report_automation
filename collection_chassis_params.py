@@ -55,7 +55,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
             # data unpacking from iter param
             switch_name, sshow_file, ams_maps_file = switch_config_data
             # search control dictionary. continue to check sshow_file until all parameters groups are found
-            collected = {'configshow': False, 'uptime_cpu': False, 'flash': False, 'memory': False, 'dhcp': False, 'licenses': False}
+            collected = {'configshow': False, 'uptime_cpu': False, 'flash': False, 'memory': False, 'dhcp': False, 'licenses': False, 'vf_id': False}
             # dictionary to store all DISCOVERED chassis parameters
             # collecting data only for the chassis in current loop
             chassis_params_dct = {}
@@ -64,6 +64,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
             syslog_set = set()
             tz_lst = []
             licenses = []
+            vf_id = []
 
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} chassis parameters'
@@ -168,12 +169,25 @@ def chassis_params_extract(all_config_data, report_data_lst):
                                 licenses = 'No licenses installed'                                                                            
                             if not line:
                                 break  
-                    # licenses section end                            
+                    # licenses section end
+                    # LS indexes identification start
+                    if re.search(r'Section *: +SSHOW_FABRIC', line):
+                        collected['vf_id'] = True
+                        while not re.search(r'^(SWITCHCMD /fabos/cliexec/)?fabricshow *-version *:$|Non-VF', line):       
+                            if re.search(r'CURRENT +CONTEXT +-- +(\d+) *, \d+', line):
+                                id = re.match(r'CURRENT +CONTEXT +-- +(\d+) *, \d+', line).group(1)
+                                vf_id.append(id)
+                                line = file.readline()
+                            else:
+                                line = file.readline()
+                                if not line:
+                                    break
+                     # LS indexes identification end                  
                             
             # additional values which need to be added to the chassis params dictionary
             # chassis_params_add order (configname, ams_maps_log, chassis_name, snmp_server, syslog_server, timezone_h:m, uptime, cpu_average_load, memory_usage, flash_usage, licenses)
             # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
-            chassis_params_values = (sshow_file, ams_maps_file, switch_name, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
+            chassis_params_values = (sshow_file, ams_maps_file, switch_name, vf_id, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
             
             # adding additional parameters and values to the chassis_params_switch_dct
             for chassis_param_add, chassis_param_value in zip(chassis_params_add,  chassis_params_values):

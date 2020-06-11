@@ -1,7 +1,8 @@
 """
 Module to define connected device class (server, storage, library, switch, vc) and 
 device type (emulex, qlogic, xp, 3par, eva, msa and etc) based on device oui
-and informarion extracted from nameserver
+and informarion extracted from nameserver.
+Auxiliary to analysis_portcmd module.
 """
 
 

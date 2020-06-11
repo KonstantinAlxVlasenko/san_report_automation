@@ -7,7 +7,6 @@ from analysis_fabric_statistics import fabricstatistics_main
 from analysis_isl import isl_main
 from analysis_portcmd import portcmd_analysis_main
 from analysis_switch_params import fabric_main
-
 from collection_bladesystem import blade_system_extract
 from collection_chassis_params import chassis_params_extract
 from collection_fabric_membership import fabricshow_extract
@@ -19,11 +18,10 @@ from collection_portcfg_sfp import portinfo_extract
 from collection_portcmd import portcmdshow_extract
 from collection_switch_params import switch_params_configshow_extract
 from collection_zoning import zoning_extract
-
-from common_operations_dataframe import list_to_dataframe, report_entry_values
+from common_operations_dataframe import list_to_dataframe
 from common_operations_servicefile import (columns_import, dataframe_import,
-                                           dct_from_columns)
-
+                                           dct_from_columns,
+                                           report_entry_values)
 from parser_san_toolbox import (
     create_files_list_to_parse, create_parsed_dirs, santoolbox_process)
 
@@ -70,7 +68,7 @@ def main():
     isl_df, trunk_df, porttrunkarea_df = interswitch_connection(switch_params_lst)
     fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcrouting(switch_params_lst)
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df = zoning(switch_params_lst)
-    blade_module_df, blade_servers_df = blade_system(blade_folder)
+    blade_module_df, blade_servers_df, blade_vc_df = blade_system(blade_folder)
     
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
@@ -78,17 +76,21 @@ def main():
     switch_params_aggregated_df, report_columns_usage_dct, fabric_labeled_df = \
             fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst)
 
+    fabric_clean_df, isl_report_df, ifl_report_df = \
+        isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
+    isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
+
     device_type_df = \
         portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, \
-            alias_df, fdmi_df, blade_servers_df, report_columns_usage_dct, report_data_lst)
+            alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst)
 
     fabric_statistics_df, fabric_statistics_summary_df = \
         fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, 
         fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst)
 
-    fabric_clean_df, isl_report_df, ifl_report_df = \
-        isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
-    isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
+    # fabric_clean_df, isl_report_df, ifl_report_df = \
+    #     isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
+    # isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
       
 
 def config_preparation():
@@ -201,11 +203,12 @@ def zoning(switch_params_lst):
           
 
 def blade_system(blade_folder):
-    module_comprehensive_lst, blades_comprehensive_lst = blade_system_extract(blade_folder, report_data_lst)
+    module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = blade_system_extract(blade_folder, report_data_lst)
     blade_module_df = list_to_dataframe(module_comprehensive_lst, report_data_lst, 'blade_interconnect', 'blades')
     blade_servers_df = list_to_dataframe(blades_comprehensive_lst, report_data_lst, 'blade_servers', 'blades', columns_title_import = 'blade_columns')
+    blade_vc_df = list_to_dataframe(blade_vc_comprehensive_lst, report_data_lst, 'blade_vc', 'blades', columns_title_import = 'blade_vc_columns')
 
-    return blade_module_df, blade_servers_df
+    return blade_module_df, blade_servers_df, blade_vc_df
 
 if __name__ == "__main__":
     main()

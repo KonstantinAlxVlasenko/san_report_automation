@@ -50,6 +50,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
     delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
     """
+    
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
 
     # if report_type == 'collection':
@@ -252,7 +253,7 @@ def load_data(report_data_list, *args):
     return data_imported
 
 
-def create_files_list(folder, file_extension, max_title):
+def create_files_list(folder, file_extension, max_title,):
     """
     Function to create list with files. Takes directory to check
     and file extension as a parameters. Returns list of files with the extension

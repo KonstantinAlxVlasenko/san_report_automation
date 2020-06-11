@@ -15,6 +15,7 @@ def create_report_tables(portshow_aggregated_df, data_names, report_columns_usag
     add_columns_lst = ['FW_Recommeneded', 'Driver_Recommeneded', 'FW_Supported', 'HW_Supported']
     portshow_aggregated_df = portshow_aggregated_df.reindex(columns=[*portshow_aggregated_df.columns.tolist(), *add_columns_lst])
     # partition aggregated DataFrame to required tables
+    # pylint: disable=unbalanced-tuple-unpacking
     servers_report_df, storage_report_df, library_report_df, hba_report_df, \
         storage_connection_df,  library_connection_df, server_connection_df = \
         dataframe_segmentation(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title)

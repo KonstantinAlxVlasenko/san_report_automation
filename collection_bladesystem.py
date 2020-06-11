@@ -14,13 +14,14 @@ from common_operations_servicefile import columns_import, data_extract_objects
 
 def blade_system_extract(blade_folder, report_data_lst):
     """Function to extract blade systems information"""
+    
 
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['blade_interconnect', 'blade_servers']
+    data_names = ['blade_interconnect', 'blade_servers', 'blade_vc']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
@@ -28,7 +29,7 @@ def blade_system_extract(blade_folder, report_data_lst):
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    module_comprehensive_lst, blades_comprehensive_lst = data_lst
+    module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = data_lst
 
     # data force extract check 
     # list of keys for each data from data_lst representing if it is required 
@@ -40,6 +41,16 @@ def blade_system_extract(blade_folder, report_data_lst):
     # when any of data_lst was not saved or 
     # force extract flag is on then re-extract data  from configueation files
     if not all(data_lst) or any(force_extract_keys_lst):
+
+        # lists to store only REQUIRED infromation
+        # collecting data for all blades during looping
+        # list containing enclosure, blade and hba information for all blade systems
+        blades_comprehensive_lst = []
+        # list containing enclosure and interconnect modules information for all blade systems
+        module_comprehensive_lst = []
+        # list containing virtual connect ports information for all blade systems
+        blade_vc_comprehensive_lst = []
+
         if blade_folder:    
             print('\nEXTRACTING BLADES SYSTEM INFORMATION ...\n')   
             
@@ -57,17 +68,10 @@ def blade_system_extract(blade_folder, report_data_lst):
                 module_params = columns_import('blades', max_title, 'module_params')
                 blade_params = columns_import('blades', max_title, 'blade_params')
 
-                # lists to store only REQUIRED infromation
-                # collecting data for all blades during looping
-                # list containing enclosure, blade and hba information for all blade systems
-                blades_comprehensive_lst = []
-                # list containing enclosure and interconnect modules information for all blade systems
-                module_comprehensive_lst = []
-
                 for i, blade_config in enumerate(blade_configs_lst):       
                     # file name with extension
                     configname_wext = os.path.basename(blade_config)
-                    # remoce extension from filename
+                    # remove extension from filename
                     configname, _ = os.path.splitext(configname_wext)
                     # Active Onboard Administrator IP address
                     oa_ip = None
@@ -75,13 +79,14 @@ def blade_system_extract(blade_folder, report_data_lst):
                     module_num = 0
 
                     # current operation information string
-                    info = f'[{i+1} of {configs_num}]: {configname} system. Enclosure, interconnect modules, blade servers, hba'
+                    info = f'[{i+1} of {configs_num}]: {configname} system.'
                     print(info, end =" ")
                     
                     # search control dictionary. continue to check file until all parameters groups are found
-                    collected = {'enclosure': False, 'oa_ip': False, 'module': False, 'servers': False}
+                    collected = {'enclosure': False, 'oa_ip': False, 'module': False, 'servers': False, 'vc': False}
                     # if blade_lst remains empty after file checkimng than status_info shows NO_DATA for current file
                     blade_lst = []
+                    enclosure_vc_lst = []
                     
                     with open(blade_config, encoding='utf-8', errors='ignore') as file:
                         # check file until all groups of parameters extracted
@@ -90,7 +95,7 @@ def blade_system_extract(blade_folder, report_data_lst):
                             if not line:
                                 break
                             # enclosure section start
-                            if re.search(r'>SHOW ENCLOSURE INFO', line):
+                            if re.search(r'>SHOW ENCLOSURE INFO|^ +ENCLOSURE INFORMATION$', line):
                                 enclosure_dct = {}
                                 collected['enclosure'] = True
                                 # while not reach empty line
@@ -104,16 +109,43 @@ def blade_system_extract(blade_folder, report_data_lst):
                                         enclosure_dct[result.group(1).strip()] = result.group(2).strip()      
                                     if not line:
                                         break
+                                # rename Description key to Enclosure Type key for VC
+                                if enclosure_dct.get('Description'):
+                                    enclosure_dct['Enclosure Type'] = enclosure_dct.pop('Description')
                                 # creating list with REQUIRED enclosure information only
                                 enclosure_lst = [enclosure_dct.get(param) for param in enclosure_params]
                             # enclosure section end
+                            # vc fabric connection section start
+                            elif re.search(r'FABRIC INFORMATION', line):
+                                info_type = 'Type VC'
+                                print(info_type, end = " ")
+                                info = info + " " + info_type
+                                line = file.readline()
+                                collected['vc'] = True
+                                while not re.search(r'FC-CONNECTION INFORMATION', line):
+                                    # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                                    match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    # vc_port_match
+                                    if match_dct[match_keys[14]]:
+                                        vc_port = line_to_list(comp_dct[comp_keys[14]], line, *enclosure_lst)
+                                        enclosure_vc_lst.append(vc_port)
+                                        blade_vc_comprehensive_lst.append(vc_port)
+                                        line = file.readline()
+                                    else:
+                                        line = file.readline()
+                                        if not line:
+                                            break
+                            # vc fabric connection section end
                             # active onboard administrator ip section start
                             elif re.search(r'>SHOW TOPOLOGY *$', line):
+                                info_type = 'Type Blade Enclosure'
+                                print(info_type, end = " ")
+                                info = info + " " + info_type
                                 line = file.readline()
                                 collected['oa_ip'] = True
                                 while not re.search(r'^>SHOW', line):
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                     # oa_ip_match
                                     if match_dct[match_keys[1]]:
                                         oa_ip = match_dct[match_keys[1]].group(1)
@@ -267,23 +299,21 @@ def blade_system_extract(blade_folder, report_data_lst):
                         for num in range(-1, -module_num-1, -1):
                             module_comprehensive_lst[num][3] = oa_ip
                         # show status blades information extraction from file
-                        if blade_lst:
+                        if blade_lst or enclosure_vc_lst:
                             status_info('ok', max_title, len(info))
                         else:
                             status_info('no data', max_title, len(info))
-
                 # save extracted data to json file
-                save_data(report_data_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst)
-
+                save_data(report_data_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
         else:
             # current operation information string
             info = f'Collecting enclosure, interconnect modules, blade servers, hba'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
             # save empty data to json file
-            save_data(report_data_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst)
+            save_data(report_data_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        module_comprehensive_lst, blades_comprehensive_lst = verify_data(report_data_lst, data_names, *data_lst)
+        module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_data_lst, data_names, *data_lst)
     
-    return module_comprehensive_lst, blades_comprehensive_lst
+    return module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst

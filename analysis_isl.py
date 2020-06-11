@@ -218,28 +218,6 @@ def fabriclabel_join(fabric_clean_df, isl_aggregated_df, fcredge_df):
     return isl_aggregated_df, fcredge_df
 
 
-# def dataframe_join(left_df, right_df, columns_lst, columns_join_index = None):
-#     """Auxiliary function to join DataFrames
-#     Function take as parameters two DataFrames, 
-#     list with names in right DataFrame with, index which used to separate columns names which join operation performed on
-#     from columns with infromation to join 
-#     """
-
-#     right_join_df = right_df.loc[:, columns_lst].copy()
-#     # left join on switch columns
-#     left_df = left_df.merge(right_join_df, how = 'left', on = columns_lst[:columns_join_index])
-#     # columns names for connected switch 
-#     columns_connected_lst = ['Connected_' + column_name for column_name in columns_lst]
-#     # dictionary to rename columns in right DataFrame
-#     rename_dct = dict(zip(columns_lst, columns_connected_lst))
-#     # rename columns in right DataFrame
-#     right_join_df.rename(columns = rename_dct, inplace = True)
-#     # left join connected switch columns
-#     left_df = left_df.merge(right_join_df, how = 'left', on = columns_connected_lst[:columns_join_index])
-    
-#     return left_df
-
-
 def portcfg_join(portcfgshow_df, isl_aggregated_df):
     """Adding portcfg information to ISL aggregated DataFrame"""
 
@@ -360,6 +338,7 @@ def switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df):
         fcredge_df = fcredge_df.merge(switch_name_df, how = 'left', on='Connected_switchWwn')
         
     return isl_df, trunk_df, fcredge_df
+
 
 def trunk_join(isl_df, trunk_df):
     """Join Trunk and ISL DataFrames

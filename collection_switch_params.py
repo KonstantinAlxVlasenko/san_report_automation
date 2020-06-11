@@ -62,21 +62,19 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
             sshow_file = chassis_params_data_dct['configname']
             chassis_name = chassis_params_data_dct['chassis_name']
             chassis_wwn = chassis_params_data_dct['chassis_wwn']
-            num_ls = int(chassis_params_data_dct["Number_of_LS"]) if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 1
+            # num_ls = int(chassis_params_data_dct["Number_of_LS"]) if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 1
             # when num of logical switches is 0 or None than mode is Non-VF otherwise VF
             ls_mode_on = (True if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else False)
-            ls_mode = ('ON' if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 'OFF')       
+            ls_mode = ('ON' if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 'OFF')
+            # logical switches indexes. if switch is in Non-VF mode then ls_id is 0
+            ls_ids = chassis_params_data_dct['LS_IDs'].split(', ') if chassis_params_data_dct['LS_IDs'] else ['0']      
             
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch parameters. Number of LS: {chassis_params_data_dct["Number_of_LS"]}'
             print(info, end =" ")
-            
-            # logical switch numbers are not always sequential so if LS mode is on 
-            # it is better to make more than num_ls iterations ove supportshow file
-            iterations_num = num_ls +2 if ls_mode_on else 1
 
             # check each logical switch in chassis
-            for i in range(iterations_num):
+            for i in ls_ids:
                 # search control dictionary. continue to check sshow_file until all parameters groups are found
                 collected = {'configshow': False, 'switchshow': False}
                 # dictionary to store all DISCOVERED switch parameters
@@ -147,10 +145,8 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
                 switch_params_values = (sshow_file, chassis_name, chassis_wwn, str(i), ls_mode)
 
                 if switch_params_dct:
-
                     # adding additional parameters and values to the switch_params_switch_dct
-                    update_dct(params_add, switch_params_values, switch_params_dct)
-                                                
+                    update_dct(params_add, switch_params_values, switch_params_dct)                                                
                     # creating list with REQUIRED chassis parameters for the current switch.
                     # if no value in the switch_params_dct for the parameter then None is added 
                     # and appending this list to the list of all switches switch_params_fabric_lst            

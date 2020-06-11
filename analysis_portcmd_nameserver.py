@@ -1,4 +1,7 @@
-"""Module to retrieve storage, host, HBA information from Name Server service data"""
+"""
+Module to retrieve storage, host, HBA information from Name Server service data.
+Auxiliary to analysis_portcmd module.
+"""
 
 
 import re

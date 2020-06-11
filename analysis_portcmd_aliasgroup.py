@@ -1,6 +1,7 @@
 """
 Module to define device name based on aliases of device ports,
-label aliasses and check if aliases defined using wwnn instead of wwnp 
+label aliasses and check if aliases defined using wwnn instead of wwnp.
+Auxiliary to analysis_portcmd module. 
 """
 
 
@@ -67,6 +68,10 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
 
 
 def alias_wwnn_group(portshow_aggregated_df):
+    """
+    Function to group storage and libraries based on wwnn.
+    And find alias group name.
+    """
     
     # it is required to find group names for storages and libraries only 
     portshow_alias_grp_df = portshow_aggregated_df.loc[portshow_aggregated_df.deviceType.isin(['STORAGE', 'LIB'])].copy()
@@ -74,7 +79,6 @@ def alias_wwnn_group(portshow_aggregated_df):
     portshow_alias_grp_df.dropna(subset = ['alias'], inplace = True)
     # change alias case  
     portshow_alias_grp_df.alias = portshow_alias_grp_df.alias.str.upper()
-
 
     # columns required to find name for group of wwns based on alias 
     alias_grp_lst = ['NodeName', 'alias', 'deviceType']
@@ -128,6 +132,10 @@ def alias_wwnn_group(portshow_aggregated_df):
 
 
 def alias_serial_group(portshow_aggregated_df):
+    """
+    Function to group libraries based on serial number.
+    And find alias group name.
+    """
 
     # it is required to find group names for storages and libraries only 
     portshow_alias_grp_df = portshow_aggregated_df.loc[portshow_aggregated_df.deviceType.isin(['STORAGE', 'LIB'])].copy()
@@ -135,22 +143,28 @@ def alias_serial_group(portshow_aggregated_df):
     portshow_alias_grp_df.dropna(subset = ['alias'], inplace = True)
     # change alias case  
     portshow_alias_grp_df.alias = portshow_alias_grp_df.alias.str.upper()
-
+    # columns required to find name for group of serials based on alias
     alias_serial_lst = ['Device_SN', 'alias', 'deviceType']
+    # mask to filter libraries
     mask_lib = portshow_alias_grp_df.deviceType == 'LIB'
+    # serial number value shouldn't be empty
     mask_serial = pd.notna(portshow_alias_grp_df.Device_SN)
-    
+    # filter libraries with non-empty serail number
     lib_sn_df = portshow_alias_grp_df.loc[mask_lib & mask_serial, alias_serial_lst].copy()
     lib_sn_df.drop(columns = ['deviceType'], inplace = True)
 
+    # filter rows from lib DataFrame with repeated serial numbers only
     lib_sn_df = lib_sn_df[lib_sn_df.duplicated(subset=['Device_SN'], keep=False)]
+    # perform aliases grouping based on serial number
     lib_sn_group_df = lib_sn_df.groupby(['Device_SN'], as_index = False).agg({'alias': ', '.join})
+    # define group name for each serail number (find longest common string in aliases for that group)
     lib_sn_group_df['Group_Name'] = lib_sn_group_df.alias.apply(lambda aliases: find_grp_name(aliases))
 
     return lib_sn_group_df
 
 
 def find_grp_name(aliases):
+    """Function to find find longest common string in the set of strings"""
     
     aliases = aliases.split(', ')
 
@@ -166,6 +180,7 @@ def find_grp_name(aliases):
 
 
 def get_longest_common_subseq(data):
+    """Auxiliary function for find_grp_name function"""
     substr = []
     if len(data) > 1 and len(data[0]) > 0:
         for i in range(len(data[0])):
@@ -175,6 +190,8 @@ def get_longest_common_subseq(data):
     return substr
 
 def is_subseq_of_any(find, data):
+    """Auxiliary function for get_longest_common_subseq function"""
+
     if len(data) < 1 and len(find) < 1:
         return False
     for i in range(len(data)):
@@ -184,6 +201,8 @@ def is_subseq_of_any(find, data):
 
 # Will also return True if possible_subseq == seq.
 def is_subseq(possible_subseq, seq):
+    """Auxiliary function for is_subseq_of_any function"""
+    
     if len(possible_subseq) > len(seq):
         return False
     def get_length_n_slices(n):

@@ -3,9 +3,10 @@
 import numpy as np
 import pandas as pd
 
-from analysis_aliasgroup import alias_preparation, group_name_fillna
-from analysis_devicetype import oui_join, type_check
-from analysis_nameserver import nsshow_analysis_main
+from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
+from analysis_portcmd_devicetype import oui_join, type_check
+from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna
+from analysis_portcmd_nameserver import nsshow_analysis_main
 from common_operations_dataframe import dataframe_fillna, dataframe_join
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import force_extract_check, status_info
@@ -15,7 +16,7 @@ from report_portcmd import create_report_tables
 
 
 def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, \
-    nscamshow_df, alias_df, fdmi_df, blade_servers_df, report_columns_usage_dct, report_data_lst):
+    nscamshow_df, alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
     # report_data_lst contains information: 
@@ -75,7 +76,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
 
         portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df = \
             portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, \
-                nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_servers_df, re_pattern_lst)
+                nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))
@@ -103,37 +104,24 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
     return portshow_aggregated_df
 
 
-def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_servers_df, re_pattern_lst):
+def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst):
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
     # add fabric information (FabricName, FabricLabel) and switchMode to portshow_aggregated DataFrame
     portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_aggregated_df)
     # prepare alias_df (label fabrics, replace WWNn with WWNp if present)
     alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df = alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df)
-    
-    # to remove
-    # # prepare nscamshow_df (label fabrics, drop duplicates WWNp)
-    # nscamshow_join_df = nscamshow_preparation(nscamshow_df, fabric_labels_df)
-
     # retrieve storage, host, HBA information from Name Server service and FDMI data
-    # TO REMOVE
-    # nsshow_join_df, nsshow_unsplit_df, fabric_labels_df = nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, switch_params_aggregated_df, re_pattern_lst)
-    nsshow_join_df, nsshow_unsplit_df  = nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst)
-    
-    
-    # to remove
-    # add nsshow and aliases to portshow_df
-    # portshow_aggregated_df = alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nscamshow_join_df)
-
+    nsshow_join_df, nsshow_unsplit_df = nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst)
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
     # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
-    portshow_aggregated_df = blade_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst)
-
-
+    portshow_aggregated_df = blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst)
+    # fillna portshow_aggregated DataFrame null values with values from blade_vc_join_df
+    if not blade_vc_df.empty:
+        portshow_aggregated_df = blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df)
     # calculate virtual channel id for medium priority traffic
     portshow_aggregated_df = vc_id(portshow_aggregated_df)
-
     # add 'deviceType', 'deviceSubtype' columns
     portshow_aggregated_df = portshow_aggregated_df.reindex(columns=[*portshow_aggregated_df.columns.tolist(), 'deviceType', 'deviceSubtype'])
     # add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)
@@ -220,52 +208,6 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     # add aliases to portshow_aggregated_df
     portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 
                                                           on = ['Fabric_name', 'Fabric_label', 'PortName'])
-
-    return portshow_aggregated_df
-
-
-def blade_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst):
-    """
-    Function to fillna portshow_aggregated_df null values with values from blade_servers_join_df.
-    Hostname, location and HBA infromation
-    """
-
-    # regular expression patterns
-    comp_keys, _, comp_dct = re_pattern_lst
-
-    if not blade_servers_df.empty:
-        # make copy to avoid changing original DataFrame
-        blade_servers_join_df = blade_servers_df.copy()
-        # Uppercase Device_Manufacturer column
-        blade_servers_join_df.Device_Manufacturer = blade_servers_join_df.Device_Manufacturer.str.upper()
-
-        # hostname_clean_comp
-        blade_servers_join_df.Host_Name = blade_servers_join_df.Host_Name.replace(comp_dct[comp_keys[0]], np.nan, regex=True)
-
-        # auxiliary lambda function to combine two columns in DataFrame
-        # it combines to columns if both are not null and takes second if first is null
-        # str1 and str2 are strings before columns respectively (dfault is whitespace between columns)
-        wise_combine = lambda series, str1='', str2=' ': \
-            str1 + str(series.iloc[0]) + str2 + str(series.iloc[1]) \
-                if pd.notna(series.iloc[[0,1]]).all() else series.iloc[1]
-        # combine 'Device_Manufacturer' and 'Device_Model' columns
-        blade_servers_join_df.Device_Model = blade_servers_join_df[['Device_Manufacturer', 'Device_Model']].apply(wise_combine, axis=1)
-        # combine 'Enclosure_Name' and 'Server_Slot' columns
-        blade_servers_join_df['Device_Location'] = \
-            blade_servers_join_df[['Enclosure_Name', 'Server_Slot']].apply(wise_combine, axis=1, args=('Enclosure ', ' slot '))
-
-        # rename column to correspond name in portshow_aggregated_df DataFrame
-        blade_servers_join_df.rename(columns = {'portWwn': 'Connected_portWwn'}, inplace = True)
-
-        # columns with null values to fill
-        blade_columns_lst = [
-            'Device_Manufacturer', 'Device_Model', 'Device_SN', 'Host_Name', 
-            'IP_Address', 'HBA_Description', 'HBA_Model', 'Device_Location'
-            ]
-        # fillna portshow_aggregated_df null values with values from blade_servers_join_df
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, blade_servers_join_df, ['Connected_portWwn'], blade_columns_lst)
-        # fillna null values in Device_Host_Name from Host_Name
-        portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)
 
     return portshow_aggregated_df
 
