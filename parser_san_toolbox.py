@@ -31,7 +31,7 @@ def create_parsed_dirs(customer_title, project_path, max_title):
     # current date
     current_date = str(date.today())   
     
-    print(f'\n\nPREREQUISITES 1. CREATING REQUIRED DIRECTORIES ...\n')
+    print(f'\n\nPREREQUISITES 1. CREATING REQUIRED DIRECTORIES\n')
     print(f'Project folder {project_path}')
     # define folder and subfolders to save configuration data (supportsave and ams_maps files)
     santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
@@ -60,7 +60,7 @@ def create_files_list_to_parse(ssave_path):
     Configuration file for Active CP has bigger size
     """
     
-    print(f'\n\nPREREQUISITES 2. SEARCHING SUPPORSAVE CONFIGURATION FILES ...\n')
+    print(f'\n\nPREREQUISITES 2. SEARCHING SUPPORSAVE CONFIGURATION FILES\n')
     print(f'Configuration data folder {ssave_path}')
 
     # check if ssave_path folder exist
@@ -130,7 +130,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     # number of configuration data sets (one set is config files for one switch)
     config_set_num = len(all_files_to_parse_lst)
     
-    print('\n\nPREREQUISITES 3. PROCESSING SUPPORTSAVE FILES WITH SANTOOLBOX ... \n')
+    print('\n\nPREREQUISITES 3. PROCESSING SUPPORTSAVE FILES WITH SANTOOLBOX\n')
     print(f'Parsed configuration files is moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
     
     # going throgh each configuration set (switch) in unpased list

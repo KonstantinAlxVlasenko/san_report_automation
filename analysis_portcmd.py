@@ -104,7 +104,13 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
     return portshow_aggregated_df
 
 
-def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst):
+def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, \
+                        alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst):
+    """
+    Function to fill portshow DataFrame with information from DataFrames passed as params
+    and define fabric device types
+    """
+    
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
     # add fabric information (FabricName, FabricLabel) and switchMode to portshow_aggregated DataFrame
@@ -118,8 +124,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
     portshow_aggregated_df = blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst)
     # fillna portshow_aggregated DataFrame null values with values from blade_vc_join_df
-    if not blade_vc_df.empty:
-        portshow_aggregated_df = blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df)
+    portshow_aggregated_df = blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df)
     # calculate virtual channel id for medium priority traffic
     portshow_aggregated_df = vc_id(portshow_aggregated_df)
     # add 'deviceType', 'deviceSubtype' columns
@@ -139,18 +144,18 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # final device type define
     # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['type', 'subtype']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
     # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['Connected_oui', 'Connected_portWwn']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
-    portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, blade_servers_df), axis = 1)
+    portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(
+        lambda series: type_check(series, switches_oui, blade_servers_df), axis = 1)
     # libraries Device_Host_Name correction to avoid hba information from FDMI DataFrame usage for library name
-    portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: lib_name_correction(series) if pd.notna(series[['deviceType', 'Device_Name']]).all() else series['Device_Host_Name'], axis=1)
-
+    portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: lib_name_correction(series) \
+        if pd.notna(series[['deviceType', 'Device_Name']]).all() else series['Device_Host_Name'], axis=1)
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias group name values
     portshow_aggregated_df = group_name_fillna(portshow_aggregated_df)
-
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias values 
     portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
-
     # fill empty values in portshow_aggregated_df Device_Host_Name column with combination of device class and it's wwnp
-    portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series) if pd.notna(series[['deviceType', 'Connected_portWwn']]).all() else np.nan, axis=1)
+    portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series) \
+        if pd.notna(series[['deviceType', 'Connected_portWwn']]).all() else np.nan, axis=1)
 
     return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df
 

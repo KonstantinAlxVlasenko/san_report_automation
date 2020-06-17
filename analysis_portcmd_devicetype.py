@@ -87,13 +87,20 @@ def type_check(series, switches_oui, blade_servers_df):
                 device_subtype = series['subtype'].split('|')[1]
                 return pd.Series((device_type, device_subtype))
 
-    # if device type is not strictly detected 
+    # if device type is not strictly detected
     if pd.isna(series[['deviceType', 'deviceSubtype']]).any():
+        # Connected_WWNp is not empty and device type and subtype defined
         if series[['type', 'subtype']].notnull().all():                                
             return pd.Series((series['type'], series['subtype']))
+        # Connected_WWNp is empty and no device type and subtype
         else:
+            # define link from AG to Native switch
             if pd.notna(series[['switchMode', 'portType']]).all() and \
                 series[['switchMode', 'portType']].equals(pd.Series({'switchMode': 'Access Gateway Mode', 'portType': 'N-Port'})):
+                return pd.Series(('SWITCH', 'SWITCH'))
+            # define ISL link
+            elif pd.notna(series[['portState', 'portType']]).all() and \
+                ('E-Port' in series['portType'] and series['portState'] == 'Online'):
                 return pd.Series(('SWITCH', 'SWITCH'))
             else:
                 return pd.Series((np.nan, np.nan))

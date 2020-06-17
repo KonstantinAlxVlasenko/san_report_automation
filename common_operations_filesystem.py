@@ -98,7 +98,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
                         workbook.save(file_path)
                     except PermissionError:
                         status_info('fail', max_title, len(info))
-                        print('Permission denied. Close the file.')
+                        print('\nPermission denied. Close the file.\n')
                         sys.exit()
                 else:
                     file_mode = 'w'                
@@ -120,7 +120,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
                     data_frame_flat.to_excel(writer, sheet_name=sheet_title, index=False)
             except PermissionError:
                 status_info('fail', max_title, len(info))
-                print('Permission denied. Close the file.')
+                print('\nPermission denied. Close the file.\n')
                 sys.exit()
             else:
                 status_info('ok', max_title, len(info))        
@@ -242,7 +242,7 @@ def load_data(report_data_list, *args):
                         data_imported.append(json.load(file))
                     # for csv file use read_csv method
                     elif file_csv:
-                        data_imported.append(pd.read_csv(file))
+                        data_imported.append(pd.read_csv(file, dtype='unicode'))
             # display file load status
             except:
                 status_info('no data', max_title, len(info))

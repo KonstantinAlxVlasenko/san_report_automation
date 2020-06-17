@@ -102,6 +102,9 @@ def nsshow_clean(nsshow_labeled_df, re_pattern_lst):
         nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
         # remove whitespace from the right and left side
         nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
+        # 
+        # hostname_clean_comp
+        nsshow_join_df[symb_column].replace(to_replace = r'Embedded-AG', value = np.nan, regex=True, inplace = True)
     
     return nsshow_join_df
 

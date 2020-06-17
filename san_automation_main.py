@@ -33,7 +33,8 @@ Define customer name
 File report_info_xlsx
 """
 
-print('\n\n')
+
+
 
 # global list with constant vars for report operations 
 # (customer name, folder to save report, biggest file name (char number) to print info on screen)
@@ -42,8 +43,15 @@ report_data_lst = []
 # initial max filename title for status represenation
 start_max_title = 60
 
+print('\n\n')
+info = f'ASSESSMENT FOR SAN SERVICE'
+print(info.center(start_max_title + 80, '.'))
+print('\n')
+
 # get report entry values from report file
 customer_name, project_folder, ssave_folder, blade_folder = report_entry_values(start_max_title)
+
+
 
 # dictionary with report steps as keys. each keys has two values
 # first value shows if it is required to export extracted data to excel table
@@ -52,10 +60,10 @@ report_steps_dct = dct_from_columns('service_tables', start_max_title, \
     'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', \
         init_file = 'report_info.xlsx')
 
-print('\n\n')
-info = f'ASSESSMENT FOR SAN {customer_name}'
-print(info.center(start_max_title + 80, '.'))
 
+print('\n')
+info = f'CUSTOMER {customer_name}'
+print(info.center(start_max_title + 80, '.'))
 
 def main():
     
@@ -116,7 +124,7 @@ def config_preparation():
     parsed_lst_columns = ['chassis_name', 'sshow_config', 'ams_maps_log_config']
     list_to_dataframe(parsed_filenames_lst, report_data_lst, 'parsed_files', columns = parsed_lst_columns) 
 
-    return parsed_lst #, report_data_lst
+    return parsed_lst
 
 
 def chassis_maps_params(parsed_lst):

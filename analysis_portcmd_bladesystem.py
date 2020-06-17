@@ -61,41 +61,42 @@ def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df):
     Virtual connect information.
     """
 
-    # columns of Blade Interconnect modules DataFrame
-    module_lst = ['Enclosure_Name',	'Enclosure_SN', 'Interconnect_Bay', 
-                'Interconnect_Name', 'Interconnect_Manufacturer', 
-                'Interconnect_Model', 'Interconnect_SN', 
-                'Interconnect_IP', 'Interconnect_Firmware']
-    # columns of Blade Virtual Connect modules DataFrame 
-    vc_lst = ['Enclosure_Name', 'Enclosure_SN', 
-                'Interconnect_Bay', 'Port', 'portWwn']
-    
-    blade_vc_join_df = blade_vc_df.loc[:, vc_lst].copy()
-    blade_module_join_df = blade_module_df.loc[:, module_lst]
-
-    # combine 'Enclosure_Name' and 'Bay' columns
-    blade_vc_join_df['Device_Location'] = \
-        blade_vc_join_df[['Enclosure_Name', 'Interconnect_Bay']].apply(wise_combine, axis=1, args=('Enclosure ', ' bay '))
+    if not blade_vc_df.empty:
+        # columns of Blade Interconnect modules DataFrame
+        module_lst = ['Enclosure_Name',	'Enclosure_SN', 'Interconnect_Bay', 
+                    'Interconnect_Name', 'Interconnect_Manufacturer', 
+                    'Interconnect_Model', 'Interconnect_SN', 
+                    'Interconnect_IP', 'Interconnect_Firmware']
+        # columns of Blade Virtual Connect modules DataFrame 
+        vc_lst = ['Enclosure_Name', 'Enclosure_SN', 
+                    'Interconnect_Bay', 'Port', 'portWwn']
         
-    # extend Blade Virtual Connect modules DataFrame with values from
-    # Blade Interconnect modules DataFrame
-    blade_vc_join_df = blade_vc_join_df.merge(blade_module_join_df, how = 'left', \
-        on = ['Enclosure_Name',	'Enclosure_SN', 'Interconnect_Bay'])
+        blade_vc_join_df = blade_vc_df.loc[:, vc_lst].copy()
+        blade_module_join_df = blade_module_df.loc[:, module_lst]
 
-    # rename Blade Virtual Connect modules DataFrame columns to correspond
-    # portshow_aggregated_df DataFrame
-    blade_vc_join_df.rename(columns = \
-        {'Port': 'Device_Port', 'portWwn': 'Connected_portWwn', 
-        'Interconnect_Name': 'Device_Host_Name', 'Interconnect_Manufacturer': 'Device_Manufacturer', 
-        'Interconnect_Model': 'Device_Model', 'Interconnect_SN': 'Device_SN', 
-        'Interconnect_IP': 'IP_Address', 'Interconnect_Firmware': 'Device_Fw'}, 
-        inplace = True)
+        # combine 'Enclosure_Name' and 'Bay' columns
+        blade_vc_join_df['Device_Location'] = \
+            blade_vc_join_df[['Enclosure_Name', 'Interconnect_Bay']].apply(wise_combine, axis=1, args=('Enclosure ', ' bay '))
+            
+        # extend Blade Virtual Connect modules DataFrame with values from
+        # Blade Interconnect modules DataFrame
+        blade_vc_join_df = blade_vc_join_df.merge(blade_module_join_df, how = 'left', \
+            on = ['Enclosure_Name',	'Enclosure_SN', 'Interconnect_Bay'])
 
-    # apply lower case to WWNp column
-    blade_vc_join_df.Connected_portWwn = blade_vc_join_df.Connected_portWwn.str.lower()
-    # fillna portshow_aggregated_df null values with values Blade Virtual Connect modules DataFram
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, blade_vc_join_df, ['Connected_portWwn'], 
-                                            ['Device_Port', 'Device_Location', 'Device_Host_Name', 'Device_Manufacturer', 
-                                            'Device_Model', 'Device_SN', 'IP_Address', 'Device_Fw'])
+        # rename Blade Virtual Connect modules DataFrame columns to correspond
+        # portshow_aggregated_df DataFrame
+        blade_vc_join_df.rename(columns = \
+            {'Port': 'Device_Port', 'portWwn': 'Connected_portWwn', 
+            'Interconnect_Name': 'Device_Host_Name', 'Interconnect_Manufacturer': 'Device_Manufacturer', 
+            'Interconnect_Model': 'Device_Model', 'Interconnect_SN': 'Device_SN', 
+            'Interconnect_IP': 'IP_Address', 'Interconnect_Firmware': 'Device_Fw'}, 
+            inplace = True)
+
+        # apply lower case to WWNp column
+        blade_vc_join_df.Connected_portWwn = blade_vc_join_df.Connected_portWwn.str.lower()
+        # fillna portshow_aggregated_df null values with values Blade Virtual Connect modules DataFram
+        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, blade_vc_join_df, ['Connected_portWwn'], 
+                                                ['Device_Port', 'Device_Location', 'Device_Host_Name', 'Device_Manufacturer', 
+                                                'Device_Model', 'Device_SN', 'IP_Address', 'Device_Fw'])
 
     return portshow_aggregated_df
