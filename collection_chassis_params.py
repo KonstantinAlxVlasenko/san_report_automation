@@ -173,7 +173,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
                     # LS indexes identification start
                     if re.search(r'Section *: +SSHOW_FABRIC', line):
                         collected['vf_id'] = True
-                        while not re.search(r'^(SWITCHCMD /fabos/cliexec/)?fabricshow *-version *:$|Non-VF', line):       
+                        while not re.search(r'^(SWITCHCMD /fabos/cliexec/)?dom *:$|Non-VF', line):       
                             if re.search(r'CURRENT +CONTEXT +-- +(\d+) *, \d+', line):
                                 id = re.match(r'CURRENT +CONTEXT +-- +(\d+) *, \d+', line).group(1)
                                 vf_id.append(id)

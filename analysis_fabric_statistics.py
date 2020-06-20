@@ -189,7 +189,11 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
     mask_ag = switchshow_portshow_devicetype_df.switchMode == 'Access Gateway Mode'
     switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'] = \
         switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
+        
     # crosstab DataFrame to count device types number in fabric
+    if switchshow_portshow_devicetype_df.Device_type.isna().all():
+        switchshow_portshow_devicetype_df['Device_type'] = 'Unknown'
+
     target_initiator_df = pd.crosstab(index = [switchshow_portshow_devicetype_df.Fabric_name, 
                                                 switchshow_portshow_devicetype_df.Fabric_label, 
                                                 switchshow_portshow_devicetype_df.chassis_name, 

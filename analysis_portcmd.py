@@ -7,6 +7,7 @@ from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
 from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna
 from analysis_portcmd_nameserver import nsshow_analysis_main
+from analysis_portcmd_gateway import verify_gateway_link
 from common_operations_dataframe import dataframe_fillna, dataframe_join
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import force_extract_check, status_info
@@ -74,9 +75,9 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
         info = f'Generating connected devices table'
         print(info, end =" ") 
 
-        portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df = \
+        portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df = \
             portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, \
-                nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst)
+                nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))
@@ -97,6 +98,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
         save_data(report_data_lst, data_names, *data_lst)
         save_xlsx_file(alias_wwnn_wwnp_df, 'alias_wwnn', report_data_lst)
         save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst)
+        save_xlsx_file(expected_ag_links_df, 'expected_ag_links_df', report_data_lst)
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
@@ -105,7 +107,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, \
-                        alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst):
+                        alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
@@ -139,25 +141,39 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # preliminarily assisgn to all initiators type SRV
     mask_initiator = portshow_aggregated_df.Device_type.isin(['Physical Initiator', 'NPIV Initiator'])
     portshow_aggregated_df.loc[mask_initiator, ['deviceType', 'deviceSubtype']] = ['SRV', 'SRV']
-    # 
+    # define oui for each connected device to identify device type
     switches_oui = switch_params_aggregated_df['switchWwn'].str.slice(start = 6)
-    # final device type define
+    
+    
+    # TO REMOVE
     # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['type', 'subtype']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
     # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['Connected_oui', 'Connected_portWwn']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
+    
+    
+    # final device type define
     portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(
         lambda series: type_check(series, switches_oui, blade_servers_df), axis = 1)
+
+    # verify access gateway links
+    portshow_aggregated_df, expected_ag_links_df = verify_gateway_link(portshow_aggregated_df, report_data_lst)
+    
     # libraries Device_Host_Name correction to avoid hba information from FDMI DataFrame usage for library name
     portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: lib_name_correction(series) \
         if pd.notna(series[['deviceType', 'Device_Name']]).all() else series['Device_Host_Name'], axis=1)
+    
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias group name values
     portshow_aggregated_df = group_name_fillna(portshow_aggregated_df)
+    
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias values 
     portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
+    # save_xlsx_file(portshow_aggregated_df, 'portshow_ag_link', report_data_lst)
     # fill empty values in portshow_aggregated_df Device_Host_Name column with combination of device class and it's wwnp
-    portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series) \
-        if pd.notna(series[['deviceType', 'Connected_portWwn']]).all() else np.nan, axis=1)
+    # portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series) \
+    #     if pd.notna(series[['deviceType', 'Connected_portWwn']]).all() else np.nan, axis=1)
 
-    return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df
+    portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
+    
+    return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df
 
 
 def switchshow_join(portshow_df, switchshow_df):
@@ -225,11 +241,16 @@ def device_name_fillna(series):
 
     mask_switch = series['deviceType'] == 'SWITCH'
     # mask_vc = series['deviceType'] == 'VC'
-    mask_notna = pd.notna(series['Device_Host_Name'])
+    mask_name_notna = pd.notna(series['Device_Host_Name'])
     
+    mask_devicetype_wwn_isna =  pd.isna(series[['deviceType', 'Connected_portWwn']]).any()
+
     # if device is switch or already has name no action required
-    if mask_switch or mask_notna:
+    if mask_switch or mask_name_notna:
         return series['Device_Host_Name']
+    # if no device class defined or no wwn then it's not possible to concatenate to values
+    if  mask_devicetype_wwn_isna:
+        return np.nan
     
     return series['deviceType'] + ' ' + series['Connected_portWwn']
 

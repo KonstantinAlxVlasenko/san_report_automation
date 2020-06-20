@@ -30,6 +30,8 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst
         blade_servers_join_df = blade_servers_df.copy()
         # Uppercase Device_Manufacturer column
         blade_servers_join_df.Device_Manufacturer = blade_servers_join_df.Device_Manufacturer.str.upper()
+        # lower case WWNp
+        blade_servers_join_df.portWwn = blade_servers_join_df.portWwn.str.lower()
 
         # hostname_clean_comp
         blade_servers_join_df.Host_Name = blade_servers_join_df.Host_Name.replace(comp_dct[comp_keys[0]], np.nan, regex=True)
@@ -47,6 +49,8 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst
             'Device_Manufacturer', 'Device_Model', 'Device_SN', 'Host_Name', 
             'IP_Address', 'HBA_Description', 'HBA_Model', 'Device_Location'
             ]
+
+
         # fillna portshow_aggregated_df null values with values from blade_servers_join_df
         portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, blade_servers_join_df, ['Connected_portWwn'], blade_columns_lst)
         # fillna null values in Device_Host_Name from Host_Name

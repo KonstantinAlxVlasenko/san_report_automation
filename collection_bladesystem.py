@@ -239,11 +239,16 @@ def blade_system_extract(blade_folder, report_data_lst):
                                                     line = file.readline()
                                             # mezzanin hba section end
                                             # flex flb hba section start
-                                            # flb_model_match
-                                            elif match_dct[match_keys[8]]:
-                                                result = match_dct[match_keys[8]]
-                                                flex_description = result.group(1)
-                                                flex_model = re.search(comp_dct[comp_keys[13]], line).group(1)
+                                            # flb_model_match and flex_ethernet_match
+                                            elif match_dct[match_keys[8]] or match_dct[match_keys[15]]:
+                                                if match_dct[match_keys[8]]:
+                                                    result = match_dct[match_keys[8]]
+                                                    flex_description = result.group(1)
+                                                    flex_model = re.search(comp_dct[comp_keys[13]], line).group(1)
+                                                elif match_dct[match_keys[15]]:
+                                                    result = match_dct[match_keys[15]]
+                                                    flex_description = result.group(1)
+                                                    flex_model = result.group(1)
                                                 line = file.readline()
                                                 # wwn_mac_line_comp
                                                 while re.search(comp_dct[comp_keys[9]], line):
@@ -254,6 +259,7 @@ def blade_system_extract(blade_folder, report_data_lst):
                                                         result = match_dct[match_keys[10]]
                                                         wwnp = result.group(1)
                                                         hba_lst.append([flex_description, flex_model, wwnp])
+
                                                     line = file.readline()
                                             # flex flb hba section end
                                             # blade server section start
