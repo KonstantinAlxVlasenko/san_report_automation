@@ -6,7 +6,6 @@ Module to define Access Gateway and NPV switches connection.
 import numpy as np
 import pandas as pd
 from common_operations_dataframe import dataframe_fillna
-from common_operations_filesystem import save_xlsx_file
 
 
 portcmd_columns_lst = [
@@ -32,7 +31,7 @@ portcmd_columns_lst = [
     ]
 
 
-def verify_gateway_link(portshow_aggregated_df, report_data_lst):
+def verify_gateway_link(portshow_aggregated_df):
 
     portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
     portshow_aggregated_df['Connected_index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
@@ -42,7 +41,7 @@ def verify_gateway_link(portshow_aggregated_df, report_data_lst):
     master_native_df, master_ag_df, slave_native_df, slave_ag_df =  find_aglink_connected_port(master_native_df, master_ag_df, slave_native_df, slave_ag_df)
     portshow_aggregated_df, expected_ag_links_df = add_aglink_connected_port(portshow_aggregated_df,
                                 master_native_df, master_native_cisco_df, master_ag_df, 
-                                slave_native_df, slave_ag_df, report_data_lst)
+                                slave_native_df, slave_ag_df)
 
     return portshow_aggregated_df, expected_ag_links_df
 
@@ -126,99 +125,43 @@ def find_aglink_connected_port(master_native_df, master_ag_df,
     empty column names in each of AG links groups DataFrames.  
     """
 
-    # columns of DataFrame to merge with
-    join_columns_lst = [
-        'Fabric_name', 
-        'Fabric_label', 
-        'Connected_portId', 
-        'switchName',
-        'Connected_index_slot_port'
-        ]
-
-    # each group with presumed AG links have empty columns with information about
-    # connected device name (Device_Host_Name) and it's port number (Device_Port)
-    rename_columns_dct = {'switchName': 'Device_Host_Name', 'Connected_index_slot_port': 'Device_Port'}
-
-    # dataframe_fillna function accepept as parameters two lists
-    # list with DataFrames column names to merge on  
-    join_lst = ['Fabric_name', 'Fabric_label', 'Connected_portId']
-    # list with DataFrames column names from which information need to be copied
-    # from right to left DataFrame  
-    filled_lst = ['Device_Host_Name', 'Device_Port']
-
     """
     Find ports connected to trunk master and regular ag links of Native mode switch 
     Group#1 (master_native) merged with Group#3 (master_ag)
     """
-    # align Group#3 DataFrame paired for Group#1 DataFrame and perform merge operation
-    master_ag_join_df = master_ag_df.loc[:, join_columns_lst]
-    master_ag_join_df.rename(columns=rename_columns_dct, inplace= True)
-    # fill values for connected switch name and port number for each AG link
-    master_native_df = dataframe_fillna(master_native_df, master_ag_join_df, join_lst, filled_lst)
+    master_native_df = _merge_ag_groups(master_native_df, master_ag_df)
 
     """
     Find ports connected to trunk master and regular ag links of Access Gateway mode switch 
     Group#3 (master_ag) merged with Group#1 (master_native)
     """
-    # align Group#1 DataFrame paired for Group#3 DataFrame and perform merge operation
-    master_native_join_df = master_native_df.loc[:, join_columns_lst]
-    master_native_join_df.rename(columns=rename_columns_dct, inplace= True)
-    # fill values for connected switch name and port number for each AG link
-    master_ag_df = dataframe_fillna(master_ag_df, master_native_join_df, join_lst, filled_lst)
 
-    """
-    It's not possible to strictly identify port number connected to the slave AG link 
-    if number of slave links in trunk exceeds one (FCID is the same for all trunk ports 
-    and there is no WWNp value for slave link). Thus after merge operation we can get
-    multiple ports with the same port number for both sides of the link.
-    To avoid this we apply grouping of links and joining all ports with the same FCID in one line
-    """
-    # columns names grouping performed on
-    grp_lst = portcmd_columns_lst.copy()
-    grp_lst.remove('Device_Port')
+    master_ag_df = _merge_ag_groups(master_ag_df, master_native_df)
 
     """
     Find ports connected to trunk slave ag links of Access Gateway mode switch 
     Group#5 (slave_ag) merged with Group#4 (slave_native)
     """
-    # align Group#4 DataFrame paired for Group#5 DataFrame and perform merge operation
-    slave_native_join_df = slave_native_df.loc[:, join_columns_lst].copy()
-    slave_native_join_df.rename(columns=rename_columns_dct, inplace= True)
-    # fill values for connected switch name and port number for each AG link
-    slave_ag_df = dataframe_fillna(slave_ag_df, slave_native_join_df, join_lst, filled_lst, remove_duplicates=False)
-    # pandas 1.04 is not able to perform grouping if nan values present thus replcae it with unknown value
-    slave_ag_df.fillna('unknown', inplace=True)
-    # grouping ports numbers in case of multiple links in tunk
-    slave_ag_df = slave_ag_df.groupby(grp_lst, as_index = False).agg({'Device_Port': ', '.join})
-    # return nan values
-    slave_ag_df.replace('unknown', np.nan, inplace=True)
+
+    slave_ag_df = _merge_ag_groups(slave_ag_df, slave_native_df, slave_group=True)
 
     """
     Find ports connected to trunk slave ag links of Native mode switch 
     Group#4 (slave_native) merged with Group#5 (slave_ag)
     """
-    # align Group#5 DataFrame paired for Group#4 DataFrame and perform merge operation
-    slave_ag_join_df = slave_ag_df.loc[:, join_columns_lst].copy()
-    slave_ag_join_df.rename(columns=rename_columns_dct, inplace= True)
-    # fill values for connected switch name and port number for each AG link
-    slave_native_df = dataframe_fillna(slave_native_df, slave_ag_join_df, join_lst, filled_lst, remove_duplicates=False)
-    # pandas 1.04 is not able to perform grouping if nan values present thus replcae it with unknown value
-    slave_native_df.fillna('unknown', inplace=True)
-    # grouping ports numbers in case of multiple links in tunk
-    slave_native_df = slave_native_df.groupby(grp_lst, as_index = False).agg({'Device_Port': ', '.join})
-    # return nan values
-    slave_native_df.replace('unknown', np.nan, inplace=True)
+
+    slave_native_df = _merge_ag_groups(slave_native_df, slave_ag_df, slave_group=True)
 
     # fill device type for slave trunk AG links (was not defined before coz of WWNp absence)
-    slave_native_df['deviceType'] = np.where(slave_native_df.Device_Host_Name.notna(), 'SWITCH', np.nan)
-    slave_native_df['deviceSubtype'] = np.where(slave_native_df.Device_Host_Name.notna(), 'SWITCH', np.nan)
+    slave_native_df['deviceType'] = np.where(slave_native_df.Device_Host_Name.notna(), 'SWITCH', pd.NA)
+    slave_native_df['deviceSubtype'] = np.where(slave_native_df.Device_Host_Name.notna(), 'SWITCH', pd.NA)
 
     return  master_native_df, master_ag_df, slave_native_df, slave_ag_df
 
 
 def add_aglink_connected_port(portshow_aggregated_df,
                                 master_native_df, master_native_cisco_df, master_ag_df, 
-                                slave_native_df, slave_ag_df, report_data_lst):    
+                                slave_native_df, slave_ag_df):    
     """
     Function to combine five AG link groups into one, drop undefined links
     and add information about connected switch name
@@ -226,7 +169,7 @@ def add_aglink_connected_port(portshow_aggregated_df,
     All AG links from Native mode switch to the AG/NPV switch marked as NPIV.
     """
 
-    # concatenate AG link groups 1, 2, 3 (links from Native to AG)
+    # concatenate AG link groups 1, 2, 4 (links from Native to AG)
     # mark links as npiv
     ag_df = pd.concat([master_native_df, master_native_cisco_df, slave_native_df])
     expected_ag_links_df = ag_df.copy()
@@ -245,3 +188,61 @@ def add_aglink_connected_port(portshow_aggregated_df,
     portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, ag_df, join_lst, filled_lst)
 
     return portshow_aggregated_df, expected_ag_links_df
+
+
+def _merge_ag_groups(left_group_df, right_group_df, slave_group = False):
+    """
+    Auxiliary function to merge two npiv link groups. Takes right and left groups to merge.
+    Returns left group with connected ports from right group.
+    """
+
+    # columns of DataFrame to merge with
+    join_columns_lst = [
+        'Fabric_name', 
+        'Fabric_label', 
+        'configname',
+        'chassis_name',
+        'chassis_wwn',
+        'switchName',
+        'switchWwn',
+        'Connected_portId',
+        'Connected_index_slot_port'
+        ]
+
+    # each group with presumed AG links have empty columns with information about
+    # connected device name (Device_Host_Name) and it's port number (Device_Port)
+    rename_columns_dct = {'switchName': 'Device_Host_Name', 'Connected_index_slot_port': 'Device_Port'}
+
+    # dataframe_fillna function accepept as parameters two lists
+    # list with DataFrames column names to merge on  
+    join_lst = ['Fabric_name', 'Fabric_label', 'Connected_portId']
+    # list with DataFrames column names from which information need to be copied
+    # from right to left DataFrame  
+    filled_lst = ['Device_Host_Name', 'Device_Port']
+
+    """
+    It's not possible to strictly identify port number connected to the slave AG link 
+    if number of slave links in trunk exceeds one (FCID is the same for all trunk ports 
+    and there is no WWNp value for slave link). Thus after merge operation we can get
+    multiple ports with the same port number for both sides of the link.
+    To avoid this we apply grouping of links and joining all ports with the same FCID in one line
+    """
+    # columns names grouping performed on
+    grp_lst = portcmd_columns_lst.copy()
+    grp_lst.remove('Device_Port')
+
+    # align Group#5 DataFrame paired for Group#4 DataFrame and perform merge operation
+    right_join_df = right_group_df.loc[:, join_columns_lst].copy()
+    right_join_df.rename(columns=rename_columns_dct, inplace= True)
+    # fill values for connected switch name and port number for each AG link
+    left_group_df = dataframe_fillna(left_group_df, right_join_df, join_lst, filled_lst, remove_duplicates=False)
+
+    if slave_group:
+        # pandas 1.04 is not able to perform grouping if nan values present thus replcae it with unknown value
+        left_group_df.fillna('unknown', inplace=True)
+        # grouping ports numbers in case of multiple links in tunk
+        left_group_df = left_group_df.groupby(grp_lst, as_index = False).agg({'Device_Port': ', '.join})
+        # return nan values
+        left_group_df.replace('unknown', pd.NA, inplace=True)
+
+    return left_group_df

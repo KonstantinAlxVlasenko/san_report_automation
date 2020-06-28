@@ -154,9 +154,10 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     # reset index values
     f_s_c_m_i_df.reset_index(inplace=True, drop=True)
 
-    # set DHCP to 'off' for Directors
-    director_type = [42.0, 62.0, 77.0, 120.0, 121.0, 165.0, 166.0]
-    f_s_c_m_i_df.loc[f_s_c_m_i_df.switchType.isin(director_type), 'DHCP'] = 'Off'
+    # # set DHCP to 'off' for Directors
+    # director_type = [42.0, 62.0, 77.0, 120.0, 121.0, 165.0, 166.0]
+    # f_s_c_m_i_df.loc[f_s_c_m_i_df.switchType.isin(director_type), 'DHCP'] = 'Off'
+    
     # add empty column FOS suuported to fill manually 
     f_s_c_m_i_df['FW_Supported'] = pd.Series()
 

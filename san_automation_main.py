@@ -1,7 +1,16 @@
+"""
+Main module to run
+Define folders where configuration data is stored
+Define SAN Assessment project folder to store all data
+Define customer name
+File report_info_xlsx
+"""
+
 import os
 
 import pandas as pd
 
+from analysis_blade_chassis import blademodule_analysis
 from analysis_fabric_label import fabriclabels_main
 from analysis_fabric_statistics import fabricstatistics_main
 from analysis_isl import isl_main
@@ -25,13 +34,7 @@ from common_operations_servicefile import (columns_import, dataframe_import,
 from parser_san_toolbox import (
     create_files_list_to_parse, create_parsed_dirs, santoolbox_process)
 
-"""
-Main module to run
-Define folders where configuration data is stored
-Define SAN Assessment project folder to store all data
-Define customer name
-File report_info_xlsx
-"""
+
 
 
 
@@ -80,6 +83,8 @@ def main():
     
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
+
+    blade_module_loc_df = blademodule_analysis(blade_module_df, report_data_lst)
 
     switch_params_aggregated_df, report_columns_usage_dct, fabric_labeled_df = \
             fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst)

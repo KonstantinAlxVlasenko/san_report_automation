@@ -104,7 +104,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
 
     # construct english columns titles from tables_names_lst to use in columns_import function
     tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]
-    # dictionary to extract required columns from aggregated DataFrame f_s_c_m_i
+    # dictionary to extract required columns from aggregated DataFrame
     data_columns_names_eng_dct = {}
     # for each data element from data_names list import english columns title
     for dataframe_name, df_eng_column in zip(dataframes_to_create_lst, tables_names_eng_lst):
@@ -124,8 +124,13 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     # list with partitioned DataFrames
     segmented_dataframes_lst = []
     for dataframe_name in dataframes_to_create_lst:
+
+        df_columns_names_eng_lst = data_columns_names_eng_dct[dataframe_name]
+        
+
         # get required columns from aggregated DataFrame
-        sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy()
+        # sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy()
+        sliced_dataframe = dataframe_to_segment_df.reindex(columns = df_columns_names_eng_lst).copy()
 
         # translate columns to russian
         sliced_dataframe.rename(columns = data_columns_names_dct[dataframe_name], inplace = True)
