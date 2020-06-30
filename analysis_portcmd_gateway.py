@@ -16,7 +16,7 @@ portcmd_columns_lst = [
     'chassis_wwn',
     'switchName',
     'switchWwn',
-    'Connected_index_slot_port',
+    'Index_slot_port',
     'portIndex',
     'slot',
     'port',
@@ -34,7 +34,7 @@ portcmd_columns_lst = [
 def verify_gateway_link(portshow_aggregated_df):
 
     portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
-    portshow_aggregated_df['Connected_index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
+    portshow_aggregated_df['Index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
         portshow_aggregated_df.slot + '-' + portshow_aggregated_df.port
     portshow_aggregated_df['Connected_NPIV'] = np.where(portshow_aggregated_df.deviceType == 'VC', 'yes', pd.NA)
     master_native_df, master_native_cisco_df, master_ag_df, slave_native_df, slave_ag_df = portcmd_split(portshow_aggregated_df)
@@ -206,12 +206,12 @@ def _merge_ag_groups(left_group_df, right_group_df, slave_group = False):
         'switchName',
         'switchWwn',
         'Connected_portId',
-        'Connected_index_slot_port'
+        'Index_slot_port'
         ]
 
     # each group with presumed AG links have empty columns with information about
     # connected device name (Device_Host_Name) and it's port number (Device_Port)
-    rename_columns_dct = {'switchName': 'Device_Host_Name', 'Connected_index_slot_port': 'Device_Port'}
+    rename_columns_dct = {'switchName': 'Device_Host_Name', 'Index_slot_port': 'Device_Port'}
 
     # dataframe_fillna function accepept as parameters two lists
     # list with DataFrames column names to merge on  

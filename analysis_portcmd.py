@@ -8,6 +8,7 @@ from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna
 from analysis_portcmd_nameserver import nsshow_analysis_main
 from analysis_portcmd_gateway import verify_gateway_link
+from analysis_portcmd_switch import fill_isl_link, fill_switch_info
 from common_operations_dataframe import dataframe_fillna, dataframe_join
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import force_extract_check, status_info
@@ -16,7 +17,7 @@ from common_operations_servicefile import (data_extract_objects,
 from report_portcmd import create_report_tables
 
 
-def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, \
+def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, \
     nscamshow_df, alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
@@ -75,7 +76,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
         print(info, end =" ") 
 
         portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df = \
-            portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, \
+            portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, \
                 nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst)
 
         # after finish display status
@@ -105,7 +106,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
     return portshow_aggregated_df
 
 
-def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, nsshow_df, nscamshow_df, \
+def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
                         alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
@@ -155,6 +156,10 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
 
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = verify_gateway_link(portshow_aggregated_df)
+    # fill isl links information
+    portshow_aggregated_df = fill_isl_link(portshow_aggregated_df, isl_aggregated_df)
+    # fill connected switch information
+    portshow_aggregated_df = fill_switch_info(portshow_aggregated_df, switch_params_aggregated_df)
     
     # libraries Device_Host_Name correction to avoid hba information from FDMI DataFrame usage for library name
     portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: lib_name_correction(series) \

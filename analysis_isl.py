@@ -78,7 +78,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst, report_type = 'report')
 
-    return fabric_clean_df, isl_report_df, ifl_report_df
+    return isl_aggregated_df, fabric_clean_df
 
 
 def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, 

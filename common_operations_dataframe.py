@@ -129,7 +129,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
         
 
         # get required columns from aggregated DataFrame
-        # sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy()
+        # sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy() # remove
         sliced_dataframe = dataframe_to_segment_df.reindex(columns = df_columns_names_eng_lst).copy()
 
         # translate columns to russian
