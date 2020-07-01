@@ -6,7 +6,7 @@ from common_operations_dataframe import dataframe_fillna
 
 
 def fill_isl_link(portshow_aggregated_df, isl_aggregated_df):
-    """Function to add ISL links information (switchname, port) to portcmd DataFrame"""
+    """Function to add ISL links information (switchname, port, ip, model) to portcmd DataFrame"""
 
     if not isl_aggregated_df.empty:
         # extract required columns from isl_aggregated_df

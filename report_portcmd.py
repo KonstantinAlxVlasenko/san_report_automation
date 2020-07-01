@@ -17,7 +17,7 @@ def create_report_tables(portshow_aggregated_df, data_names, report_columns_usag
     # partition aggregated DataFrame to required tables
     # pylint: disable=unbalanced-tuple-unpacking
     servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-        storage_connection_df,  library_connection_df, server_connection_df = \
+        storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = \
         dataframe_segmentation(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title)
     
     # clean and sort DataFrames
@@ -30,19 +30,20 @@ def create_report_tables(portshow_aggregated_df, data_names, report_columns_usag
 
     library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean = True)
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean = True)
+    npiv_report_df = _clean_dataframe(npiv_report_df, 'npiv', duplicates = None, clean = True)
 
     return servers_report_df, storage_report_df, library_report_df, \
-        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df
+        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df
     
 
 def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя устройства', 'Имя группы псевдонимов'], clean = False):
     """
     Auxiliary function to sort, remove duplicates and drop columns in cases they are not required in report DataFrame
     """
-    # list of columns to check if the are empty
+    # list of columns to check if they are empty
     columns_empty = ['Медленное устройство', 'Подключено через AG', 'Real_device_behind_AG']
     # list of columns to check if all values are equal
-    columns_unique = ['Режим коммутатора', 'LSAN']
+    columns_unique = ['Режим коммутатора', 'LSAN', 'Connected_NPIV']
     # list of columns to sort DataFrame on
     columns_sort = [
         'Фабрика', 'Расположение', 'Имя устройства', 'Порт устройства', 
@@ -56,6 +57,8 @@ def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя ус
         mask = df['Класс устройства'] == 'STORAGE'
     elif mask_type == 'lib':
         mask = df['Класс устройства'] == 'LIB'
+    elif mask_type == 'npiv':
+        mask = df['Connected_NPIV'] == 'yes'
 
     # filter DataFrame base on hardware type 
     df = df.loc[mask].copy()
@@ -63,7 +66,8 @@ def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя ус
     columns_sort = [column for column in columns_sort if column in df.columns]
     df.sort_values(by = columns_sort, inplace = True)
 
-    duplicates = [column for column in duplicates if column in df.columns]
+    if duplicates:
+        duplicates = [column for column in duplicates if column in df.columns]
 
     # DataFrames are cleaned in two ways
     # by drop duplicate values in certain columns
@@ -71,7 +75,7 @@ def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя ус
         df.drop_duplicates(subset = duplicates, inplace = True)
     # or by drop entire column
     if clean:
-        # if all values in the column is the same
+        # if all values in the column are the same
         for column in columns_unique:
             if column in df.columns and df[column].nunique() < 2:
                 df.drop(columns = [column], inplace = True)
@@ -106,3 +110,5 @@ def _multi_fabric(df, report_columns_usage_dct):
         df = df.reindex(columns = df_columns)
 
     return df
+
+

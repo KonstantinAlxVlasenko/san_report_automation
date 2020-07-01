@@ -28,7 +28,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
     # names to save data obtained after current module execution
     data_names = [
         'portshow_aggregated', 'Сервера', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
-        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов'
+        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 'NPIV'
         ]
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
@@ -38,7 +38,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     portshow_aggregated_df, servers_report_df, storage_report_df, library_report_df, \
-        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df = data_lst
+        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = data_lst
     nsshow_unsplit_df = pd.DataFrame()
 
     # list of data to analyze from report_info table
@@ -83,7 +83,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
         status_info('ok', max_title, len(info))
 
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-            storage_connection_df,  library_connection_df, server_connection_df = \
+            storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = \
                 create_report_tables(portshow_aggregated_df, data_names[1:], \
                     report_columns_usage_dct, max_title)
 
@@ -91,7 +91,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
         data_lst = [
             portshow_aggregated_df, servers_report_df, storage_report_df, 
             library_report_df, hba_report_df, storage_connection_df,  
-            library_connection_df, server_connection_df
+            library_connection_df, server_connection_df, npiv_report_df
             ]
 
         # saving data to json or csv file
