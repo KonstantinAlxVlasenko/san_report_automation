@@ -4,12 +4,11 @@ import numpy as np
 import pandas as pd
 
 from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
-from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna
-from analysis_portcmd_nameserver import nsshow_analysis_main
+from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_gateway import verify_gateway_link
+from analysis_portcmd_nameserver import nsshow_analysis_main
 from analysis_portcmd_switch import fill_isl_link, fill_switch_info
-from common_operations_dataframe import dataframe_fillna, dataframe_join
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import force_extract_check, status_info
 from common_operations_servicefile import (data_extract_objects,

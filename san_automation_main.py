@@ -97,13 +97,13 @@ def main():
         isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
     isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
 
-    device_type_df = \
+    portshow_aggregated_df = \
         portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
             alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst)
 
     fabric_statistics_df, fabric_statistics_summary_df = \
-        fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, 
-        fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst)
+        fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
+                                nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst)
 
     # fabric_clean_df, isl_report_df, ifl_report_df = \
     #     isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 

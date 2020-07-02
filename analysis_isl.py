@@ -28,14 +28,21 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     # pylint: disable=unbalanced-tuple-unpacking
     isl_report_df, ifl_report_df = data_lst
 
+    # list of data to analyze from report_info table
+    analyzed_data_names = ['isl', 'trunk', 'fcredge', 'sfpshow', 'portcfgshow', 
+                            'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
+                            'maps_parameters', 'blade_interconnect', 'fabric_labels']
+
     # data force extract check 
     # list of keys for each data from data_lst representing if it is required 
     # to re-collect or re-analyze data even they were obtained on previous iterations 
     force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
     # list with True (if data loaded) and/or False (if data was not found and None returned)
-    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)  
-    # flag if fabrics labels was forced to be changed 
-    fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
+    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # check force extract keys for data passed to main function as parameters and fabric labels
+    # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
+    # need to be re-checked regardless if it was analyzed on prev iterations
+    analyzed_data_change_flags_lst = [report_steps_dct[data_name][1] for data_name in analyzed_data_names]
   
     # get aggregated DataFrames
     fabric_clean_df, isl_aggregated_df, fcredge_df = \
@@ -46,11 +53,11 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
 
     # when no data saved or force extract flag is on or fabric labels have been changed than 
     # analyze extracted config data  
-    if not all(data_check) or any(force_extract_keys_lst) or fabric_labels_change:
+    if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_change_flags_lst):
         # information string if fabric labels force changed was initiated
         # and statistics recounting required
-        if fabric_labels_change and not any(force_extract_keys_lst) and all(data_check):
-            info = f'ISL, IFL information force extract due to change in Fabrics labeling'
+        if any(analyzed_data_change_flags_lst) and not any(force_extract_keys_lst) and all(data_check):
+            info = f'Force data processing due to change in collected or analyzed data'
             print(info, end =" ")
             status_info('ok', max_title, len(info))
 

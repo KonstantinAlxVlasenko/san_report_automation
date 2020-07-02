@@ -8,9 +8,10 @@ from common_operations_servicefile import dct_from_columns
 """Module to count Fabric statistics"""
 
 
-def fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst):
-    """Main function to count Fabrics statistics
-    """
+def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
+                            nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst):
+    """Main function to count Fabrics statistics"""
+    
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
@@ -38,6 +39,7 @@ def fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, fabrics
 
     chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
 
+
     # when no data saved or force extract flag is on or fabric labels have been changed than 
     # analyze extracted config data  
     if not all(data_check) or any(force_extract_keys_lst) or fabric_labels_change:
@@ -56,7 +58,9 @@ def fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, fabrics
         port_state_type_df, port_state_summary_df = port_state_statistics(switchshow_df)
         # crosstab to count ports speed (8G, N16, etc) in fabric
         port_speed_df = port_speed_statistics(switchshow_df)
-        # crosstab to count device type (Targer, Initiator and etc) in fabric
+        # crosstab to cound device classes(SRV, STORAGE, SWITCH,VC)
+        device_class_df = device_class_statistics(portshow_aggregated_df)
+        # crosstab to count device type (Target, Initiator and etc) in fabric
         target_initiator_df = target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report_data_lst)
         # crosstab to count ports types (E-port, F-port, etc) in fabric
         portType_df = portType_statistics(switchshow_df)
@@ -65,7 +69,7 @@ def fabricstatistics_main(report_columns_usage_dct, switchshow_ports_df, fabrics
         port_ne_df = n_e_statistics(switchshow_df)
         # merge all counted above data into aggregated table and create summary for each fabric from it
         fabric_statistics_df, fabric_statistics_report_df, fabric_statistics_summary_df = \
-            merge_statisctics(chassis_column_usage, portType_df, target_initiator_df, \
+            merge_statisctics(chassis_column_usage, portType_df, device_class_df, target_initiator_df, \
                 port_speed_df, port_ne_df, port_state_type_df, port_state_summary_df, max_title)
 
         # current operation information string
@@ -101,7 +105,7 @@ def switchshow_labeled(switchshow_ports_df, fabricshow_ag_labels_df):
     return switchshow_df
 
 
-def merge_statisctics(chassis_column_usage, portType_df, target_initiator_df, 
+def merge_statisctics(chassis_column_usage, portType_df, device_class_df, target_initiator_df, 
                       port_speed_df, port_ne_df, 
                       port_state_type_df, port_state_summary_df, max_title):
     """Function to create aggregated statistics table by merging DataFrames
@@ -111,7 +115,9 @@ def merge_statisctics(chassis_column_usage, portType_df, target_initiator_df,
     # statistic and port type (E-port, F-port)
     statistics_df = statistics_df.merge(portType_df, how='left', left_index=True, right_index=True)   
     # statistic and port speed (16G, N32)
-    statistics_df = statistics_df.merge(port_speed_df, how='left', left_index=True, right_index=True)    
+    statistics_df = statistics_df.merge(port_speed_df, how='left', left_index=True, right_index=True)
+    # statistic and device class
+    statistics_df = statistics_df.merge(device_class_df, how='left', left_index=True, right_index=True)
     # statistics and N:E (device ports to inter switch links ratio) summary
     statistics_df = statistics_df.merge(port_ne_df, how='left', left_index=True, right_index=True)   
     # statistics and port state (InSync, NoModule)
@@ -149,6 +155,20 @@ def merge_statisctics(chassis_column_usage, portType_df, target_initiator_df,
     statistics_subtotal_df.rename(columns = statistic_columns_names_dct, inplace = True)
 
     return statistics_df, fabric_statistics_report_df, statistics_subtotal_df
+
+def device_class_statistics(portshow_aggregated_df):
+    """Function to count devce classes (BLADE_SRV, SRV, STORAGE, LIB, SWITCH< VC"""
+
+    # crosstab from portshowaggregated_df
+    device_class_df = pd.crosstab(index= [portshow_aggregated_df.Fabric_name, portshow_aggregated_df.Fabric_label, 
+                                            portshow_aggregated_df.chassis_name, portshow_aggregated_df.switch_index,
+                                            portshow_aggregated_df.switchName, portshow_aggregated_df.switchWwn], 
+                                    columns = portshow_aggregated_df.deviceType, margins = True)
+    
+    # droping 'All' columns
+    device_class_df.drop(columns = 'All', inplace=True)
+
+    return device_class_df
 
 
 def portType_statistics(switchshow_df):

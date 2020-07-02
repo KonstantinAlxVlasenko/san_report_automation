@@ -1,5 +1,5 @@
 """
-Module to define Access Gateway and NPV switches connection.
+Module to define Access Gateway and NPV switches connection in portcmd DataFrame.
 """
 
 

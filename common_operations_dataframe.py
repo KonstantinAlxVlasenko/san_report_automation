@@ -145,12 +145,19 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates 
     Function to fill null values with values from another DataFrame with the same column names.
     Function accepts left Dataframe with null values, right DataFrame with filled values,
     list of columns join_lst used to join left and right DataFrames on,
-    list of columns filled_lst where null values need to be filled. Both join_lst and filled_lst
-    columns need to be present in left and right DataFrames.
+    list of columns filled_lst where null values need to be filled. join_lst
+    columns need to be present in left and right DataFrames. filled_lst must be present in right_df.
+    If some columns from filled_lst missing in left_df it is added and the filled with values from right_df.
     If drop duplicate values in join columns of right DataFrame is not required pass remove_duplicates as False.
     Function returns left DataFrame with filled null values in filled_lst columns 
     """
-    
+
+    # add missing columns to left_df from filled_lst if required
+    left_df_columns_lst = left_df.columns.to_list()
+    add_columns_lst = [column for column in filled_lst if column not in left_df_columns_lst]
+    if add_columns_lst:
+        left_df = left_df.reindex(columns = [*left_df_columns_lst, *add_columns_lst])
+
     # cut off unnecessary columns from right DataFrame
     right_join_df = right_df.loc[:, join_lst + filled_lst].copy()
     # drop rows with null values in columns to join on

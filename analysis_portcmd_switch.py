@@ -76,4 +76,13 @@ def fill_switch_info(portshow_aggregated_df, switch_params_aggregated_df):
     portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
                                                 join_lst = switch_join_columns_lst[:3], filled_lst = switch_join_columns_lst[3:])
 
+    switch_join_columns_lst = ['configname', 'Fabric_name',	'Fabric_label',	
+                                'chassis_name',	'chassis_wwn', 'switchWwn',	'switchName']
+
+    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_params_aggregated_df, 
+                                                switch_join_columns_lst, ['Generation', 'switch_index'], remove_duplicates=True)
+    portshow_aggregated_df.switch_index = portshow_aggregated_df.switch_index.astype('float64')
+    portshow_aggregated_df.switch_index = portshow_aggregated_df.switch_index.astype('int64')
+    portshow_aggregated_df.switch_index = portshow_aggregated_df.switch_index.astype('object')
+
     return portshow_aggregated_df
