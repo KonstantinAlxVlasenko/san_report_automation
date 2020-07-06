@@ -10,6 +10,7 @@ import os
 
 import pandas as pd
 
+from analysis_err_sfp_cfg import err_sfp_cfg_analysis_main
 from analysis_switch_params_upd import  switch_params_analysis_main
 from analysis_blade_chassis import blademodule_analysis
 from analysis_fabric_label import fabriclabels_main
@@ -93,15 +94,18 @@ def main():
     report_columns_usage_dct, switch_params_aggregated_df, fabric_clean_df = \
             switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, blade_module_loc_df, report_data_lst)
 
-    isl_aggregated_df, fabric_clean_df = \
+    isl_aggregated_df = \
         isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
     isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
 
     portshow_aggregated_df = \
-        portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
+        portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
             alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst)
 
-    fabric_statistics_df, fabric_statistics_summary_df = \
+    port_complete_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
+
+
+    statistics_df = \
         fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
                                 nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst)
 

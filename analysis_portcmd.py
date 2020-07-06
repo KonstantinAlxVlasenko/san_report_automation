@@ -8,15 +8,16 @@ from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna
 from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_gateway import verify_gateway_link
 from analysis_portcmd_nameserver import nsshow_analysis_main
-from analysis_portcmd_switch import fill_isl_link, fill_switch_info
+from analysis_portcmd_switch import fill_isl_link, fill_switch_info, switchparams_join, switchshow_join
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
-from common_operations_miscellaneous import force_extract_check, status_info
+from common_operations_miscellaneous import (status_info, verify_data,
+                                             verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
 from report_portcmd import create_report_tables
 
 
-def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, \
+def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, \
     nscamshow_df, alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
@@ -42,29 +43,14 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
-    'fdmi', 'nscamshow', 'nsshow', 'alias', 'blade_servers', 'fabric_labels']
+        'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 'nsshow', 
+            'alias', 'blade_servers', 'fabric_labels']
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations 
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # list with True (if data loaded) and/or False (if data was not found and None returned)
-    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-
-    # check force extract keys for data passed to main function as parameters and fabric labels
-    # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
-    # need to be re-checked regardless if it was analyzed on prev iterations
-    analyzed_data_flags = [report_steps_dct[data_name][1] for data_name in analyzed_data_names]
-
-    # when no data saved or force extract flag is on or data passed as parameters have been changed then 
-    # analyze extracted config data  
-    if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_flags):
-        # information string if data used have been forcibly changed
-        if any(analyzed_data_flags) and not any(force_extract_keys_lst) and all(data_check):
-            info = f'Force data processing due to change in collected or analyzed data'
-            print(info, end =" ")
-            status_info('ok', max_title, len(info))
-
+    # force run when any data from data_lst was not saved (file not found) or 
+    # procedure execution explicitly requested for output data or data used during fn execution  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+                                            max_title, analyzed_data_names)
+    if force_run:
         # data imported from init file (regular expression patterns) to extract values from data columns
         # re_pattern list contains comp_keys, match_keys, comp_dct    
         _, _, *re_pattern_lst = data_extract_objects('nameserver', max_title)
@@ -75,8 +61,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
         print(info, end =" ") 
 
         portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df = \
-            portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, \
-                nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst)
+            portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, \
+                nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))
@@ -98,6 +84,12 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
         save_xlsx_file(alias_wwnn_wwnp_df, 'alias_wwnn', report_data_lst)
         save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst)
         save_xlsx_file(expected_ag_links_df, 'expected_ag_links_df', report_data_lst)
+    # verify if loaded data is empty and replace information string with empty DataFrame
+    else:
+        portshow_aggregated_df, servers_report_df, storage_report_df, \
+            library_report_df, hba_report_df, storage_connection_df, \
+                library_connection_df, server_connection_df, npiv_report_df \
+                    = verify_data(report_data_lst, data_names, *data_lst)
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
@@ -105,8 +97,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_aggreg
     return portshow_aggregated_df
 
 
-def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
-                        alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst):
+def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
+                        alias_df, oui_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
@@ -115,7 +107,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
     # add fabric information (FabricName, FabricLabel) and switchMode to portshow_aggregated DataFrame
-    portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_aggregated_df)
+    portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df, report_data_lst)
     # prepare alias_df (label fabrics, replace WWNn with WWNp if present)
     alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df = alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df)
     # retrieve storage, host, HBA information from Name Server service and FDMI data
@@ -132,23 +124,11 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     portshow_aggregated_df = portshow_aggregated_df.reindex(columns=[*portshow_aggregated_df.columns.tolist(), 'deviceType', 'deviceSubtype'])
     # add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)
     portshow_aggregated_df = oui_join(portshow_aggregated_df, oui_df)
-
-    # TOREMOVE
-    # # allocate oui and vendor information from  from Access Gateway switches WWNp
-    # ag_oui = ag_switches_oui(ag_principal_df)
-
     # preliminarily assisgn to all initiators type SRV
     mask_initiator = portshow_aggregated_df.Device_type.isin(['Physical Initiator', 'NPIV Initiator'])
     portshow_aggregated_df.loc[mask_initiator, ['deviceType', 'deviceSubtype']] = ['SRV', 'SRV']
     # define oui for each connected device to identify device type
     switches_oui = switch_params_aggregated_df['switchWwn'].str.slice(start = 6)
-    
-    
-    # TO REMOVE
-    # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['type', 'subtype']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
-    # portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(lambda series: type_check(series, switches_oui, fdmi_df, blade_servers_df) if series[['Connected_oui', 'Connected_portWwn']].notnull().all() else pd.Series((np.nan, np.nan)), axis = 1)
-    
-    
     # final device type define
     portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(
         lambda series: type_check(series, switches_oui, blade_servers_df), axis = 1)
@@ -158,7 +138,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     # fill isl links information
     portshow_aggregated_df = fill_isl_link(portshow_aggregated_df, isl_aggregated_df)
     # fill connected switch information
-    portshow_aggregated_df = fill_switch_info(portshow_aggregated_df, switch_params_aggregated_df)
+    portshow_aggregated_df = fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df, report_data_lst)
     
     # libraries Device_Host_Name correction to avoid hba information from FDMI DataFrame usage for library name
     portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: lib_name_correction(series) \
@@ -171,43 +151,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_aggregat
     portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
     # fill empty values in portshow_aggregated_df Device_Host_Name column with combination of device class and it's wwnp
     portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
-    
+
     return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df
-
-
-def switchshow_join(portshow_df, switchshow_df):
-    """Function to add switch information to portshow DataFrame
-    Adding switchName, switchWwn, speed and portType
-    Initially DataFrame contains only chassisName and chassisWwn
-    Merge DataFrames on configName, chassisName, chassisWwn, slot and port"""
-    
-    # columns labels reqiured for join operation
-    switchshow_lst = ['configname', 'chassis_name', 'chassis_wwn', 'slot', 'port', 'switchName', 
-                      'switchWwn', 'speed', 'portType']
-    # create left DataFrame for join operation
-    switchshow_join_df = switchshow_df.loc[:, switchshow_lst].copy()
-    # portshow_df and switchshow_join_df DataFrames join operation
-    portshow_aggregated_df = portshow_df.merge(switchshow_join_df, how = 'left', on = switchshow_lst[:5])
-    # # drop offline ports
-    # mask_online = portshow_aggregated_df['portState'] == 'Online'
-    # portshow_aggregated_df = portshow_aggregated_df.loc[mask_online]
-    # # drop columns with empty WWN device column
-    # portshow_aggregated_df.dropna(subset = ['Connected_portWwn'], inplace = True)
-    
-    return portshow_aggregated_df
-
-
-def switchparams_join(portshow_aggregated_df, switch_params_aggregated_df):
-    """Function to label switches in portshow_aggregated_df with Fabric names and labels, switchMode"""
-    
-    # columns labels reqiured for join operation
-    switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 'Fabric_name', 'Fabric_label', 'switchMode']
-    # create left DataFrame for join operation
-    switchparams_join_df = switch_params_aggregated_df.loc[:, switchparams_lst].copy()
-    # portshow_aggregated_df and switchshow_join_df DataFrames join operation
-    portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_join_df, how = 'left', on = switchparams_lst[:5])
-
-    return portshow_aggregated_df
 
 
 def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):

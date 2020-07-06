@@ -139,7 +139,7 @@ def save_data(report_data_list, data_names, *args):
 
     customer_name, _, json_data_dir, max_title, _ = report_data_list    
     # data_names it's a list of names for data passed as args
-    empty_data = None
+    empty_data = False
 
     for data_name, data_exported in zip(data_names, args):
         file_name = customer_name + '_' + data_name
@@ -159,29 +159,28 @@ def save_data(report_data_list, data_names, *args):
             with open(file_path, 'w', encoding="utf-8") as file:
                 # savng data for DataFrame
                 if isinstance(data_exported, pd.DataFrame):
-                    if not data_exported.empty:
-                        # check if DataFrame have MultiIndex
-                        # reset index if True due to MultiIndex is not saved                    
-                        if isinstance(data_exported.index, pd.MultiIndex):
-                            data_exported_flat = data_exported.reset_index()
-                        # keep indexing if False
-                        else:
-                            data_exported_flat = data_exported.copy()
-                        # save single level Index DataFrame to csv
-                        data_exported_flat.to_csv(file, index=False)
+                    # check if DataFrame have MultiIndex
+                    # reset index if True due to MultiIndex is not saved                    
+                    if isinstance(data_exported.index, pd.MultiIndex):
+                        data_exported_flat = data_exported.reset_index()
+                    # keep indexing if False
                     else:
+                        data_exported_flat = data_exported.copy()
+                    # when DataFrame is empty fill first row values
+                    # with information string
+                    if data_exported_flat.empty:
                         empty_data = True
+                        data_exported_flat.loc[0] = 'NO DATA FOUND'
+                    # save single level Index DataFrame to csv
+                    data_exported_flat.to_csv(file, index=False)
+
                 # for all other types
                 else:
                     # if data list is not empty
-                    if len(data_exported) != 0: 
-                        json.dump(data_exported, file)
-                    # otherwise save 'NO DATA' information string to json file 
-                    # to avoid multiple unapplicable data collection
-                    else:
+                    if not len(data_exported):
+                        empty_data = True 
                         data_exported = 'NO DATA FOUND'
-                        json.dump(data_exported, file)
-                        empty_data = True
+                    json.dump(data_exported, file)
         # display writing data to file status
         except FileNotFoundError:
             status_info('fail', max_title, len(info))

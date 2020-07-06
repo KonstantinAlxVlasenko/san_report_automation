@@ -6,7 +6,8 @@ from datetime import date
 import pandas as pd
 
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
-from common_operations_miscellaneous import force_extract_check
+from common_operations_miscellaneous import (status_info, verify_data,
+                                             verify_force_run)
 
 # auxiliary global variables for auto_fabrics_labeling function
 # variables changed globally each time function called
@@ -35,15 +36,25 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
     # pylint: disable=unbalanced-tuple-unpacking
     fabricshow_ag_labels_df, = data_lst
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations 
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # list with True (if data loaded) and/or False (if data was not found and None returned)
-    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # list of data to analyze from report_info table
+    analyzed_data_names = []
+
+    # # data force extract check 
+    # # list of keys for each data from data_lst representing if it is required 
+    # # to re-collect or re-analyze data even they were obtained on previous iterations 
+    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # # list with True (if data loaded) and/or False (if data was not found and None returned)
+    # data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # when no data saved or force extract flag is on analyze extracted config data
-    if not all(data_check) or any(force_extract_keys_lst):             
+    # # when no data saved or force extract flag is on analyze extracted config data
+    # if not all(data_check) or any(force_extract_keys_lst):
+
+
+    # force run when any data from data_lst was not saved (file not found) or 
+    # procedure execution explicitly requested for output data or data used during fn execution  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names)
+
+    if force_run:             
         print('\nSETTING UP FABRICS NAMES AND LABELS  ...\n')
     
         fabricshow_porttype_state_df = fabricshow_porttype_state(switchshow_ports_df, fabricshow_df)
@@ -94,12 +105,23 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         # merge the in one DataFrame and identify which Fabrics they belong too with fabricshow_summary DataFrame
         fabricshow_ag_labels_df = native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df)
 
-        
-        # saving fabricshow_ag_labels DataFrame to csv file
-        save_data(report_data_lst, data_names, fabricshow_ag_labels_df)
+        # create list with partitioned DataFrames
+        data_lst = [fabricshow_ag_labels_df]
+        # saving data to json or csv file
+        save_data(report_data_lst, data_names, *data_lst)
 
-    # saving fabricshow_ag_labels DataFrame to Excel
-    save_xlsx_file(fabricshow_ag_labels_df, 'fabric_labels', report_data_lst, report_type = 'analysis')
+        # # saving fabricshow_ag_labels DataFrame to csv file
+        # save_data(report_data_lst, data_names, fabricshow_ag_labels_df)
+    # verify if loaded data is empty and replace information string with empty DataFrame
+    else:
+       fabricshow_ag_labels_df, = verify_data(report_data_lst, data_names, *data_lst)
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        save_xlsx_file(data_frame, data_name, report_data_lst)
+
+    # TO REMOVE
+    # # saving fabricshow_ag_labels DataFrame to Excel
+    # save_xlsx_file(fabricshow_ag_labels_df, 'fabric_labels', report_data_lst, report_type = 'analysis')
 
     return fabricshow_ag_labels_df
     

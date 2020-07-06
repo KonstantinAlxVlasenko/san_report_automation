@@ -2,7 +2,8 @@ import pandas as pd
 
 # from datetime import date
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
-from common_operations_miscellaneous import force_extract_check, status_info
+from common_operations_miscellaneous import (status_info, verify_data,
+                                             verify_force_run)
 from common_operations_servicefile import dct_from_columns
 
 """Module to count Fabric statistics"""
@@ -11,13 +12,13 @@ from common_operations_servicefile import dct_from_columns
 def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
                             nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst):
     """Main function to count Fabrics statistics"""
-    
+
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['Статистика', 'Статистика_Итого', 'fabric_statistics']
+    data_names = ['statistics', 'Статистика', 'Статистика_Итого', ]
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -25,34 +26,51 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    fabric_statistics_report_df, fabric_statistics_summary_df, fabric_statistics_df  = data_lst
+    statistics_df, statistics_report_df, statistics_summary_report_df  = data_lst
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required re-collect or re-analyze data 
-    # even they  were obtained on previous iterations 
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # list with True (if data loaded) and False (if data was not found and None returned)
-    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # list of data to analyze from report_info table
+    analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
+        'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 'nsshow', 
+            'alias', 'blade_servers', 'fabric_labels']
+
+    # TO REMOVE
+    # # data force extract check 
+    # # list of keys for each data from data_lst representing if it is required re-collect or re-analyze data 
+    # # even they  were obtained on previous iterations 
+    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # # list with True (if data loaded) and False (if data was not found and None returned)
+    # data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # flag if fabrics labels was forced to be changed 
-    fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
+    # # flag if fabrics labels was forced to be changed 
+    # fabric_labels_change = True if report_steps_dct['fabric_labels'][1] else False
 
     chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
 
+    # # TO REMOVE
+    # # when no data saved or force extract flag is on or fabric labels have been changed than 
+    # # analyze extracted config data  
+    # if not all(data_check) or any(force_extract_keys_lst) or fabric_labels_change:
+    #     # information string if fabric labels force changed was initiated
+    #     # and statistics recounting required
+    #     if fabric_labels_change and not any(force_extract_keys_lst) and all(data_check):
+    #         info = f'Statistics force counting due to change in Fabrics labeling'
+    #         print(info, end =" ")
+    #         status_info('ok', max_title, len(info))             
 
-    # when no data saved or force extract flag is on or fabric labels have been changed than 
-    # analyze extracted config data  
-    if not all(data_check) or any(force_extract_keys_lst) or fabric_labels_change:
-        # information string if fabric labels force changed was initiated
-        # and statistics recounting required
-        if fabric_labels_change and not any(force_extract_keys_lst) and all(data_check):
-            info = f'Statistics force counting due to change in Fabrics labeling'
-            print(info, end =" ")
-            status_info('ok', max_title, len(info))             
-        
+    # force run when any data from data_lst was not saved (file not found) or 
+    # procedure execution explicitly requested for output data or data used during fn execution  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+                                            max_title, analyzed_data_names)
+    if force_run:
+
+        # current operation information string
+        info = f'Counting up Fabrics statistics'
+        print(info, end =" ")  
+
         # get labeled switchshow to perform pandas crosstab method
         # to count number of different type of ports values
         switchshow_df = switchshow_labeled(switchshow_ports_df, fabricshow_ag_labels_df)
+        switchshow_df.switch_index = switchshow_df.switch_index.astype('int64')
         # crosstab to count ports state type (In_Sync, No_Light, etc) 
         # and state summary (Online, Total ports and percentage of occupied)
         port_state_type_df, port_state_summary_df = port_state_statistics(switchshow_df)
@@ -67,25 +85,30 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
         # calculating ratio of device ports to inter-switch links
         # number and bandwidth
         port_ne_df = n_e_statistics(switchshow_df)
+
+        # after finish display status
+        status_info('ok', max_title, len(info))
+
         # merge all counted above data into aggregated table and create summary for each fabric from it
-        fabric_statistics_df, fabric_statistics_report_df, fabric_statistics_summary_df = \
+        statistics_df, statistics_report_df, statistics_summary_report_df = \
             merge_statisctics(chassis_column_usage, portType_df, device_class_df, target_initiator_df, \
                 port_speed_df, port_ne_df, port_state_type_df, port_state_summary_df, max_title)
 
-        # current operation information string
-        info = f'Counting up Fabrics statistics'
-        print(info, end =" ")  
 
-        # after finish display status
-        status_info('ok', max_title, len(info)) 
-        # saving fabric_statistics and fabric_statistics_summary DataFrames to csv file
-        save_data(report_data_lst, data_names, fabric_statistics_report_df, fabric_statistics_summary_df, fabric_statistics_df)
-    
+        # create list with partitioned DataFrames
+        data_lst = [statistics_df, statistics_report_df, statistics_summary_report_df]
+
+        # saving data to json or csv file
+        save_data(report_data_lst, data_names, *data_lst)     
+    # verify if loaded data is empty and replace information string with empty DataFrame
+    else:
+        statistics_df, statistics_report_df, statistics_summary_report_df = \
+            verify_data(report_data_lst, data_names, *data_lst)
     # save data to service file if it's required
-    save_xlsx_file(fabric_statistics_report_df, 'Статистика', report_data_lst, report_type = 'report')
-    save_xlsx_file(fabric_statistics_summary_df, 'Статистика_Итого', report_data_lst, report_type = 'report')
+    for data_name, data_frame in zip(data_names, data_lst):
+        save_xlsx_file(data_frame, data_name, report_data_lst)
         
-    return fabric_statistics_df, fabric_statistics_summary_df
+    return statistics_df
 
 
 def switchshow_labeled(switchshow_ports_df, fabricshow_ag_labels_df):
@@ -139,31 +162,38 @@ def merge_statisctics(chassis_column_usage, portType_df, device_class_df, target
     statistics_subtotal_df['%_occupied'] = round(statistics_subtotal_df.Online.div(statistics_subtotal_df.Total_ports_number)*100, 1)
     statistics_subtotal_df = statistics_subtotal_df.astype('int64', errors = 'ignore')
     # create statistic DataFrame copy
-    fabric_statistics_report_df = statistics_df.copy()
+    statistics_report_df = statistics_df.copy()
     # drop columns 'switch_index', 'switchWwn', 'N:E_int', 'N:E_bw_int'
-    fabric_statistics_report_df.drop(columns = ['switch_index', 'switchWwn', 'N:E_int', 'N:E_bw_int'], inplace=True)
+    statistics_report_df.drop(columns = ['switch_index', 'switchWwn', 'N:E_int', 'N:E_bw_int'], inplace=True)
     # drop column 'chassis_name' if it is not required
     if not chassis_column_usage:
-        fabric_statistics_report_df.drop(columns = ['chassis_name'], inplace=True)
+        statistics_report_df.drop(columns = ['chassis_name'], inplace=True)
     # column titles used to create dictionary to traslate column names
     statistic_columns_lst = ['Статистика_eng', 'Статистика_ru']
     # dictionary used to translate column names
     statistic_columns_names_dct = dct_from_columns('customer_report', max_title, *statistic_columns_lst, \
         init_file = 'san_automation_info.xlsx')
     # translate columns in fabric_statistics_report and statistics_subtotal_df DataFrames
-    fabric_statistics_report_df.rename(columns = statistic_columns_names_dct, inplace = True)
+    statistics_report_df.rename(columns = statistic_columns_names_dct, inplace = True)
     statistics_subtotal_df.rename(columns = statistic_columns_names_dct, inplace = True)
 
-    return statistics_df, fabric_statistics_report_df, statistics_subtotal_df
+    return statistics_df, statistics_report_df, statistics_subtotal_df
 
 def device_class_statistics(portshow_aggregated_df):
     """Function to count devce classes (BLADE_SRV, SRV, STORAGE, LIB, SWITCH< VC"""
+    
+    # filter ports without switch_index number
+    mask_index = pd.notna(portshow_aggregated_df.switch_index)
+    portshow_aggregated_idx_df = portshow_aggregated_df.loc[mask_index].copy()
+    # convert switch_index to integer
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('float64')
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('int64')
 
     # crosstab from portshowaggregated_df
-    device_class_df = pd.crosstab(index= [portshow_aggregated_df.Fabric_name, portshow_aggregated_df.Fabric_label, 
-                                            portshow_aggregated_df.chassis_name, portshow_aggregated_df.switch_index,
-                                            portshow_aggregated_df.switchName, portshow_aggregated_df.switchWwn], 
-                                    columns = portshow_aggregated_df.deviceType, margins = True)
+    device_class_df = pd.crosstab(index= [portshow_aggregated_idx_df.Fabric_name, portshow_aggregated_idx_df.Fabric_label, 
+                                            portshow_aggregated_idx_df.chassis_name, portshow_aggregated_idx_df.switch_index,
+                                            portshow_aggregated_idx_df.switchName, portshow_aggregated_idx_df.switchWwn], 
+                                    columns = portshow_aggregated_idx_df.deviceType, margins = True)
     
     # droping 'All' columns
     device_class_df.drop(columns = 'All', inplace=True)

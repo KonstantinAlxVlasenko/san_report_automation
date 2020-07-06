@@ -6,7 +6,7 @@ import pandas as pd
 
 from common_operations_dataframe import dataframe_join, dataframe_segmentation
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
-from common_operations_miscellaneous import force_extract_check, status_info
+from common_operations_miscellaneous import force_extract_check, status_info, verify_data, verify_force_run
 
 
 def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
@@ -18,7 +18,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['Межкоммутаторные_соединения', 'Межфабричные_соединения']
+    data_names = ['isl_aggregated', 'Межкоммутаторные_соединения', 'Межфабричные_соединения']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -26,66 +26,54 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    isl_report_df, ifl_report_df = data_lst
+    isl_aggregated_df, isl_report_df, ifl_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['isl', 'trunk', 'fcredge', 'sfpshow', 'portcfgshow', 
                             'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
                             'maps_parameters', 'blade_interconnect', 'fabric_labels']
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations 
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # list with True (if data loaded) and/or False (if data was not found and None returned)
-    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-    # check force extract keys for data passed to main function as parameters and fabric labels
-    # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
-    # need to be re-checked regardless if it was analyzed on prev iterations
-    analyzed_data_change_flags_lst = [report_steps_dct[data_name][1] for data_name in analyzed_data_names]
-  
-    # get aggregated DataFrames
-    fabric_clean_df, isl_aggregated_df, fcredge_df = \
-        isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
-        isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df)
-    # export DataFrame to excel if required
-    save_xlsx_file(isl_aggregated_df, 'isl_aggregated', report_data_lst, report_type = 'analysis')
+    # force run when any data from data_lst was not saved (file not found) or 
+    # procedure execution explicitly requested for output data or data used during fn execution  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+                                            max_title, analyzed_data_names)
+    if force_run:
+        # current operation information string
+        info = f'Generating ISL and IFL tables'
+        print(info, end =" ")
 
-    # when no data saved or force extract flag is on or fabric labels have been changed than 
-    # analyze extracted config data  
-    if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_change_flags_lst):
-        # information string if fabric labels force changed was initiated
-        # and statistics recounting required
-        if any(analyzed_data_change_flags_lst) and not any(force_extract_keys_lst) and all(data_check):
-            info = f'Force data processing due to change in collected or analyzed data'
-            print(info, end =" ")
-            status_info('ok', max_title, len(info))
+        # get aggregated DataFrames
+        isl_aggregated_df, fcredge_df = \
+            isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
+            isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df)
+
+        # after finish display status
+        status_info('ok', max_title, len(info))      
 
         # partition aggregated DataFrame to required tables
-        isl_report_df, = dataframe_segmentation(isl_aggregated_df, [data_names[0]], report_columns_usage_dct, max_title)
+        isl_report_df, = dataframe_segmentation(isl_aggregated_df, [data_names[1]], report_columns_usage_dct, max_title)
         # if no trunks in fabric drop trunk columns
         if trunk_df.empty:
             isl_report_df.drop(columns = ['Идентификатор транка', 'Deskew', 'Master'], inplace = True)
         # check if IFL table required
         if not fcredge_df.empty:
-            ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[1]], report_columns_usage_dct, max_title)
+            ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[2]], report_columns_usage_dct, max_title)
         else:
             ifl_report_df = fcredge_df.copy()
 
         # create list with partitioned DataFrames
-        data_lst = [isl_report_df, ifl_report_df]
-        # current operation information string
-        info = f'Generating ISL and IFL tables'
-        print(info, end =" ")   
-        # after finish display status
-        status_info('ok', max_title, len(info))
+        data_lst = [isl_aggregated_df, isl_report_df, ifl_report_df]
         # saving fabric_statistics and fabric_statistics_summary DataFrames to csv file
-        save_data(report_data_lst, data_names, *data_lst)        
+        save_data(report_data_lst, data_names, *data_lst)
+    # verify if loaded data is empty and replace information string with empty DataFrame
+    else:
+        isl_aggregated_df, isl_report_df, ifl_report_df = \
+            verify_data(report_data_lst, data_names, *data_lst)
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst, report_type = 'report')
+        save_xlsx_file(data_frame, data_name, report_data_lst)
 
-    return isl_aggregated_df, fabric_clean_df
+    return isl_aggregated_df
 
 
 def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, 
@@ -115,7 +103,7 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     # remove unlabeled switches from isl aggregated Dataframe
     isl_aggregated_df, fcredge_df = remove_empty_fabrics(isl_aggregated_df, fcredge_df)    
     
-    return fabric_clean_df, isl_aggregated_df, fcredge_df
+    return isl_aggregated_df, fcredge_df
     
 
 def remove_empty_fabrics(isl_aggregated_df, fcredge_df):
@@ -261,17 +249,17 @@ def sfp_join(sfpshow_df, isl_aggregated_df):
     """Adding sfp infromation for both ports of the ISL link"""
 
     # column names list to slice sfphshow DataFrame and join with isl_aggregated Dataframe
-    sfp_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Vendor_PN', 'Wavelength_nm',	'Transceiver',	'RX_Power_dBm',	'TX_Power_dBm',	'RX_Power_uW', 'TX_Power_uW']
+    sfp_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Transceiver_PN', 'Wavelength_nm', 'Transceiver_mode',	'RX_Power_dBm',	'TX_Power_dBm',	'RX_Power_uW', 'TX_Power_uW']
     # convert sfp power data to float
     sfp_power_dct = {sfp_power: 'float64' for sfp_power in sfp_lst[7:]}
     sfpshow_df = sfpshow_df.astype(dtype = sfp_power_dct, errors = 'ignore')
-    
+
     # addition switchshow port information to isl_aggregated DataFrame
     isl_aggregated_df = dataframe_join(isl_aggregated_df, sfpshow_df, sfp_lst, 4)    
     #max Transceiver speed
     sfp_speed_dct = {
-            'Transceiver': 'Transceiver_speedMax', 
-            'Connected_Transceiver': 'Connected_Transceiver_speedMax'
+            'Transceiver_mode': 'Transceiver_speedMax', 
+            'Connected_Transceiver_mode': 'Connected_Transceiver_speedMax'
             }
     # extract tranceivers speed and take max value
     for sfp, sfp_sp_max in sfp_speed_dct.items():

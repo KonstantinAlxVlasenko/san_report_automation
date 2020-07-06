@@ -7,7 +7,7 @@ import pandas as pd
 
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
+    force_extract_check, line_to_list, status_info, update_dct, verify_data, verify_force_run)
 from common_operations_servicefile import (columns_import,
                                            data_extract_objects,
                                            dct_from_columns)
@@ -31,16 +31,21 @@ def portinfo_extract(switch_params_lst, report_data_lst):
     # pylint: disable=unbalanced-tuple-unpacking
     sfpshow_lst, portcfgshow_lst = data_lst
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+
+    # # data force extract check 
+    # # list of keys for each data from data_lst representing if it is required 
+    # # to re-collect or re-analyze data even they were obtained on previous iterations
+    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # # print data which were loaded but for which force extract flag is on
+    # force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files  
-    if not all(data_lst) or any(force_extract_keys_lst):    
+    # # when any of data_lst was not saved or 
+    # # force extract flag is on then re-extract data  from configueation files  
+    # if not all(data_lst) or any(force_extract_keys_lst):
+    if force_run:    
         print('\nEXTRACTING SWITCH PORTS SFP, PORTCFG INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')   
         
         # extract chassis parameters names from init file

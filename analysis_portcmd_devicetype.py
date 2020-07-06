@@ -78,9 +78,6 @@ def type_check(series, switches_oui, blade_servers_df):
             # if ultrium type
             elif not pd.isna(series['NodeSymb']) and 'ultrium' in series['NodeSymb'].lower():
                 return pd.Series(('LIB', series['subtype'].split('|')[2]))
-            # # target port type 
-            # elif series['Device_type'] in ['Physical Target', 'NPIV Target', 'Physical Unknown(initiator/target)']:
-            #     pass
             # if not initiator and not target ultrium than it's storage
             else:
                 device_type = series['type'].split('|')[1]
@@ -102,6 +99,10 @@ def type_check(series, switches_oui, blade_servers_df):
             elif pd.notna(series[['portState', 'portType']]).all() and \
                 ('E-Port' in series['portType'] and series['portState'] == 'Online'):
                 return pd.Series(('SWITCH', 'SWITCH'))
+            # when device_type is not defined, oui is not founded, 
+            # and link is not slave AG or ISL but port is Online then device class is UNKNOWN
+            elif series['portState'] == 'Online':
+                return pd.Series(('UNKNOWN', 'UNKNOWN'))
             else:
                 return pd.Series((np.nan, np.nan))
     else:

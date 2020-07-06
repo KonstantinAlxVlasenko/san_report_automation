@@ -58,7 +58,7 @@ def dataframe_join(left_df, right_df, columns_lst, columns_join_index = None):
     """
     Auxiliary function to add information from right DataFrame to left DataFrame
     for both parts of left DataFrame (with and w/o _Connecetd suffix columns).
-    Function take as parameters ledt and right DataFrames, list with names in right DataFrame and 
+    Function take as parameters left and right DataFrames, list with names in right DataFrame and 
     index. Join is performed on columns up to index 
     """
 
@@ -101,12 +101,11 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     for dataframe_name, eng_ru_columns in zip(dataframes_to_create_lst, tables_names_lst):
         data_columns_names_dct[dataframe_name]  = \
             dct_from_columns(customer_report_columns_sheet, max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
-
     # construct english columns titles from tables_names_lst to use in columns_import function
     tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]
     # dictionary to extract required columns from aggregated DataFrame
     data_columns_names_eng_dct = {}
-    # for each data element from data_names list import english columns title
+    # for each data element from data_names list import english columns title to slice main DataFrame 
     for dataframe_name, df_eng_column in zip(dataframes_to_create_lst, tables_names_eng_lst):
         # dataframe_name is key and list with columns names is value for data_columns_names_eng_dct
         data_columns_names_eng_dct[dataframe_name] = columns_import(customer_report_columns_sheet, max_title, df_eng_column, init_file = 'san_automation_info.xlsx')
@@ -126,7 +125,6 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     for dataframe_name in dataframes_to_create_lst:
 
         df_columns_names_eng_lst = data_columns_names_eng_dct[dataframe_name]
-        
 
         # get required columns from aggregated DataFrame
         # sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy() # remove
@@ -136,7 +134,6 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
         sliced_dataframe.rename(columns = data_columns_names_dct[dataframe_name], inplace = True)
         # add partitioned DataFrame to list
         segmented_dataframes_lst.append(sliced_dataframe)
-
     return segmented_dataframes_lst
 
 

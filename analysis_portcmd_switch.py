@@ -1,8 +1,62 @@
 """Module to fill ISL links and switches information in portcmd DataFrame"""
 
 import pandas as pd
+import sys
 
 from common_operations_dataframe import dataframe_fillna
+from common_operations_filesystem import save_xlsx_file
+
+
+def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df, report_data_lst):
+    """
+    Function to label switches in portshow_aggregated_df with Fabric names and labels.
+    Add switchState, switchMode and Generation information
+    """
+    
+    # add Fabric labels from switch_params_aggregated_df Fataframe
+    # columns labels reqiured for join operation
+    switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
+                        'switchName', 'switchWwn', 
+                        'Fabric_name', 'Fabric_label'
+                        ]
+    # create left DataFrame for join operation
+    switchparams_aggregated_join_df = switch_params_aggregated_df.loc[:, switchparams_lst].copy()
+    # portshow_aggregated_df and switchshow_join_df DataFrames join operation
+    portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:5])
+
+    # add 'switch_index', 'switchState', 'switchMode' from switch_params_df
+    # columns labels reqiured for join operation
+    switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
+                        'switchName', 'switchWwn',
+                        'switch_index', 'switchState', 'switchMode']
+
+    switchparams_join_df = switch_params_df.loc[:, switchparams_lst].copy()
+    portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_join_df, how = 'left', on = switchparams_lst[:5])
+
+    # add switch Generation based on chassis wwn
+    switch_generation_lst = ['configname', 'chassis_name', 'chassis_wwn', 'Generation']
+    switch_generation_df = switch_params_aggregated_df.loc[:, switch_generation_lst].copy()
+    switch_generation_df.drop_duplicates(subset = switch_generation_lst[:3], inplace = True)
+    portshow_aggregated_df = portshow_aggregated_df.merge(switch_generation_df, how = 'left', on = switch_generation_lst[:3])
+
+    return portshow_aggregated_df
+
+
+def switchshow_join(portshow_df, switchshow_df):
+    """Function to add switch information to portshow DataFrame
+    Adding switchName, switchWwn, speed and portType
+    Initially DataFrame contains only chassisName and chassisWwn
+    Merge DataFrames on configName, chassisName, chassisWwn, slot and port"""
+    
+    # columns labels reqiured for join operation
+    switchshow_lst = ['configname', 'chassis_name', 'chassis_wwn', 'slot', 'port', 'switchName', 
+                      'switchWwn', 'speed', 'portType']
+    # create left DataFrame for join operation
+    switchshow_join_df = switchshow_df.loc[:, switchshow_lst].copy()
+    # portshow_df and switchshow_join_df DataFrames join operation
+    portshow_aggregated_df = portshow_df.merge(switchshow_join_df, how = 'left', on = switchshow_lst[:5])
+    
+    return portshow_aggregated_df
 
 
 def fill_isl_link(portshow_aggregated_df, isl_aggregated_df):
@@ -46,9 +100,9 @@ def fill_isl_link(portshow_aggregated_df, isl_aggregated_df):
     return portshow_aggregated_df
 
 
-def fill_switch_info(portshow_aggregated_df, switch_params_aggregated_df):
+def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df, report_data_lst):
     """
-    Function to add switch information (SN, IP, Location, FOS, Model) to portcmd DataFrame 
+    Function to add connected switch information (SN, IP, Location, FOS, Model) to portcmd DataFrame 
     based on combination of connected oui and switch main board seral number (oui_board_sn)
     """
     
@@ -75,14 +129,5 @@ def fill_switch_info(portshow_aggregated_df, switch_params_aggregated_df):
     switch_join_columns_lst = switch_params_join_df.columns.to_list()
     portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
                                                 join_lst = switch_join_columns_lst[:3], filled_lst = switch_join_columns_lst[3:])
-
-    switch_join_columns_lst = ['configname', 'Fabric_name',	'Fabric_label',	
-                                'chassis_name',	'chassis_wwn', 'switchWwn',	'switchName']
-
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_params_aggregated_df, 
-                                                switch_join_columns_lst, ['Generation', 'switch_index'], remove_duplicates=True)
-    portshow_aggregated_df.switch_index = portshow_aggregated_df.switch_index.astype('float64')
-    portshow_aggregated_df.switch_index = portshow_aggregated_df.switch_index.astype('int64')
-    portshow_aggregated_df.switch_index = portshow_aggregated_df.switch_index.astype('object')
 
     return portshow_aggregated_df

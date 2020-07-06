@@ -9,7 +9,8 @@ import pandas as pd
 
 from common_operations_dataframe import dataframe_segmentation
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
-from common_operations_miscellaneous import force_extract_check, status_info
+from common_operations_miscellaneous import (status_info, verify_data,
+                                             verify_force_run)
 from common_operations_servicefile import dataframe_import
 
 
@@ -37,30 +38,38 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     # list of data to analyze from report_info table
     analyzed_data_names = ['chassis_parameters', 'switch_parameters', 'switchshow_ports', 
                             'maps_parameters', 'blade_interconnect', 'fabric_labels']
+    # TO REMOVE
+    # # data force extract check 
+    # # list of keys for each data from data_lst representing if it is required 
+    # # to re-collect or re-analyze data even they were obtained on previous iterations 
+    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # # list with True (if data loaded) and/or False (if data was not found and None returned)
+    # data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations 
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # list with True (if data loaded) and/or False (if data was not found and None returned)
-    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # # check force extract keys for data passed to main function as parameters and fabric labels
+    # # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
+    # # need to be re-checked regardless if it was analyzed on prev iterations
+    # analyzed_data_change_flags_lst = [report_steps_dct[data_name][1] for data_name in analyzed_data_names]
 
-    # check force extract keys for data passed to main function as parameters and fabric labels
-    # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
-    # need to be re-checked regardless if it was analyzed on prev iterations
-    analyzed_data_change_flags_lst = [report_steps_dct[data_name][1] for data_name in analyzed_data_names]
+
+    # TO REMOVE
+    # # when no data saved or force extract flag is on or data passed as parameters have been changed then 
+    # # analyze extracted config data  
+    # if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_change_flags_lst):
+    #     # information string if data used have been forcibly changed
+    #     if any(analyzed_data_change_flags_lst) and not any(force_extract_keys_lst) and all(data_check):
+    #         info = f'Force data processing due to change in collected or analyzed data'
+    #         print(info, end =" ")
+    #         status_info('ok', max_title, len(info))
+
 
     # clean fabricshow DataFrame from unneccessary data
     fabric_clean_df = fabric_clean(fabricshow_ag_labels_df)
-
-    # when no data saved or force extract flag is on or data passed as parameters have been changed then 
-    # analyze extracted config data  
-    if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_change_flags_lst):
-        # information string if data used have been forcibly changed
-        if any(analyzed_data_change_flags_lst) and not any(force_extract_keys_lst) and all(data_check):
-            info = f'Force data processing due to change in collected or analyzed data'
-            print(info, end =" ")
-            status_info('ok', max_title, len(info))
+    # force run when any data from data_lst was not saved (file not found) or 
+    # procedure execution explicitly requested for output data or data used during fn execution  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+                                            max_title, analyzed_data_names)
+    if force_run:
 
         # import data with switch models, firmware and etc
         switch_models_df = dataframe_import('switch_models', max_title)
@@ -99,14 +108,6 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
             global_fabric_parameters_report_df.drop_duplicates(subset=['Подсеть'], inplace=True)
         global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)      
 
-
-        
-        # # current operation information string
-        # info = f'Generating Fabric and Switches tables'
-        # print(info, end =" ")   
-        # # after finish display status
-        # status_info('ok', max_title, len(info))
-
         # create list with partitioned DataFrames
         data_lst = [report_columns_usage_dct, switch_params_aggregated_df, 
                     switches_report_df, fabric_report_df, 
@@ -115,7 +116,10 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
 
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
-        
+    # verify if loaded data is empty and replace information string with empty DataFrame
+    else:
+        report_columns_usage_dct, switch_params_aggregated_df, switches_report_df, fabric_report_df, global_fabric_parameters_report_df, \
+            switches_parameters_report_df, licenses_report_df = verify_data(report_data_lst, data_names, *data_lst)
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names[1:], data_lst[1:]):
         save_xlsx_file(data_frame, data_name, report_data_lst)
@@ -130,7 +134,7 @@ def fabric_clean(fabricshow_ag_labels_df):
     fabric_clean_df = fabricshow_ag_labels_df.copy()
     # remove switches which are not part of research 
     # (was not labeled during Fabric labeling procedure)
-    fabric_clean_df.dropna(subset=['Fabric_name', 'Fabric_label'], inplace = True)
+    # fabric_clean_df.dropna(subset=['Fabric_name', 'Fabric_label'], inplace = True)
 
     # remove Front and Translate Domain switches
     mask = fabric_clean_df.Enet_IP_Addr != '0.0.0.0'

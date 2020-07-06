@@ -8,7 +8,8 @@ import pandas as pd
 
 from common_operations_dataframe import dataframe_segmentation
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
-from common_operations_miscellaneous import force_extract_check, status_info
+from common_operations_miscellaneous import (status_info, verify_data,
+                                             verify_force_run)
 from common_operations_servicefile import dataframe_import
 
 
@@ -28,33 +29,16 @@ def blademodule_analysis(blade_module_df, report_data_lst):
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    blade_module_loc_df, blade_module_report_df, = data_lst
-    # nsshow_unsplit_df = pd.DataFrame()
+    blade_module_loc_df, blade_module_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['blade_interconnect']
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations 
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # list with True (if data loaded) and/or False (if data was not found and None returned)
-    data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-
-    # check force extract keys for data passed to main function as parameters and fabric labels
-    # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
-    # need to be re-checked regardless if it was analyzed on prev iterations
-    analyzed_data_change_flags_lst = [report_steps_dct[data_name][1] for data_name in analyzed_data_names]
-
-    # when no data saved or force extract flag is on or data passed as parameters have been changed then 
-    # analyze extracted config data  
-    if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_change_flags_lst):
-        # information string if data used have been forcibly changed
-        if any(analyzed_data_change_flags_lst) and not any(force_extract_keys_lst) and all(data_check):
-            info = f'Force data processing due to change in collected or analyzed data'
-            print(info, end =" ")
-            status_info('ok', max_title, len(info))
-         
+    # force run when any data from data_lst was not saved (file not found) or 
+    # procedure execution explicitly requested for output data or data used during fn execution  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+                                            max_title, analyzed_data_names)
+    if force_run:
         # current operation information string
         info = f'Generating blade modules location table'
         print(info, end =" ") 
@@ -69,6 +53,10 @@ def blademodule_analysis(blade_module_df, report_data_lst):
         data_lst = [blade_module_loc_df, blade_module_report_df]
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
+    # verify if loaded data is empty and replace information string with empty DataFrame
+    else:
+        blade_module_loc_df, blade_module_report_df = \
+            verify_data(report_data_lst, data_names, *data_lst)
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
