@@ -161,10 +161,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     # convert switch_index in f_s_c and maps_params DataFrames to same type
     maps_params_df.switch_index = maps_params_df.switch_index.astype('float64', errors='ignore')
     switch_params_aggregated_df.switch_index = switch_params_aggregated_df.switch_index.astype('float64', errors='ignore')
-
     # complete f_s_c DataFrame with information from maps_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(maps_params_df, how = 'left', on = ['configname', 'chassis_name', 'switch_index'])
-
     # convert switchType in f_s_c_m and switch_models DataFrames to same type
     # convert f_s_c_m_df.switchType from string to float
     switch_params_aggregated_df.switchType = switch_params_aggregated_df.switchType.astype('float64', errors='ignore')
@@ -173,6 +171,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     switch_models_df.switchType = switch_models_df.switchType.astype('float64', errors='ignore')
     # complete f_s_c_m DataFrame with information from switch_models DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(switch_models_df, how='left', on='switchType')
+
+
     # sorting DataFrame
     switch_params_aggregated_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchType', 'chassis_name', 'switch_index'], \
         ascending=[True, True, False, True, True], inplace=True)

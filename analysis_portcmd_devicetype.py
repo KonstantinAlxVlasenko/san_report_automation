@@ -97,7 +97,7 @@ def type_check(series, switches_oui, blade_servers_df):
                 return pd.Series(('SWITCH', 'SWITCH'))
             # define ISL link
             elif pd.notna(series[['portState', 'portType']]).all() and \
-                ('E-Port' in series['portType'] and series['portState'] == 'Online'):
+                ('E-Port' in series['portType'] or 'EX-Port' in series['portType']):
                 return pd.Series(('SWITCH', 'SWITCH'))
             # when device_type is not defined, oui is not founded, 
             # and link is not slave AG or ISL but port is Online then device class is UNKNOWN

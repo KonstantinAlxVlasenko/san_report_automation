@@ -226,7 +226,7 @@ def blade_system_extract(blade_folder, report_data_lst):
                                             if match_dct[match_keys[6]]:
                                                 result = match_dct[match_keys[6]]
                                                 hba_description = result.group(1)
-                                                hba_model = re.search(comp_dct[comp_keys[12]], line).group(1)
+                                                hba_model = result.group(2)
                                                 line = file.readline()
                                                 # mezzanine_wwn_comp
                                                 while re.search(comp_dct[comp_keys[7]], line):

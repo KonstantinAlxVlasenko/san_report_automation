@@ -42,7 +42,6 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     # lowercase SwitchName
     nsshow_lst[3] = nsshow_lst[3][0].lower() + nsshow_lst[3][1:]
     nsshow_join_df.drop(columns = nsshow_lst[:5], inplace = True)
-    
     # fabric labeling alias DataFrame
     alias_prep_df =  alias_df.rename(columns = {'principal_switch_name': 'switchName', 'principal_switchWwn': 'switchWwn'})
     alias_labeled_df = alias_prep_df.merge(fabric_labels_df, how = 'left', on = fabric_labels_lst[:5])
@@ -50,17 +49,17 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     # create alias_join DataFrame
     alias_lst = ['Fabric_name', 'Fabric_label', 'alias', 'alias_member']
     alias_join_df = alias_labeled_df.loc[:, alias_lst].copy()
+    # drop aliases from fabrics that is not part of the assessment
+    alias_join_df.dropna(subset=['Fabric_name', 'Fabric_label'], inplace=True)
     # merging alias_join and nsshow_join DataFrame
     # if alias_member column contains WWNn then new column contains corresponding WWNp for that WWNn
-    alias_wwnn_wwnp_df = alias_join_df.merge(nsshow_join_df, how = 'left', left_on = ['Fabric_name', 'Fabric_label', 'alias_member'], right_on = ['Fabric_name', 'Fabric_label', 'NodeName'])
+    alias_wwnn_wwnp_df = alias_join_df.merge(nsshow_join_df, how = 'left', left_on = ['Fabric_name', 'Fabric_label', 'alias_member'], \
+                                                                                    right_on = ['Fabric_name', 'Fabric_label', 'NodeName'])
     # fill empty cells in WWNn -> WWNp column with alias_member WWNp values thus filtering off all WWNn values
     alias_wwnp_df = alias_wwnn_wwnp_df.copy()   
     alias_wwnp_df.PortName.fillna(alias_join_df['alias_member'], inplace = True)
-
     # drop possibly mixed WWNp and WWNn column alias_memeber and pure WWNn column
     alias_wwnp_df.drop(columns = ['alias_member', 'NodeName'], inplace = True)
-    # alias_wwnp_df = alias_join_df.loc[:, ['Fabric_name', 'Fabric_label', 'alias', 'PortName']]
-
     # if severeal aliases for one wwnp then combine all into one alias
     alias_wwnp_df = alias_wwnp_df.groupby(['Fabric_name', 'Fabric_label', 'PortName'], as_index = False).agg(', '.join)
 
@@ -167,12 +166,9 @@ def find_grp_name(aliases):
     """Function to find find longest common string in the set of strings"""
     
     aliases = aliases.split(', ')
-
     if len(aliases) == 1:
         return aliases[0]
-    
     grp_name = get_longest_common_subseq(aliases)
-    
     if not grp_name or len(grp_name) < 3:
         return None
     

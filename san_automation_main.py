@@ -10,6 +10,7 @@ import os
 
 import pandas as pd
 
+from analysis_zoning import zoning_analysis_main
 from analysis_err_sfp_cfg import err_sfp_cfg_analysis_main
 from analysis_switch_params_upd import  switch_params_analysis_main
 from analysis_blade_chassis import blademodule_analysis
@@ -103,6 +104,12 @@ def main():
             alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst)
 
     port_complete_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
+
+    zoning_aggregated_df = \
+        zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
+                                cfg_df, zone_df, alias_df, cfg_effective_df, 
+                                    fcrfabric_df, lsan_df,
+                                        report_columns_usage_dct, report_data_lst)
 
 
     statistics_df = \

@@ -29,7 +29,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
     statistics_df, statistics_report_df, statistics_summary_report_df  = data_lst
 
     # list of data to analyze from report_info table
-    analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
+    analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 'portshow_aggregated',
         'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 'nsshow', 
             'alias', 'blade_servers', 'fabric_labels']
 
