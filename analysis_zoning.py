@@ -8,7 +8,7 @@ import pandas as pd
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
-from common_operations_dataframe import dataframe_join
+from common_operations_dataframe import dataframe_join, dataframe_fillna, dataframe_segmentation
 
 
 def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
@@ -22,7 +22,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
 
     # names to save data obtained after current module execution
     data_names = [
-        'zoning_aggregated'
+        'zoning_aggregated', 'alias_aggregated', 'Зонирование', 'Псевдонимы'
         ]
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
@@ -31,7 +31,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    zoning_aggregated_df, = data_lst
+    zoning_aggregated_df, alias_aggregated_df, zoning_report_df, alias_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['cfg', 'cfg_effective', 'zone', 'alias',
@@ -47,76 +47,142 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
         info = f'Generating zoning table'
         print(info, end =" ") 
 
-        zoning_aggregated_df = zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
+        zoning_aggregated_df, alias_aggregated_df = zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
                                                     cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, report_data_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))
 
-        # servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-        #     storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = \
-        #         create_report_tables(portshow_aggregated_df, data_names[1:], \
-        #             report_columns_usage_dct, max_title)
+        zoning_report_df = create_report(zoning_aggregated_df, data_names[2:3], report_columns_usage_dct, max_title)
+        alias_report_df = create_report(alias_aggregated_df, data_names[3:], report_columns_usage_dct, max_title)
 
         # create list with partitioned DataFrames
-        data_lst = [
-            zoning_aggregated_df
-            ]
+        data_lst = [zoning_aggregated_df, alias_aggregated_df, zoning_report_df, alias_report_df]
 
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
-        # save_xlsx_file(alias_wwnn_wwnp_df, 'alias_wwnn', report_data_lst)
-        # save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst)
-        # save_xlsx_file(expected_ag_links_df, 'expected_ag_links_df', report_data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        zoning_aggregated_df, = verify_data(report_data_lst, data_names, *data_lst)
+        zoning_aggregated_df, alias_aggregated_df, zoning_report_df, alias_report_df = verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [zoning_aggregated_df, alias_aggregated_df, zoning_report_df, alias_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
 
-    return zoning_aggregated_df
+    return zoning_aggregated_df, alias_aggregated_df
+
+
+def create_report(aggregated_df, data_name, report_columns_usage_dct, max_title):
+    
+    cleaned_df = drop_columns(aggregated_df, report_columns_usage_dct)
+    report_df, = dataframe_segmentation(cleaned_df, data_name, report_columns_usage_dct, max_title)
+
+    return report_df
+
+
+
+
+def drop_columns(aggregated_df, report_columns_usage_dct):
+    
+    fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
+    check_df = aggregated_df.copy()
+    check_df.dropna(subset = ['zonemember_Fabric_name', 'zonemember_Fabric_label'], inplace=True)
+    
+    mask_fabricname = (check_df.Fabric_name == check_df.zonemember_Fabric_name).all()
+    mask_fabriclabel = (check_df.Fabric_label == check_df.zonemember_Fabric_label).all()
+    
+    if mask_fabricname and mask_fabriclabel:
+        aggregated_df.drop(columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'], inplace=True)
+
+    if not fabric_name_usage and ('zonemember_Fabric_name' in aggregated_df.columns):
+        aggregated_df.drop(columns=['zonemember_Fabric_name'], inplace=True)
+        
+    if aggregated_df.LSAN_device_state.isna().all():
+        aggregated_df.drop(columns=['LSAN_device_state'], inplace=True)
+
+    check_df.dropna(subset = ['Wwn_type'], inplace=True)
+    mask_wwnp = (check_df.Wwn_type == 'Wwnp').all()
+    if mask_wwnp:
+        aggregated_df.drop(columns=['Wwn_type'], inplace=True)
+        
+    return aggregated_df
+
+
+
+# def drop_columns(aggregated_df):
+    
+#     check_df = zoning_aggregated_df.copy()
+#     check_df.dropna(subset = ['zonemember_Fabric_name', 'zonemember_Fabric_label'], inplace=True)
+    
+#     mask_fabricname = (check_df.Fabric_name == check_df.zonemember_Fabric_name).all()
+#     mask_fabriclabel = (check_df.Fabric_label == check_df.zonemember_Fabric_label).all()
+    
+#     if mask_fabricname and mask_fabriclabel:
+#         zoning_aggregated_df.drop(columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'], inplace=True)
+        
+#     check_df.dropna(subset = ['Wwn_type'], inplace=True)
+#     mask_wwnp = (check_df.Wwn_type == 'Wwnp').all()
+#     if mask_wwnp:
+#         zoning_aggregated_df.drop(columns=['Wwn_type'], inplace=True)
+        
+#     return zoning_aggregated_df
 
 
 def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
                         cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, report_data_lst):
 
 
+    zoning_aggregated_df, alias_aggregated_df = \
+        zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df)
 
+    zoning_aggregated_df, alias_aggregated_df = wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
 
-    zoning_aggregated_df = zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df)
+    zoning_aggregated_df, alias_aggregated_df = \
+        zonemember_connection_verify(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
 
-
-
-
-
-    # wwnn_lst = sorted(portshow_aggregated_df.NodeName.dropna().drop_duplicates().to_list())
-    # wwnp_lst = sorted(portshow_aggregated_df.PortName.dropna().drop_duplicates().to_list())
-    # wwn_intersection = set(wwnp_lst).intersection(wwnn_lst)
-    # wwnp_clear_lst = [wwnp for wwnp in wwnp_lst if wwnp not in wwn_intersection]
-    # wwnn_clear_lst = [wwnn for wwnn in wwnn_lst if wwnn not in wwn_intersection]
-
-    # zoning_aggregated_df['Wwn_type'] = zoning_aggregated_df.alias_member.apply(lambda wwn: wwn_check(wwn, wwnp_clear_lst, wwnn_clear_lst, wwn_intersection))
-
-    zoning_aggregated_df = wwn_type(zoning_aggregated_df, portshow_aggregated_df)
-
-
-
-    zoning_aggregated_df = zonemember_connection_verify(zoning_aggregated_df, portshow_aggregated_df)
-
-
-
-
-
-
-    zoning_aggregated_df = lsan_state_verify(zoning_aggregated_df, switch_params_aggregated_df, fcrfabric_df, lsan_df)
+    zoning_aggregated_df, alias_aggregated_df = \
+        lsan_state_verify(zoning_aggregated_df,alias_aggregated_df, switch_params_aggregated_df, fcrfabric_df, lsan_df)
+    
     zoning_aggregated_df = zonemember_in_cfg_fabric_verify(zoning_aggregated_df)
+
+    alias_aggregated_df = zonemember_in_cfg_fabric_verify(alias_aggregated_df)
+
+    alias_aggregated_df = alias_cfg_type(alias_aggregated_df, zoning_aggregated_df)
+
+    zoning_aggregated_df, alias_aggregated_df = sort_dataframe(zoning_aggregated_df, alias_aggregated_df)
 
 
      # zoning_aggregated_df['Member_in_cfg_Fabric'] = np.where(pd.isna(zoning_aggregated_df.zonemember_Fabric_name), np.nan, zoning_aggregated_df['Member_in_cfg_Fabric'])
-    zoning_aggregated_df = drop_columns(zoning_aggregated_df)
+    # zoning_aggregated_df = drop_columns(zoning_aggregated_df)
 
-    return zoning_aggregated_df 
+    return zoning_aggregated_df, alias_aggregated_df 
+
+
+def sort_dataframe(zoning_aggregated_df, alias_aggregated_df):
+
+
+    # sorting DataFrame
+
+    sort_zone_lst = ['cfg_type', 'Fabric_label', 'zone', 'deviceType', 'zone_member', 'Fabric_name']
+    sort_alias_lst = ['cfg_type', 'Fabric_label', 'deviceType',	'deviceSubtype', 'zone_member']
+    zoning_aggregated_df.sort_values(by=sort_zone_lst, \
+        ascending=[False, *5*[True]], inplace=True)
+    alias_aggregated_df.sort_values(by=sort_alias_lst, \
+        ascending=[False, *4*[True]], inplace=True)
+
+    return zoning_aggregated_df, alias_aggregated_df
+
+def alias_cfg_type(alias_aggregated_df, zoning_aggregated_df):
+
+    mask_effective = zoning_aggregated_df['cfg_type'].str.contains('effective', na=False)
+    mask_defined = zoning_aggregated_df['cfg_type'].str.contains('defined', na=False)
+    cfg_lst = ['Fabric_name', 'Fabric_label', 'zone_member', 'alias_member', 'cfg_type']
+    cfg_effective_df = zoning_aggregated_df.loc[mask_effective, cfg_lst]
+    cfg_defined_df = zoning_aggregated_df.loc[mask_defined, cfg_lst]
+    alias_aggregated_df = dataframe_fillna(alias_aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+    alias_aggregated_df = dataframe_fillna(alias_aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+
+    return alias_aggregated_df
 
 
 def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df):
@@ -133,9 +199,12 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
     zoning_aggregated_df = zoning_aggregated_df.merge(alias_join_df, how='left', on = ['Fabric_name', 'Fabric_label', 'zone_member'])
     zoning_aggregated_df.alias_member.fillna(zoning_aggregated_df.zone_member, inplace=True)
 
-    return zoning_aggregated_df
+    alias_aggregated_df = alias_join_df.copy()
+    alias_aggregated_df = alias_aggregated_df.reindex(columns= ['Fabric_name', 'Fabric_label', 'zone_member', 'alias_member'])
 
-def zonemember_connection_verify(zoning_aggregated_df, portshow_aggregated_df):
+    return zoning_aggregated_df, alias_aggregated_df
+
+def zonemember_connection_verify(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
 
     port_node_name_df = portshow_aggregated_df[['PortName', 'NodeName']].copy()
     port_node_name_df.dropna(subset = ['PortName', 'NodeName'], inplace=True)
@@ -143,6 +212,9 @@ def zonemember_connection_verify(zoning_aggregated_df, portshow_aggregated_df):
 
     zoning_aggregated_df = zoning_aggregated_df.merge(port_node_name_df, how='left', on=['alias_member'])
     zoning_aggregated_df.Strict_Wwnp.fillna(zoning_aggregated_df.alias_member, inplace=True)
+
+    alias_aggregated_df = alias_aggregated_df.merge(port_node_name_df, how='left', on=['alias_member'])
+    alias_aggregated_df.Strict_Wwnp.fillna(alias_aggregated_df.alias_member, inplace=True)
 
     port_columns_lst = ['Fabric_name', 'Fabric_label', 
                     'Device_Host_Name', 'Group_Name', 
@@ -160,22 +232,26 @@ def zonemember_connection_verify(zoning_aggregated_df, portshow_aggregated_df):
     zoning_aggregated_df = zoning_aggregated_df.merge(portcmd_join_df, how='left', on=['Strict_Wwnp']) 
     zoning_aggregated_df.drop(columns=['Strict_Wwnp'], inplace=True)
 
-    return zoning_aggregated_df
+    alias_aggregated_df = alias_aggregated_df.merge(portcmd_join_df, how='left', on=['Strict_Wwnp']) 
+    alias_aggregated_df.drop(columns=['Strict_Wwnp'], inplace=True)
+
+    return zoning_aggregated_df, alias_aggregated_df
 
 
-def zonemember_in_cfg_fabric_verify(zoning_aggregated_df):
+def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
 
     zoning_aggregated_df['Member_in_cfg_Fabric'] = (zoning_aggregated_df['Fabric_name'] == zoning_aggregated_df['zonemember_Fabric_name']) & \
         (zoning_aggregated_df['Fabric_label'] == zoning_aggregated_df['zonemember_Fabric_label'])
     zoning_aggregated_df['Member_in_cfg_Fabric'] = zoning_aggregated_df['Member_in_cfg_Fabric'].where(pd.notna(zoning_aggregated_df.zonemember_Fabric_name), np.nan)
     zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={1: 'Да', 0: 'Нет'}, inplace = True)
+
     mask_member_imported = zoning_aggregated_df['LSAN_device_state'].str.contains('Imported', na=False)
     mask_fabric_name = pd.notna(zoning_aggregated_df['zonemember_Fabric_name'])
     zoning_aggregated_df['Member_in_cfg_Fabric'] = np.where((mask_member_imported&mask_fabric_name), 'Да', zoning_aggregated_df['Member_in_cfg_Fabric'])
 
     return zoning_aggregated_df 
 
-def lsan_state_verify(zoning_aggregated_df, switch_params_aggregated_df, fcrfabric_df, lsan_df):
+def lsan_state_verify(zoning_aggregated_df, alias_aggregated_df, switch_params_aggregated_df, fcrfabric_df, lsan_df):
 
     fcr_columns_lst = ['switchWwn', 'Fabric_name', 'Fabric_label']
 
@@ -222,12 +298,18 @@ def lsan_state_verify(zoning_aggregated_df, switch_params_aggregated_df, fcrfabr
                                 'Connected_Fabric_label': 'Fabric_label',
                                 'zone_member': 'alias_member'}, inplace=True)
     lsan_join_columns_lst = ['Fabric_name', 'Fabric_label', 'zone', 'alias_member']
-    zoning_aggregated_df = zoning_aggregated_df.merge(lsan_join_df, how='left', on=lsan_join_columns_lst) 
+    zoning_aggregated_df = zoning_aggregated_df.merge(lsan_join_df, how='left', on=lsan_join_columns_lst)
 
-    return zoning_aggregated_df
+    mask_lsan = pd.notna(zoning_aggregated_df['LSAN_device_state'])
+    lsan_alias_lst = ['Fabric_name', 'Fabric_label', 'zone_member', 'alias_member', 'LSAN_device_state']
+    lsan_alias_df = zoning_aggregated_df.loc[mask_lsan, lsan_alias_lst].copy()
+    lsan_alias_df.drop_duplicates(inplace=True)
+    alias_aggregated_df = alias_aggregated_df.merge(lsan_alias_df, how='left', on=lsan_alias_lst[:-1]) 
+
+    return zoning_aggregated_df, alias_aggregated_df
 
 
-def wwn_type(zoning_aggregated_df, portshow_aggregated_df):
+def wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
 
     wwnn_lst = sorted(portshow_aggregated_df.NodeName.dropna().drop_duplicates().to_list())
     wwnp_lst = sorted(portshow_aggregated_df.PortName.dropna().drop_duplicates().to_list())
@@ -247,8 +329,9 @@ def wwn_type(zoning_aggregated_df, portshow_aggregated_df):
         return np.nan
 
     zoning_aggregated_df['Wwn_type'] = zoning_aggregated_df.alias_member.apply(lambda wwn: wwn_check(wwn, wwnp_clear_lst, wwnn_clear_lst, wwn_intersection))
+    alias_aggregated_df['Wwn_type'] = alias_aggregated_df.alias_member.apply(lambda wwn: wwn_check(wwn, wwnp_lst, wwnn_lst, wwn_intersection))
 
-    return zoning_aggregated_df
+    return zoning_aggregated_df, alias_aggregated_df
 
 
 def align_dataframe(switch_params_aggregated_df, *args, drop_columns=True):
@@ -281,23 +364,7 @@ def align_dataframe(switch_params_aggregated_df, *args, drop_columns=True):
     return df_lst
 
 
-def drop_columns(zoning_aggregated_df):
-    
-    check_df = zoning_aggregated_df.copy()
-    check_df.dropna(subset = ['zonemember_Fabric_name', 'zonemember_Fabric_label'], inplace=True)
-    
-    mask_fabricname = (check_df.Fabric_name == check_df.zonemember_Fabric_name).all()
-    mask_fabriclabel = (check_df.Fabric_label == check_df.zonemember_Fabric_label).all()
-    
-    if mask_fabricname and mask_fabriclabel:
-        zoning_aggregated_df.drop(columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'], inplace=True)
-        
-    check_df.dropna(subset = ['Wwn_type'], inplace=True)
-    mask_wwnp = (check_df.Wwn_type == 'Wwnp').all()
-    if mask_wwnp:
-        zoning_aggregated_df.drop(columns=['Wwn_type'], inplace=True)
-        
-    return zoning_aggregated_df
+
 
 def same_subnet(series):
     

@@ -115,6 +115,7 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
        fabricshow_ag_labels_df, = verify_data(report_data_lst, data_names, *data_lst)
+       data_lst = [fabricshow_ag_labels_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)

@@ -105,7 +105,7 @@ def main():
 
     port_complete_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
 
-    zoning_aggregated_df = \
+    zoning_aggregated_df, alias_aggregated_df = \
         zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
                                 cfg_df, zone_df, alias_df, cfg_effective_df, 
                                     fcrfabric_df, lsan_df,

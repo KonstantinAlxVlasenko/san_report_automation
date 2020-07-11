@@ -43,7 +43,7 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     nsshow_lst[3] = nsshow_lst[3][0].lower() + nsshow_lst[3][1:]
     nsshow_join_df.drop(columns = nsshow_lst[:5], inplace = True)
     # fabric labeling alias DataFrame
-    alias_prep_df =  alias_df.rename(columns = {'principal_switch_name': 'switchName', 'principal_switchWwn': 'switchWwn'})
+    alias_prep_df =  alias_df.rename(columns = {'principal_switchName': 'switchName', 'principal_switchWwn': 'switchWwn'})
     alias_labeled_df = alias_prep_df.merge(fabric_labels_df, how = 'left', on = fabric_labels_lst[:5])
     # replacing WWNn with WWNp if any
     # create alias_join DataFrame

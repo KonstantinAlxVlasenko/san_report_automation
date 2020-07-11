@@ -104,6 +104,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
     else:
         statistics_df, statistics_report_df, statistics_summary_report_df = \
             verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [statistics_df, statistics_report_df, statistics_summary_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)

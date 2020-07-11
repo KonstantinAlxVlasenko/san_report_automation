@@ -124,7 +124,9 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     segmented_dataframes_lst = []
     for dataframe_name in dataframes_to_create_lst:
 
-        df_columns_names_eng_lst = data_columns_names_eng_dct[dataframe_name]
+        # df_columns_names_eng_lst = data_columns_names_eng_dct[dataframe_name]
+        columns = dataframe_to_segment_df.columns.to_list()
+        df_columns_names_eng_lst = [column for column in data_columns_names_eng_dct[dataframe_name] if column in columns]
 
         # get required columns from aggregated DataFrame
         # sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy() # remove

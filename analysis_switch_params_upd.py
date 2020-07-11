@@ -120,6 +120,10 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     else:
         report_columns_usage_dct, switch_params_aggregated_df, switches_report_df, fabric_report_df, global_fabric_parameters_report_df, \
             switches_parameters_report_df, licenses_report_df = verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [report_columns_usage_dct, switch_params_aggregated_df, 
+                    switches_report_df, fabric_report_df, 
+                    global_fabric_parameters_report_df, 
+                    switches_parameters_report_df, licenses_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names[1:], data_lst[1:]):
         save_xlsx_file(data_frame, data_name, report_data_lst)

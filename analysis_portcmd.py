@@ -44,7 +44,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, sw
     # list of data to analyze from report_info table
     analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
         'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 'nsshow', 
-            'alias', 'blade_servers', 'fabric_labels']
+            'alias', 'blade_servers', 'fabric_labels', 'isl', 'trunk', 'isl_aggregated']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
@@ -90,6 +90,11 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, sw
             library_report_df, hba_report_df, storage_connection_df, \
                 library_connection_df, server_connection_df, npiv_report_df \
                     = verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [
+            portshow_aggregated_df, servers_report_df, storage_report_df, 
+            library_report_df, hba_report_df, storage_connection_df,  
+            library_connection_df, server_connection_df, npiv_report_df
+            ]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
@@ -161,7 +166,14 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     
     # fill empty values in portshow_aggregated_df Device_Host_Name column with combination of device class and it's wwnp
     portshow_aggregated_df.Device_Host_Name = portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
+
+    # sorting DataFrame
+    portshow_aggregated_df.sort_values(by=['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 'switchWwn', 'switchName', 'portIndex', 'slot', 'port',], \
+        ascending=[True, True, False, True, False, True, True, True, True], inplace=True)
     
+
+
+
     return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df
 
 

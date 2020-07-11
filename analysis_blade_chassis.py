@@ -57,6 +57,7 @@ def blademodule_analysis(blade_module_df, report_data_lst):
     else:
         blade_module_loc_df, blade_module_report_df = \
             verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [blade_module_loc_df, blade_module_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)

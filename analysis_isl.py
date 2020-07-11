@@ -69,6 +69,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     else:
         isl_aggregated_df, isl_report_df, ifl_report_df = \
             verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [isl_aggregated_df, isl_report_df, ifl_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)

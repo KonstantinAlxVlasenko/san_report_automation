@@ -60,6 +60,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
     else:
         port_complete_df, error_report_df, sfp_report_df, portcfg_report_df \
             = verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [port_complete_df, error_report_df, sfp_report_df, portcfg_report_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
@@ -142,5 +143,9 @@ def create_report_tables(port_complete_df, data_names, report_columns_usage_dct,
     errors_report_df.dropna(axis=1, how = 'all', inplace=True)
     sfp_report_df.dropna(axis=1, how = 'all', inplace=True)
     portcfg_report_df.dropna(axis=1, how = 'all', inplace=True)
+
+    # remove rows with no sfp installed
+    mask_sfp = ~sfp_report_df['Vendor Name'].str.contains('No SFP module', na=False)
+    sfp_report_df = sfp_report_df.loc[mask_sfp]
 
     return errors_report_df, sfp_report_df, portcfg_report_df
