@@ -77,7 +77,7 @@ def fcr_extract(switch_params_lst, report_data_lst):
             ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
             # data unpacking from iter param
-            sshow_file, *_, switch_name, switch_wwn, switch_role, fid, fc_router = switch_info_lst
+            sshow_file, *_, switch_name, _, switch_role, fid, fc_router = switch_info_lst
 
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} fabric routing. FC Routing: {fc_router}'

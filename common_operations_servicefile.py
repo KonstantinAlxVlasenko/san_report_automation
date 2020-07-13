@@ -53,7 +53,7 @@ def report_entry_values(max_title):
 #     return dataframe
 
 
-def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_info.xlsx'):
+def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_info.xlsx', print_status=True):
     """Function to import corresponding columns from init file.
     Can import several columns.
     """

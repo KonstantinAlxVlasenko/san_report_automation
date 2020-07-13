@@ -78,6 +78,9 @@ def type_check(series, switches_oui, blade_servers_df):
             # if ultrium type
             elif not pd.isna(series['NodeSymb']) and 'ultrium' in series['NodeSymb'].lower():
                 return pd.Series(('LIB', series['subtype'].split('|')[2]))
+            # if host and hba info present
+            elif series[['HBA_Manufacturer', 'HBA_Model', 'Host_OS', 'HBA_Firmware', 'HBA_Driver']].notnull().all():
+                return pd.Series(('SRV', series['subtype'].split('|')[0]))
             # if not initiator and not target ultrium than it's storage
             else:
                 device_type = series['type'].split('|')[1]
