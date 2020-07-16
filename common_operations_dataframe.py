@@ -136,6 +136,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
         sliced_dataframe.rename(columns = data_columns_names_dct[dataframe_name], inplace = True)
         # add partitioned DataFrame to list
         segmented_dataframes_lst.append(sliced_dataframe)
+    
     return segmented_dataframes_lst
 
 

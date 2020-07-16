@@ -40,6 +40,7 @@ def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя ус
     """
     Auxiliary function to sort, remove duplicates and drop columns in cases they are not required in report DataFrame
     """
+
     # list of columns to check if they are empty
     columns_empty = ['Медленное устройство', 'Подключено через AG', 'Real_device_behind_AG']
     # list of columns to check if all values are equal
@@ -49,7 +50,6 @@ def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя ус
         'Фабрика', 'Расположение', 'Имя устройства', 'Порт устройства', 
         'Подсеть', 'Имя коммутатора', 'Идентификатор порта WWPN'
         ]
-
     # create mask to filter required class only
     if mask_type == 'srv':
         mask = df['Класс устройства'].isin(['SRV', 'BLADE_SRV'])
@@ -58,14 +58,15 @@ def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя ус
     elif mask_type == 'lib':
         mask = df['Класс устройства'] == 'LIB'
     elif mask_type == 'npiv':
-        mask = df['Connected_NPIV'] == 'yes'
-
+        # to avoid warning fillna with "no"
+        df['Connected_NPIV'].fillna('no', inplace=True)
+        mask = df['Connected_NPIV'].str.contains('yes')
     # filter DataFrame base on hardware type 
     df = df.loc[mask].copy()
     # check if columns required to sort on are in the DataFrame
     columns_sort = [column for column in columns_sort if column in df.columns]
     df.sort_values(by = columns_sort, inplace = True)
-
+    
     if duplicates:
         duplicates = [column for column in duplicates if column in df.columns]
 
