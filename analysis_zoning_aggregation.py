@@ -33,6 +33,10 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     alias_aggregated_df = alias_cfg_type(alias_aggregated_df, zoning_aggregated_df)
     # sort zoning configuration based on config type, fabric labels and devices zoned
     zoning_aggregated_df, alias_aggregated_df = sort_dataframe(zoning_aggregated_df, alias_aggregated_df)
+    # create zone_duplicates_free column with no duplicated zonenames
+    zoning_aggregated_df['zone_duplicates_free'] = np.nan
+    mask_zone_duplicate = zoning_aggregated_df.duplicated(subset=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'], keep='first')
+    zoning_aggregated_df['zone_duplicates_free'] = zoning_aggregated_df['zone_duplicates_free'].where(mask_zone_duplicate, zoning_aggregated_df.zone)
 
     return zoning_aggregated_df, alias_aggregated_df 
 
@@ -48,7 +52,7 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
     cfg_join_df = cfg_join_df.merge(cfg_effective_join_df, how='left', on=['Fabric_name', 'Fabric_label'])
     cfg_join_df['cfg_type'] = np.where(cfg_join_df.cfg == cfg_join_df.effective_config, 'effective', 'defined')
     # change columns order
-    cfg_join_df = cfg_join_df.reindex(columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'])
+    cfg_join_df = cfg_join_df.reindex(columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone', 'zone_duplicates_free'])
     # add zone members (aliases or WWN) for each zone in configs-zones DataFrame
     zoning_aggregated_df = cfg_join_df.merge(zone_join_df, how='left', on= ['Fabric_name', 'Fabric_label', 'zone'])
     # add WWN for each alias in zone configuration configs-zones-aliases
@@ -169,8 +173,10 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
 
     # connection information revealed by merging based on WWNP number
     # of connected device switch port  (PortName) and 
-    # WWNP number of alias_member (Strict_Wwnp)  
-    portcmd_join_df = portshow_aggregated_df.loc[:, port_columns_lst].copy()
+    # WWNP number of alias_member (Strict_Wwnp)
+    # AG mode switches dropped to avoid duplicate  connection information3
+    mask_switch_native = portshow_aggregated_df['switchMode'] == 'Native'
+    portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, port_columns_lst].copy()
     portcmd_join_df['Strict_Wwnp'] = np.nan
     portcmd_join_df['Strict_Wwnp'].fillna(portcmd_join_df.PortName, inplace=True)
     # zonemember_Fabric_name and zonemember_Fabric_label show which fabric device connected to.

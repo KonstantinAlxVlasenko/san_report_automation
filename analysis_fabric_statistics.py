@@ -47,7 +47,6 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
         status_info('ok', max_title, len(info))
         # get report DataFrame
         statistics_report_df = statistics_report(statistics_df, chassis_column_usage, max_title)
-
         # create list with partitioned DataFrames
         data_lst = [statistics_df, statistics_report_df]
         # saving data to json or csv file
