@@ -1,0 +1,16 @@
+# report_info_dct = dct_from_columns('report', start_max_title, 'name', 'value', init_file = 'report_info.xlsx')
+
+# customer_name = report_info_dct['customer_name']
+# project_folder = os.path.normpath(report_info_dct['project_folder'])
+# ssave_folder = os.path.normpath(report_info_dct['supportsave_folder'])
+
+# report_entry_df = dataframe_import('report', start_max_title, 'report_info.xlsx', ['name', 'value'], 'name')
+# customer_name = report_entry_df.loc['customer_name', 'value']
+# project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
+# ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
+
+# list with extracted customer name, supportsave folder and project folder
+# report_info_lst = columns_import('report', start_max_title, 'report_data', init_file = 'report_info.xlsx') 
+# customer_name = rf'{report_info_lst[0]}'
+# project_folder = rf'{report_info_lst[1]}'
+# ssave_folder = rf'{report_info_lst[2]}'
