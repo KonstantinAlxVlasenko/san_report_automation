@@ -8,51 +8,6 @@ from common_operations_filesystem import save_xlsx_file
 from common_operations_servicefile import dct_from_columns, columns_import
 from common_operations_miscellaneous import status_info
 
-# # copied service values
-# def report_entry_values(max_title):
-#     """
-#     Function to import entry report values:
-#     customer_name, hardware configuration files, directory to save report 
-#     """
-
-#     report_entry_df = dataframe_import('report', max_title, 'report_info.xlsx', ['name', 'value'], 'name')
-
-#     customer_name = report_entry_df.loc['customer_name', 'value']
-#     project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
-#     ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
-#     if not pd.isna(report_entry_df.loc['blade_showall_folder', 'value']):
-#         blade_folder = os.path.normpath(report_entry_df.loc['blade_showall_folder', 'value'])
-#     else:
-#         blade_folder = None
-
-#     return customer_name, project_folder, ssave_folder, blade_folder
-
-# # copied service values
-# def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', columns = None, index_name = None):
-#     """Function to import dataframe from exel file"""
-
-#     # file to store all required data to process configuratin files
-#     # init_file = 'san_automation_info.xlsx'   
-#     info = f'Importing {sheet_title} dataframe from {init_file} file'
-#     print(info, end = ' ')
-#     # try read data in excel
-#     try:
-#         dataframe = pd.read_excel(init_file, sheet_name = sheet_title, usecols = columns, index_col = index_name)
-#     # if file is not found
-#     except FileNotFoundError:
-#         status_info('fail', max_title, len(info))
-#         print(f'File not found. Check if file {init_file} exists.')
-#         sys.exit()
-#     # if sheet is not found
-#     except xlrd.biffh.XLRDError:
-#         status_info('fail', max_title, len(info))
-#         print(f'Sheet {sheet_title} not found in {init_file}. Check if it exists.')
-#         sys.exit()
-#     else:
-#         status_info('ok', max_title, len(info))
-    
-#     return dataframe
-
 
 def dataframe_join(left_df, right_df, columns_lst, columns_join_index = None):
     """
@@ -108,7 +63,8 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     # for each data element from data_names list import english columns title to slice main DataFrame 
     for dataframe_name, df_eng_column in zip(dataframes_to_create_lst, tables_names_eng_lst):
         # dataframe_name is key and list with columns names is value for data_columns_names_eng_dct
-        data_columns_names_eng_dct[dataframe_name] = columns_import(customer_report_columns_sheet, max_title, df_eng_column, init_file = 'san_automation_info.xlsx')
+        data_columns_names_eng_dct[dataframe_name] = \
+            columns_import(customer_report_columns_sheet, max_title, df_eng_column, init_file = 'san_automation_info.xlsx', display_status=False)
         # if no need to use chassis information in tables
         if not chassis_column_usage:
             if 'chassis_name' in data_columns_names_eng_dct[dataframe_name]:

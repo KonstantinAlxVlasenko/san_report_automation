@@ -44,7 +44,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, sw
     # list of data to analyze from report_info table
     analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
         'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 'nsshow', 
-            'alias', 'blade_servers', 'fabric_labels', 'isl', 'trunk', 'isl_aggregated', 'Параметры_SFP', 'port_complete']
+            'alias', 'blade_servers', 'fabric_labels', 'isl', 'trunk', 'isl_aggregated', 'Параметры_SFP', 'portshow_sfp_aggregated']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  

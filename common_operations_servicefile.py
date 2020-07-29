@@ -27,33 +27,8 @@ def report_entry_values(max_title):
     return customer_name, project_folder, ssave_folder, blade_folder
 
 
-# def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', columns = None, index_name = None):
-#     """Function to import dataframe from exel file"""
-
-#     # file to store all required data to process configuratin files
-#     # init_file = 'san_automation_info.xlsx'   
-#     info = f'Importing {sheet_title} dataframe from {init_file} file'
-#     print(info, end = ' ')
-#     # try read data in excel
-#     try:
-#         dataframe = pd.read_excel(init_file, sheet_name = sheet_title, usecols = columns, index_col = index_name)
-#     # if file is not found
-#     except FileNotFoundError:
-#         status_info('fail', max_title, len(info))
-#         print(f'File not found. Check if file {init_file} exists.')
-#         sys.exit()
-#     # if sheet is not found
-#     except xlrd.biffh.XLRDError:
-#         status_info('fail', max_title, len(info))
-#         print(f'Sheet {sheet_title} not found in {init_file}. Check if it exists.')
-#         sys.exit()
-#     else:
-#         status_info('ok', max_title, len(info))
-    
-#     return dataframe
-
-
-def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_info.xlsx', print_status=True):
+def columns_import(sheet_title, max_title, *args, 
+                    init_file = 'san_automation_info.xlsx', display_status=True):
     """Function to import corresponding columns from init file.
     Can import several columns.
     """
@@ -66,17 +41,20 @@ def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_in
         columns_str += "'" + arg + "', "
     columns_str = columns_str.rstrip(", ")
 
-    info = f'Importing {columns_str} from {sheet_title} tab'
-    print(info, end = ' ')
+    if display_status:
+        info = f'Importing {columns_str} from {sheet_title} tab'
+        print(info, end = ' ')
     # try read data in excel
     try:
         columns = pd.read_excel(init_file, sheet_name = sheet_title, usecols = args, squeeze=True)
     except FileNotFoundError:
-        status_info('fail', max_title, len(info))
+        if display_status:
+            status_info('fail', max_title, len(info))
         print(f'File not found. Check if file {init_file} exist.')
         sys.exit()
     except ValueError:
-        status_info('fail', max_title, len(info))
+        if display_status:
+            status_info('fail', max_title, len(info))
         print(f'Column(s) {columns_str} not found. Check if column exist in {sheet_title}.')
         sys.exit()        
     else:
@@ -85,7 +63,8 @@ def columns_import(sheet_title, max_title, *args, init_file = 'san_automation_in
             columns_names = [columns[arg].dropna().tolist() if not columns[arg].empty else None for arg in args]
         else:
             columns_names = columns.dropna().tolist()
-        status_info('ok', max_title, len(info))
+        if display_status:
+            status_info('ok', max_title, len(info))
     
     return columns_names
 

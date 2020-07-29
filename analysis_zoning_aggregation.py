@@ -30,15 +30,26 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     zoning_aggregated_df = zonemember_in_cfg_fabric_verify(zoning_aggregated_df)
     alias_aggregated_df = zonemember_in_cfg_fabric_verify(alias_aggregated_df)
     # checks in which type of configuration alias apllied in (effective or defined)
-    alias_aggregated_df = alias_cfg_type(alias_aggregated_df, zoning_aggregated_df)
+    # alias_aggregated_df = alias_cfg_type(alias_aggregated_df, zoning_aggregated_df)
+    alias_aggregated_df = verify_cfg_type(alias_aggregated_df, zoning_aggregated_df, ['zone_member', 'alias_member'])
     # sort zoning configuration based on config type, fabric labels and devices zoned
     zoning_aggregated_df, alias_aggregated_df = sort_dataframe(zoning_aggregated_df, alias_aggregated_df)
     # create zone_duplicates_free column with no duplicated zonenames
     zoning_aggregated_df['zone_duplicates_free'] = np.nan
     mask_zone_duplicate = zoning_aggregated_df.duplicated(subset=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'], keep='first')
     zoning_aggregated_df['zone_duplicates_free'] = zoning_aggregated_df['zone_duplicates_free'].where(mask_zone_duplicate, zoning_aggregated_df.zone)
+    # create alias_duplicates_free column with no duplicated aliasnames
+    alias_aggregated_df['zonemember_duplicates_free'] = np.nan
+    mask_zonemember_duplicate = alias_aggregated_df.duplicated(subset=['Fabric_name', 'Fabric_label', 'zone_member'], keep='first')
+    alias_aggregated_df['zonemember_duplicates_free'] = alias_aggregated_df['zonemember_duplicates_free'].where(mask_zonemember_duplicate, alias_aggregated_df.zone_member)
 
-    return zoning_aggregated_df, alias_aggregated_df 
+    alias_aggregated_df = verify_alias_duplicate(alias_aggregated_df)
+    alias_aggregated_df = zone_using_alias(zoning_aggregated_df, alias_aggregated_df)
+
+    zoning_aggregated_df = wwnp_instance_number_per_group(zoning_aggregated_df, 'zone')
+    alias_aggregated_df = wwnp_instance_number_per_group(alias_aggregated_df, 'alias')
+
+    return zoning_aggregated_df, alias_aggregated_df
 
 
 def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df):
@@ -138,20 +149,23 @@ def wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
 
 
 def replace_wwnn(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
-    """
-    Function to replace each wwnn in zoning configuration 
-    with it's wwnp if any wwnn is present
-    """
+    """Function to replace each wwnn in zoning configuration with it's wwnp if any wwnn is present"""
 
     # create DataFrame with WWNP and WWNN
-    port_node_name_df = portshow_aggregated_df[['PortName', 'NodeName']].copy()
-    port_node_name_df.dropna(subset = ['PortName', 'NodeName'], inplace=True)
+    port_node_name_df = portshow_aggregated_df[['Fabric_name', 'Fabric_label', 'PortName', 'NodeName']].copy()
+    port_node_name_df.dropna(subset = ['Fabric_name', 'Fabric_label', 'PortName', 'NodeName'], inplace=True)
+    # check if
+
+    port_node_name_df['Wwnn_unpack'] = np.nan
+    mask_duplicated_wwnn = ~port_node_name_df.duplicated(subset=['Fabric_name', 'Fabric_label', 'NodeName'], keep=False)
+    port_node_name_df['Wwnn_unpack'] = port_node_name_df['Wwnn_unpack'].where(mask_duplicated_wwnn, 'Да')
+
     port_node_name_df.rename(columns={'PortName': 'Strict_Wwnp', 'NodeName': 'alias_member'}, inplace=True )
     # merge zoning_aggregated_df and alias_aggregated_df with port_node_name_df based on alias members and WWNN values
     # thus finding for each alias member defined through WWNN it's WWNP number
     # if no aliases defined through the WWNN then Strict_Wwnp column is empty
-    zoning_aggregated_df = zoning_aggregated_df.merge(port_node_name_df, how='left', on=['alias_member'])
-    alias_aggregated_df = alias_aggregated_df.merge(port_node_name_df, how='left', on=['alias_member'])
+    zoning_aggregated_df = zoning_aggregated_df.merge(port_node_name_df, how='left', on=['Fabric_name', 'Fabric_label', 'alias_member'])
+    alias_aggregated_df = alias_aggregated_df.merge(port_node_name_df, how='left', on=['Fabric_name', 'Fabric_label', 'alias_member'])
     # all empty cells in Strict_Wwnp column after merging mean that corresponding cells in
     # alias_member contain WWNP values. 
     # fillna copies those WWNP values to the Strict_Wwnp columns thus this column
@@ -313,14 +327,113 @@ def alias_cfg_type(alias_aggregated_df, zoning_aggregated_df):
     return alias_aggregated_df
 
 
+def verify_cfg_type(aggregated_df, zoning_aggregated_df, search_lst):
+    """Function to check which type of configuration 'search_lst' apllied in (effective or defined)"""
+
+    # separate effective and defined configs zoning configurations
+    mask_effective = zoning_aggregated_df['cfg_type'].str.contains('effective', na=False)
+    mask_defined = zoning_aggregated_df['cfg_type'].str.contains('defined', na=False)
+    
+    cfg_lst = [*['Fabric_name', 'Fabric_label'], *search_lst, *['cfg_type']]
+    cfg_effective_df = zoning_aggregated_df.loc[mask_effective, cfg_lst]
+    cfg_defined_df = zoning_aggregated_df.loc[mask_defined, cfg_lst]
+    # fill empty cfg_type values in alias_aggregated_df DataFrame with config type from cfg_effective_df
+    # thus if alias is in effective config it's marked as effective
+    aggregated_df = dataframe_fillna(aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+    # fill rest empty values with defined word if alias is in defined config
+    aggregated_df = dataframe_fillna(aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+
+    return aggregated_df
+
+
 def sort_dataframe(zoning_aggregated_df, alias_aggregated_df):
     """Function to sort zoning configuration based on config type, fabric labels and devices zoned"""
 
-    sort_zone_lst = ['cfg_type', 'Fabric_label', 'cfg', 'zone', 'deviceType', 'zone_member', 'Fabric_name']
-    sort_alias_lst = ['cfg_type', 'Fabric_label', 'Fabric_name', 'deviceType',	'deviceSubtype', 'zone_member', ]
+    sort_zone_lst = ['Fabric_label', 'Fabric_name', 'cfg_type', 'cfg' , 'zone', 'deviceType', 'zone_member']
+    # sort_zone_lst = ['cfg_type', 'Fabric_label', 'cfg', 'zone', 'deviceType', 'zone_member', 'Fabric_name']
+    sort_alias_lst = ['cfg_type', 'Fabric_label', 'Fabric_name', 'zone_member', 'Wwn_type']
+
     zoning_aggregated_df.sort_values(by=sort_zone_lst, \
-        ascending=[False, *6*[True]], inplace=True)
+        ascending=[True, True, False, *4*[True]], inplace=True)
+    # zoning_aggregated_df.sort_values(by=sort_zone_lst, \
+    #     ascending=[False, *6*[True]], inplace=True)
     alias_aggregated_df.sort_values(by=sort_alias_lst, \
-        ascending=[False, *5*[True]], inplace=True)
+        ascending=[False, *4*[True]], inplace=True)
 
     return zoning_aggregated_df, alias_aggregated_df
+
+
+def verify_alias_duplicate(alias_aggregated_df):
+    """
+    Function to check if alias_member (wwnp or wwnn) has duplicated aliases and
+    counts its number if they exist
+    """
+
+    # perform zone_member (alias names) grouping based on alias_member (set of wwnn and wwnp) for each fabric
+    alias_count_columns = ['Fabric_name', 'Fabric_label', 'alias_member']
+    # join zone_members in each group
+    alias_duplicated_names_df = alias_aggregated_df.groupby(alias_count_columns, as_index = False).agg({'zone_member': ', '.join})
+    # rename column with joined zone_members names and perform merge with aggregated DataFrame
+    alias_duplicated_names_df.rename(columns={'zone_member': 'alias_duplicated'}, inplace=True)
+    alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_names_df, how='left', on=alias_count_columns)
+    # leave duplicated zone_memebers only
+    mask_duplicated = alias_aggregated_df['alias_duplicated'] != alias_aggregated_df['zone_member']
+    alias_aggregated_df['alias_duplicated'] = alias_aggregated_df['alias_duplicated'].where(mask_duplicated, np.nan)
+    # count number of alias(es) for the alias_member (wwnn or wwnp)
+    alias_duplicated_number_df = alias_aggregated_df.groupby(alias_count_columns, as_index = False).agg({'zone_member': 'count'})
+    alias_duplicated_number_df.rename(columns={'zone_member': 'alias_count'}, inplace=True)
+    alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_number_df, how='left', on=alias_count_columns)
+
+    return alias_aggregated_df
+
+
+def zone_using_alias(zoning_aggregated_df, alias_aggregated_df):
+    """Function to identify which zones use zone_member (alias) and count number of zones"""
+
+    # perform grouping based on zone_member (alias name) and alias_member (wwnn or wwnp) in each fabric
+    # it is required to take into account alias_member to avoid zone number multiplication in case if zone_member
+    # contains several alias_memeber(s)
+    zone_count_columns = ['Fabric_name', 'Fabric_label', 'zone_member', 'alias_member']
+    # drop rows with duplicated alias_members in zones (in case if wwnn splitted into several wwnps earlier)
+    zoning_effective_defined_duplicates_free_df = zoning_aggregated_df.drop_duplicates(subset=zone_count_columns + ['zone'])
+    # join zone_names for each group
+    alias_zone_names_df = zoning_effective_defined_duplicates_free_df.groupby(zone_count_columns, as_index = False).agg({'zone': ', '.join})
+    # rename column with joined zone_names and perform merge with aggregated DataFrame
+    alias_zone_names_df.rename(columns={'zone': 'zone_name_alias_used_in'}, inplace=True)
+    alias_aggregated_df = alias_aggregated_df.merge(alias_zone_names_df, how='left', on=zone_count_columns)
+
+    # perform zones count
+    alias_zone_number_df = zoning_effective_defined_duplicates_free_df.groupby(zone_count_columns, as_index = False).agg({'zone': 'count'})
+    alias_zone_number_df.rename(columns={'zone': 'zone_number_alias_used_in'}, inplace=True)
+    alias_aggregated_df = alias_aggregated_df.merge(alias_zone_number_df, how='left', on=zone_count_columns)
+    alias_aggregated_df['zone_number_alias_used_in'].fillna(0, inplace=True)
+
+    return alias_aggregated_df
+
+
+def wwnp_instance_number_per_group(aggregated_df, df_type):
+    """
+    Auxiliary function to identify is there duplicated wwnp values inside each group
+    (zone or alias). Function calculates how many times wwnp used inside zone or alias.
+    Normally each wwnp used only once.
+    """
+    
+    # columns to perform grouping on
+    group_columns = ['Fabric_name',	'Fabric_label']
+    
+    if df_type == 'zone':
+        group_columns = [*group_columns, *['cfg', 'cfg_type', 'zone', 'PortName']]
+        wwnp_number_column = 'wwnp_instance_number_per_zone'
+    elif df_type == 'alias':
+        group_columns = [*group_columns, *['zone_member', 'PortName']]
+        wwnp_number_column = 'wwnp_instance_number_per_alias'
+    
+    # count wwnp instances for each group
+    wwnp_number_df = aggregated_df.groupby(group_columns).PortName.count()
+    wwnp_number_df = pd.DataFrame(wwnp_number_df)
+    wwnp_number_df.rename(columns={'PortName': wwnp_number_column}, inplace=True)
+    wwnp_number_df.reset_index(inplace=True)
+    # add wwnp instance number to zoning or aliases DataFrames
+    aggregated_df = aggregated_df.merge(wwnp_number_df, how='left', on=group_columns)
+    
+    return aggregated_df

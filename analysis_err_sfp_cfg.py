@@ -21,7 +21,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['port_complete', 'Ошибки', 'Параметры_SFP', 'Параметры_портов']
+    data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -29,7 +29,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    port_complete_df, error_report_df, sfp_report_df, portcfg_report_df = data_lst
+    portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
@@ -47,25 +47,25 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
         info = f'Updating connected devices table'
         print(info, end =" ") 
         # add sfpshow, transceiver information and portcfg to aggregated portcmd DataFrame
-        port_complete_df = port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_df)
+        portshow_sfp_aggregated_df = port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_df)
         # after finish display status
         status_info('ok', max_title, len(info))
         # create reaport tables from port_complete_df DataFrtame
         error_report_df, sfp_report_df, portcfg_report_df = \
-            create_report_tables(port_complete_df, data_names[1:], report_columns_usage_dct, max_title)
+            create_report_tables(portshow_sfp_aggregated_df, data_names[1:], report_columns_usage_dct, max_title)
         # saving data to json or csv file
-        data_lst = [port_complete_df, error_report_df, sfp_report_df, portcfg_report_df]
+        data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df]
         save_data(report_data_lst, data_names, *data_lst)
     # verify if loaded data is empty and reset DataFrame if yes
     else:
-        port_complete_df, error_report_df, sfp_report_df, portcfg_report_df \
+        portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df \
             = verify_data(report_data_lst, data_names, *data_lst)
-        data_lst = [port_complete_df, error_report_df, sfp_report_df, portcfg_report_df]
+        data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
 
-    return port_complete_df
+    return portshow_sfp_aggregated_df
 
 
 def port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_df):

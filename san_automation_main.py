@@ -63,7 +63,7 @@ customer_name, project_folder, ssave_folder, blade_folder = report_entry_values(
 # first value shows if it is required to export extracted data to excel table
 # second value shows if it is required to initiate force data extraction if data have been already extracted
 report_steps_dct = dct_from_columns('service_tables', start_max_title, \
-    'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', \
+    'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', 'description', \
         init_file = 'report_info.xlsx')
 
 
@@ -103,22 +103,17 @@ def main():
         portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
             alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst)
 
-    port_complete_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
+    portshow_sfp_aggregated_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
 
-    zoning_aggregated_df, alias_aggregated_df = \
+    zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
                                 cfg_df, zone_df, alias_df, cfg_effective_df, 
                                     fcrfabric_df, lsan_df,
                                         report_columns_usage_dct, report_data_lst)
 
-
-    statistics_df = \
+    fabric_statistics_df = \
         fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
                                 nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst)
-
-    # fabric_clean_df, isl_report_df, ifl_report_df = \
-    #     isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
-    # isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
       
 
 def config_preparation():
