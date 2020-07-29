@@ -1,4 +1,5 @@
-"""Module to get aggreagated connected ports statistics DataFrame 
+"""
+Module to get aggreagated connected ports statistics DataFrame 
 out of portshow_aggregated_df and switchshow_ports_df DataFrame 
 """
 
@@ -44,8 +45,8 @@ def statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df,
 
 
 def switchshow_labeled(switchshow_ports_df, fabricshow_ag_labels_df):
-    """Function to label switchshow with fabric names and labels
-    """
+    """Function to label switchshow with fabric names and labels"""
+
     # get from switchshow_ports and fabricshow_ag_labels Data Frames required columns
     switchshow_df = switchshow_ports_df.loc[:, ['chassis_name', 'chassis_wwn', 'switch_index', 
                                             'switchName', 'switchWwn', 'switchMode', 
@@ -83,8 +84,8 @@ def device_class_statistics(portshow_aggregated_df):
 
 
 def portType_statistics(switchshow_df):
-    """Function to count ports types (E-port, F-port, etc) number in fabric
-    """
+    """Function to count ports types (E-port, F-port, etc) number in fabric"""
+
     # crosstab from labeled switchshow
     portType_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
                                         switchshow_df.chassis_name, switchshow_df.switch_index, 
@@ -97,8 +98,8 @@ def portType_statistics(switchshow_df):
 
 
 def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report_data_lst):
-    """Function to count device types (Targer, Initiator and etc) number in fabric
-    """
+    """Function to count device types (Targer, Initiator and etc) number in fabric"""
+
     # get required columns from portshow DataFrame
     # contains set of connected to the ports WWNs  
     portshow_connected_df = portshow_df.loc[:, ['chassis_name', 'chassis_wwn', 'slot', 'port', 
@@ -139,9 +140,11 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
 
 
 def port_state_statistics(switchshow_df):
-    """Function to count ports state type (In_Sync, No_Light, etc) number in fabric
+    """
+    Function to count ports state type (In_Sync, No_Light, etc) number in fabric
     and state summary (Online, Total ports and percentage of occupied ports)
     """
+    
     # crosstab switchshow DataFrame to count port state number in fabric
     port_state_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
                                 switchshow_df.chassis_name, switchshow_df.switch_index, 
@@ -170,8 +173,8 @@ def port_state_statistics(switchshow_df):
 
 
 def port_speed_statistics(switchshow_df):
-    """Function to count ports speed (8G, N16, etc) values number in fabric
-    """
+    """Function to count ports speed (8G, N16, etc) values number in fabric"""
+
     # speed columns dictionary to rename DataFrame columns for correct sorting order
     speed_columns = {'2G': 'A', 'N2': 'B', '4G': 'C', 'N4': 'D', '8G': 'E', 
                      'N8': 'F', '16G': 'G', 'N16': 'H', '32G': 'I', 'N32': 'J' }
@@ -196,9 +199,11 @@ def port_speed_statistics(switchshow_df):
 
 
 def n_e_statistics(switchshow_df):
-    """Function to create DataFrame with N:E ratio for each switch
+    """
+    Function to create DataFrame with N:E ratio for each switch
     (device ports to inter-switch links, quantity and bandwidth ratio)
     """
+
     # dictionary to convert string speed represenation to integer number
     speed_columns_gbs = {'2G': 2, 'N2': 2, '4G': 4, 'N4': 4, '8G': 8, 
                          'N8': 8, '16G': 16, 'N16': 16, '32G': 32, 'N32': 32}
@@ -226,9 +231,11 @@ def n_e_statistics(switchshow_df):
 
 
 def n_e(group):
-    """Auxiliary function to calculate
+    """
+    Auxiliary function to calculate
     N:E ratio for the group of ports belonging to one switch
     """
+
     # e-ports definition
     e_ports = ['E-Port', 'EX-Port', 'LS E-Port', 'LD E-Port', 'LE-Port', 'N-Port']
     # f-ports definition (n-ports)
