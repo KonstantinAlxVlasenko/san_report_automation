@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+~$*.*
+
 # Distribution / packaging
 .Python
 build/
@@ -24,6 +26,10 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# My directories to ignore
+oui/
+tmp_files/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
