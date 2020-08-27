@@ -53,15 +53,6 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
     
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
 
-    # if report_type == 'collection':
-    #     report_mark = 'collection'
-    # elif report_type == 'analysis':
-    #     report_mark = 'analysis'
-    # elif report_type == 'report':
-    #     report_mark = 'SAN_Assessment_tables'
-    # else:
-    #     report_mark = 'unknown'
-
     # check DataFrame report type to save 
     if report_steps_dct[sheet_title][2] == 'collection':
         report_mark = 'collection'
@@ -71,7 +62,6 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
         report_mark = 'SAN_Assessment_tables'
     else:
         report_mark = 'unknown'
-
           
     current_date = str(date.today())
     # construct excel filename
@@ -190,9 +180,9 @@ def save_data(report_data_list, data_names, *args):
 
     customer_name, _, json_data_dir, max_title, _ = report_data_list    
     # data_names it's a list of names for data passed as args
-    empty_data = False
 
     for data_name, data_exported in zip(data_names, args):
+        empty_data = False
         file_name = customer_name + '_' + data_name
         # adding file extenson depending from type of data saved
         # csv for DataFrame

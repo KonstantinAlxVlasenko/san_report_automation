@@ -158,5 +158,6 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_data_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         switch_params_lst, switchshow_ports_lst = verify_data(report_data_lst, data_names, *data_lst)
+
         
     return switch_params_lst, switchshow_ports_lst

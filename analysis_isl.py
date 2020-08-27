@@ -108,7 +108,8 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     
 
 def remove_empty_fabrics(isl_aggregated_df, fcredge_df):
-    """Function to remove switches which are not part of research
+    """
+    Function to remove switches which are not part of research
     and sort required switches
     """
 
@@ -173,7 +174,8 @@ def attenuation_calc(isl_aggregated_df):
     
 
 def max_isl_speed(isl_aggregated_df):
-    """Function to evaluate maximum available port speed
+    """
+    Function to evaluate maximum available port speed
     and check if ISL link operates on maximum speed.
     Maximum available link speed is calculated as minimum of next values 
     speed_chassis1, speed_chassis2, max_sfp_speed_switch1, max_sfp_speed_switch2
@@ -337,32 +339,22 @@ def switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df):
 
 
 def trunk_join(isl_df, trunk_df):
-    """Join Trunk and ISL DataFrames
+    """
+    Join Trunk and ISL DataFrames
     Add switcNames to Trunk and FCREdge DataFrames
     """
     
     # convert numerical data in ISL and TRUNK DataFrames to float
     isl_df = isl_df.astype(dtype = 'float64', errors = 'ignore')    
-    if not trunk_df.empty:
-        trunk_df  = trunk_df.astype(dtype = 'float64', errors = 'ignore')
+    trunk_df  = trunk_df.astype(dtype = 'float64', errors = 'ignore')
     
     # List of columns DataFrames are joined on     
-    join_lst = ['configname',
-                'chassis_name',
-                'switch_index',
-                'SwitchName',
-                'switchWwn',
-                'switchRole',
-                'FabricID',
-                'FC_router',
-                'portIndex',
-                'Connected_portIndex',
-                'Connected_SwitchName',
-                'Connected_switchWwn',
-                'Connected_switchDID']  
-
+    join_lst = ['configname', 'chassis_name', 'switch_index', 'SwitchName',
+                'switchWwn', 'switchRole', 'FabricID', 'FC_router', 'portIndex', 
+                'Connected_portIndex', 'Connected_SwitchName',
+                'Connected_switchWwn', 'Connected_switchDID']  
 
     # merge updated ISL and TRUNK DataFrames 
     isl_aggregated_df = trunk_df.merge(isl_df, how = 'outer', on = join_lst)
-        
+
     return isl_aggregated_df

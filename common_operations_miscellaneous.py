@@ -23,7 +23,8 @@ def status_info(status, max_title, len_info_string, shift=0):
 
 
 def line_to_list(re_object, line, *args):
-    """Function to extract values from line with regex object 
+    """
+    Function to extract values from line with regex object 
     and combine values with other optional data into list
     """
 
@@ -71,8 +72,25 @@ def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     # print data names for which extraction is forced
     if all(data_check) and any(force_extract_keys_lst):
         # list for which data extraction is forced
-        force_extract_names_lst = [data_name for data_name, force_extract_key in zip(data_names, force_extract_keys_lst) if force_extract_key]
-        info = f'Force {", ".join(force_extract_names_lst)} data extract initialize'
+        force_extract_names_lst = \
+            [data_name for data_name, force_extract_key in zip(data_names, force_extract_keys_lst) if force_extract_key]
+
+        # force_extract_names_str add elenments of force_extract_names_lst until it's length 
+        # exceeds max_title to avoid info string truncation 
+        force_extract_names_str = ''
+        item_count = 0
+        for name in force_extract_names_lst:
+            if not force_extract_names_str:
+                force_extract_names_str = name
+                item_count += 1
+            else: 
+                if len(force_extract_names_str) < max_title:
+                    force_extract_names_str = force_extract_names_str + ', ' + name
+                    item_count += 1
+        if item_count < len(force_extract_names_lst):
+            force_extract_names_str = force_extract_names_str + ', etc'
+
+        info = f'Force {force_extract_names_str} invoke'
         print(info, end =" ")
         status_info('ok', max_title, len(info))
         

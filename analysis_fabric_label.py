@@ -184,11 +184,11 @@ def native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df):
     ag_concat_df = ag_principal_df.drop_duplicates(subset=['AG_Switch_WWN'])
     
     # align columns in both DataFrames to concatenate
-    fabricshow_columns = ['configname','chassis_name', 'Principal_switch_index', 
+    fabricshow_columns = ['configname','chassis_name', 'chassis_wwn', 'Principal_switch_index', 
                           'Principal_switch_name', 'Principal_switch_wwn', 'Fabric_ID', 
                           'FC_Route', 'Domain_ID', 'Worldwide_Name', 'Enet_IP_Addr', 'Name']
     
-    ag_columns = ['configname','chassis_name', 'Principal_switch_index', 
+    ag_columns = ['configname','chassis_name', 'chassis_wwn', 'Principal_switch_index', 
                   'Principal_switch_name', 'Principal_switch_wwn', 'Fabric_ID', 
                   'AG_Switch_WWN', 'AG_Switch_IP_Address', 'AG_Switch_Name']
     
@@ -209,10 +209,11 @@ def native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df):
     
     # set ag DataFrame columns order same as fabricshow columns order 
     ag_concat_df = ag_concat_df[fabricshow_columns]
+
     
     # concatenating ag and fabricshow DataFrames
     # set label Native and AG mode
-    fabricshow_ag_df = pd.concat([fabricshow_concat_df, ag_concat_df], ignore_index=False, keys=['Native', 'AG'])
+    fabricshow_ag_df = pd.concat([fabricshow_concat_df, ag_concat_df], ignore_index=False, keys=['Native', 'Access Gateway Mode'])
     # reset index and set name for the new column
     fabricshow_ag_df = fabricshow_ag_df.reset_index(level = 0).rename(columns={'level_0': 'SwitchMode'})
     # relocating SwitchMode column to the end

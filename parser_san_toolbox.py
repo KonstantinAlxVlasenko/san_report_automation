@@ -53,7 +53,32 @@ def create_parsed_dirs(customer_title, project_path, max_title):
     return santoolbox_parsed_sshow_path, santoolbox_parsed_others_path, san_assessment_report_path, data_objects_path
 
 
-def create_files_list_to_parse(ssave_path):
+
+def find_max_title(ssave_path):
+    """Function to find maximum cinfiguration file length for display puproses"""
+
+    # check if ssave_path folder exist
+    check_valid_path(ssave_path)
+    
+    # list to save length of config data file names to find max
+    # required in order to proper alighnment information in terminal
+    filename_size = []
+
+    # going through all directories inside ssave folder to find configurutaion data
+    for root, _, files in os.walk(ssave_path):
+        for file in files:
+            if file.endswith(".SSHOW_SYS.txt.gz") or file.endswith(".SSHOW_SYS.gz"):
+                filename_size.append(len(file))
+            elif file.endswith("AMS_MAPS_LOG.txt.gz"):
+                filename_size.append(len(file))
+    if not filename_size:
+        print('\nNo confgiguration data found')
+        sys.exit()
+              
+    return max(filename_size)
+
+
+def create_files_list_to_parse(ssave_path, start_max_title):
     """
     Function to create two lists with unparsed supportshow and amps_maps configs data files.
     Directors have two ".SSHOW_SYS.txt.gz" files. For Active and Standby CPs
@@ -65,6 +90,8 @@ def create_files_list_to_parse(ssave_path):
 
     # check if ssave_path folder exist
     check_valid_path(ssave_path)
+
+    separate_ssave_files(ssave_path, start_max_title)
    
     # list to save unparsed configuration data files
     unparsed_files_lst = []
@@ -115,7 +142,58 @@ def create_files_list_to_parse(ssave_path):
         print('\nNo confgiguration data found')
         sys.exit()
               
-    return unparsed_files_lst, max(filename_size)
+    return unparsed_files_lst
+
+
+def separate_ssave_files(ssave_path, max_title):
+    """
+    Function to check if switch supportsave files for each switch are in individual
+    folder. If not create folder for each swicth met in current folder and move files 
+    to corresponding folders.
+    """
+    
+    # going through all directories inside ssave folder to find configurutaion data
+    for root, _, files in os.walk(ssave_path):
+
+        
+        files_group_set = set()
+        # sshow_regex = r'^(([\w-]+)(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-S\d(?:cp)?-\d+.SSHOW_SYS.(?:txt.)?gz$'
+        
+        filename_nofid_regex = r'(([\w-]+)(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-S\d(?:cp)?-\d+.[\w.]+$'
+        filename_fid_regex = r'([\w-]+)_FID\d+(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?-S\d(?:cp)?-\d+.[\w.]+$'
+        
+        
+        for file in files:
+            if file.endswith(".SSHOW_SYS.txt.gz") or file.endswith(".SSHOW_SYS.gz"):                
+                files_group_name = re.search(filename_nofid_regex, file).group(1)
+                files_group_set.add(files_group_name)
+        
+        if len(files_group_set) > 1:
+            for files_group_name in files_group_set:
+                files_group_folder = os.path.join(root, files_group_name)
+                create_folder(files_group_folder, max_title)
+                
+            for file in files:
+                if re.match(filename_fid_regex, file):
+                    switchname = re.search(filename_fid_regex, file).group(1)
+                    ip_address = re.search(filename_fid_regex, file).group(2)
+                    files_group_folder = switchname
+                    if ip_address:
+                        files_group_folder = files_group_folder + ip_address
+                elif re.match(filename_nofid_regex, file):
+                    files_group_folder = re.search(filename_nofid_regex, file).group(1)
+                path_to_move = os.path.join(root, files_group_folder)
+                
+                # moving file to destination config folder
+                info = ' '*16+f'{file} moving'
+                print(info, end =" ") 
+                try:
+                    shutil.move(os.path.join(root, file),path_to_move)
+                except shutil.Error:
+                    status_info('fail', max_title, len(info))
+                    sys.exit()
+                else:
+                    status_info('ok', max_title, len(info))
 
 
 def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_to_move_parsed_others, max_title):    

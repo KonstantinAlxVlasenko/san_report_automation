@@ -14,7 +14,7 @@ def report_entry_values(max_title):
     customer_name, hardware configuration files, directory to save report 
     """
 
-    report_entry_df = dataframe_import('report', max_title, 'report_info.xlsx', ['name', 'value'], 'name')
+    report_entry_df = dataframe_import('report', max_title, 'report_info.xlsx', ['name', 'value'], 'name', display_status=False)
 
     customer_name = report_entry_df.loc['customer_name', 'value']
     project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
@@ -69,28 +69,32 @@ def columns_import(sheet_title, max_title, *args,
     return columns_names
 
 
-def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', columns = None, index_name = None):
+def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', columns = None, index_name = None, display_status=True):
     """Function to import dataframe from exel file"""
 
     # file to store all required data to process configuratin files
-    # init_file = 'san_automation_info.xlsx'   
-    info = f'Importing {sheet_title} dataframe from {init_file} file'
-    print(info, end = ' ')
+    # init_file = 'san_automation_info.xlsx'
+    if display_status:   
+        info = f'Importing {sheet_title} dataframe from {init_file} file'
+        print(info, end = ' ')
     # try read data in excel
     try:
         dataframe = pd.read_excel(init_file, sheet_name = sheet_title, usecols = columns, index_col = index_name)
     # if file is not found
     except FileNotFoundError:
-        status_info('fail', max_title, len(info))
+        if display_status:
+            status_info('fail', max_title, len(info))
         print(f'File not found. Check if file {init_file} exists.')
         sys.exit()
     # if sheet is not found
     except xlrd.biffh.XLRDError:
-        status_info('fail', max_title, len(info))
+        if display_status:
+            status_info('fail', max_title, len(info))
         print(f'Sheet {sheet_title} not found in {init_file}. Check if it exists.')
         sys.exit()
     else:
-        status_info('ok', max_title, len(info))
+        if display_status:
+            status_info('ok', max_title, len(info))
     
     return dataframe
 
@@ -118,7 +122,7 @@ def data_extract_objects(sheet_title, max_title, param_columns = True):
     return params_names, params_add_names, comp_keys, match_keys, comp_dct
 
 
-def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xlsx'):
+def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xlsx', display_status=True):
     """Function imports columns and create dictionary
     If only one column imported then dictionary with keys and empty lists as values created
     If several columns imported then first column is keys of dictionary and others are values
@@ -129,11 +133,11 @@ def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xls
 
     # if one column is passed then create dictionary with keys and empty lists as values for each key
     if len(args) == 1:
-        keys = columns_import(sheet_title, max_title, *args, init_file)
+        keys = columns_import(sheet_title, max_title, *args, init_file=init_file, display_status=display_status)
         dct = dict((key, []) for key in keys)
     # if two columns passed then create dictionary of keys with one value for each key
     elif len(args) == 2:
-        keys, values = columns_import(sheet_title, max_title, *args, init_file = init_file)
+        keys, values = columns_import(sheet_title, max_title, *args, init_file=init_file, display_status=display_status)
         # if columns have different number of elements throw information string and exit
         if len(keys) != len(values):
             print(info)
@@ -142,7 +146,7 @@ def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xls
     # if morte than two columns passed then create dictionary of keys with list of values for each key
     elif len(args) > 2:
         # first column is keys rest columns are in values list of lists
-        keys, *values = columns_import(sheet_title, max_title, *args, init_file = init_file)
+        keys, *values = columns_import(sheet_title, max_title, *args, init_file=init_file, display_status=display_status)
         # check if all imported columns have equal length to create dictionary
         # create set of columns length with set comprehension method
         columns_len_set = {len(columns_title) for columns_title in [keys, *values]}

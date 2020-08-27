@@ -22,7 +22,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
 
     # names to save data obtained after current module execution
     data_names = ['zoning_aggregated', 'alias_aggregated', 'zonemember_statistics', 'portshow_zoned_aggregated', 
-                    'Зонирование', 'Псевдонимы', 'Зонирование_A&B', 'Порты_не_в_зонах', 'Статистика_зон']
+                    'Зонирование', 'Псевдонимы', 'Зонирование_A&B', 'Порты_не_в_зонах', 'Порты_без_псевдономов', 'Отсутсвуют_в_сети', 'Статистика_зон']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -32,7 +32,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     # pylint: disable=unbalanced-tuple-unpacking
     zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, \
         portshow_zoned_aggregated_df, zoning_report_df, alias_report_df, \
-            zoning_compare_report_df, unzoned_device_report_df, \
+            zoning_compare_report_df, unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df,\
                 zonemember_statistics_report_df = data_lst
 
     # list of data to analyze from report_info table
@@ -66,14 +66,15 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
 
         # report tables
         zoning_report_df, alias_report_df, zoning_compare_report_df, \
-            unzoned_device_report_df, zonemember_statistics_report_df = \
+            unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df = \
                 zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df,
                         zonemember_statistics_df, data_names, report_columns_usage_dct, max_title)
 
         # create list with partitioned DataFrames
         data_lst = [zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, 
                     portshow_zoned_aggregated_df, zoning_report_df, alias_report_df, 
-                    zoning_compare_report_df, unzoned_device_report_df, zonemember_statistics_report_df]
+                    zoning_compare_report_df, unzoned_device_report_df, no_alias_device_report_df, 
+                    zoning_absent_device_report_df, zonemember_statistics_report_df]
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
 
@@ -81,14 +82,15 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     else:
         zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, \
             portshow_zoned_aggregated_df, zoning_report_df, alias_report_df, \
-                zoning_compare_report_df, unzoned_device_report_df, zonemember_statistics_report_df \
+                zoning_compare_report_df, unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df \
                     = verify_data(report_data_lst, data_names, *data_lst)
 
         data_lst = [zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, 
                     portshow_zoned_aggregated_df, zoning_report_df, alias_report_df, 
-                    zoning_compare_report_df, unzoned_device_report_df, zonemember_statistics_report_df]
+                    zoning_compare_report_df, unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
+
         save_xlsx_file(data_frame, data_name, report_data_lst)
 
     return zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df

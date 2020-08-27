@@ -12,7 +12,9 @@ from common_operations_servicefile import columns_import, data_extract_objects
 
 
 def fabricshow_extract(switch_params_lst, report_data_lst):
-    """Function to extract fabrics information
+    """
+    Function to extract from principal switch configuration 
+    list of switches in fabric including AG switches
     """
 
     # report_data_lst contains information: 
@@ -60,12 +62,12 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
             # data unpacking from iter param
             # dictionary with parameters for the current switch
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            switch_info_keys = ['configname', 'chassis_name', 'switch_index', 
+            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
             switch_info_lst = [switch_params_data_dct[key] for key in switch_info_keys]
             ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
-            sshow_file, _, switch_index, switch_name, _, switch_role = switch_info_lst[:6]
+            sshow_file, _, _, switch_index, switch_name, _, switch_role = switch_info_lst[:7]
 
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} fabric environment. Switch role: {switch_role}'
@@ -78,8 +80,8 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
             
             # check config of Principal switch only 
             if switch_role == 'Principal':
-                # principal_switch_lst contains sshow_file, chassis_name, switch_index, switch_name, switch_fid
-                principal_switch_lst = [*switch_info_lst[:5], *switch_info_lst[6:8]]
+                # principal_switch_lst contains sshow_file, chassis_name, chassis_wwn, switch_index, switch_name, switch_fid
+                principal_switch_lst = [*switch_info_lst[:6], *switch_info_lst[7:9]]
                                         
                 # search control dictionary. continue to check sshow_file until all parameters groups are found
                 with open(sshow_file, encoding='utf-8', errors='ignore') as file:

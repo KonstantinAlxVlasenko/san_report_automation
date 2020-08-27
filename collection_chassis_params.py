@@ -64,7 +64,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
             syslog_set = set()
             tz_lst = []
             licenses = []
-            vf_id = []
+            vf_id_set = set()
 
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} chassis parameters'
@@ -176,7 +176,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
                         while not re.search(r'^(SWITCHCMD /fabos/cliexec/)?dom *:$|Non-VF', line):       
                             if re.search(r'CURRENT +CONTEXT +-- +(\d+) *, \d+', line):
                                 id = re.match(r'CURRENT +CONTEXT +-- +(\d+) *, \d+', line).group(1)
-                                vf_id.append(id)
+                                vf_id_set.add(id)
                                 line = file.readline()
                             else:
                                 line = file.readline()
@@ -187,7 +187,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
             # additional values which need to be added to the chassis params dictionary
             # chassis_params_add order (configname, ams_maps_log, chassis_name, snmp_server, syslog_server, timezone_h:m, uptime, cpu_average_load, memory_usage, flash_usage, licenses)
             # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
-            chassis_params_values = (sshow_file, ams_maps_file, switch_name, vf_id, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
+            chassis_params_values = (sshow_file, ams_maps_file, switch_name, vf_id_set, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
             
             # adding additional parameters and values to the chassis_params_switch_dct
             for chassis_param_add, chassis_param_value in zip(chassis_params_add,  chassis_params_values):

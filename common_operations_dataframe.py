@@ -41,6 +41,8 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     # sheet name with customer report columns
     customer_report_columns_sheet = 'customer_report'
     # construct columns titles from data_names to use in dct_from_columns function
+    if isinstance(dataframes_to_create_lst, str):
+        dataframes_to_create_lst = [dataframes_to_create_lst]
     tables_names_lst = [
         [data_name.rstrip('_report') + '_eng', data_name.rstrip('_report')+'_ru'] 
         for data_name in dataframes_to_create_lst

@@ -34,7 +34,7 @@ def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_ag
     portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_join_df, how = 'left', on = switchparams_lst[:5])
 
     # add switch Generation based on chassis wwn
-    switch_generation_lst = ['configname', 'chassis_name', 'chassis_wwn', 'Generation']
+    switch_generation_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switchType', 'Generation', 'HPE_modelName']
     switch_generation_df = switch_params_aggregated_df.loc[:, switch_generation_lst].copy()
     switch_generation_df.drop_duplicates(subset = switch_generation_lst[:3], inplace = True)
     portshow_aggregated_df = portshow_aggregated_df.merge(switch_generation_df, how = 'left', on = switch_generation_lst[:3])

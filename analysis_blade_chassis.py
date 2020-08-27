@@ -93,10 +93,10 @@ def blademodule_report(blade_module_df, data_names, max_title):
 
     report_columns_usage_dct = {'fabric_name_usage': False, 'chassis_info_usage': False}
 
-    # columns_lst = [*blade_module_df.columns.to_list(), 'FW_Supported', 'Recommended_FW'] # remove
-    # blade_modules_prep_df = blade_module_df.reindex(columns = columns_lst) # remove
+    columns_lst = [*blade_module_df.columns.to_list(), 'FW_Supported', 'Recommended_FW'] # remove
+    blade_modules_prep_df = blade_module_df.reindex(columns = columns_lst) # remove
 
     # pylint: disable=unbalanced-tuple-unpacking
-    blade_module_report_df, = dataframe_segmentation(blade_module_df, data_names[1:], report_columns_usage_dct, max_title)
+    blade_module_report_df, = dataframe_segmentation(blade_modules_prep_df, data_names[1:], report_columns_usage_dct, max_title)
 
     return blade_module_report_df

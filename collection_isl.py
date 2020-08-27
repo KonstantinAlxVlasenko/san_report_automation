@@ -12,8 +12,7 @@ from common_operations_servicefile import columns_import, data_extract_objects
 
 
 def interswitch_connection_extract(switch_params_lst, report_data_lst):
-    """Function to extract interswitch connection information
-    """  
+    """Function to extract interswitch connection information"""  
 
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct

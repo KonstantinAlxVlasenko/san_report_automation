@@ -172,7 +172,7 @@ def find_grp_name(aliases):
     if not grp_name or len(grp_name) < 3:
         return None
     
-    return grp_name.strip('_')
+    return grp_name.strip('_-')
 
 
 def get_longest_common_subseq(data):

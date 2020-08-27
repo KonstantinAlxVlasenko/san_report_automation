@@ -10,6 +10,17 @@ from common_operations_miscellaneous import (
 from common_operations_servicefile import columns_import, data_extract_objects
 
 
+# regex_peerzone = r'^(SWITCHCMD /fabos/cliexec/)?zoneshow --peerzone all:$'
+# regex_end = r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$'
+# regex_zone = r'^ *zone: *([\w$^-]+) *$'
+# regex_effective = r'^ *Effective +configuration *: *$'
+# regex_zoneend = r'^ *(cfg:|zone:|alias:|real [\w.]+|\*\* *SS CMD END *\*\*|Effective +configuration *:)'
+# regex_zonemember = r'[\w$-^]+'
+
+# regex_property_member = r'^ +([PC][a-z]+) +(?:Member|by): +[\w$-^]+$'
+# regex_principal_peer = r'^ +(Principal|Peer) +Member\(s\):$'
+# regex_peer_member_end = r'^ *(zone:|real [\w.]+|\*\* *SS CMD END *\*\*|Effective +configuration *|(Peer|Principal) +Member\(s\):|\d+ Peer +Zones +in +Eff +Cfg)'
+
 def zoning_extract(switch_params_lst, report_data_lst):
     """Function to extract zoning information"""
 
@@ -18,7 +29,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['cfg', 'zone', 'alias', 'cfg_effective', 'zone_effective']
+    data_names = ['cfg', 'zone', 'alias', 'cfg_effective', 'zone_effective', 'peerzone' , 'peerzone_effective']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
@@ -26,7 +37,8 @@ def zoning_extract(switch_params_lst, report_data_lst):
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst = data_lst
+    cfg_lst, zone_lst, alias_lst, cfg_effective_lst, \
+        zone_effective_lst, peerzone_lst, peerzone_effective_lst = data_lst
 
     # data force extract check 
     # list of keys for each data from data_lst representing if it is required 
@@ -51,6 +63,8 @@ def zoning_extract(switch_params_lst, report_data_lst):
         alias_lst = []
         cfg_effective_lst = []
         zone_effective_lst = []
+        peerzone_effective_lst = []
+        peerzone_lst = []
          
         # data imported from init file to extract values from config file
         *_, comp_keys, match_keys, comp_dct = data_extract_objects('zoning', max_title)
@@ -73,7 +87,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
             info = f'[{i+1} of {switch_num}]: {switch_name} zoning. Switch role: {switch_role}'
             print(info, end =" ")
             
-            collected = {'cfgshow': False}
+            collected = {'cfgshow': False, 'peerzone': False}
             
             # check config of Principal switch only 
             if switch_role == 'Principal':
@@ -169,20 +183,93 @@ def zoning_extract(switch_params_lst, report_data_lst):
                                         line = file.readline()
                                         if not line:
                                             break
-                                # if line doesn't coreesponds to any reg expression pattern then switch line
+                                # if line doesn't coreesponds to any reg expression pattern then next line
+                                # until cfgshow command border reached
                                 else:
                                     line = file.readline()                                           
                                 if not line:
                                     break
-                                                                                
+                        # cfgshow section end
+                        # peerzone section start
+                        elif re.search(comp_dct[comp_keys[8]], line):
+                            
+                            # when section is found corresponding collected dict values changed to True
+                            collected['peerzone'] = True
+                            # control flag to check if Effective configuration line passed
+                            peerzone_effective = False
+                            if ls_mode_on:
+                                while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+                                    line = file.readline()
+                                    if not line:
+                                        break
+                            # switchcmd_end_comp
+                            while not re.search(comp_dct[comp_keys[4]], line):
+                                # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}                              
+                                # if Effective configuration line passed
+                                if match_dct[match_keys[7]]:
+                                    peerzone_effective = True                                     
+                                # 'zone_match'
+                                if match_dct[match_keys[5]]:
+                                    zone_line = line_to_list(comp_dct[comp_keys[5]], line)
+                                    zone_name = zone_line[0]
+                                    line = file.readline()
+                                    # zoning_switchcmd_end_comp separates different zones
+                                    while not re.search(comp_dct[comp_keys[3]], line):
+                                        # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                                        match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}  
+                                        # peerzone_property_match
+                                        if match_dct[match_keys[9]]:
+                                            # peerzone_property is tuple. contains property member ot created by info
+                                            peerzone_property = match_dct[match_keys[9]].groups()
+                                            zonemember = [*principal_switch_lst, zone_name, *peerzone_property]
+                                            # for Effective configuration add member to peerzone_effective_lst
+                                            if peerzone_effective:
+                                                peerzone_effective_lst.append(zonemember)
+                                            # for Defined configuration add member to peerzone_lst
+                                            else:
+                                                peerzone_lst.append(zonemember)
+                                            line = file.readline()
+                                        # peerzone_member_type_match (principal or peer)
+                                        elif match_dct[match_keys[10]]:
+                                            member_type = match_dct[match_keys[10]].group(1)
+                                            line = file.readline()
+                                            # peerzone_member_end_comp separates peer and principals groups
+                                            while not re.search(comp_dct[comp_keys[11]], line):
+                                                # find zonemembers
+                                                members_lst = re.findall(comp_dct[comp_keys[2]], line)
+                                                for member in members_lst:
+                                                    # for Defined configuration add zones to zone_lst
+                                                    zonemember = [*principal_switch_lst, zone_name, member_type, member.rstrip(';')]
+                                                    # for Effective configuration add member to peerzone_effective_lst
+                                                    if peerzone_effective:
+                                                        peerzone_effective_lst.append(zonemember)
+                                                    # for Defined configuration add member to peerzone_lst
+                                                    else:
+                                                        peerzone_lst.append(zonemember)
+                                                line = file.readline()
+                                                if not line:
+                                                    break
+                                        # if line doesn't coreesponds to any reg expression pattern then switch line
+                                        # until zone description border reached
+                                        else:
+                                            line = file.readline()
+                                            if not line:
+                                                break
+                                # next line until zoneshow --peer command border reached
+                                else:
+                                    line = file.readline()                                           
+                                if not line:
+                                    break
+                        # peerzone section end
                 status_info('ok', max_title, len(info))
             else:
                 status_info('skip', max_title, len(info))
         # save extracted data to json file
-        save_data(report_data_lst, data_names, cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst)
+        save_data(report_data_lst, data_names, cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst = verify_data(report_data_lst, data_names, *data_lst)
+        cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst = verify_data(report_data_lst, data_names, *data_lst)
             
-    return cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst
+    return cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst
 

@@ -182,7 +182,7 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
     port_columns_lst = ['Fabric_name', 'Fabric_label', 
                     'Device_Host_Name', 'Group_Name', 
                     'Device_type', 'deviceType', 'deviceSubtype', 'portType',
-                    'PortName', 'NodeName', 'portId',
+                    'PortName', 'NodeName', 'Connected_portId',
                     'chassis_name', 'switchName', 'Index_slot_port']
 
     # connection information revealed by merging based on WWNP number

@@ -153,6 +153,10 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # final device type define
     portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(
         lambda series: type_check(series, switches_oui, blade_servers_df), axis = 1)
+    # identify MSA port numbers (A1-A4, B1-B4) based on PortWwn
+    portshow_aggregated_df.Device_Port = \
+        portshow_aggregated_df.apply(lambda series: find_msa_port(series) \
+        if (pd.notna(series['PortName']) and  series['deviceSubtype'] == 'MSA') else series['Device_Port'], axis=1)   
     
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = \
@@ -177,8 +181,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
         portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
     # sorting DataFrame
     sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
-                    'switchWwn', 'switchName', 'portIndex', 'slot', 'port']
-    sort_order = [True, True, False, True, False, True, True, True, True]
+                    'switchWwn', 'switchName']
+    sort_order = [True, True, False, True, False, True]
     portshow_aggregated_df.sort_values(by=sort_columns, ascending=sort_order, inplace=True)
 
     return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df
@@ -255,3 +259,24 @@ def lib_name_correction(series):
         return series['Device_Name']
     else:
         return series['Device_Host_Name']
+
+
+def find_msa_port(series):
+    """
+    Function to identify port name (A1-A4, B1-B4) for the MSA Storage
+    based on second digit of PortWwn number (0-3 A1-A4, 4-7 B1-B4)
+    """ 
+    # if pd.isna(series['PortName']):
+    #     return series['Device_Port']
+    # print(series['PortName'])
+
+    # port name based on second digit of portWwn
+    port_num = int(series['PortName'][1])
+    # Controller A ports
+    if port_num in range(4):
+        return 'A' + str(port_num+1)
+    # Controller B ports
+    elif port_num in range(4,8):
+        return 'B' + str(port_num-3)
+        
+    return series['Device_Port']

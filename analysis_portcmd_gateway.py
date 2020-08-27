@@ -20,6 +20,7 @@ portcmd_columns_lst = [
     'portIndex',
     'slot',
     'port',
+    'speed',
     'Connected_portId',
     'Connected_portWwn',
     'portType',
@@ -106,6 +107,7 @@ def portcmd_split(portshow_aggregated_df):
     #  Group#5 AG links. AG switches connected to Native mode switches through the N-port
     slave_ag_df = slave_df.loc[slave_df.portType == 'N-Port'].copy()
 
+
     return master_native_df, master_native_cisco_df, master_ag_df, slave_native_df, slave_ag_df
 
 
@@ -130,6 +132,7 @@ def find_aglink_connected_port(master_native_df, master_ag_df,
     Group#1 (master_native) merged with Group#3 (master_ag)
     """
     master_native_df = _merge_ag_groups(master_native_df, master_ag_df)
+
 
     """
     Find ports connected to trunk master and regular ag links of Access Gateway mode switch 
@@ -173,15 +176,15 @@ def add_aglink_connected_port(portshow_aggregated_df,
     # mark links as npiv
     ag_df = pd.concat([master_native_df, master_native_cisco_df, slave_native_df])
     expected_ag_links_df = ag_df.copy()
+
     ag_df.dropna(subset = ['Device_Host_Name'], inplace = True)
     ag_df['Connected_NPIV'] = 'yes'
-
-    # add access gatwwae switches 
+    # add access gateway switches 
     ag_df = pd.concat([ag_df, master_ag_df, slave_ag_df])
     expected_ag_links_df = pd.concat([expected_ag_links_df, master_ag_df, slave_ag_df])
     # drop rows with undefined links
     ag_df.dropna(subset = ['Device_Host_Name'], inplace = True)
-    # add information about connected switch nam and port number 
+    # add information about connected switch name and port number 
     # from joint AG link DataFrame to the main portcmd DataFrame.
     join_lst = ['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn', 'Connected_portId', 'portIndex', 'slot', 'port']
     filled_lst = ['Device_Host_Name', 'Device_Port', 'deviceType', 'deviceSubtype', 'Connected_NPIV']

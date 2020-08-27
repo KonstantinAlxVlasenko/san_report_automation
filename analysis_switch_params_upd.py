@@ -7,7 +7,7 @@ Module to generate aggregated switch parameters table and
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import dataframe_segmentation
+from common_operations_dataframe import dataframe_segmentation, dataframe_fillna
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
@@ -15,7 +15,7 @@ from common_operations_servicefile import dataframe_import
 
 
 def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df, 
-                                switch_params_df, maps_params_df, blade_module_loc_df, report_data_lst):
+                                switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, report_data_lst):
     """Main function to create aggregated switch parameters table and report tables"""
     
     # report_data_lst contains information: 
@@ -32,36 +32,12 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    report_columns_usage_dct, switch_params_aggregated_df, switches_report_df, fabric_report_df, global_fabric_parameters_report_df, \
-        switches_parameters_report_df, licenses_report_df = data_lst
+    report_columns_usage_dct, switch_params_aggregated_df, switches_report_df, fabric_report_df, \
+        global_fabric_parameters_report_df, switches_parameters_report_df, licenses_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['chassis_parameters', 'switch_parameters', 'switchshow_ports', 
                             'maps_parameters', 'blade_interconnect', 'fabric_labels']
-    # TO REMOVE
-    # # data force extract check 
-    # # list of keys for each data from data_lst representing if it is required 
-    # # to re-collect or re-analyze data even they were obtained on previous iterations 
-    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # # list with True (if data loaded) and/or False (if data was not found and None returned)
-    # data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-
-    # # check force extract keys for data passed to main function as parameters and fabric labels
-    # # if analyzed data was re-extracted or re-analyzed on previous steps then data from data_lst
-    # # need to be re-checked regardless if it was analyzed on prev iterations
-    # analyzed_data_change_flags_lst = [report_steps_dct[data_name][1] for data_name in analyzed_data_names]
-
-
-    # TO REMOVE
-    # # when no data saved or force extract flag is on or data passed as parameters have been changed then 
-    # # analyze extracted config data  
-    # if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_change_flags_lst):
-    #     # information string if data used have been forcibly changed
-    #     if any(analyzed_data_change_flags_lst) and not any(force_extract_keys_lst) and all(data_check):
-    #         info = f'Force data processing due to change in collected or analyzed data'
-    #         print(info, end =" ")
-    #         status_info('ok', max_title, len(info))
-
 
     # clean fabricshow DataFrame from unneccessary data
     fabric_clean_df = fabric_clean(fabricshow_ag_labels_df)
@@ -82,7 +58,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
         # create aggregated table by joining DataFrames
         switch_params_aggregated_df, report_columns_usage_dct = \
             fabric_aggregation(fabric_clean_df, chassis_params_df, \
-                switch_params_df, maps_params_df, switch_models_df)
+                switch_params_df, maps_params_df, switch_models_df, ag_principal_df)
         # add 'Device_Location for Blade chassis switches
         switch_params_aggregated_df = fill_device_location(switch_params_aggregated_df, blade_module_loc_df)
 
@@ -146,21 +122,44 @@ def fabric_clean(fabricshow_ag_labels_df):
     # reset fabrics DataFrame index after droping switches
     fabric_clean_df.reset_index(inplace=True, drop=True)
     # extract required columns
-    fabric_clean_df = fabric_clean_df.loc[:, ['Fabric_name', 'Fabric_label', 'Worldwide_Name', 'Name']]
+    fabric_clean_df = fabric_clean_df.loc[:, ['Fabric_name', 'Fabric_label', 'Worldwide_Name', 'Name', 'Enet_IP_Addr',	'SwitchMode']]
     # rename columns as in switch_params DataFrame
     fabric_clean_df.rename(columns={'Worldwide_Name': 'switchWwn', 'Name': 'switchName'}, inplace=True)
 
     return fabric_clean_df
 
 
-def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, switch_models_df):
+def ag_switch_info(switch_params_aggregated_df, ag_principal_df):
+    """Function to add AG switches and VC switchtype, fw version to switch lists"""
+
+    ag_columns_lst = ['AG_Switch_WWN', 'AG_Switch_Type', 'AG_Switch_Firmware_Version']
+    switch_columns_lst = ['switchWwn', 'switchType', 'FOS_version']
+    ag_translate_dct = dict(zip(ag_columns_lst, switch_columns_lst))
+    ag_fw_type_df = ag_principal_df.copy()
+    ag_fw_type_df = ag_fw_type_df.loc[:, ag_columns_lst]
+    ag_fw_type_df.rename(columns=ag_translate_dct, inplace=True)
+
+    switch_params_aggregated_df = \
+        dataframe_fillna(switch_params_aggregated_df, ag_fw_type_df, join_lst=switch_columns_lst[0:1], filled_lst=switch_columns_lst[1:])
+
+    return switch_params_aggregated_df
+
+
+def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, switch_models_df, ag_principal_df):
     """Function to complete fabric DataFrame with information from 
     chassis_params_fabric, switch_params, maps_params DataFrames """
 
     # complete fabric DataFrame with information from switch_params DataFrame
     switch_params_aggregated_df = fabric_clean_df.merge(switch_params_df, how = 'left', on = ['switchWwn', 'switchName'])
+    switch_params_aggregated_df['SwitchName'].fillna(switch_params_aggregated_df['switchName'], inplace=True)
+    switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'], inplace=True)
+    switch_params_aggregated_df['boot.ipa'].fillna(switch_params_aggregated_df['Enet_IP_Addr'], inplace=True)
+    switch_params_aggregated_df['switchMode'].fillna(switch_params_aggregated_df['SwitchMode'], inplace=True)
+
     # complete f_s DataFrame with information from chassis_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(chassis_params_df, how = 'left', on=['configname', 'chassis_name', 'chassis_wwn'])
+
+    switch_params_aggregated_df = ag_switch_info(switch_params_aggregated_df, ag_principal_df)
 
     # convert switch_index in f_s_c and maps_params DataFrames to same type
     maps_params_df.switch_index = maps_params_df.switch_index.astype('float64', errors='ignore')
@@ -176,16 +175,11 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     # complete f_s_c_m DataFrame with information from switch_models DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(switch_models_df, how='left', on='switchType')
 
-
     # sorting DataFrame
     switch_params_aggregated_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchType', 'chassis_name', 'switch_index'], \
         ascending=[True, True, False, True, True], inplace=True)
     # reset index values
     switch_params_aggregated_df.reset_index(inplace=True, drop=True)
-
-    # # set DHCP to 'off' for Directors
-    # director_type = [42.0, 62.0, 77.0, 120.0, 121.0, 165.0, 166.0]
-    # switch_params_aggregated_df.loc[switch_params_aggregated_df.switchType.isin(director_type), 'DHCP'] = 'Off'
 
     # add empty column FOS suuported to fill manually 
     switch_params_aggregated_df['FW_Supported'] = pd.Series()
@@ -193,7 +187,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     # license check
     license_dct = {'Trunking_license': 'Trunking', 'Fabric_Vision_license': 'Fabric Vision'}
     for lic_check, lic_name in license_dct.items():
-        switch_params_aggregated_df[lic_check] = switch_params_aggregated_df.loc[switch_params_aggregated_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)
+        switch_params_aggregated_df[lic_check] = \
+            switch_params_aggregated_df.loc[switch_params_aggregated_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)
         switch_params_aggregated_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
 
     # check if chassis_name and switch_name columns are equal
