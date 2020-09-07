@@ -12,17 +12,18 @@ def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_ag
     Function to label switches in portshow_aggregated_df with Fabric names and labels.
     Add switchState, switchMode and Generation information
     """
-
-    # add Fabric labels from switch_params_aggregated_df Fataframe
-    # columns labels reqiured for join operation
-    switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
-                        'switchName', 'switchWwn', 
-                        'Fabric_name', 'Fabric_label'
-                        ]
-    # create left DataFrame for join operation
-    switchparams_aggregated_join_df = switch_params_aggregated_df.loc[:, switchparams_lst].copy()
-    # portshow_aggregated_df and switchparams_join_df DataFrames join operation
-    portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:5])
+    
+    # TO_REMOVE. ALLOCATED TO SEPARATE FUNCTION
+    # # add Fabric labels from switch_params_aggregated_df Fataframe
+    # # columns labels reqiured for join operation
+    # switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
+    #                     'switchName', 'switchWwn', 
+    #                     'Fabric_name', 'Fabric_label'
+    #                     ]
+    # # create left DataFrame for join operation
+    # switchparams_aggregated_join_df = switch_params_aggregated_df.loc[:, switchparams_lst].copy()
+    # # portshow_aggregated_df and switchparams_join_df DataFrames join operation
+    # portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:5])
 
     # add 'switch_index', 'switchState', 'switchMode' from switch_params_df
     # columns labels reqiured for join operation

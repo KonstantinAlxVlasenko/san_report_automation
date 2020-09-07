@@ -94,7 +94,7 @@ def main():
     isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
 
     portshow_aggregated_df = \
-        portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, \
+        portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, \
             alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst)
 
     portshow_sfp_aggregated_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
@@ -102,7 +102,7 @@ def main():
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
                                 cfg_df, zone_df, alias_df, cfg_effective_df, 
-                                    fcrfabric_df, lsan_df,
+                                    fcrfabric_df, lsan_df, peerzone_df,
                                         report_columns_usage_dct, report_data_lst)
 
     sensor_aggregated_df = sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_usage_dct, report_data_lst)

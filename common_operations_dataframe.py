@@ -157,3 +157,20 @@ def list_to_dataframe(data_lst, report_data_lst, sheet_title_export, sheet_title
     save_xlsx_file(data_df, sheet_title_export, report_data_lst)
     
     return data_df
+
+
+def dataframe_fabric_labeling(df, switch_params_aggregated_df):
+    """Function to label switches with fabric name and label"""
+
+    # add Fabric labels from switch_params_aggregated_df Fataframe
+    # columns labels reqiured for join operation
+    switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn',
+                        'Fabric_name', 'Fabric_label']
+    # create left DataFrame for join operation
+    fabric_label_df = switch_params_aggregated_df.loc[:, switchparams_lst].copy()
+    
+    fabric_label_df.drop_duplicates(inplace=True)
+    # portshow_aggregated_df and switchparams_join_df DataFrames join operation
+    df_labeled = df.merge(fabric_label_df, how = 'left', on = switchparams_lst[:5])
+    
+    return df_labeled

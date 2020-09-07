@@ -7,7 +7,8 @@ from common_operations_dataframe import dataframe_fillna, dataframe_join
 
 
 def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
-                        cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, report_data_lst):
+                        cfg_df, zone_df, alias_df, cfg_effective_df, 
+                        fcrfabric_df, lsan_df, peerzone_df, report_data_lst):
     """
     Main aggregation function. 
     Combines set of zoning DataFrames into aggregated zoning configuration DataFrame.
@@ -15,7 +16,7 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
 
     # create fabric labaled zoning configuration DataFrame
     zoning_aggregated_df, alias_aggregated_df = \
-        zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df)
+        zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df, peerzone_df)
     # verify which type of WWN (port or node WWN) is used for each member
     zoning_aggregated_df, alias_aggregated_df = wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
     # replace each wwnn in zoning configuration with it's wwnp  
@@ -52,13 +53,13 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     return zoning_aggregated_df, alias_aggregated_df
 
 
-def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df):
+def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df, peerzone_df):
     """Function to create fabric labaled zoning configuration DataFrame"""
 
     # fabric label, columns rename and drop for  separate zoning DataFrames
     # pylint: disable=unbalanced-tuple-unpacking
-    cfg_join_df, cfg_effective_join_df, zone_join_df, alias_join_df = \
-        align_dataframe(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df)
+    cfg_join_df, cfg_effective_join_df, zone_join_df, alias_join_df, peerzone_join_df = \
+        align_dataframe(switch_params_aggregated_df, cfg_df, cfg_effective_df, zone_df, alias_df, peerzone_df)
     # define type of zoning config (effective or defined)
     cfg_join_df = cfg_join_df.merge(cfg_effective_join_df, how='left', on=['Fabric_name', 'Fabric_label'])
     cfg_join_df['cfg_type'] = np.where(cfg_join_df.cfg == cfg_join_df.effective_config, 'effective', 'defined')
@@ -69,8 +70,11 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
     # add WWN for each alias in zone configuration configs-zones-aliases
     alias_join_df.rename(columns = {'alias': 'zone_member'}, inplace = True)
     zoning_aggregated_df = zoning_aggregated_df.merge(alias_join_df, how='left', on = ['Fabric_name', 'Fabric_label', 'zone_member'])
-    # when zonemember defined directly through wwn omitting alias copy wwn to alias_member column
+    # if zonemember defined directly through wwn omitting alias then copy wwn to alias_member column
     zoning_aggregated_df.alias_member.fillna(zoning_aggregated_df.zone_member, inplace=True)
+    # add peerzones zonemember type (Property, Principal, Peer)
+    peerzone_join_df['peerzone_member_type'] = peerzone_join_df['peerzone_member_type'].str.lower()
+    zoning_aggregated_df = zoning_aggregated_df.merge(peerzone_join_df, how='left', on = ['Fabric_name', 'Fabric_label', 'zone', 'zone_member'])
     # alias aggregated DataFrame
     alias_aggregated_df = alias_join_df.copy()
     alias_aggregated_df = alias_aggregated_df.reindex(columns= ['Fabric_name', 'Fabric_label', 'zone_member', 'alias_member'])
@@ -180,7 +184,7 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
     """Function to find each zonememeber and aliasmember fabric connection if it's exist"""
 
     port_columns_lst = ['Fabric_name', 'Fabric_label', 
-                    'Device_Host_Name', 'Group_Name', 
+                    'Device_Host_Name', 'Group_Name', 'Device_Port',
                     'Device_type', 'deviceType', 'deviceSubtype', 'portType',
                     'PortName', 'NodeName', 'Connected_portId',
                     'chassis_name', 'switchName', 'Index_slot_port']
@@ -296,6 +300,8 @@ def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
     mask_member_configured = zoning_aggregated_df['LSAN_device_state'].str.contains('Configured', na=False)
     mask_member_initializing = zoning_aggregated_df['LSAN_device_state'].str.contains('Initializing', na=False)
     mask_fabric_name = pd.notna(zoning_aggregated_df['zonemember_Fabric_name'])
+
+
     zoning_aggregated_df['Member_in_cfg_Fabric'] = \
         np.where((mask_member_imported&mask_fabric_name), 'Да', zoning_aggregated_df['Member_in_cfg_Fabric'])
     zoning_aggregated_df['Fabric_device_status'] = \
@@ -304,6 +310,12 @@ def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
         np.where((mask_member_configured & mask_fabric_name), 'remote_configured', zoning_aggregated_df['Fabric_device_status'])
     zoning_aggregated_df['Fabric_device_status'] = \
         np.where((mask_member_initializing & mask_fabric_name), 'remote_initializing', zoning_aggregated_df['Fabric_device_status'])
+    
+    # replace 'absent' status for peerzone property member fo np.nan 
+    if 'peerzone_member_type' in zoning_aggregated_df.columns:
+        mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
+        zoning_aggregated_df['Fabric_device_status'] = \
+            np.where((mask_peerzone_property), np.nan, zoning_aggregated_df['Fabric_device_status'])
 
     return zoning_aggregated_df
 

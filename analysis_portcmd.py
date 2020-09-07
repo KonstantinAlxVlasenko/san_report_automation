@@ -14,13 +14,14 @@ from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
+from common_operations_dataframe import dataframe_fabric_labeling
 from report_portcmd import create_report_tables
 
 
 def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, 
                             switch_params_aggregated_df, isl_aggregated_df, nsshow_df, 
-                            nscamshow_df, alias_df, fdmi_df, blade_module_df, blade_servers_df, 
-                            blade_vc_df, report_columns_usage_dct, report_data_lst):
+                            nscamshow_df, ag_principal_df, alias_df, fdmi_df, blade_module_df, 
+                            blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
     # report_data_lst contains information: 
@@ -54,6 +55,9 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
+
+        # import data with switch models, firmware and etc
+        switch_models_df = dataframe_import('switch_models', max_title)
         # data imported from init file (regular expression patterns) to extract values from data columns
         # re_pattern list contains comp_keys, match_keys, comp_dct    
         _, _, *re_pattern_lst = data_extract_objects('nameserver', max_title)
@@ -66,7 +70,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df = \
             portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, 
                                 switch_params_aggregated_df, isl_aggregated_df, nsshow_df, 
-                                nscamshow_df, alias_df, oui_df, fdmi_df, blade_module_df, 
+                                nscamshow_df, ag_principal_df, switch_models_df, alias_df, 
+                                oui_df, fdmi_df, blade_module_df, 
                                 blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst)
 
         # after finish display status
@@ -107,7 +112,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
-                        isl_aggregated_df, nsshow_df, nscamshow_df, alias_df, oui_df, fdmi_df, 
+                        isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, switch_models_df, alias_df, oui_df, fdmi_df, 
                         blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
@@ -116,6 +121,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
+
+    portshow_aggregated_df = dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
     
     # add fabric information (FabricName, FabricLabel) and switchMode to portshow_aggregated DataFrame
     portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_df, 
@@ -160,7 +167,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = \
-        verify_gateway_link(portshow_aggregated_df)
+        verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)
     # fill isl links information
     portshow_aggregated_df = \
         fill_isl_link(portshow_aggregated_df, isl_aggregated_df)
@@ -176,7 +183,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df = group_name_fillna(portshow_aggregated_df)
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias values 
     portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
-    # fill empty values in portshow_aggregated_df Device_Host_Name column with combination of device class and it's wwnp
+
+    # if Device_Host_Name is still empty fill empty values in portshow_aggregated_df Device_Host_Name column 
+    # with combination of device class and it's wwnp
     portshow_aggregated_df.Device_Host_Name = \
         portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
     # sorting DataFrame

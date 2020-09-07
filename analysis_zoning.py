@@ -12,7 +12,8 @@ from report_zoning import zoning_report_main
 
 
 def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
-                            cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df,
+                            cfg_df, zone_df, alias_df, cfg_effective_df, 
+                            fcrfabric_df, lsan_df, peerzone_df, 
                             report_columns_usage_dct, report_data_lst):
     """Main function to analyze zoning configuration"""
         
@@ -52,7 +53,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
         # aggregated DataFrames
         zoning_aggregated_df, alias_aggregated_df \
             = zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
-                                    cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, report_data_lst)
+                                    cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, report_data_lst)
 
         # create comprehesive statistics DataFrame with Fabric summaries and
         # zones statistics DataFrame without summuries  

@@ -5,34 +5,19 @@ Module to define Access Gateway and NPV switches connection in portcmd DataFrame
 
 import numpy as np
 import pandas as pd
-from common_operations_dataframe import dataframe_fillna
+from common_operations_dataframe import dataframe_fillna, dataframe_fabric_labeling
 
 
-portcmd_columns_lst = [
-    'configname',
-    'Fabric_name',
-    'Fabric_label',
-    'chassis_name',
-    'chassis_wwn',
-    'switchName',
-    'switchWwn',
-    'Index_slot_port',
-    'portIndex',
-    'slot',
-    'port',
-    'speed',
-    'Connected_portId',
-    'Connected_portWwn',
-    'portType',
-    'Device_Host_Name',
-    'Device_Port',
-    'deviceType',
-    'deviceSubtype',
-    'Connected_NPIV'
-    ]
+portcmd_columns_lst = ['configname', 'Fabric_name', 'Fabric_label',
+                        'chassis_name', 'chassis_wwn',
+                        'switchName', 'switchWwn',
+                        'Index_slot_port', 'portIndex', 'slot', 'port',
+                        'speed', 'Connected_portId', 'Connected_portWwn',
+                        'portType', 'Device_Host_Name', 'Device_Port', 
+                        'deviceType', 'deviceSubtype', 'Connected_NPIV']
 
 
-def verify_gateway_link(portshow_aggregated_df):
+def verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df):
 
     portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
     portshow_aggregated_df['Index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
@@ -44,7 +29,50 @@ def verify_gateway_link(portshow_aggregated_df):
                                 master_native_df, master_native_cisco_df, master_ag_df, 
                                 slave_native_df, slave_ag_df)
 
+    ag_principal_label_df = ag_fabric_labeling(ag_principal_df, switch_params_aggregated_df)
+    portshow_aggregated_df = ag_principal_fillna(portshow_aggregated_df, ag_principal_label_df, switch_models_df)
+
     return portshow_aggregated_df, expected_ag_links_df
+
+
+def ag_fabric_labeling(ag_principal_df, switch_params_aggregated_df):
+
+    ag_columns_lst = ['configname',	'chassis_name', 'chassis_wwn', 
+                    'Principal_switch_name',	'Principal_switch_wwn',
+                    'AG_Switch_Name',	'AG_Switch_WWN', 'AG_Switch_Type', 
+                    'AG_Switch_Number_of_Ports',	'AG_Switch_IP_Address',	
+                    'AG_Switch_Firmware_Version']
+    ag_columns_dct = {'Principal_switch_name': 'switchName', 'Principal_switch_wwn': 'switchWwn',
+                    'AG_Switch_Name': 'Device_Host_Name', 'AG_Switch_WWN': 'NodeName', 
+                    'AG_Switch_Type': 'switchType', 'AG_Switch_IP_Address': 'IP_Address', 
+                    'AG_Switch_Firmware_Version': 'Device_Fw'}
+    ag_principal_label_df =  ag_principal_df.loc[:, ag_columns_lst].copy()
+    ag_principal_label_df.drop_duplicates(inplace=True)
+    ag_principal_label_df.rename(columns=ag_columns_dct, inplace=True)
+    ag_principal_label_df = dataframe_fabric_labeling(ag_principal_label_df, switch_params_aggregated_df)
+    ag_principal_label_df.drop(columns=['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn'], inplace=True)
+
+    return ag_principal_label_df
+
+def ag_principal_fillna(portshow_aggregated_df, ag_principal_label_df, switch_models_df):
+    ag_principal_label_df['Connected_NPIV'] = 'yes'
+    ag_principal_label_df.switchType = ag_principal_label_df.switchType.astype('float64', errors='ignore')
+    # remove fractional part from f_s_c_m_df.switchType
+    ag_principal_label_df.switchType = np.floor(ag_principal_label_df.switchType)
+    switch_models_df.switchType = switch_models_df.switchType.astype('float64', errors='ignore')
+    # complete f_s_c_m DataFrame with information from switch_models DataFrame
+    ag_principal_label_df = ag_principal_label_df.merge(switch_models_df, how='left', on='switchType')
+
+    ag_principal_label_df.rename(columns={'HPE_modelName': 'Device_Model'}, inplace=True)
+
+    fillna_columns_lst = ['Fabric_name', 'Fabric_label', 'NodeName',
+                        'Device_Host_Name', 'IP_Address', 'Device_Fw', 
+                        'Connected_NPIV', 'Device_Model']
+
+    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, ag_principal_label_df,
+                                            join_lst=fillna_columns_lst[:3], filled_lst=fillna_columns_lst[3:])
+
+    return portshow_aggregated_df
 
 
 def portcmd_split(portshow_aggregated_df):
@@ -249,3 +277,4 @@ def _merge_ag_groups(left_group_df, right_group_df, slave_group = False):
         left_group_df.replace('unknown', pd.NA, inplace=True)
 
     return left_group_df
+

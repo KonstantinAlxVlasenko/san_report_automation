@@ -194,7 +194,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     # check if chassis_name and switch_name columns are equal
     # if yes then no need to use chassis information in tables
     # remove switches with unparsed data
-    chassis_names_check_df = switch_params_aggregated_df.dropna(subset=['chassis_name', 'SwitchName'], how = 'all')
+    # chassis_names_check_df = switch_params_aggregated_df.dropna(subset=['chassis_name', 'SwitchName'], how = 'all')
+    chassis_names_check_df = switch_params_aggregated_df.dropna(subset=['chassis_name'], how = 'all')
     if all(chassis_names_check_df.chassis_name == chassis_names_check_df.SwitchName):
         chassis_column_usage = False
     else:

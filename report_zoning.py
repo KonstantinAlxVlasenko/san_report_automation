@@ -84,8 +84,13 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     # if alieses doesn't have duplicates 
     if 'alias_duplicated' in cleaned_df and cleaned_df['alias_duplicated'].isna().all():
         cleaned_df.drop(columns=['alias_duplicated'], inplace=True)
+    # if no WWNn used which represents more then one WWNp
     if 'Wwnn_unpack' in cleaned_df and cleaned_df['Wwnn_unpack'].isna().all():
         cleaned_df.drop(columns=['Wwnn_unpack'], inplace=True)
+    # if all aliases contain one wwn only
+    if 'zone_member' in cleaned_df and 'zonemember_duplicates_free' in cleaned_df:
+        if all(cleaned_df['zone_member'] == cleaned_df['zonemember_duplicates_free']):
+            cleaned_df.drop(columns=['zonemember_duplicates_free'], inplace=True)
 
     return cleaned_df
 

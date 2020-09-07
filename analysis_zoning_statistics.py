@@ -7,7 +7,7 @@ import pandas as pd
 def zonemember_statistics(zoning_aggregated_df):
     """Main function to create zonemembers statistics"""
 
-    statistics_columns_lst = ['deviceType', 'deviceSubtype', 'Device_type', 'Wwn_type'] 
+    statistics_columns_lst = ['deviceType', 'deviceSubtype', 'Device_type', 'Wwn_type', 'peerzone_member_type'] 
 
     # to count zonemeber stitistics it is required to make
     # changes in zoning_aggregated_df DataFrame
@@ -20,17 +20,21 @@ def zonemember_statistics(zoning_aggregated_df):
     mask_srv = zoning_modified_df.deviceType.str.contains('SRV', na=False)
     zoning_modified_df.deviceSubtype = np.where(mask_srv, np.nan, zoning_modified_df.deviceSubtype)
     """
-    We are interested to count connected devices statistic only.
+    We are interested to count connected devices statistics only.
     Connected devices are in the same fabric with the switch which 
     zoning configurutaion defined in (local) or imported to that fabric
     in case of LSAN zones (imported).
     Ports with status remote_na, initializing and configured considered to be
-    not connected (np.nan) and thus not taking into acccount.
+    not connected (np.nan) and thus it's 'deviceType', 'deviceSubtype', 'Device_type', 
+    'Wwn_type', 'peerzone_member_type' are not taking into acccount.
+    'peerzone_member_type' for Peerzone property member is not changed and counted in statistics. 
     But device status for not connected ports is reflected in zonemember statistics.
     """  
     mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
+    mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
+
     zoning_modified_df[statistics_columns_lst] = \
-        zoning_modified_df[statistics_columns_lst].where(mask_connected, pd.Series((np.nan, np.nan)), axis=1)
+        zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan, np.nan)), axis=1)
 
     # get statistice DataFrames for zone and cfgtype level statistics
     zonemember_zonelevel_stat_df = count_zonemember_statistics(zoning_modified_df)
@@ -41,7 +45,8 @@ def zonemember_statistics(zoning_aggregated_df):
     zonemember_cfgtypelevel_stat_df.reset_index(inplace=True)
     # add defined and actual wwn number for each zone
     zone_wwn_number_df = defined_actual_wwn_number(zoning_aggregated_df, df_type='zone')
-    zonemember_zonelevel_stat_df = zonemember_zonelevel_stat_df.merge(zone_wwn_number_df, how='left', on=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'])
+    zonemember_zonelevel_stat_df = zonemember_zonelevel_stat_df.merge(zone_wwn_number_df, how='left', 
+                                                                        on=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'])
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
     zonemember_zonelevel_stat_df = note_zonemember_statistics(zonemember_zonelevel_stat_df)
     # concatenate both statistics
@@ -59,10 +64,14 @@ def count_zonemember_statistics(zoning_modified_df, zone=True):
 
     # column names for which statistics is counted for
     columns_lst = ['Fabric_device_status',
+                'peerzone_member_type',
                 'deviceType',
                 'deviceSubtype',
                 'Device_type',
-                'Wwn_type'] 
+                'Wwn_type']
+
+    columns_lst = [column for column in columns_lst if zoning_modified_df[column].notna().any()]
+
     # list to merge diffrenet parameters statistics into single DataFrame
     merge_lst = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type','zone']
     # list of series(columns) grouping performed on
@@ -203,7 +212,7 @@ def target_initiator_note(series):
     Auxiliary function for 'note_zonemember_statistic' function 
     to verify zone content from target_initiator number point of view.
     """
-    
+
     # if there are no local or imported zonemembers in fabric of zoning config switch
     # current zone is empty (neither actual initiators nor targets are present)
     if series['Total_connected_zonemembers'] == 0:
@@ -224,8 +233,13 @@ def target_initiator_note(series):
     # if zone contains initiator(s) but not targets then zone considered to be target's less zone
     if series['SRV'] >= 1 and series['STORAGE_LIB'] == 0:
             return 'no_target'
-    # if zone contains more then one initiator and target(s) then initiator number exceeds threshold
+    # if zone contains more then one initiator and it's not a peerzone 
+    # then initiator number exceeds threshold
     if series['SRV'] > 1:
-        return 'several_initiators'
+        if 'peer' in series.index:
+            if series['peer'] == 0:
+                return 'several_initiators'
+        else:
+            return 'several_initiators'
     
     return np.nan
