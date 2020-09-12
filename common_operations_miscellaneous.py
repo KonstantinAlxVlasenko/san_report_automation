@@ -97,7 +97,7 @@ def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     return data_check
 
 
-def verify_data(report_data_list, data_names, *args):
+def verify_data(report_data_list, data_names, *args,  show_status=True):
     """
     Function to verify if loaded json file contains 'NO DATA FOUND' information string.
     If yes then data converted to empty list [] or DataFrame otherwise remains unchanged.
@@ -110,25 +110,30 @@ def verify_data(report_data_list, data_names, *args):
     # list to store verified data
     verified_data_lst = []
     for data_name, data_verified in zip(data_names, args):
-        info = f'Verifying {data_name}'
-        print(info, end =" ")
+        if show_status:
+            info = f'Verifying {data_name}'
+            print(info, end =" ")
         # if data is DataFrame
         if isinstance(data_verified, pd.DataFrame):
             if data_verified.iloc[0, 0] == 'NO DATA FOUND':
                 # reset DataFrame (leaves columns title only)
                 data_verified = data_verified.iloc[0:0]
-                status_info('empty', max_title, len(info))
+                if show_status:
+                    status_info('empty', max_title, len(info))
             else:
-                status_info('ok', max_title, len(info))
+                if show_status:
+                    status_info('ok', max_title, len(info))
         # for other type of data
         else:
             # if json file contains NO DATA information string
             if data_verified == 'NO DATA FOUND':
                 # transorm data to empty list
                 data_verified = []
-                status_info('empty', max_title, len(info))
+                if show_status:
+                    status_info('empty', max_title, len(info))
             else:
-                status_info('ok', max_title, len(info))
+                if show_status:
+                    status_info('ok', max_title, len(info))
         verified_data_lst.append(data_verified)
 
     return verified_data_lst
@@ -168,6 +173,20 @@ def verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed
         force_run = True
 
     return force_run
+
+
+def reply_request(question: str, reply_options = ['y', 'yes', 'n', 'no'], show_reply = False):
+    """Function to ask user for input until its in reply options"""
+
+    reply = None                
+    while not reply in reply_options:
+        reply = input(question).lower()
+    else:
+        if show_reply:
+            print(f'Your choice: {reply}')
+    return reply[0]
+
+
 
 
 

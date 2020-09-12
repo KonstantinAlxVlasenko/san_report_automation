@@ -45,23 +45,31 @@ def check_valid_path(path):
         
 
 # saving DataFrame to excel file
-def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'collection'):   
+def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False):
+    # , report_type = 'collection'   
     """Check if excel file exists, check if dataframe sheet is in file, 
     delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
     """
     
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
+    
+    # report_steps_dct for each data_name contains: export_to_excel flag, 
+    # force_extract flag, report_type, step_info, data_description
+    if report_steps_dct.get(sheet_title):
+        export_flag, _, report_type, _, df_decription = report_steps_dct.get(sheet_title)
+    else:
+        info = f'DataFrame {sheet_title}'
+        print(info, end =" ")
+        status_info('unknown', max_title, len(info))
+        export_flag, report_type = 1, 'unknown'
+        df_decription = '-'
 
-    # check DataFrame report type to save 
-    if report_steps_dct[sheet_title][2] == 'collection':
-        report_mark = 'collection'
-    elif report_steps_dct[sheet_title][2] == 'analysis':
-        report_mark = 'analysis'
-    elif report_steps_dct[sheet_title][2] == 'report':
+    # check DataFrame report type to save
+    if report_type == 'report':
         report_mark = 'SAN_Assessment_tables'
     else:
-        report_mark = 'unknown'
+        report_mark = report_type
           
     current_date = str(date.today())
     # construct excel filename
@@ -73,7 +81,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
     
     # save DataFrame to excel file if export_to_excel trigger is ON
     # and DataFrame is not empty
-    if report_steps_dct[sheet_title][0] and not data_frame.empty:
+    if (force_flag or export_flag) and not data_frame.empty:
         # pd.ExcelWriter has only two file open modes
         # if file doesn't exist it has be opened in "w" mode otherwise in "a"    
         if os.path.isfile(file_path):
@@ -103,7 +111,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
                     # if file is new then create table of content
                     if file_mode == 'w':
                         # save current item with header
-                        content_df = pd.DataFrame([[sheet_title, report_steps_dct[sheet_title][4]]], columns=['Закладка', 'Название таблицы'])
+                        content_df = pd.DataFrame([[sheet_title, df_decription]], columns=['Закладка', 'Название таблицы'])
                         content_df.to_excel(writer, sheet_name='Содержание', index=False)
                         writer.save()
                         # create hyperlink to wotksheet
@@ -129,7 +137,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
                             writer.book = workbook
                             writer.sheets = {ws.title: ws for ws in workbook.worksheets}
                             # content item to add
-                            content_df = pd.DataFrame([[sheet_title, report_steps_dct[sheet_title][4]]], columns=['Закладка', 'Название таблицы'])
+                            content_df = pd.DataFrame([[sheet_title, df_decription]], columns=['Закладка', 'Название таблицы'])
                             # find row and cell to add new item and hyperlink
                             startrow = writer.sheets['Содержание'].max_row
                             cell_address = 'A' + str(startrow+1)
@@ -153,7 +161,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, report_type = 'coll
                     writer.book = workbook
                     writer.sheets = {ws.title: ws for ws in workbook.worksheets}
                     # add table title
-                    workbook[sheet_title]['A1'] = report_steps_dct[sheet_title][4]
+                    workbook[sheet_title]['A1'] = df_decription
                     workbook[sheet_title]['A1'].font =  openpyxl.styles.fonts.Font(bold=True)
                     # add hyperlink to the Table of contents
                     create_hyperlink(workbook[sheet_title], 'A2', 'Содержание', cell_ref='A2', display_name='К содержанию')

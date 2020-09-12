@@ -130,17 +130,23 @@ def fabric_clean(fabricshow_ag_labels_df):
 
 
 def ag_switch_info(switch_params_aggregated_df, ag_principal_df):
-    """Function to add AG switches and VC switchtype, fw version to switch lists"""
+    """
+    Function to add AG switches and VC's switchtype, fw version collected 
+    from Principal switch configuration to switch_params_aggrefated_df DataFrame
+    """
 
+    # extract required columns from ag_principal_df DataFrame and translate it's
+    # titles to correspond columns in switch_params_aggregated_df DataFrame
     ag_columns_lst = ['AG_Switch_WWN', 'AG_Switch_Type', 'AG_Switch_Firmware_Version']
     switch_columns_lst = ['switchWwn', 'switchType', 'FOS_version']
     ag_translate_dct = dict(zip(ag_columns_lst, switch_columns_lst))
     ag_fw_type_df = ag_principal_df.copy()
     ag_fw_type_df = ag_fw_type_df.loc[:, ag_columns_lst]
     ag_fw_type_df.rename(columns=ag_translate_dct, inplace=True)
-
+    # fill information for AG switches and VC
     switch_params_aggregated_df = \
-        dataframe_fillna(switch_params_aggregated_df, ag_fw_type_df, join_lst=switch_columns_lst[0:1], filled_lst=switch_columns_lst[1:])
+        dataframe_fillna(switch_params_aggregated_df, ag_fw_type_df, join_lst=switch_columns_lst[0:1], 
+                                                                    filled_lst=switch_columns_lst[1:])
 
     return switch_params_aggregated_df
 

@@ -18,17 +18,20 @@ portcmd_columns_lst = ['configname', 'Fabric_name', 'Fabric_label',
 
 
 def verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df):
+    """Main function to find AG links in portshow_aggregated_df DataFrame"""
 
+    # find AG links using information in portshow_aggregated_df DataFrame itself
     portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
     portshow_aggregated_df['Index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
         portshow_aggregated_df.slot + '-' + portshow_aggregated_df.port
     portshow_aggregated_df['Connected_NPIV'] = np.where(portshow_aggregated_df.deviceType == 'VC', 'yes', pd.NA)
     master_native_df, master_native_cisco_df, master_ag_df, slave_native_df, slave_ag_df = portcmd_split(portshow_aggregated_df)
-    master_native_df, master_ag_df, slave_native_df, slave_ag_df =  find_aglink_connected_port(master_native_df, master_ag_df, slave_native_df, slave_ag_df)
+    master_native_df, master_ag_df, slave_native_df, slave_ag_df =  \
+        find_aglink_connected_port(master_native_df, master_ag_df, slave_native_df, slave_ag_df)
     portshow_aggregated_df, expected_ag_links_df = add_aglink_connected_port(portshow_aggregated_df,
                                 master_native_df, master_native_cisco_df, master_ag_df, 
                                 slave_native_df, slave_ag_df)
-
+    # complement AG links information in portshow_aggregated_df with information from ag_principal_df DataFrame
     ag_principal_label_df = ag_fabric_labeling(ag_principal_df, switch_params_aggregated_df)
     portshow_aggregated_df = ag_principal_fillna(portshow_aggregated_df, ag_principal_label_df, switch_models_df)
 
@@ -36,39 +39,51 @@ def verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_
 
 
 def ag_fabric_labeling(ag_principal_df, switch_params_aggregated_df):
+    """Function to label ag_principal_df with Fabric names and labels"""
 
+    # columns to select from ag_principal_df DataFrame
     ag_columns_lst = ['configname',	'chassis_name', 'chassis_wwn', 
                     'Principal_switch_name',	'Principal_switch_wwn',
                     'AG_Switch_Name',	'AG_Switch_WWN', 'AG_Switch_Type', 
                     'AG_Switch_Number_of_Ports',	'AG_Switch_IP_Address',	
                     'AG_Switch_Firmware_Version']
+    # translate dictionary to correspond columns in switch_params_aggregated_df
     ag_columns_dct = {'Principal_switch_name': 'switchName', 'Principal_switch_wwn': 'switchWwn',
                     'AG_Switch_Name': 'Device_Host_Name', 'AG_Switch_WWN': 'NodeName', 
                     'AG_Switch_Type': 'switchType', 'AG_Switch_IP_Address': 'IP_Address', 
                     'AG_Switch_Firmware_Version': 'Device_Fw'}
+    # select and rename ag_principal_df colummns 
     ag_principal_label_df =  ag_principal_df.loc[:, ag_columns_lst].copy()
     ag_principal_label_df.drop_duplicates(inplace=True)
     ag_principal_label_df.rename(columns=ag_columns_dct, inplace=True)
+    # label AG Principal DataFrame and drop columns containing Principal switch information
     ag_principal_label_df = dataframe_fabric_labeling(ag_principal_label_df, switch_params_aggregated_df)
     ag_principal_label_df.drop(columns=['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn'], inplace=True)
 
     return ag_principal_label_df
 
+
 def ag_principal_fillna(portshow_aggregated_df, ag_principal_label_df, switch_models_df):
+    """
+    Function to add information from labled Princial AG swithes DataFrame
+    to portshow_aggregated_df DataFrame
+    """
+
+    # define all AG switches ann VCFC modules as Connected through NPIV
     ag_principal_label_df['Connected_NPIV'] = 'yes'
+
+    # complete ag_principal_label_df DataFrame with information from switch_models DataFrame
     ag_principal_label_df.switchType = ag_principal_label_df.switchType.astype('float64', errors='ignore')
-    # remove fractional part from f_s_c_m_df.switchType
-    ag_principal_label_df.switchType = np.floor(ag_principal_label_df.switchType)
+    # floor switchType fractional value to correcpond values in  switch_models_df DataFrame
+    ag_principal_label_df.switchType = np.floor(ag_principal_label_df.switchType)  
     switch_models_df.switchType = switch_models_df.switchType.astype('float64', errors='ignore')
-    # complete f_s_c_m DataFrame with information from switch_models DataFrame
     ag_principal_label_df = ag_principal_label_df.merge(switch_models_df, how='left', on='switchType')
 
+    # add AG information to portshow_aggregated_df
     ag_principal_label_df.rename(columns={'HPE_modelName': 'Device_Model'}, inplace=True)
-
     fillna_columns_lst = ['Fabric_name', 'Fabric_label', 'NodeName',
                         'Device_Host_Name', 'IP_Address', 'Device_Fw', 
                         'Connected_NPIV', 'Device_Model']
-
     portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, ag_principal_label_df,
                                             join_lst=fillna_columns_lst[:3], filled_lst=fillna_columns_lst[3:])
 

@@ -55,7 +55,6 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
-
         # import data with switch models, firmware and etc
         switch_models_df = dataframe_import('switch_models', max_title)
         # data imported from init file (regular expression patterns) to extract values from data columns
