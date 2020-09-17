@@ -136,7 +136,7 @@ def verify_data(report_data_list, data_names, *args,  show_status=True):
                     status_info('ok', max_title, len(info))
         verified_data_lst.append(data_verified)
 
-    return verified_data_lst
+    return verified_data_lst if len(args) > 1 else verified_data_lst[0]
 
 
 def verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names = []):

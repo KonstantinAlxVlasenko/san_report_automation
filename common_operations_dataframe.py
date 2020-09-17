@@ -50,6 +50,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
 
     chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
+    group_name_usage = report_columns_usage_dct.get('group_name_usage')
 
     # dictionary used to rename DataFrame english columns names to russian
     data_columns_names_dct = {}
@@ -77,6 +78,10 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
         if not fabric_name_usage:
             if 'Fabric_name' in data_columns_names_eng_dct[dataframe_name]:
                 data_columns_names_eng_dct[dataframe_name].remove('Fabric_name')
+        # if device names correction applied then no need to use alias group name column
+        if not group_name_usage:
+            if 'Group_Name' in data_columns_names_eng_dct[dataframe_name]:
+                data_columns_names_eng_dct[dataframe_name].remove('Group_Name')
             
     # list with partitioned DataFrames
     segmented_dataframes_lst = []

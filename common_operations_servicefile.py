@@ -69,17 +69,19 @@ def columns_import(sheet_title, max_title, *args,
     return columns_names
 
 
-def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', columns = None, index_name = None, display_status=True):
+def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', 
+                        columns = None, index_name = None, header = 0, display_status=True):
     """Function to import dataframe from exel file"""
 
+    init_file_base = os.path.basename(init_file)
     # file to store all required data to process configuratin files
     # init_file = 'san_automation_info.xlsx'
     if display_status:   
-        info = f'Importing {sheet_title} dataframe from {init_file} file'
+        info = f'Importing {sheet_title} dataframe from {init_file_base} file'
         print(info, end = ' ')
     # try read data in excel
     try:
-        dataframe = pd.read_excel(init_file, sheet_name = sheet_title, usecols = columns, index_col = index_name)
+        dataframe = pd.read_excel(init_file, sheet_name = sheet_title, usecols = columns, index_col = index_name, header = header)
     # if file is not found
     except FileNotFoundError:
         if display_status:

@@ -36,9 +36,13 @@ def create_report_tables(portshow_aggregated_df, data_names, report_columns_usag
         hba_report_df, storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df
     
 
-def _clean_dataframe(df, mask_type, duplicates = ['Фабрика', 'Имя устройства', 'Имя группы псевдонимов'], clean = False):
+def _clean_dataframe(df, mask_type, 
+                        duplicates = ['Фабрика', 'Имя устройства', 'Имя группы псевдонимов', 
+                                        'Класс устройства', 'Тип устройства'], 
+                        clean = False):
     """
-    Auxiliary function to sort, remove duplicates and drop columns in cases they are not required in report DataFrame
+    Auxiliary function to sort, remove duplicates and 
+    drop columns in cases they are not required in report DataFrame
     """
 
     # list of columns to check if they are empty

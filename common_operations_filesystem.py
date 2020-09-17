@@ -172,13 +172,15 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False)
                 print('\nPermission denied. Close the file.\n')
                 sys.exit()
             else:
-                status_info('ok', max_title, len(info))        
+                status_info('ok', max_title, len(info))
+        return file_path        
     else:
         # if save key is on but DataFrame empty
         if report_steps_dct[sheet_title][0] and data_frame.empty:
             status_info('no data', max_title, len(info))
         else:            
             status_info('skip', max_title, len(info))
+        return None
 
 
 def save_data(report_data_list, data_names, *args):

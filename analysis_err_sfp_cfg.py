@@ -34,7 +34,8 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
                             'switchshow_ports', 'switch_params_aggregated', 'fdmi', 
-                            'nscamshow', 'nsshow', 'alias', 'blade_servers', 'fabric_labels']
+                            'device_rename', 'report_columns_usage_upd', 'nscamshow', 
+                            'nsshow', 'alias', 'blade_servers', 'fabric_labels']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  

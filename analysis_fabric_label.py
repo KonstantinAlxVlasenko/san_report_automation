@@ -66,6 +66,9 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         # labeling fabrics with auto_fabrics_labeling fanction
         fabricshow_summary_df[['Fabric_name', 'Fabric_label']] = \
             fabricshow_summary_df.apply(lambda row: pd.Series(auto_fabrics_labeling(row)), axis=1)
+
+        fabricshow_summary_df.sort_values(by=['Fabric_name', 'Fabric_label', 'Principal_switch_name', 'Domain_IDs'],
+                                                inplace=True, ignore_index=True)
         
         # fabricshow_summary_df columns to present current fabric labeling
         info_labels = ['Fabric_name', 'Fabric_label', 'chassis_name', 'Principal_switch_name', 'Fabric_ID', 
@@ -77,8 +80,8 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         print('\nAutomatic fabrics labeling\n')
         print(fabricshow_summary_df.loc[:, info_labels])
         print(f"\nFor detailed switch port types and numbers statistic in each fabric check '{file_name}' file \
-                            'fabricshow_statistics' sheet in\n{report_path} directory")
-        print('WARNING! CLOSE file after check\n')
+        'fabricshow_statistics' sheet in\n'{report_path}'' directory")
+        print('ATTN! CLOSE file after check\n')
         
         # ask user if Automatic Fabric labeling need to be corrected
         query = 'Do you want to change Fabrics Names or Labels? (y)es/(n)o: '
@@ -98,7 +101,7 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         save_data(report_data_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-       fabricshow_ag_labels_df, = verify_data(report_data_lst, data_names, *data_lst)
+       fabricshow_ag_labels_df = verify_data(report_data_lst, data_names, *data_lst)
        data_lst = [fabricshow_ag_labels_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
@@ -109,7 +112,8 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
     
     
 def fabricshow_porttype_state(switchshow_ports_df, fabricshow_df):
-    """Function adding to fabricshow DataFrame summary
+    """
+    Function adding to fabricshow DataFrame summary
     about port type for each switch and total number of ports
     and online ports by crosstab switchshow DataFrame and
     joining with fabricshow DataFrame
@@ -239,6 +243,8 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
     while not input_option in ['s', 'x']:
         # printing actual fabricshow_summary DataFrame
         print('\nCurrent fabric labeling\n')
+        fabricshow_summary_df.sort_values(by=['Fabric_name', 'Fabric_label', 'Principal_switch_name', 'Domain_IDs'],
+                                                inplace=True, ignore_index=True)
         print(fabricshow_summary_df.loc[:, info_labels])
         # printing menu options to choose to work with DataFrame
         # save, reset, exit or fabric index number to change
@@ -256,9 +262,9 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
             fabricshow_summary_before_df = fabricshow_summary_df.copy()
             
             # convert user input fabric number to integer
-            fubric_num = int(input_option)
+            fabric_num = int(input_option)
             # printing information for current fabric
-            print(fabricshow_summary_df.iloc[fubric_num])
+            print(fabricshow_summary_df.iloc[fabric_num])
             print('\n')
             
             # list to save user input
@@ -270,17 +276,21 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
                 reply_lst.append(reply)
                 # if user want to change name or label ask to enter new value
                 if reply == 'y':
-                    value = input(f'Enter new Fabric {option_name}: ')
+                    current_value = fabricshow_summary_df.loc[fabric_num, rename_options_dct[option_name]]
+                    value = input(f'\nEnter new Fabric {option_name}. Current value is {current_value}: ')
                     # 0 or None means no labeling
                     if value in ['0', 'None']:
                         value = None
+                    elif len(value) == 0:
+                        value = current_value
+                        print(f'Fabric {option_name} was not changed')
                     # change values in fabricshow_summary DataFrame 
-                    fabricshow_summary_df.loc[fubric_num, option_column] = value
+                    fabricshow_summary_df.loc[fabric_num, option_column] = value
             # if user didn't reply "no" two times
             if reply_lst != ['n']*2:
                 print('\n')
                 # print current fabric information after change
-                print(fabricshow_summary_df.iloc[fubric_num])
+                print(fabricshow_summary_df.iloc[fabric_num])
                 print('\n')
                 reply = reply_request('Do you want to keep changes? (y)es/(n)o: ')
                 # when user doesn't want to keep data fabricshow_summary DataFrame
@@ -290,13 +300,13 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
         
         # user input is save current labeling configuration and exit   
         elif input_option == 's':
-            reply = reply_request('Do you really want to save changes and exit? (y)es/(n)o: ')
+            reply = reply_request('Do you want to save changes and exit? (y)es/(n)o: ')
             # for save option do nothing and while loop stops on next condition check
             if reply == 'y':
                 print('\nSaved fabric labeling\n')
         # user input is reset current labeling configuration and start labeling from scratch
         elif input_option == 'r':
-            reply = reply_request('Do you really want to reset fabric labeling to original values? (y)es/(n)o: ')
+            reply = reply_request('Do you want to reset fabric labeling to original values? (y)es/(n)o: ')
             # for reset option actual fabricshow_summary DataFrame returns back
             # to initial DataFrame version and while loop don't stop
             if reply == 'y':
@@ -304,7 +314,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
                 print('\nFabric labeling has been reset to original version\n')
         # user input is exit without saving
         elif input_option == 'x':
-            reply = reply_request('Do you really want to leave without saving? (y)es/(n)o: ')
+            reply = reply_request('Do you want to leave without saving? (y)es/(n)o: ')
             # for exit option DataFrame returns back to initial version
             # and while loop stops
             if reply == 'y':
@@ -321,7 +331,8 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
 
 
 def faricshow_summary(group):
-    """Function takes group of switches in fabric.
+    """
+    Function takes group of switches in fabric.
     Summarizes DomainIDs, Switchnames for each fabric.
     Calculates total switch and online port numbers for each fabric
     Return Series 

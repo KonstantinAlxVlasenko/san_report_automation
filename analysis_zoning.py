@@ -22,8 +22,10 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['zoning_aggregated', 'alias_aggregated', 'zonemember_statistics', 'portshow_zoned_aggregated', 
-                    'Зонирование', 'Псевдонимы', 'Зонирование_A&B', 'Порты_не_в_зонах', 'Порты_без_псевдономов', 'Отсутсвуют_в_сети', 'Статистика_зон']
+    data_names = ['zoning_aggregated', 'alias_aggregated', 'zonemember_statistics', 
+                    'portshow_zoned_aggregated', 'Зонирование', 'Псевдонимы', 
+                    'Зонирование_A&B', 'Порты_не_в_зонах', 'Порты_без_псевдономов', 
+                    'Отсутсвуют_в_сети', 'Статистика_зон']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -37,9 +39,10 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
                 zonemember_statistics_report_df = data_lst
 
     # list of data to analyze from report_info table
-    analyzed_data_names = ['cfg', 'cfg_effective', 'zone', 'alias',
-                           'switch_params_aggregated', 'switch_parameters', 'switchshow_ports', 'chassis_parameters', 
-                            'portshow_aggregated', 'portcmd', 'fdmi', 'nscamshow', 'nsshow', 'blade_servers', 'fabric_labels']
+    analyzed_data_names = ['cfg', 'cfg_effective', 'zone', 'alias', 'switch_params_aggregated', 
+                            'switch_parameters', 'switchshow_ports', 'chassis_parameters', 
+                            'portshow_aggregated', 'device_rename', 'report_columns_usage_upd', 
+                            'portcmd', 'fdmi', 'nscamshow', 'nsshow', 'blade_servers', 'fabric_labels']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  

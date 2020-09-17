@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 
+from analysis_portcmd_devicename_correction import devicename_correction_main
 from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
 from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna
 from analysis_portcmd_devicetype import oui_join, type_check
@@ -30,19 +31,24 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
     # names to save data obtained after current module execution
     data_names = [
-        'portshow_aggregated', 'Сервера', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
+        'portshow_aggregated', 'device_rename', 'report_columns_usage_upd', 'Сервера', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
         'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 'NPIV'
         ]
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+
+    report_columns_usage_bckp = report_columns_usage_dct
     
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    portshow_aggregated_df, servers_report_df, storage_report_df, library_report_df, \
+    portshow_aggregated_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, library_report_df, \
         hba_report_df, storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = data_lst
     nsshow_unsplit_df = pd.DataFrame()
+
+    if not report_columns_usage_dct:
+        report_columns_usage_dct = report_columns_usage_bckp
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
@@ -76,14 +82,19 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         # after finish display status
         status_info('ok', max_title, len(info))
 
+        portshow_aggregated_df, device_rename_df = \
+            devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_data_lst)
+
+
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
             storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = \
-                create_report_tables(portshow_aggregated_df, data_names[1:], \
+                create_report_tables(portshow_aggregated_df, data_names[3:], \
                     report_columns_usage_dct, max_title)
 
         # create list with partitioned DataFrames
         data_lst = [
-            portshow_aggregated_df, servers_report_df, storage_report_df, 
+            portshow_aggregated_df, device_rename_df, report_columns_usage_dct, 
+            servers_report_df, storage_report_df, 
             library_report_df, hba_report_df, storage_connection_df,  
             library_connection_df, server_connection_df, npiv_report_df
             ]
@@ -94,12 +105,12 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         save_xlsx_file(expected_ag_links_df, 'expected_ag_links_df', report_data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        portshow_aggregated_df, servers_report_df, storage_report_df, \
+        portshow_aggregated_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, \
             library_report_df, hba_report_df, storage_connection_df, \
                 library_connection_df, server_connection_df, npiv_report_df \
                     = verify_data(report_data_lst, data_names, *data_lst)
         data_lst = [
-            portshow_aggregated_df, servers_report_df, storage_report_df, 
+            portshow_aggregated_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, 
             library_report_df, hba_report_df, storage_connection_df,  
             library_connection_df, server_connection_df, npiv_report_df
             ]

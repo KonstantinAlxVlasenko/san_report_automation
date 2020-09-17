@@ -131,6 +131,6 @@ def maps_params_extract(all_config_data, report_data_lst):
         save_data(report_data_lst, data_names, maps_params_fabric_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        maps_params_fabric_lst, = verify_data(report_data_lst, data_names, *data_lst)
+        maps_params_fabric_lst = verify_data(report_data_lst, data_names, *data_lst)
         
     return maps_params_fabric_lst
