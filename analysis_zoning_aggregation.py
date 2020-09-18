@@ -31,7 +31,7 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     zoning_aggregated_df = zonemember_in_cfg_fabric_verify(zoning_aggregated_df)
     alias_aggregated_df = zonemember_in_cfg_fabric_verify(alias_aggregated_df)
     # checks in which type of configuration alias apllied in (effective or defined)
-    # alias_aggregated_df = alias_cfg_type(alias_aggregated_df, zoning_aggregated_df)
+    # TO_REMOVE alias_aggregated_df = alias_cfg_type(alias_aggregated_df, zoning_aggregated_df)
     alias_aggregated_df = verify_cfg_type(alias_aggregated_df, zoning_aggregated_df, ['zone_member', 'alias_member'])
     # sort zoning configuration based on config type, fabric labels and devices zoned
     zoning_aggregated_df, alias_aggregated_df = sort_dataframe(zoning_aggregated_df, alias_aggregated_df)
@@ -43,10 +43,11 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     alias_aggregated_df['zonemember_duplicates_free'] = np.nan
     mask_zonemember_duplicate = alias_aggregated_df.duplicated(subset=['Fabric_name', 'Fabric_label', 'zone_member'], keep='first')
     alias_aggregated_df['zonemember_duplicates_free'] = alias_aggregated_df['zonemember_duplicates_free'].where(mask_zonemember_duplicate, alias_aggregated_df.zone_member)
-
+    # check if alias has duplicates
     alias_aggregated_df = verify_alias_duplicate(alias_aggregated_df)
+    # find zones alias used in
     alias_aggregated_df = zone_using_alias(zoning_aggregated_df, alias_aggregated_df)
-
+    # count how many times wwnp meets in zone, alias
     zoning_aggregated_df = wwnp_instance_number_per_group(zoning_aggregated_df, 'zone')
     alias_aggregated_df = wwnp_instance_number_per_group(alias_aggregated_df, 'alias')
 

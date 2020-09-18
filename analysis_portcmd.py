@@ -131,13 +131,11 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
-
+    # add fabric information (FabricName, FabricLabel)
     portshow_aggregated_df = dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
-    
-    # add fabric information (FabricName, FabricLabel) and switchMode to portshow_aggregated DataFrame
+    # add switchMode to portshow_aggregated DataFrame
     portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_df, 
                                                 switch_params_aggregated_df, report_data_lst)
-    
     # prepare alias_df (label fabrics, replace WWNn with WWNp if present)
     alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df = \
         alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df)

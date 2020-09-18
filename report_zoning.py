@@ -46,8 +46,13 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     """Auxiliary function to drop unnecessary columns from aggreagated DataFrame"""
     
     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
-
+    # list of columns to check if all values in column are NA
+    possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 'peerzone_member_type']
+    # dictionary of items to check if all values in column (dict key) are equal to certain value (dict value)
+    possible_identical_values = {'Wwn_type': 'Wwnp', 'cfg_type': 'effective', 'Member_in_cfg_Fabric': 'Да', 
+                                            'Fabric_device_status': 'local', 'portType': 'F-Port', }
     cleaned_df = aggregated_df.copy()
+
     # if Fabric name and Fabric labels are equal for config defined switch and zonemembers
     # then zonemember Fabric name and label columns are excessive
     check_df = cleaned_df.copy()
@@ -60,37 +65,55 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     # but there is only one fabric then zonemember_Fabric_name column is excessive
     if not fabric_name_usage and ('zonemember_Fabric_name' in cleaned_df.columns):
         cleaned_df.drop(columns=['zonemember_Fabric_name'], inplace=True)
-    # if there is no LSAN devices in fabric then LSAN_device_state column should be dropped
-    if cleaned_df.LSAN_device_state.isna().all():
-        cleaned_df.drop(columns=['LSAN_device_state'], inplace=True)
-    # if all zonemembers are defined through WWNp then Wwn_type column not informative
-    check_df.dropna(subset = ['Wwn_type'], inplace=True)
-    mask_wwnp = (check_df.Wwn_type == 'Wwnp').all()
-    if mask_wwnp:
-        cleaned_df.drop(columns=['Wwn_type'], inplace=True)
-    # if only effective configuration present drop cfg_type column
-    if cleaned_df['cfg_type'].str.contains('effective', na=False).all():
-        cleaned_df.drop(columns=['cfg_type'], inplace=True)
-    # if all zonemembers except not connected are in the same fabric 
-    # with the cfg switch drop  Member_in_cfg_Fabric column
-    if (cleaned_df['Member_in_cfg_Fabric'].dropna() == 'Да').all():
-        cleaned_df.drop(columns=['Member_in_cfg_Fabric'], inplace=True)
-    # if all ports are local
-    if (cleaned_df['Fabric_device_status'] == 'local').all():
-        cleaned_df.drop(columns=['Fabric_device_status'], inplace=True)
-    # if all ports are F-ports
-    if (cleaned_df['portType'].dropna() == 'F-Port').all():
-        cleaned_df.drop(columns=['portType'], inplace=True)
-    # if alieses doesn't have duplicates 
-    if 'alias_duplicated' in cleaned_df and cleaned_df['alias_duplicated'].isna().all():
-        cleaned_df.drop(columns=['alias_duplicated'], inplace=True)
-    # if no WWNn used which represents more then one WWNp
-    if 'Wwnn_unpack' in cleaned_df and cleaned_df['Wwnn_unpack'].isna().all():
-        cleaned_df.drop(columns=['Wwnn_unpack'], inplace=True)
+
     # if all aliases contain one wwn only
     if 'zone_member' in cleaned_df and 'zonemember_duplicates_free' in cleaned_df:
         if all(cleaned_df['zone_member'] == cleaned_df['zonemember_duplicates_free']):
             cleaned_df.drop(columns=['zonemember_duplicates_free'], inplace=True)
+
+    # # TO_REMOVE
+    # # if all zonemembers are defined through WWNp then Wwn_type column not informative
+    # check_df.dropna(subset = ['Wwn_type'], inplace=True)
+    # mask_wwnp = (check_df.Wwn_type == 'Wwnp').all()
+    # if mask_wwnp:
+    #     cleaned_df.drop(columns=['Wwn_type'], inplace=True)
+    # # if only effective configuration present drop cfg_type column
+    # if cleaned_df['cfg_type'].str.contains('effective', na=False).all():
+    #     cleaned_df.drop(columns=['cfg_type'], inplace=True)
+    # # if all zonemembers except not connected are in the same fabric 
+    # # with the cfg switch drop  Member_in_cfg_Fabric column
+    # if (cleaned_df['Member_in_cfg_Fabric'].dropna() == 'Да').all():
+    #     cleaned_df.drop(columns=['Member_in_cfg_Fabric'], inplace=True)
+    # # if all ports are local
+    # if (cleaned_df['Fabric_device_status'] == 'local').all():
+    #     cleaned_df.drop(columns=['Fabric_device_status'], inplace=True)
+    # # if all ports are F-ports
+    # if (cleaned_df['portType'].dropna() == 'F-Port').all():
+    #     cleaned_df.drop(columns=['portType'], inplace=True)
+
+
+    # # TO_RMOVE
+    # # if there is no LSAN devices in fabric then LSAN_device_state column should be dropped
+    # if cleaned_df.LSAN_device_state.isna().all():
+    #     cleaned_df.drop(columns=['LSAN_device_state'], inplace=True)
+    # # if alieses doesn't have duplicates 
+    # if 'alias_duplicated' in cleaned_df and cleaned_df['alias_duplicated'].isna().all():
+    #     cleaned_df.drop(columns=['alias_duplicated'], inplace=True)
+    # # if no WWNn used which represents more then one WWNp
+    # if 'Wwnn_unpack' in cleaned_df and cleaned_df['Wwnn_unpack'].isna().all():
+    #     cleaned_df.drop(columns=['Wwnn_unpack'], inplace=True)    
+    # # if no peer zoning applied drop column
+    # if 'peerzone_member_type' in cleaned_df and cleaned_df['peerzone_member_type'].isna().all():
+    #     cleaned_df.drop(columns=['peerzone_member_type'], inplace=True)
+
+    # drop columns where all values are NA
+    for column in possible_allna_values:
+        if column in cleaned_df.columns and cleaned_df[column].isna().all():
+            cleaned_df.drop(columns=[column], inplace=True)
+    # drop columns where all values after dropping NA are equal to certian value
+    for column, value in possible_identical_values.items():
+        if column in cleaned_df.columns and (cleaned_df[column].dropna() == value).all():
+            cleaned_df.drop(columns=[column], inplace=True)
 
     return cleaned_df
 

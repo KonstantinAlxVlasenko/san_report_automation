@@ -121,11 +121,17 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
     mask_ag = switchshow_portshow_devicetype_df.switchMode == 'Access Gateway Mode'
     switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'] = \
         switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
-        
-    # crosstab DataFrame to count device types number in fabric
-    if switchshow_portshow_devicetype_df.Device_type.isna().all():
-        switchshow_portshow_devicetype_df['Device_type'] = 'Unknown'
 
+    # drop duplicated ports rows in case of NPIV 
+    switchshow_portshow_devicetype_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 
+                                                                'switchName', 'switchWwn', 'slot', 'port'], inplace = True)
+
+    # if no device type in cached name server (no ISLs links) usu 'Unknown' label
+    if switchshow_portshow_devicetype_df.Device_type.isna().all():
+        mask_nport_fport = switchshow_portshow_devicetype_df['portType'].isin(['F-Port', 'N-Port'])
+        switchshow_portshow_devicetype_df.loc[mask_nport_fport, 'Device_type'] = 'Unknown(initiator/target)'
+
+    # crosstab DataFrame to count device types number in fabric
     target_initiator_df = pd.crosstab(index = [switchshow_portshow_devicetype_df.Fabric_name, 
                                                 switchshow_portshow_devicetype_df.Fabric_label, 
                                                 switchshow_portshow_devicetype_df.chassis_name, 
