@@ -126,7 +126,7 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
     switchshow_portshow_devicetype_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 
                                                                 'switchName', 'switchWwn', 'slot', 'port'], inplace = True)
 
-    # if no device type in cached name server (no ISLs links) usu 'Unknown' label
+    # if no device type in cached name server (no ISLs links) use 'Unknown' label
     if switchshow_portshow_devicetype_df.Device_type.isna().all():
         mask_nport_fport = switchshow_portshow_devicetype_df['portType'].isin(['F-Port', 'N-Port'])
         switchshow_portshow_devicetype_df.loc[mask_nport_fport, 'Device_type'] = 'Unknown(initiator/target)'

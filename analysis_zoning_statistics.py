@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import re
 
 
 def zonemember_statistics(zoning_aggregated_df):
@@ -36,7 +37,14 @@ def zonemember_statistics(zoning_aggregated_df):
     zoning_modified_df[statistics_columns_lst] = \
         zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan, np.nan)), axis=1)
 
-    # get statistice DataFrames for zone and cfgtype level statistics
+    mask_zone_name = zoning_modified_df['zone_duplicates_free'].isna()
+    zoning_modified_df['zone_tag'] = zoning_modified_df['zone_duplicates_free'].where(mask_zone_name, 'zone_tag')
+    zoning_modified_df['lsan_tag'] = zoning_modified_df['lsan_tag'].where(~mask_zone_name, np.nan)
+
+    # print(zoning_modified_df[['zone', 'zone_duplicates_free', 'zone_tag', 'lsan_tag']])
+    # exit()
+
+    # get statistics DataFrames for zone and cfgtype level statistics
     zonemember_zonelevel_stat_df = count_zonemember_statistics(zoning_modified_df)
     zonemember_cfgtypelevel_stat_df = count_zonemember_statistics(zoning_modified_df, zone=False)
     zonemember_zonelevel_stat_df.reset_index(inplace=True)
@@ -45,8 +53,16 @@ def zonemember_statistics(zoning_aggregated_df):
     zonemember_cfgtypelevel_stat_df.reset_index(inplace=True)
     # add defined and actual wwn number for each zone
     zone_wwn_number_df = defined_actual_wwn_number(zoning_aggregated_df, df_type='zone')
+    
     zonemember_zonelevel_stat_df = zonemember_zonelevel_stat_df.merge(zone_wwn_number_df, how='left', 
+    
                                                                         on=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'])
+    # # TO_REMOVE
+    # # add alias number in each zone
+    # alias_number_per_zone_df =  alias_number_per_zone(zoning_aggregated_df)
+    # zonemember_zonelevel_stat_df = zonemember_zonelevel_stat_df.merge(alias_number_per_zone_df, how='left', 
+    #                                                                 on=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'])
+
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
     zonemember_zonelevel_stat_df = note_zonemember_statistics(zonemember_zonelevel_stat_df)
     # concatenate both statistics
@@ -55,7 +71,7 @@ def zonemember_statistics(zoning_aggregated_df):
     return zonemember_statistics_df, zonemember_zonelevel_stat_df
 
 
-def count_zonemember_statistics(zoning_modified_df, zone=True):
+def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
     """
     Auxiliary function to count statistics for list of columns of 
     modified zoning_modified_df DataFrame.
@@ -63,46 +79,86 @@ def count_zonemember_statistics(zoning_modified_df, zone=True):
     """
 
     # column names for which statistics is counted for
-    columns_lst = ['Fabric_device_status',
-                'peerzone_member_type',
-                'deviceType',
-                'deviceSubtype',
-                'Device_type',
-                'Wwn_type']
+    columns_lst = ['zone_tag', 'lsan_tag', 'Fabric_device_status', 'peerzone_member_type',
+                    'deviceType', 'deviceSubtype',
+                    'Device_type', 'Wwn_type', 'zone_member_type']
 
-    columns_lst = [column for column in columns_lst if zoning_modified_df[column].notna().any()]
+    wwnn_duplicates_columns = ['Fabric_name', 'Fabric_label', 
+                                'cfg', 'cfg_type', 'zone', 
+                                'zone_member', 'alias_member']
+
+    columns_lst = [column for column in columns_lst if zoning_modified_deafult_df[column].notna().any()]
 
     # list to merge diffrenet parameters statistics into single DataFrame
-    merge_lst = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type','zone']
-    # list of series(columns) grouping performed on
-    index_lst = [zoning_modified_df.Fabric_name, zoning_modified_df.Fabric_label,
-                zoning_modified_df.cfg, zoning_modified_df.cfg_type,
-                zoning_modified_df.zone]
-    # for cfg type level statistics drop zone
-    # from lists grouping and merging on
-    if not zone:
-        index_lst = index_lst[:-1]
-        merge_lst = merge_lst[:-1]
+    merge_lst = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
+    # # list of series(columns) grouping performed on
+    # index_lst = [zoning_modified_df.Fabric_name, zoning_modified_df.Fabric_label,
+    #             zoning_modified_df.cfg, zoning_modified_df.cfg_type,
+    #             zoning_modified_df.zone]
+    # # for cfg type level statistics drop zone
+    # # from lists grouping and merging on
+    # if not zone:
+    #     index_lst = index_lst[:-1]
+    #     merge_lst = merge_lst[:-1]
+
     # aggregated zoning_statistics DataFrame is initially empty
     zone_aggregated_statistics_df = pd.DataFrame()
     for column in columns_lst:
+        zoning_modified_df = zoning_modified_deafult_df.copy()
+        # print('\n')
+        # print('------------------------------------------------')
+        # print(zone, column)
+        if column == 'Wwn_type':
+            zoning_modified_df.drop_duplicates(subset=wwnn_duplicates_columns, inplace=True)
+        if column == 'zone_member_type':
+            zoning_modified_df.drop_duplicates(subset=wwnn_duplicates_columns[:-1], inplace=True)
+            mask_property_member = zoning_modified_df['peerzone_member_type'] == 'property'
+            zoning_modified_df = zoning_modified_df.loc[~mask_property_member]
+
+        # list of series(columns) grouping performed on
+        index_lst = [zoning_modified_df.Fabric_name, zoning_modified_df.Fabric_label,
+                    zoning_modified_df.cfg, zoning_modified_df.cfg_type,
+                    zoning_modified_df.zone]
+        # list to merge diffrenet parameters statistics into single DataFrame
+        merge_lst = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
+        
+        # for cfg type level statistics drop zone
+        # from lists grouping and merging on
+        if not zone:
+            index_lst = index_lst[:-1]
+            merge_lst = merge_lst[:-1]
+
+
         # count statistics for each column from columns_lst
         column_statistics_df = pd.crosstab(index = index_lst,
                                     columns = zoning_modified_df[column],
                                     margins=True)
+
         # drop All column for all statistics except for device class
         if column == 'deviceType':
             column_statistics_df.rename(columns={'All': 'Total_connected_zonemembers'}, inplace=True)
         elif column == 'Fabric_device_status':
             column_statistics_df.rename(columns={'All': 'Total_zonemembers'}, inplace=True)
+        elif column == 'Wwn_type' and 'Wwnn' not in column_statistics_df.columns:
+            column_statistics_df.drop(columns=['All'], inplace=True)
+            # if now wwnn used during zone configuration then add Wwnn column with zeroes
+            column_statistics_df['Wwnn'] = 0
         else:
             column_statistics_df.drop(columns=['All'], inplace=True)
+
+        # if not zone:
+        #     print('---------')
+        #     print(zone_aggregated_statistics_df)
+        #     print(merge_lst)
+        #     print('\n+++++++')
+        #     print(column_statistics_df)
+        #     print('\n=======')
 
         # for the first iteration (aggregated DataFrame is empty)
         if zone_aggregated_statistics_df.empty:
             # just take Fabric_device_status statistics
             zone_aggregated_statistics_df = column_statistics_df.copy()
-        else:
+        else:                
             # for the rest statistics DataFrames perform merge operation with zonememeber_statistic aggregated DataFrame
             zone_aggregated_statistics_df = zone_aggregated_statistics_df.merge(column_statistics_df, how='left', on=merge_lst)
 
@@ -118,7 +174,7 @@ def count_zonemember_statistics(zoning_modified_df, zone=True):
 def defined_actual_wwn_number(aggregated_df, df_type='alias'):
     """
     Function to count defined vs actual wwn number in zone or alias.
-    Checks if Wwnn is 'unpacked' into more then onle Wwnp
+    Checks if Wwnn is 'unpacked' into more then one Wwnp
     """
     
     group_columns = ['Fabric_name',	'Fabric_label', 'zone_member', 'alias_member']
@@ -129,16 +185,59 @@ def defined_actual_wwn_number(aggregated_df, df_type='alias'):
     duplicates_free_df = aggregated_df.drop_duplicates(subset=group_columns).copy()
     wwn_number_defined_sr = duplicates_free_df.groupby(group_columns[:-1]).alias_member.count()
     wwn_number_actual_sr = aggregated_df.groupby(group_columns[:-1]).alias_member.count()
+
+    wwn_unpack_sr = wwn_number_actual_sr - wwn_number_defined_sr
     
     # add dined and actual wwnp numbers to main DataFrame
-    wwn_number_defined_df = pd.DataFrame(wwn_number_defined_sr)
-    wwn_number_actual_df = pd.DataFrame(wwn_number_actual_sr)
+
+    # TO_REMOVE
+    # wwn_number_defined_df = pd.DataFrame(wwn_number_defined_sr)
+    # wwn_number_actual_df = pd.DataFrame(wwn_number_actual_sr)
+    # wwn_number_defined_df.rename(columns={'alias_member': 'Wwn_number_defined'}, inplace=True)
+    # wwn_number_actual_df.rename(columns={'alias_member': 'Wwn_number_actual'}, inplace=True)
+    # wwn_number_df = wwn_number_defined_df.merge(wwn_number_actual_df, how='left', on=group_columns[:-1])
+    wwn_unpack_df = pd.DataFrame(wwn_unpack_sr)
+    wwn_unpack_df.rename(columns={'alias_member': 'Wwnn_to_Wwnp_number_unpacked'}, inplace=True)
     
-    wwn_number_defined_df.rename(columns={'alias_member': 'Wwn_number_defined'}, inplace=True)
-    wwn_number_actual_df.rename(columns={'alias_member': 'Wwn_number_actual'}, inplace=True)
-    wwn_number_df = wwn_number_defined_df.merge(wwn_number_actual_df, how='left', on=group_columns[:-1])
+
+
+    return wwn_unpack_df #wwn_number_df
+
+# TO_REMOVE
+# def alias_number_per_zone(aggregated_df):
+#     """
+#     Function to count defined wwn vs actual wwnp number in zone or alias.
+#     Checks if Wwnn is 'unpacked' into more then onle Wwnp
+#     """
     
-    return wwn_number_df
+#     # group_columns = ['Fabric_name',	'Fabric_label', 'zone_member', 'alias_member']
+#     # if df_type == 'zone':
+#     #     group_columns = [*group_columns[:2], *['cfg', 'cfg_type', 'zone'], *group_columns[3:]]
+
+#     group_columns = ['Fabric_name',	'Fabric_label', 'cfg', 'cfg_type', 'zone', 'zone_member']
+
+#     # count defined and actual wwnp numbers in each zone or alias
+#     duplicates_free_df = aggregated_df.drop_duplicates(subset=group_columns).copy()
+#     # wwn_number_defined_sr = duplicates_free_df.groupby(group_columns[:-1]).alias_member.count()
+#     # wwn_number_actual_sr = aggregated_df.groupby(group_columns[:-1]).alias_member.count()
+
+#     alias_number_per_zone_sr = duplicates_free_df.groupby(group_columns[:-1]).zone_member.count()
+    
+#     # # add dined and actual wwnp numbers to main DataFrame
+#     # wwn_number_defined_df = pd.DataFrame(wwn_number_defined_sr)
+#     # wwn_number_actual_df = pd.DataFrame(wwn_number_actual_sr)
+    
+#     alias_number_per_zone_df = pd.DataFrame(alias_number_per_zone_sr)
+
+#     # wwn_number_defined_df.rename(columns={'alias_member': 'Wwn_number_defined'}, inplace=True)
+#     # wwn_number_actual_df.rename(columns={'alias_member': 'Wwn_number_actual'}, inplace=True)
+
+
+#     alias_number_per_zone_df.rename(columns={'zone_member': 'alias_number_per_zone'}, inplace=True)
+
+#     # wwn_number_df = wwn_number_defined_df.merge(wwn_number_actual_df, how='left', on=group_columns[:-1])
+    
+#     return alias_number_per_zone_df
 
 
 def note_zonemember_statistics(zonemember_zonelevel_stat_df):

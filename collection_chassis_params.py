@@ -187,7 +187,9 @@ def chassis_params_extract(all_config_data, report_data_lst):
             # additional values which need to be added to the chassis params dictionary
             # chassis_params_add order (configname, ams_maps_log, chassis_name, snmp_server, syslog_server, timezone_h:m, uptime, cpu_average_load, memory_usage, flash_usage, licenses)
             # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
-            chassis_params_values = (sshow_file, ams_maps_file, switch_name, vf_id_set, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
+            vf_id_lst = list(vf_id_set)
+            vf_id_lst.sort()
+            chassis_params_values = (sshow_file, ams_maps_file, switch_name, vf_id_lst, snmp_target_set, syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
             
             # adding additional parameters and values to the chassis_params_switch_dct
             for chassis_param_add, chassis_param_value in zip(chassis_params_add,  chassis_params_values):
@@ -196,13 +198,13 @@ def chassis_params_extract(all_config_data, report_data_lst):
                         s = ':' if chassis_param_add == 'timezone_h:m' else ', '
                         chassis_param_value = f'{s}'.join(chassis_param_value)
                     chassis_params_dct[chassis_param_add] = chassis_param_value
-
             # creating list with REQUIRED chassis parameters for the current switch
             # if no value in the chassis_params_dct for the parameter then None is added  
             # and appending this list to the list of all switches chassis_params_fabric_lst
-            chassis_params_fabric_lst.append([chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params])                
+            chassis_params_fabric_lst.append([chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params])
+                            
             status_info('ok', max_title, len(info))
-        # save extracted data to json file    
+        # save extracted data to json file   
         save_data(report_data_lst, data_names, chassis_params_fabric_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:

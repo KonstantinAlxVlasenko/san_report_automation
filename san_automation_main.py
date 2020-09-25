@@ -146,7 +146,6 @@ def chassis_maps_params(parsed_lst):
     chassis_params_fabric_lst = chassis_params_extract(parsed_lst, report_data_lst)
     # export chassis parameters list to DataFrame and saves it to excel file
     chassis_params_fabric_df = list_to_dataframe(chassis_params_fabric_lst, report_data_lst, 'chassis_parameters', 'chassis')
-    
     maps_params_fabric_lst = maps_params_extract(parsed_lst, report_data_lst)
     # export maps parameters list to DataFrame and saves it to excel file
     maps_params_fabric_df = list_to_dataframe(maps_params_fabric_lst, report_data_lst, 'maps_parameters', 'maps')

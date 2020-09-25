@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import re
 
 from common_operations_dataframe import dataframe_fillna, dataframe_join
 
@@ -50,6 +51,8 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     # count how many times wwnp meets in zone, alias
     zoning_aggregated_df = wwnp_instance_number_per_group(zoning_aggregated_df, 'zone')
     alias_aggregated_df = wwnp_instance_number_per_group(alias_aggregated_df, 'alias')
+    # verify if zonemember is alias, wwn or DI format
+    zoning_aggregated_df = verify_zonemember_type(zoning_aggregated_df, column = 'zone_member')
 
     return zoning_aggregated_df, alias_aggregated_df
 
@@ -121,9 +124,7 @@ def align_dataframe(switch_params_aggregated_df, *args, drop_columns=True):
 
 
 def wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
-    """
-    Function to verify which type of WWN (port or node WWN) is used for each alias_member
-    """
+    """Function to verify which type of WWN (port or node WWN) is used for each alias_member"""
 
     # list of all Node WWNs in Fabric
     wwnn_lst = sorted(portshow_aggregated_df.NodeName.dropna().drop_duplicates().to_list())
@@ -215,7 +216,6 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
 
 def lsan_state_verify(zoning_aggregated_df, alias_aggregated_df, switch_params_aggregated_df, fcrfabric_df, lsan_df):
     """Function to check device status (imported, exist, configured and etc) for LSAN zones"""
-
     
     # rename columns in fcrfabric for join operation
     fcr_columns_dct = {'principal_switch_index': 'switch_index',	
@@ -261,10 +261,16 @@ def lsan_state_verify(zoning_aggregated_df, alias_aggregated_df, switch_params_a
     lsan_join_df = lsan_join_df.reindex(columns=lsan_columns_lst)
     lsan_join_df.rename(columns=lsan_columns_dct, inplace=True)
 
+    # print(lsan_join_df)
+
     # add lsan zones member status (Imported, Exist, Configured) to zoning_aggregated_df
     # based on fabric where zone is defined, zonename and device wwn
     lsan_join_columns_lst = ['Fabric_name', 'Fabric_label', 'zone', 'alias_member']
     zoning_aggregated_df = zoning_aggregated_df.merge(lsan_join_df, how='left', on=lsan_join_columns_lst)
+    
+    # add 'zone_lsan' tag for statistics
+    mask_lsan = zoning_aggregated_df['LSAN_device_state'].isna()
+    zoning_aggregated_df['lsan_tag'] = zoning_aggregated_df['LSAN_device_state'].where(mask_lsan, 'lsan_tag')
 
     # create DataFrame containing original combination of LSAN zonemembers(aliases), 
     # it's WWN with fabric labels and device status
@@ -449,4 +455,26 @@ def wwnp_instance_number_per_group(aggregated_df, df_type):
     # add wwnp instance number to zoning or aliases DataFrames
     aggregated_df = aggregated_df.merge(wwnp_number_df, how='left', on=group_columns)
     
+    return aggregated_df
+
+
+def verify_zonemember_type(aggregated_df, column = 'zone_member'):
+    """Function to verify what type of member in zone configuration (alias, wwn, DI) """
+
+    # create column name with verified values
+    verified_column = column + '_type'
+    # copy values from column to be verified to column with verified values
+    aggregated_df[verified_column] = aggregated_df[column]
+
+    # create dictionary with compiled regular expressins for alias, wwn and DI 
+    alias_regex = re.compile(r'^[\w_$^-]+$')
+    wwn_regex = re.compile(r'^([0-9a-fA-F]{2}:){7}[0-9a-fA-F]{2}$')
+    domain_portindex_regex = re.compile(r'^\d+,\d+$')
+    replace_dct = {alias_regex: 'zonemember_alias',
+                    wwn_regex: 'zonemember_wwn',
+                    domain_portindex_regex: 'zonemember_domain_portindex'}
+
+    # replace values in verified column with values from dict 
+    aggregated_df[verified_column] = aggregated_df[verified_column].replace(to_replace=replace_dct, regex=True)
+
     return aggregated_df

@@ -89,12 +89,16 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     isl_aggregated_df = trunk_join(isl_df, trunk_df)
     # adding switchshow port information to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = porttype_join(switchshow_df, isl_aggregated_df, fcredge_df)
+
     # adding sfp information to isl aggregated DataFrame
     isl_aggregated_df = sfp_join(sfpshow_df, isl_aggregated_df)
+
     # adding switch informatio to isl aggregated DataFrame
     isl_aggregated_df = switch_join(switch_params_aggregated_df, isl_aggregated_df)
+
     # adding portcfg information to isl aggregated DataFrame
     isl_aggregated_df = portcfg_join(portcfgshow_df, isl_aggregated_df)
+
     # adding fabric labels to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = fabriclabel_join(fabric_clean_df, isl_aggregated_df, fcredge_df)
     # calculate maximum link speed
@@ -212,7 +216,7 @@ def fabriclabel_join(fabric_clean_df, isl_aggregated_df, fcredge_df):
     switch_ip_lst = ['SwitchName', 'switchWwn', 'Enet_IP_Addr']
     # addition IP adddreses information to isl_aggregated DataFrame
     isl_aggregated_df = dataframe_join(isl_aggregated_df, fabric_clean_df,  switch_ip_lst, 2)
-    
+
     return isl_aggregated_df, fcredge_df
 
 
