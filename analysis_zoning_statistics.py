@@ -136,7 +136,7 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
 
         # drop All column for all statistics except for device class
         if column == 'deviceType':
-            column_statistics_df.rename(columns={'All': 'Total_connected_zonemembers'}, inplace=True)
+            column_statistics_df.rename(columns={'All': 'Total_zonemembers_active'}, inplace=True)
         elif column == 'Fabric_device_status':
             column_statistics_df.rename(columns={'All': 'Total_zonemembers'}, inplace=True)
         elif column == 'Wwn_type' and 'Wwnn' not in column_statistics_df.columns:
@@ -185,59 +185,13 @@ def defined_actual_wwn_number(aggregated_df, df_type='alias'):
     duplicates_free_df = aggregated_df.drop_duplicates(subset=group_columns).copy()
     wwn_number_defined_sr = duplicates_free_df.groupby(group_columns[:-1]).alias_member.count()
     wwn_number_actual_sr = aggregated_df.groupby(group_columns[:-1]).alias_member.count()
-
     wwn_unpack_sr = wwn_number_actual_sr - wwn_number_defined_sr
     
     # add dined and actual wwnp numbers to main DataFrame
-
-    # TO_REMOVE
-    # wwn_number_defined_df = pd.DataFrame(wwn_number_defined_sr)
-    # wwn_number_actual_df = pd.DataFrame(wwn_number_actual_sr)
-    # wwn_number_defined_df.rename(columns={'alias_member': 'Wwn_number_defined'}, inplace=True)
-    # wwn_number_actual_df.rename(columns={'alias_member': 'Wwn_number_actual'}, inplace=True)
-    # wwn_number_df = wwn_number_defined_df.merge(wwn_number_actual_df, how='left', on=group_columns[:-1])
     wwn_unpack_df = pd.DataFrame(wwn_unpack_sr)
     wwn_unpack_df.rename(columns={'alias_member': 'Wwnn_to_Wwnp_number_unpacked'}, inplace=True)
     
-
-
     return wwn_unpack_df #wwn_number_df
-
-# TO_REMOVE
-# def alias_number_per_zone(aggregated_df):
-#     """
-#     Function to count defined wwn vs actual wwnp number in zone or alias.
-#     Checks if Wwnn is 'unpacked' into more then onle Wwnp
-#     """
-    
-#     # group_columns = ['Fabric_name',	'Fabric_label', 'zone_member', 'alias_member']
-#     # if df_type == 'zone':
-#     #     group_columns = [*group_columns[:2], *['cfg', 'cfg_type', 'zone'], *group_columns[3:]]
-
-#     group_columns = ['Fabric_name',	'Fabric_label', 'cfg', 'cfg_type', 'zone', 'zone_member']
-
-#     # count defined and actual wwnp numbers in each zone or alias
-#     duplicates_free_df = aggregated_df.drop_duplicates(subset=group_columns).copy()
-#     # wwn_number_defined_sr = duplicates_free_df.groupby(group_columns[:-1]).alias_member.count()
-#     # wwn_number_actual_sr = aggregated_df.groupby(group_columns[:-1]).alias_member.count()
-
-#     alias_number_per_zone_sr = duplicates_free_df.groupby(group_columns[:-1]).zone_member.count()
-    
-#     # # add dined and actual wwnp numbers to main DataFrame
-#     # wwn_number_defined_df = pd.DataFrame(wwn_number_defined_sr)
-#     # wwn_number_actual_df = pd.DataFrame(wwn_number_actual_sr)
-    
-#     alias_number_per_zone_df = pd.DataFrame(alias_number_per_zone_sr)
-
-#     # wwn_number_defined_df.rename(columns={'alias_member': 'Wwn_number_defined'}, inplace=True)
-#     # wwn_number_actual_df.rename(columns={'alias_member': 'Wwn_number_actual'}, inplace=True)
-
-
-#     alias_number_per_zone_df.rename(columns={'zone_member': 'alias_number_per_zone'}, inplace=True)
-
-#     # wwn_number_df = wwn_number_defined_df.merge(wwn_number_actual_df, how='left', on=group_columns[:-1])
-    
-#     return alias_number_per_zone_df
 
 
 def note_zonemember_statistics(zonemember_zonelevel_stat_df):
@@ -314,7 +268,7 @@ def target_initiator_note(series):
 
     # if there are no local or imported zonemembers in fabric of zoning config switch
     # current zone is empty (neither actual initiators nor targets are present)
-    if series['Total_connected_zonemembers'] == 0:
+    if series['Total_zonemembers_active'] == 0:
         return 'empty_zone'
     # if all zonememebrs are storages with local or imported device status 
     # and no asent devices then zone considered to be replication zone 
@@ -326,7 +280,7 @@ def target_initiator_note(series):
     zoning configuration switch) then it's not a replication zone and considered to be
     initiator's less zone
     """
-    if series['SRV'] == 0 and series['Total_zonemembers'] > series['Total_connected_zonemembers']:
+    if series['SRV'] == 0 and series['Total_zonemembers'] > series['Total_zonemembers_active']:
         if series['STORAGE_LIB'] > 0:
             return 'no_initiator'
     # if zone contains initiator(s) but not targets then zone considered to be target's less zone

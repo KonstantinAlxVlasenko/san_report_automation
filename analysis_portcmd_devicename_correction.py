@@ -139,13 +139,15 @@ def create_device_rename_form(portshow_aggregated_df):
     manual_device_rename_df.drop(columns=['Host_Name'], inplace=True)
 
     '''When device has different wwnn then Group_Name might differ for each wwnn
-    thus one device can have several Group_Names thus generating duplication in tables.
+    and one device can have several Group_Names thus generating duplication in tables.
     To avoid this perform gropuby based on Device_Host_Name reqiured'''
 
-    # fill empty values with tag to perform Group_Name join operattion
+    # fill empty values with 'no_grp_name' tag to perform Group_Name join aggregation
     manual_device_rename_df['Group_Name'].fillna('no_grp_name', inplace=True)
-    manual_device_rename_df = manual_device_rename_df.groupby(['Device_Host_Name'], as_index = False).agg({'Group_Name': ', '.join, 'Fabric_name': 'first', 
-                                                                                                            'deviceType': 'first', 'deviceSubtype': 'first'})
+    manual_device_rename_df = \
+        manual_device_rename_df.groupby(['Device_Host_Name'], as_index = False).\
+            agg({'Group_Name': ', '.join, 'Fabric_name': 'first', 
+                    'deviceType': 'first', 'deviceSubtype': 'first'})
     manual_device_rename_df.reset_index(inplace=True, drop=True)
     # remove 'no_grp_name' tag for devices with no Group_Name
     mask_no_grp_name = manual_device_rename_df['Group_Name'].str.contains('no_grp_name')

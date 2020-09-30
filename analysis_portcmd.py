@@ -82,6 +82,12 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         # after finish display status
         status_info('ok', max_title, len(info))
 
+        if (portshow_aggregated_df['deviceType'] == 'UNKNOWN').any():
+            unknown_count = len(portshow_aggregated_df[portshow_aggregated_df['deviceType'] == 'UNKNOWN'])
+            info = f'{unknown_count} {"device" if unknown_count == 1 else "devices"} with UNKNOWN device Class found'
+            print(info, end =" ")
+            status_info('warning', max_title, len(info))
+
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_data_lst)
 

@@ -80,7 +80,7 @@ def statistics_total(statistics_df, statistic_columns_names_dct):
     statistics_subtotal_df.reset_index(inplace = True)
     
     statistics_total_df = pd.concat([statistics_total_df, statistics_subtotal_df], ignore_index=True)
-    statistics_total_df.drop(statistics_total_df.index[statistics_total_df['Fabric_name'] == 'Всего'], inplace = True)
+    statistics_total_df.drop(statistics_total_df.index[statistics_total_df['Fabric_name'] == 'Итого:'], inplace = True)
 
     # droping columns with N:E ration data due to it pointless on fabric level
     statistics_total_df.drop(columns=['N:E_int', 'N:E_bw_int'], inplace=True)
@@ -109,8 +109,6 @@ def statistics_report(statistics_df, chassis_column_usage, max_title):
         init_file = 'san_automation_info.xlsx')
     # translate columns in fabric_statistics_report and statistics_subtotal_df DataFrames
     statistics_report_df.rename(columns = statistic_columns_names_dct, inplace = True)
-    # # drop row with Total row to avoid duplicate with statistics_total_report_df 
-    # statistics_report_df.drop(statistics_report_df.index[statistics_report_df['Фабрика'] == 'Всего'], inplace = True)
     # get summary statistics for each fabric
     statistics_total_report_df = statistics_total(statistics_df, statistic_columns_names_dct)
     # add summary fabric level statistics to switch level statistics

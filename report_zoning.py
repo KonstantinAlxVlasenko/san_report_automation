@@ -8,22 +8,24 @@ from common_operations_dataframe import dataframe_segmentation
 from common_operations_servicefile import dct_from_columns
 
 def zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df,
-                        zonemember_statistics_df, data_names, report_columns_usage_dct, max_title):
+                        zonemember_statistics_df, effective_cfg_statistics_df, data_names, report_columns_usage_dct, max_title):
     """Main function to create zoning report tables"""
 
     # report tables
     # loading values to translate
     translate_dct = dct_from_columns('customer_report', max_title, 'Зонирование_перевод_eng', 
                                         'Зонирование_перевод_ru', init_file = 'san_automation_info.xlsx')
-    zoning_report_df = create_report(zoning_aggregated_df, data_names[4:5], translate_dct, report_columns_usage_dct, max_title)
-    alias_report_df = create_report(alias_aggregated_df, data_names[5:6], translate_dct, report_columns_usage_dct, max_title)
+    zoning_report_df = create_report(zoning_aggregated_df, data_names[5:6], translate_dct, report_columns_usage_dct, max_title)
+    alias_report_df = create_report(alias_aggregated_df, data_names[6:7], translate_dct, report_columns_usage_dct, max_title)
     zoning_compare_report_df = compare_zone_config(zoning_report_df)
-    unzoned_device_report_df, no_alias_device_report_df = unzoned_device_report(portshow_zoned_aggregated_df, data_names[7:9], report_columns_usage_dct, max_title)
-    zoning_absent_device_report_df = absent_device(zoning_aggregated_df, data_names, translate_dct, report_columns_usage_dct, max_title)
+    unzoned_device_report_df, no_alias_device_report_df = unzoned_device_report(portshow_zoned_aggregated_df, data_names[8:10], report_columns_usage_dct, max_title)
+    zoning_absent_device_report_df = absent_device(zoning_aggregated_df, data_names[10], translate_dct, report_columns_usage_dct, max_title)
     zonemember_statistics_report_df = zonemember_statistics_report(zonemember_statistics_df, translate_dct, report_columns_usage_dct, max_title)
+    effective_cfg_statistics_report_df = cfg_statistics_report(effective_cfg_statistics_df, translate_dct, report_columns_usage_dct, max_title)
 
-    return zoning_report_df, alias_report_df, zoning_compare_report_df, \
-        unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df
+    return zoning_report_df, alias_report_df, zoning_compare_report_df, unzoned_device_report_df, \
+            no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df, \
+                effective_cfg_statistics_report_df
 
 
 def create_report(aggregated_df, data_name, translate_dct, report_columns_usage_dct, max_title):
@@ -35,7 +37,7 @@ def create_report(aggregated_df, data_name, translate_dct, report_columns_usage_
     # pylint: disable=unbalanced-tuple-unpacking
     cleaned_df = drop_columns(aggregated_df, report_columns_usage_dct)
     translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
-    cleaned_df = translate_values(cleaned_df, translate_dct, max_title, translate_columns)
+    cleaned_df = translate_values(cleaned_df, translate_dct, translate_columns)
     # take required data from aggregated DataFrame to create report
     report_df, = dataframe_segmentation(cleaned_df, data_name, report_columns_usage_dct, max_title)
 
@@ -70,42 +72,6 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     if 'zone_member' in cleaned_df and 'zonemember_duplicates_free' in cleaned_df:
         if all(cleaned_df['zone_member'] == cleaned_df['zonemember_duplicates_free']):
             cleaned_df.drop(columns=['zonemember_duplicates_free'], inplace=True)
-
-    # # TO_REMOVE
-    # # if all zonemembers are defined through WWNp then Wwn_type column not informative
-    # check_df.dropna(subset = ['Wwn_type'], inplace=True)
-    # mask_wwnp = (check_df.Wwn_type == 'Wwnp').all()
-    # if mask_wwnp:
-    #     cleaned_df.drop(columns=['Wwn_type'], inplace=True)
-    # # if only effective configuration present drop cfg_type column
-    # if cleaned_df['cfg_type'].str.contains('effective', na=False).all():
-    #     cleaned_df.drop(columns=['cfg_type'], inplace=True)
-    # # if all zonemembers except not connected are in the same fabric 
-    # # with the cfg switch drop  Member_in_cfg_Fabric column
-    # if (cleaned_df['Member_in_cfg_Fabric'].dropna() == 'Да').all():
-    #     cleaned_df.drop(columns=['Member_in_cfg_Fabric'], inplace=True)
-    # # if all ports are local
-    # if (cleaned_df['Fabric_device_status'] == 'local').all():
-    #     cleaned_df.drop(columns=['Fabric_device_status'], inplace=True)
-    # # if all ports are F-ports
-    # if (cleaned_df['portType'].dropna() == 'F-Port').all():
-    #     cleaned_df.drop(columns=['portType'], inplace=True)
-
-
-    # # TO_RMOVE
-    # # if there is no LSAN devices in fabric then LSAN_device_state column should be dropped
-    # if cleaned_df.LSAN_device_state.isna().all():
-    #     cleaned_df.drop(columns=['LSAN_device_state'], inplace=True)
-    # # if alieses doesn't have duplicates 
-    # if 'alias_duplicated' in cleaned_df and cleaned_df['alias_duplicated'].isna().all():
-    #     cleaned_df.drop(columns=['alias_duplicated'], inplace=True)
-    # # if no WWNn used which represents more then one WWNp
-    # if 'Wwnn_unpack' in cleaned_df and cleaned_df['Wwnn_unpack'].isna().all():
-    #     cleaned_df.drop(columns=['Wwnn_unpack'], inplace=True)    
-    # # if no peer zoning applied drop column
-    # if 'peerzone_member_type' in cleaned_df and cleaned_df['peerzone_member_type'].isna().all():
-    #     cleaned_df.drop(columns=['peerzone_member_type'], inplace=True)
-
     # drop columns where all values are NA
     for column in possible_allna_values:
         if column in cleaned_df.columns and cleaned_df[column].isna().all():
@@ -118,14 +84,13 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     return cleaned_df
 
 
-def translate_values(translated_df, translate_dct, max_title, translate_columns = None):
+def translate_values(translated_df, translate_dct, translate_columns = None):
     """Function to translate values in corresponding columns"""
 
     if not translate_columns:
         translate_columns = translated_df.columns
 
     # columns which values need to be translated
-    # translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
     # translate values in column if column in DataFrame
     for column in translate_columns:
         if column in translated_df.columns:
@@ -232,25 +197,17 @@ def unzoned_device_report(portshow_cfg_aggregated_df, data_names, report_columns
     return unzoned_device_report_df, no_alias_device_report_df
 
 
-def absent_device(zoning_aggregated_df, data_names, translate_dct, report_columns_usage_dct, max_title):
+def absent_device(zoning_aggregated_df, data_name, translate_dct, report_columns_usage_dct, max_title):
     """Function to create table with absent and unavailable remote devices in zoning configuration"""
     
     mask_absent = zoning_aggregated_df.Fabric_device_status.isin(['absent', 'remote_na'])
-
     absent_columns = ['Fabric_name', 'Fabric_label', 'cfg',	'cfg_type',	'zone_member', 'alias_member', 'Fabric_device_status', 'zone']
-
     absent_device_df = zoning_aggregated_df.loc[mask_absent, absent_columns]
-
     absent_device_df = absent_device_df.groupby(absent_columns[:-1], as_index = False).agg({'zone': ', '.join})
-
     absent_device_df = translate_values(absent_device_df, translate_dct, ['Fabric_device_status'])
-
-    zoning_absent_device_report_df, = dataframe_segmentation(absent_device_df, data_names[9], report_columns_usage_dct, max_title)
-
+    zoning_absent_device_report_df, = dataframe_segmentation(absent_device_df, data_name, report_columns_usage_dct, max_title)
 
     return zoning_absent_device_report_df
-
-
 
 
 def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report_columns_usage_dct, max_title):
@@ -260,12 +217,12 @@ def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report
 
     # create statitics report DataFrame
     zonemember_statistics_report_df = zonemember_statistics_df.copy()
-    # drop column 'chassis_name' if it is not required
-    if not fabric_name_usage:
-        zonemember_statistics_report_df.drop(columns = ['Fabric_name'], inplace=True)
+    # # drop column 'chassis_name' if it is not required
+    # if not fabric_name_usage:
+    #     zonemember_statistics_report_df.drop(columns = ['Fabric_name'], inplace=True)
     # rename values in columns
-    translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
-    zonemember_statistics_report_df = translate_values(zonemember_statistics_report_df, translate_dct, max_title, translate_columns)
+    translate_columns = ['Fabric_name', 'Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
+    zonemember_statistics_report_df = translate_values(zonemember_statistics_report_df, translate_dct, translate_columns)
     # column titles used to create dictionary to traslate column names
     statistic_columns_lst = ['Статистика_зон_eng', 'Статистика_зон_ru']
     # dictionary used to translate column names
@@ -277,3 +234,25 @@ def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report
     # statistics_report_df.sort_values(by=['Фабрика', 'Подсеть', 'Имя коммутатора'], inplace=True)
 
     return zonemember_statistics_report_df
+
+def cfg_statistics_report(effective_cfg_statistics_df, translate_dct, report_columns_usage_dct, max_title):
+
+    # create statitics report DataFrame
+    effective_cfg_statistics_report_df = effective_cfg_statistics_df.copy()
+    # # drop column 'chassis_name' if it is not required
+    # if not fabric_name_usage:
+    #     zonemember_statistics_report_df.drop(columns = ['Fabric_name'], inplace=True)
+    # rename values in columns
+    translate_columns = ['Fabric_name']
+    effective_cfg_statistics_report_df = \
+        translate_values(effective_cfg_statistics_report_df, translate_dct, translate_columns)
+
+    # column titles used to create dictionary to traslate column names
+    statistic_columns_lst = ['Статистика_конфигурации_eng', 'Статистика_конфигурации_ru']
+    # dictionary used to translate column names
+    statistic_columns_dct = dct_from_columns('customer_report', max_title, *statistic_columns_lst, \
+        init_file = 'san_automation_info.xlsx')
+    # translate columns in fabric_statistics_report and statistics_subtotal_df DataFrames
+    effective_cfg_statistics_report_df.rename(columns = statistic_columns_dct, inplace = True)
+
+    return effective_cfg_statistics_report_df

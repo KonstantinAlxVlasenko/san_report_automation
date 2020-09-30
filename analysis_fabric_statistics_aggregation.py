@@ -37,7 +37,7 @@ def statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df,
         statistics_df = statistics_df.merge(df, how='left', left_index=True, right_index=True)
 
     # renaming total row
-    statistics_df.rename(index = {'All': 'Всего'}, inplace = True)
+    statistics_df.rename(index = {'All': 'Итого:'}, inplace = True)
     # reset index to drop unneccessary columns
     statistics_df.reset_index(inplace=True)
 
