@@ -60,11 +60,15 @@ def type_check(series, switches_oui, blade_servers_df):
                 return pd.Series(('STORAGE', series['subtype'].split('|')[0]))
         
         # check if device server or library
-        elif series['type'] == 'SRV|LIB':
+        elif series['type'] == 'SRV|LIB': 
             if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
                 return pd.Series(('SRV', series['subtype'].split('|')[0]))
             elif series['Device_type'] in ['Physical Target', 'NPIV Target']:
                 return pd.Series(('LIB', series['subtype'].split('|')[1]))
+            # if Device_type is empty (No Physical target or Initator) and no Device_Model 
+            # and Device serial number then it's SRV
+            elif pd.isna(series[['Device_type', 'Device_Model', 'Device_SN']]).all():
+                return pd.Series(('SRV', series['subtype'].split('|')[0]))
         # check if device server or storage
         elif series['type'] == 'SRV|STORAGE':
             if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:

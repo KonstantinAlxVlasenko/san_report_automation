@@ -4,6 +4,7 @@
 from datetime import date
 
 import pandas as pd
+import numpy as np
 
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (reply_request, status_info,
@@ -18,8 +19,7 @@ called = False
 
 
 def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst):
-    """Function to set Fabric labels
-    """
+    """Function to set Fabric labels"""
 
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
@@ -106,7 +106,6 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
-
 
     return fabricshow_ag_labels_df
     
@@ -230,7 +229,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
     # convert DataFrame indexes to string versions 
     fabric_indexes_str_lst = [str(i) for i in fabricshow_summary_df.index]
     # DataFrame operation options (save, reset, exit)
-    opeartion_options_lst = ['s', 'r', 'x']
+    opeartion_options_lst = ['s', 'r', 'v', 'x']
     # aggregated list of available operations
     full_options_lst = fabric_indexes_str_lst + opeartion_options_lst
     # parameters to change 
@@ -241,15 +240,17 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
     input_option = None
     # work with DataFrame until it is saved or exit without saving
     while not input_option in ['s', 'x']:
-        # printing actual fabricshow_summary DataFrame
-        print('\nCurrent fabric labeling\n')
+
         fabricshow_summary_df.sort_values(by=['Fabric_name', 'Fabric_label', 'Principal_switch_name', 'Domain_IDs'],
                                                 inplace=True, ignore_index=True)
-        print(fabricshow_summary_df.loc[:, info_labels])
-        # printing menu options to choose to work with DataFrame
-        # save, reset, exit or fabric index number to change
-        print('\nS/s - Save changes in labeling\nR/r - Reset to default labeling\nX/x - Exit without saving')
-        print(f"{', '.join(fabric_indexes_str_lst)} - Choose fabric index to change labeling\n")
+        if input_option != 'v':
+            # printing actual fabricshow_summary DataFrame
+            print('\nCurrent fabric labeling\n')
+            print(fabricshow_summary_df.loc[:, info_labels])
+            # printing menu options to choose to work with DataFrame
+            # save, reset, exit or fabric index number to change
+            print('\nS/s - Save changes in labeling\nR/r - Reset to default labeling\nV/v - Veriify labeling\nX/x - Exit without saving')
+            print(f"{', '.join(fabric_indexes_str_lst)} - Choose fabric index to change labeling\n")
 
         # reset input_option value after each iteration to enter while loop
         input_option = reply_request("Choose option: ", reply_options = full_options_lst, show_reply = True)
@@ -278,6 +279,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
                 if reply == 'y':
                     current_value = fabricshow_summary_df.loc[fabric_num, rename_options_dct[option_name]]
                     value = input(f'\nEnter new Fabric {option_name}. Current value is {current_value}: ')
+                    value = value.strip()
                     # 0 or None means no labeling
                     if value in ['0', 'None']:
                         value = None
@@ -296,14 +298,27 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
                 # when user doesn't want to keep data fabricshow_summary DataFrame
                 # returns to the state saved bedore current iteration
                 if reply == 'n':
-                    fabricshow_summary_df = fabricshow_summary_before_df.copy()        
-        
+                    fabricshow_summary_df = fabricshow_summary_before_df.copy()
+        # user input is verify fabric labeling
+        elif input_option == 'v':
+            count_labels_df = verify_fabric_labels(fabricshow_summary_df)
+            print('\n', count_labels_df, '\n')
         # user input is save current labeling configuration and exit   
         elif input_option == 's':
-            reply = reply_request('Do you want to save changes and exit? (y)es/(n)o: ')
-            # for save option do nothing and while loop stops on next condition check
-            if reply == 'y':
-                print('\nSaved fabric labeling\n')
+            count_labels_df = verify_fabric_labels(fabricshow_summary_df)
+            print('\n', count_labels_df, '\n')
+            # check for errors in fabric labeling
+            if (count_labels_df['Verification'] == 'ERROR').any():
+                print('There is an error in fabric labeling. Please re-label fabrics.')
+                input_option = None
+            else:
+                # if fabric labeling is ok request to save
+                reply = reply_request('Do you want to save changes and exit? (y)es/(n)o: ')
+                # for save option do nothing and while loop stops on next condition check
+                if reply == 'y':
+                    print('\nSaved fabric labeling\n')
+                else:
+                    input_option = None
         # user input is reset current labeling configuration and start labeling from scratch
         elif input_option == 'r':
             reply = reply_request('Do you want to reset fabric labeling to original values? (y)es/(n)o: ')
@@ -410,3 +425,21 @@ def auto_fabrics_labeling(row):
     # first time function is called do nothing
     else:
         called = True
+
+
+def verify_fabric_labels(fabricshow_summary_df):
+    """Function to count fabric_labels in each fabric to avoid label duplicates causing errors"""
+
+    # count fabric labels for each fabric name
+    count_labels_df = pd.crosstab(fabricshow_summary_df.Fabric_name, fabricshow_summary_df.Fabric_label)
+    columns = count_labels_df.columns.tolist()
+    count_labels_df['Verification'] = np.nan
+    # put 'error' tag for fabric_name if number of any label is exceed 1
+    count_labels_df['Verification'] = np.where(count_labels_df[columns].gt(1).any(axis=1), 'ERROR', count_labels_df['Verification'])
+    # put 'warning' tag if some labels are absent
+    count_labels_df['Verification'] = \
+        np.where((count_labels_df[columns] == 0).any(axis=1) & count_labels_df[columns].lt(2).all(axis=1), 'WARNING', count_labels_df['Verification'])
+    # put 'ok' tag if each label used once
+    count_labels_df['Verification'] = np.where((count_labels_df[columns] == 1).all(axis=1), 'OK', count_labels_df['Verification'])
+
+    return count_labels_df

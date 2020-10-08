@@ -94,7 +94,7 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
 
     return zoning_aggregated_df, alias_aggregated_df
 
-# !!!!!!!!!!!!!!!!!
+
 def align_dataframe(switch_params_aggregated_df, *args, drop_columns=True):
     """
     Function to label DataFrame with Fabric names and labels.
@@ -132,9 +132,6 @@ def align_dataframe(switch_params_aggregated_df, *args, drop_columns=True):
     return df_lst
 
 
-
-
-# !!!!!!!!!!!!!!!!!!
 def lsan_state_verify(zoning_aggregated_df, alias_aggregated_df, switch_params_aggregated_df, fcrfabric_df, lsan_df):
     """Function to check device status (imported, exist, configured and etc) for LSAN zones"""
     

@@ -145,8 +145,8 @@ def create_device_rename_form(portshow_aggregated_df):
     # fill empty values with 'no_grp_name' tag to perform Group_Name join aggregation
     manual_device_rename_df['Group_Name'].fillna('no_grp_name', inplace=True)
     manual_device_rename_df = \
-        manual_device_rename_df.groupby(['Device_Host_Name'], as_index = False).\
-            agg({'Group_Name': ', '.join, 'Fabric_name': 'first', 
+        manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).\
+            agg({'Group_Name': ', '.join, 
                     'deviceType': 'first', 'deviceSubtype': 'first'})
     manual_device_rename_df.reset_index(inplace=True, drop=True)
     # remove 'no_grp_name' tag for devices with no Group_Name
