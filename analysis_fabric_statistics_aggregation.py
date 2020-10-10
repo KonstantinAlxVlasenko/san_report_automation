@@ -35,7 +35,6 @@ def statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df,
     merge_lst = [target_initiator_df, portType_df, port_speed_df, device_class_df, port_ne_df, port_state_type_df]
     for df in merge_lst:
         statistics_df = statistics_df.merge(df, how='left', left_index=True, right_index=True)
-
     # renaming total row
     statistics_df.rename(index = {'All': 'Итого:'}, inplace = True)
     # reset index to drop unneccessary columns
@@ -238,7 +237,7 @@ def n_e_statistics(switchshow_df):
 
 def n_e(group):
     """
-    Auxiliary function to calculate
+    Auxiliary function for n_e_statistics function to calculate
     N:E ratio for the group of ports belonging to one switch
     """
 

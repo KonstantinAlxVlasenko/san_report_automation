@@ -41,9 +41,6 @@ def zonemember_statistics(zoning_aggregated_df):
     zoning_modified_df['zone_tag'] = zoning_modified_df['zone_duplicates_free'].where(mask_zone_name, 'zone_tag')
     zoning_modified_df['lsan_tag'] = zoning_modified_df['lsan_tag'].where(~mask_zone_name, np.nan)
 
-    # print(zoning_modified_df[['zone', 'zone_duplicates_free', 'zone_tag', 'lsan_tag']])
-    # exit()
-
     # get statistics DataFrames for zone and cfgtype level statistics
     zonemember_zonelevel_stat_df = count_zonemember_statistics(zoning_modified_df)
     zonemember_cfgtypelevel_stat_df = count_zonemember_statistics(zoning_modified_df, zone=False)
@@ -55,13 +52,12 @@ def zonemember_statistics(zoning_aggregated_df):
     zone_wwn_number_df = defined_actual_wwn_number(zoning_aggregated_df, df_type='zone')
     
     zonemember_zonelevel_stat_df = zonemember_zonelevel_stat_df.merge(zone_wwn_number_df, how='left', 
-    
                                                                         on=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'])
-    # # TO_REMOVE
-    # # add alias number in each zone
-    # alias_number_per_zone_df =  alias_number_per_zone(zoning_aggregated_df)
-    # zonemember_zonelevel_stat_df = zonemember_zonelevel_stat_df.merge(alias_number_per_zone_df, how='left', 
-    #                                                                 on=['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone'])
+
+    # if zone is empty (no active devices) fill device_type columns (target/initiator) with zeroes
+    device_type_columns = [column for column in zonemember_zonelevel_stat_df.columns if ('initiator' in column.lower() or 'target' in column.lower())]
+    mask_empty_zone = zonemember_zonelevel_stat_df['Total_zonemembers_active'] == 0
+    zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns] = zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns].fillna(0)
 
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
     zonemember_zonelevel_stat_df = note_zonemember_statistics(zonemember_zonelevel_stat_df)

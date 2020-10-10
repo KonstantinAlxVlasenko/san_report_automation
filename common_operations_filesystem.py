@@ -46,8 +46,8 @@ def check_valid_path(path):
 
 # saving DataFrame to excel file
 def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False):
-    # , report_type = 'collection'   
-    """Check if excel file exists, check if dataframe sheet is in file, 
+    """
+    Check if excel file exists, check if dataframe sheet is in file, 
     delete sheet with stored dataframe (if sheet tabs number > 1)
     and save new dataframe 
     """
@@ -67,13 +67,14 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False)
 
     # check DataFrame report type to save
     if report_type == 'report':
-        report_mark = 'SAN_Assessment_tables'
+        report_mark = 'SAN_Assessment_Tables'
     else:
         report_mark = report_type
           
     current_date = str(date.today())
     # construct excel filename
-    file_name = customer_name + '_' + report_mark + '_' + 'report_' + current_date + '.xlsx'
+    file_name = customer_name + '_' + report_mark + '_' + current_date + '.xlsx'
+    # file_name = customer_name + '_' + report_mark + '_' + 'report_' + current_date + '.xlsx'
     # information string
     info = f'Exporting {sheet_title} table to {report_mark} file'
     print(info, end =" ")
@@ -184,7 +185,8 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False)
 
 
 def save_data(report_data_list, data_names, *args):
-    """Function to export extracted configuration data to JSON or CSV file
+    """
+    Function to export extracted configuration data to JSON or CSV file
     depending on data passed 
     """
 

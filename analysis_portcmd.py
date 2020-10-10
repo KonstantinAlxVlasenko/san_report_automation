@@ -137,6 +137,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
+
+
     # add fabric information (FabricName, FabricLabel)
     portshow_aggregated_df = dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
     # add switchMode to portshow_aggregated DataFrame
@@ -148,9 +150,14 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # retrieve storage, host, HBA information from Name Server service and FDMI data
     nsshow_join_df, nsshow_unsplit_df = \
         nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst)
+
+
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = \
         alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
+
+
+
     # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
     portshow_aggregated_df = \
         blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst)
@@ -229,6 +236,12 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     # add aliases to portshow_aggregated_df
     portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 
                                                           on = ['Fabric_name', 'Fabric_label', 'PortName'])
+
+    # add Unknown(initiator/target) tag for all F-port and N-port for which Device_tap is not found 
+    mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
+    mask_device_type_empty = portshow_aggregated_df['Device_type'].isna()
+    portshow_aggregated_df.loc[mask_nport_fport & mask_device_type_empty, 'Device_type'] = 'Unknown(initiator/target)'
+
     return portshow_aggregated_df
 
 

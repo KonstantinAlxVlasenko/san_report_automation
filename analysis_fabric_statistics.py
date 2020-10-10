@@ -13,6 +13,8 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
                             nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst):
     """Main function to count Fabrics statistics"""
 
+
+
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst

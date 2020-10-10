@@ -148,6 +148,8 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
     port_symb = series['PortSymb']
     node_symb = series['NodeSymb']
 
+    match_port_dct = dict()
+    match_node_dct = dict()
     # create dictionary with PortSymb cell match results
     if not pd.isnull(port_symb): 
         match_port_dct = {match_key: comp_dct[comp_key].match(port_symb) for comp_key, match_key in zip(comp_keys, match_keys)}
