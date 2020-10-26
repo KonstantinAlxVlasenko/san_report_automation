@@ -5,7 +5,7 @@ import pandas as pd
 
 from analysis_portcmd_devicename_correction import devicename_correction_main
 from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
-from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna
+from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna
 from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_gateway import verify_gateway_link
 from analysis_portcmd_nameserver import nsshow_analysis_main
@@ -22,7 +22,8 @@ from report_portcmd import create_report_tables
 def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, 
                             switch_params_aggregated_df, isl_aggregated_df, nsshow_df, 
                             nscamshow_df, ag_principal_df, alias_df, fdmi_df, blade_module_df, 
-                            blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst):
+                            blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
+                            report_columns_usage_dct, report_data_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
     # report_data_lst contains information: 
@@ -76,8 +77,9 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, 
                                 switch_params_aggregated_df, isl_aggregated_df, nsshow_df, 
                                 nscamshow_df, ag_principal_df, switch_models_df, alias_df, 
-                                oui_df, fdmi_df, blade_module_df, 
-                                blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst)
+                                oui_df, fdmi_df, blade_module_df,  blade_servers_df, blade_vc_df, 
+                                synergy_module_df, synergy_servers_df, 
+                                re_pattern_lst, report_data_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))
@@ -129,7 +131,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
                         isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, switch_models_df, alias_df, oui_df, fdmi_df, 
-                        blade_module_df, blade_servers_df, blade_vc_df, re_pattern_lst, report_data_lst):
+                        blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, re_pattern_lst, report_data_lst):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
@@ -160,10 +162,10 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
 
     # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
     portshow_aggregated_df = \
-        blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst)
+        blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, re_pattern_lst)
     # fillna portshow_aggregated DataFrame null values with values from blade_vc_join_df
     portshow_aggregated_df = \
-        blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df)
+        blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synergy_module_df)
     # calculate virtual channel id for medium priority traffic
     portshow_aggregated_df = vc_id(portshow_aggregated_df)
     # add 'deviceType', 'deviceSubtype' columns
@@ -204,6 +206,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df = group_name_fillna(portshow_aggregated_df)
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias values 
     portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
+    # fill portshow_aggregated DataFrame Device_Host_Name column null values for VC modules 
+    # with combination of 'VC' and serial number
+    portshow_aggregated_df = vc_name_fillna(portshow_aggregated_df)
 
     # if Device_Host_Name is still empty fill empty values in portshow_aggregated_df Device_Host_Name column 
     # with combination of device class and it's wwnp

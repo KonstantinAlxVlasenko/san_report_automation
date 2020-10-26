@@ -1,14 +1,15 @@
 '''Module to perform operations with files (create folder, save data to excel file, import data from excel file)'''
 
-import sys
-import os
-import openpyxl
-import re
+# import re
 import json
-import xlrd
-import pandas as pd
-from os import makedirs
+import os
+import sys
+# from os import makedirs
 from datetime import date
+
+import openpyxl
+# import xlrd
+import pandas as pd
 
 from common_operations_miscellaneous import status_info
 

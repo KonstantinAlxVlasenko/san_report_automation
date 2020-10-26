@@ -123,6 +123,7 @@ def blade_system_extract(blade_folder, report_data_lst):
                                 line = file.readline()
                                 collected['vc'] = True
                                 while not re.search(r'FC-CONNECTION INFORMATION', line):
+
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
                                     match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                     # vc_port_match
@@ -135,6 +136,7 @@ def blade_system_extract(blade_folder, report_data_lst):
                                         line = file.readline()
                                         if not line:
                                             break
+
                             # vc fabric connection section end
                             # active onboard administrator ip section start
                             elif re.search(r'>SHOW TOPOLOGY *$', line):
@@ -182,6 +184,9 @@ def blade_system_extract(blade_folder, report_data_lst):
                                                 result = match_dct[match_keys[0]]
                                                 name = result.group(1).strip()
                                                 value = result.group(2).strip()
+                                                # if value is empty string use None
+                                                if value == '':
+                                                    value = None
                                                 module_dct[name] = value
                                                 line = file.readline()
                                             else:

@@ -32,6 +32,7 @@ from collection_portcmd import portcmdshow_extract
 from collection_switch_params import switch_params_configshow_extract
 from collection_zoning import zoning_extract
 from collection_sensor import sensor_extract
+from collection_synergy import synergy_system_extract
 from common_operations_dataframe import list_to_dataframe
 from common_operations_servicefile import (columns_import, dataframe_import,
                                            dct_from_columns,
@@ -48,7 +49,7 @@ report_data_lst = []
 start_max_title = 60
 
 # get report entry values from report file
-customer_name, project_folder, ssave_folder, blade_folder = report_entry_values(start_max_title)
+customer_name, project_folder, ssave_folder, blade_folder, synergy_folder = report_entry_values(start_max_title)
 max_title = find_max_title(ssave_folder)
 
 print('\n\n')
@@ -77,11 +78,12 @@ def main():
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = zoning(switch_params_lst)
     sensor_df = sensor_readings(switch_params_lst)
     blade_module_df, blade_servers_df, blade_vc_df = blade_system(blade_folder)
+    synergy_module_df, synergy_servers_df = synergy_system_extract(synergy_folder, report_data_lst)
     
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
 
-    blade_module_loc_df = blademodule_analysis(blade_module_df, report_data_lst)
+    blade_module_loc_df = blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst)
 
     # switch_params_aggregated_df, report_columns_usage_dct, fabric_labeled_df = \
     #         fabric_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, report_data_lst)
@@ -95,7 +97,7 @@ def main():
 
     portshow_aggregated_df = \
         portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, \
-            alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, report_columns_usage_dct, report_data_lst)
+            alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, report_columns_usage_dct, report_data_lst)
 
     portshow_sfp_aggregated_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
 
@@ -238,6 +240,10 @@ def blade_system(blade_folder):
     blade_vc_df = list_to_dataframe(blade_vc_comprehensive_lst, report_data_lst, 'blade_vc', 'blades', columns_title_import = 'blade_vc_columns')
 
     return blade_module_df, blade_servers_df, blade_vc_df
+
+
+
+
 
 if __name__ == "__main__":
     main()

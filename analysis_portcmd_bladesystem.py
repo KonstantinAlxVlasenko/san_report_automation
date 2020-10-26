@@ -16,7 +16,7 @@ wise_combine = lambda series, str1='', str2=' ': \
         if pd.notna(series.iloc[[0,1]]).all() else series.iloc[1]
 
 
-def blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst):
+def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, re_pattern_lst):
     """
     Function to fillna portshow_aggregated_df null values with values from blade_servers_join_df.
     Hostname, location and HBA infromation
@@ -56,14 +56,37 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, re_pattern_lst
         # fillna null values in Device_Host_Name from Host_Name
         portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)
 
+    if not synergy_servers_df.empty:
+        # columns with null values to fill
+
+        synergy_servers_df['Device_Manufacturer'] = 'HPE'
+
+        synergy_columns_lst = [
+            'Device_Manufacturer', 'Device_Model', 'Device_SN', 'Host_Name', 'Host_OS',
+            'HBA_Description', 'HBA_Firmware', 'Device_Location'
+            ]
+
+        # fillna portshow_aggregated_df null values with values from blade_servers_join_df
+        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, synergy_servers_df, ['Connected_portWwn'], synergy_columns_lst)
+        # fillna null values in Device_Host_Name from Host_Name
+        portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)        
+
+
+
     return portshow_aggregated_df
 
 
-def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df):
+def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synergy_module_df):
     """
     Function to fillna portshow_aggregated_df null values with values from blade_vc_join_df.
     Virtual connect information.
     """
+
+    interconnect_module_columns_dct = {'Port': 'Device_Port', 'portWwn': 'Connected_portWwn', 
+                                        'Interconnect_Name': 'Device_Host_Name', 
+                                        'Interconnect_Manufacturer': 'Device_Manufacturer', 
+                                        'Interconnect_Model': 'Device_Model', 'Interconnect_SN': 'Device_SN', 
+                                        'Interconnect_IP': 'IP_Address', 'Interconnect_Firmware': 'Device_Fw'}    
 
     if not blade_vc_df.empty:
         # columns of Blade Interconnect modules DataFrame
@@ -77,7 +100,6 @@ def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df):
         
         blade_vc_join_df = blade_vc_df.loc[:, vc_lst].copy()
         blade_module_join_df = blade_module_df.loc[:, module_lst]
-
         # combine 'Enclosure_Name' and 'Bay' columns
         blade_vc_join_df['Device_Location'] = \
             blade_vc_join_df[['Enclosure_Name', 'Interconnect_Bay']].apply(wise_combine, axis=1, args=('Enclosure ', ' bay '))
@@ -89,12 +111,7 @@ def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df):
 
         # rename Blade Virtual Connect modules DataFrame columns to correspond
         # portshow_aggregated_df DataFrame
-        blade_vc_join_df.rename(columns = \
-            {'Port': 'Device_Port', 'portWwn': 'Connected_portWwn', 
-            'Interconnect_Name': 'Device_Host_Name', 'Interconnect_Manufacturer': 'Device_Manufacturer', 
-            'Interconnect_Model': 'Device_Model', 'Interconnect_SN': 'Device_SN', 
-            'Interconnect_IP': 'IP_Address', 'Interconnect_Firmware': 'Device_Fw'}, 
-            inplace = True)
+        blade_vc_join_df.rename(columns = interconnect_module_columns_dct,  inplace = True)
 
         # apply lower case to WWNp column
         blade_vc_join_df.Connected_portWwn = blade_vc_join_df.Connected_portWwn.str.lower()
@@ -102,5 +119,22 @@ def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df):
         portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, blade_vc_join_df, ['Connected_portWwn'], 
                                                 ['Device_Port', 'Device_Location', 'Device_Host_Name', 'Device_Manufacturer', 
                                                 'Device_Model', 'Device_SN', 'IP_Address', 'Device_Fw'])
+                            
+    if not synergy_module_df.empty:
+        synergy_module_join_df = synergy_module_df.rename(columns=interconnect_module_columns_dct)
+        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, synergy_module_join_df, ['NodeName'], 
+                                                ['Device_Location', 'Device_Host_Name', 
+                                                'Device_Model', 'Device_SN', 'Device_Fw'])        
 
     return portshow_aggregated_df
+
+
+def vc_name_fillna(portshow_aggregated_df):
+
+        mask_vc = portshow_aggregated_df['deviceType'] == 'VC'
+        mask_sn = portshow_aggregated_df['Device_SN'].notna()
+        mask_devicename_empty = portshow_aggregated_df['Device_Host_Name'].isna()
+        mask_complete = mask_vc & mask_sn & mask_devicename_empty
+        portshow_aggregated_df.loc[mask_complete, 'Device_Host_Name'] = 'VC' + portshow_aggregated_df['Device_SN']
+
+        return portshow_aggregated_df

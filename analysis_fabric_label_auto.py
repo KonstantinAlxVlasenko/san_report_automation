@@ -37,7 +37,6 @@ def auto_fabrics_labeling(switchshow_ports_df, fabricshow_df, report_data_lst):
 
     fabricshow_summary_df.sort_values(by=['Fabric_name', 'Fabric_label', 'Principal_switch_name', 'Domain_IDs'],
                                             inplace=True, ignore_index=True)
-
     return fabricshow_summary_df
 
 

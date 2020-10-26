@@ -8,6 +8,8 @@ import pandas as pd
 from common_operations_miscellaneous import status_info
 
 
+
+
 def report_entry_values(max_title):
     """
     Function to import entry report values:
@@ -24,7 +26,13 @@ def report_entry_values(max_title):
     else:
         blade_folder = None
 
-    return customer_name, project_folder, ssave_folder, blade_folder
+    if not pd.isna(report_entry_df.loc['synergy_meddler_folder', 'value']):
+        synergy_folder = os.path.normpath(report_entry_df.loc['synergy_meddler_folder', 'value'])
+    else:
+        synergy_folder = None
+    
+
+    return customer_name, project_folder, ssave_folder, blade_folder, synergy_folder
 
 
 def columns_import(sheet_title, max_title, *args, 

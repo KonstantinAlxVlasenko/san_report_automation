@@ -179,3 +179,11 @@ def dataframe_fabric_labeling(df, switch_params_aggregated_df):
     df_labeled = df.merge(fabric_label_df, how = 'left', on = switchparams_lst[:5])
     
     return df_labeled
+
+
+# auxiliary lambda function to combine two columns in DataFrame
+# it combines to columns if both are not null and takes second if first is null
+# str1 and str2 are strings before columns respectively (default is whitespace between columns)
+wise_combine = lambda series, str1='', str2=' ': \
+    str1 + str(series.iloc[0]) + str2 + str(series.iloc[1]) \
+        if pd.notna(series.iloc[[0,1]]).all() else series.iloc[1]
