@@ -56,7 +56,7 @@ def _clean_dataframe(df, mask_type,
         ]
     # create mask to filter required class only
     if mask_type == 'srv':
-        mask = df['Класс устройства'].isin(['SRV', 'BLADE_SRV'])
+        mask = df['Класс устройства'].isin(['SRV', 'BLADE_SRV', 'SYNERGY_SRV'])
     elif mask_type == 'stor':
         mask = df['Класс устройства'] == 'STORAGE'
     elif mask_type == 'lib':

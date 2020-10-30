@@ -204,10 +204,8 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
     # emulex_match node_symb
     elif not pd.isnull(node_symb) and match_node_dct[match_keys[4]]:
         match = match_node_dct[match_keys[4]]
-        'HBA_Manufacturer', 'HBA_Model', 'Host_Name', 'Host_OS', 'HBA_Firmware', 'HBA_Driver'
         series['HBA_Manufacturer'] = match.group(1)
         series['HBA_Model'] = match.group(2)
-        'a', 'b', 'c'
         series['HBA_Firmware'] = match.group(3)
         if match.group(4):
             series['HBA_Driver'] = match.group(4).rstrip('.')
@@ -215,6 +213,15 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
             series['Host_Name'] = match.group(5).rstrip('.')
         if match.group(6):
             series['Host_OS'] = match.group(6).rstrip('.')
+        series['nodeSymbUsed'] = 'yes'
+    # qlogic_fcoe_match node_symb
+    elif not pd.isnull(node_symb) and match_node_dct[match_keys[20]]:
+        match = match_node_dct[match_keys[20]]
+        series['HBA_Manufacturer'] = match.group(1)
+        series['HBA_Model'] = match.group(2)
+        series['HBA_Driver'] = match.group(3)
+        series['HBA_Firmware'] = match.group(4)
+        series['Host_Name'] = match.group(5).rstrip('.')
         series['nodeSymbUsed'] = 'yes'
     # hpux_match node_symb
     elif not pd.isnull(node_symb) and match_node_dct[match_keys[6]]:
@@ -249,7 +256,14 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         match = match_node_dct[match_keys[19]]
         series['HBA_Driver'] = match.group(1)
         series['Device_Port'] = match.group(2)
-        series['nodeSymbUsed'] = 'yes'     
+        series['nodeSymbUsed'] = 'yes'
+    # netapp_match node_symb
+    elif not pd.isnull(node_symb) and match_node_dct[match_keys[21]]:
+        match = match_node_dct[match_keys[21]]
+        series['Device_Manufacturer'] = match.group(2)
+        series['Device_Model'] = match.group(1)
+        series['Device_Name'] = match.group(3)
+        series['nodeSymbUsed'] = 'yes'
     # storeonce_port_match port_symb
     elif not pd.isnull(port_symb) and match_port_dct[match_keys[8]]:
         match = match_port_dct[match_keys[8]]
@@ -304,6 +318,13 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         series['Device_Model'] = 'EMC ' + match.group(1)
         series['Device_Port'] = match.group(2)
         series['portSymbUsed'] = 'yes'
+    # ibm_flash_match port_symb
+    elif not pd.isnull(port_symb) and match_port_dct[match_keys[22]]:
+        match = match_port_dct[match_keys[22]]
+        series['Device_Manufacturer'] = match.group(2)
+        series['Device_Model'] = match.group(1)
+        series['Device_SN'] = match.group(3)
+        series['portSymbUsed'] = 'yes'    
     # qlogic_emulex_port_match port_symb when node_symb is empty
     elif not pd.isnull(port_symb) and match_port_dct[match_keys[3]]:
         match = match_port_dct[match_keys[3]]

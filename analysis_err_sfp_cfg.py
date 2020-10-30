@@ -74,6 +74,14 @@ def port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_
 
     join_columns_lst = ['configname', 'chassis_name', 'chassis_wwn', 
                         'switchName', 'switchWwn', 'slot', 'port']
+
+    # rename columns in portcfgshow_df duplicated in portshow_aggregated_df DataFrame except columns to merge on
+    duplicate_columns = [column for column in portcfgshow_df.columns if 
+                            (column in portshow_aggregated_df.columns and not column in join_columns_lst)]
+    duplicate_columns_rename = [column + '_cfg' for column in duplicate_columns]
+    rename_dct = {k:v for k, v in zip(duplicate_columns, duplicate_columns_rename)}
+    portcfgshow_df.rename(columns=rename_dct, inplace=True)
+
     # change column names and switch_index data type to correspond portshow_aggregated_df
     # pylint: disable=unbalanced-tuple-unpacking
     sfp_join_df, portcfg_join_df = align_dataframe(sfpshow_df, portcfgshow_df)

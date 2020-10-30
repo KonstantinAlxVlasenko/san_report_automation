@@ -21,17 +21,26 @@ def oui_join(portshow_aggregated_df, oui_df):
     return portshow_aggregated_df
 
 
-def type_check(series, switches_oui, blade_servers_df):
+def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
     """Function to define device class and type"""
     
     # drop rows with empty WWNp values
-    blade_hba_df = blade_servers_df.dropna(subset = ['portWwn'])
+    blade_hba_df = blade_servers_df.dropna(subset = ['portWwn']).copy()
+    synergy_hba_df = synergy_servers_df.dropna(subset = ['Connected_portWwn']).copy()
 
     if series[['type', 'subtype']].notnull().all():
         # servers type
         # if WWNp in blade hba DataFrame
-        if (blade_hba_df['portWwn'] == series['Connected_portWwn']).any():
+        # if (blade_hba_df['portWwn'] == series['Connected_portWwn']).any():
+        #     return pd.Series(('BLADE_SRV', series['subtype'].split('|')[0]))
+        # elif (synergy_hba_df['Connected_portWwn'] == series['Connected_portWwn']).any():
+        #     return pd.Series(('SYNERGY_SRV', series['subtype'].split('|')[0]))
+        if (series['Connected_portWwn'] == blade_hba_df['portWwn']).any():
             return pd.Series(('BLADE_SRV', series['subtype'].split('|')[0]))
+        elif (series['Connected_portWwn'] == synergy_hba_df['Connected_portWwn']).any():
+            return pd.Series(('SYNERGY_SRV', series['subtype'].split('|')[0]))
+
+
         # devices with strictly defined type and subtype
         elif not '|' in series['type'] and not '|' in  series['subtype']:
             return pd.Series((series.type, series.subtype))

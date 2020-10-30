@@ -137,9 +137,15 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     and define fabric device types
     """
     
+    # lower case WWNp
+    blade_servers_df.portWwn = blade_servers_df.portWwn.str.lower()
+    portshow_df.Connected_portWwn = portshow_df.Connected_portWwn.str.lower()
+
+
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
 
+    
 
     # add fabric information (FabricName, FabricLabel)
     portshow_aggregated_df = dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
@@ -157,9 +163,6 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = \
         alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
-
-
-
     # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
     portshow_aggregated_df = \
         blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, re_pattern_lst)
@@ -182,7 +185,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     switches_oui = switch_params_aggregated_df['switchWwn'].str.slice(start = 6)
     # final device type define
     portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(
-        lambda series: type_check(series, switches_oui, blade_servers_df), axis = 1)
+        lambda series: type_check(series, switches_oui, blade_servers_df, synergy_servers_df), axis = 1)
     # identify MSA port numbers (A1-A4, B1-B4) based on PortWwn
     portshow_aggregated_df.Device_Port = \
         portshow_aggregated_df.apply(lambda series: find_msa_port(series) \

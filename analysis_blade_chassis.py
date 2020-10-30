@@ -45,6 +45,8 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst):
 
         # create DataFrame with Device_Location column
         blade_module_loc_df = blademodule_location(blade_module_df, synergy_module_df)
+        # add VC device name if empty
+        blade_module_loc_df = vc_name_fillna(blade_module_loc_df)
         # after finish display status
         status_info('ok', max_title, len(info))
         # create Blade chassis report table
@@ -119,3 +121,16 @@ def blademodule_report(blade_module_loc_df, data_names, max_title):
     blade_module_report_df, = dataframe_segmentation(blade_module_loc_df, data_names[1:], report_columns_usage_dct, max_title)
 
     return blade_module_report_df
+
+
+def vc_name_fillna(blade_module_loc_df):
+    """Function to combine 'VC' and module serial number to fill in empty VC name value"""
+
+    if not blade_module_loc_df.empty:
+        mask_vc = blade_module_loc_df['Interconnect_Model'].str.contains(r'VC Flex|Virtual Connect|VC.+FC Module', regex=True)
+        mask_sn = blade_module_loc_df['Interconnect_SN'].notna()
+        mask_modulename_empty = blade_module_loc_df['Interconnect_Name'].isna()
+        mask_complete = mask_vc & mask_sn & mask_modulename_empty
+        blade_module_loc_df.loc[mask_complete, 'Interconnect_Name'] = 'VC' + blade_module_loc_df['Interconnect_SN']
+
+    return blade_module_loc_df
