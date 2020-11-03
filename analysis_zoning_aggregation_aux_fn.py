@@ -77,7 +77,7 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
     # connection information revealed by merging based on WWNP number
     # of connected device switch port  (PortName) and 
     # WWNP number of alias_member (Strict_Wwnp)
-    # AG mode switches dropped to avoid duplicate  connection information3
+    # AG mode switches dropped to avoid duplicate  connection information
     mask_switch_native = portshow_aggregated_df['switchMode'] == 'Native'
     portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, port_columns_lst].copy()
     portcmd_join_df['Strict_Wwnp'] = np.nan
@@ -290,16 +290,37 @@ def verify_zonemember_type(aggregated_df, column = 'zone_member'):
 
     return aggregated_df
 
+# TO REMOVE
+# def count_group_members(df, count_columns: dict, group_columns):
+#     """Function to count members in groups and merge information to DataFrame"""
 
-def count_group_members(df, count_columns: dict, group_columns):
-    """Function to count members in groups and merge information to DataFrame"""
+#     for count_column, rename_column in count_columns.items():
+#         if count_column in df.columns:
+#             current_sr = df.groupby(by=group_columns)[count_column].count()
+#             current_df = pd.DataFrame(current_sr)
+#             # current_df.reset_index(inplace=True)
+#             current_df.rename(columns={count_column: rename_column}, inplace=True)
+#             current_df.reset_index(inplace=True)
+#             df = df.merge(current_df, how='left', on=group_columns)
 
-    for count_column, rename_column in count_columns.items():
-        if count_column in df.columns:
-            current_sr = df.groupby(by=group_columns)[count_column].count()
-            current_df = pd.DataFrame(current_sr)
-            current_df.reset_index(inplace=True)
-            current_df.rename(columns={count_column: rename_column}, inplace=True)
-            df = df.merge(current_df, how='left', on=group_columns)
+#     return df
 
-    return df
+
+def verify_device_hostname_instances(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
+    """Function to add Device_Host_Name instances number on (fabric_name, fabric_label), 
+    fabric_label and total_fabrics levels based on PortName (WWNp)"""
+
+    port_columns_lst = ['Fabric_name', 'Fabric_label', 'PortName', 
+                        'Device_Host_Name_per_fabric_name_and_label', 
+                        'Device_Host_Name_per_fabric_label', 
+                        'Device_Host_Name_total_fabrics']
+
+    # AG mode switches dropped to avoid duplicate  connection information
+    mask_switch_native = portshow_aggregated_df['switchMode'] == 'Native'
+    portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, port_columns_lst].copy()
+    portcmd_join_df.dropna(subset=['PortName'], inplace=True)
+                                              
+    zoning_aggregated_df = zoning_aggregated_df.merge(portcmd_join_df, how='left', on=port_columns_lst[:3])
+    alias_aggregated_df = alias_aggregated_df.merge(portcmd_join_df, how='left', on=port_columns_lst[:3])
+
+    return zoning_aggregated_df, alias_aggregated_df

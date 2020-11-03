@@ -15,7 +15,7 @@ from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
-from common_operations_dataframe import dataframe_fabric_labeling
+from common_operations_dataframe import dataframe_fabric_labeling, count_group_members
 from report_portcmd import create_report_tables
 
 
@@ -90,9 +90,12 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             print(info, end =" ")
             status_info('warning', max_title, len(info))
 
+        # correct device names manually
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_data_lst)
 
+        # count Device_Host_Name instances for fabric_label, label and total in fabric
+        portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df) 
 
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
             storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = \
@@ -217,6 +220,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # with combination of device class and it's wwnp
     portshow_aggregated_df.Device_Host_Name = \
         portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
+
+    
     # sorting DataFrame
     sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
                     'switchWwn', 'switchName']
@@ -324,3 +329,52 @@ def find_msa_port(series):
         return 'B' + str(port_num-3)
         
     return series['Device_Port']
+
+#  TO REMOVE
+# def device_ports_per_group(portshow_aggregated_df):
+#     """Function to count device ports for each device on (fabric_name, fabric_label), 
+#     fabric_label and total_fabrics levels based on Device_Host_Name column."""
+
+    
+#     group_columns = ['Fabric_name',	'Fabric_label', 'Device_Host_Name']
+#     group_level_lst = ['_per_fabric_name_and_label', '_per_fabric_label', '_total_fabrics']
+#     instance_column_dct = dict()
+
+#     for level in group_level_lst:
+#         instance_column_dct['Device_Host_Name'] = 'Device_Host_Name' + level
+#         portshow_aggregated_df = instance_number_per_group(portshow_aggregated_df, group_columns, instance_column_dct)
+#         group_columns.pop(0)
+
+#     return portshow_aggregated_df
+
+
+def device_ports_per_group(portshow_aggregated_df):
+    """Function to count device ports for each device on (fabric_name, fabric_label), 
+    fabric_label and total_fabrics levels based on Device_Host_Name column."""
+
+    # AG mode switches dropped to avoid duplicate  connection information
+    mask_switch_native = portshow_aggregated_df['switchMode'] == 'Native'
+
+    portshow_native_df = portshow_aggregated_df.loc[mask_switch_native]
+    
+    group_columns = ['Fabric_name',	'Fabric_label', 'Device_Host_Name']
+    group_level_lst = ['_per_fabric_name_and_label', '_per_fabric_label', '_total_fabrics']
+    instance_column_dct = dict()
+
+    for level in group_level_lst:
+        instance_column_dct['Device_Host_Name'] = 'Device_Host_Name' + level
+        portshow_native_df = count_group_members(portshow_native_df, group_columns, instance_column_dct)
+        group_columns.pop(0)
+
+
+    port_columns_lst = ['Fabric_name', 'Fabric_label', 'Connected_portWwn', 
+                        'Device_Host_Name_per_fabric_name_and_label', 
+                        'Device_Host_Name_per_fabric_label', 
+                        'Device_Host_Name_total_fabrics']
+
+    device_hostname_stat_native_df = portshow_native_df[port_columns_lst].copy()
+    device_hostname_stat_native_df.dropna(subset=['Connected_portWwn'], inplace=True)
+    device_hostname_stat_native_df.drop_duplicates(subset=['Connected_portWwn'], inplace=True)
+    portshow_aggregated_df = portshow_aggregated_df.merge(device_hostname_stat_native_df, how='left', on=port_columns_lst[:3])
+
+    return portshow_aggregated_df

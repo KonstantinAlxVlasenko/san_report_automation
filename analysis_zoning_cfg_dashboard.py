@@ -67,13 +67,13 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     mask_alias_effective = alias_aggregated_df['cfg_type'] == 'effective'
     alias_effective_df = alias_aggregated_df.loc[mask_alias_effective].copy()
     # defined and active ports number for each zonemember (alias) were calculated in advance
-    # thus each alias shuold be counted only once
+    # thus each alias should be counted only once
     alias_effective_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'zone_member'], inplace=True)
     count_columns_dct = {'ports_per_alias': 'ports_per_alias', 'active_ports_per_alias': 'active_ports_per_alias', 
                             'zone_number_alias_used_in': 'zone_number_alias_used_in'}
     alias_ports_vs_zone_usage_df = find_mean_max_min(alias_effective_df, count_columns = count_columns_dct)
 
-    # merge all summaru DataFrames into one
+    # merge all summary DataFrames into one
     active_cfg_statistics_df = zone_type_summary_df 
     summary_lst = [zone_notes_summary_df, zoned_ports_status_summary_df, zoned_vs_total_ports_summary_df, alias_vs_active_ports_per_zone_df, alias_ports_vs_zone_usage_df]
     for df in summary_lst:

@@ -181,9 +181,55 @@ def dataframe_fabric_labeling(df, switch_params_aggregated_df):
     return df_labeled
 
 
+# def instance_number_per_group(aggregated_df, group_columns, instance_column_dct):
+#     """
+#     Auxiliary function to count how many value instances are in a DataFrame group.
+#     DataFrame group defined by group_columns. Instances of which column have to be 
+#     counted and name of the column containing instances number are in instance_column_dct
+#     (dictionary key is column name with values to be evaluated, dictionary value is 
+#      created column name with instances number)
+#     """
+    
+#     # unpack column name with values to be evaluated and created column name with instances number
+#     [(instance_column, instance_number_column)] = instance_column_dct.items()
+    
+#     # count wwnp instances for each group
+#     instance_number_df = aggregated_df.groupby(group_columns)[instance_column].count()
+#     instance_number_df = pd.DataFrame(instance_number_df)
+#     instance_number_df.rename(columns=instance_column_dct , inplace=True)
+#     instance_number_df.reset_index(inplace=True)
+#     # add instance number to evaluated DataFrames
+#     aggregated_df = aggregated_df.merge(instance_number_df, how='left', on=group_columns)
+    
+#     return aggregated_df
+
+
+def count_group_members(df, group_columns, count_columns: dict):
+    """
+    Auxiliary function to count how many value instances are in a DataFrame group.
+    DataFrame group defined by group_columns. Instances of which column have to be 
+    counted and name of the column containing instances number are in ther count_columns
+    dict (dictionary key is column name with values to be evaluated, dictionary value is 
+    created column name with instances number).
+    After counting members in groups information added to df DataFrame"""
+
+    for count_column, rename_column in count_columns.items():
+        if count_column in df.columns:
+            current_sr = df.groupby(by=group_columns)[count_column].count()
+            current_df = pd.DataFrame(current_sr)
+            current_df.rename(columns={count_column: rename_column}, inplace=True)
+            current_df.reset_index(inplace=True)
+            
+            df = df.merge(current_df, how='left', on=group_columns)
+
+    return df
+
+
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null
 # str1 and str2 are strings before columns respectively (default is whitespace between columns)
 wise_combine = lambda series, str1='', str2=' ': \
     str1 + str(series.iloc[0]) + str2 + str(series.iloc[1]) \
         if pd.notna(series.iloc[[0,1]]).all() else series.iloc[1]
+
+

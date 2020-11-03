@@ -93,6 +93,13 @@ def _clean_dataframe(df, mask_type,
             elif column in df.columns and pd.Series(df[column] == 'No', pd.notna(df[column])).all():
                 df.drop(columns = [column], inplace = True)
 
+    # drop column if each device connected to single fabric_name only
+    if 'Количество портов устройства в подсети' in df.columns and \
+        'Количество портов устройства в фабрике' in df.columns and \
+            df['Количество портов устройства в подсети'].equals(df['Количество портов устройства в фабрике']):
+                df.drop(columns=['Количество портов устройства в фабрике'], inplace=True)
+
+
     return df
 
 

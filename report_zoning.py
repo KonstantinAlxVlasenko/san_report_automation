@@ -72,6 +72,11 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     if 'zone_member' in cleaned_df and 'zonemember_duplicates_free' in cleaned_df:
         if all(cleaned_df['zone_member'] == cleaned_df['zonemember_duplicates_free']):
             cleaned_df.drop(columns=['zonemember_duplicates_free'], inplace=True)
+    # if all device connected to one fabric_label only
+    if 'Device_Host_Name_per_fabric_name_and_label' in cleaned_df.columns and \
+        'Device_Host_Name_per_fabric_label' in cleaned_df.columns and \
+            cleaned_df['Device_Host_Name_per_fabric_name_and_label'].equals(cleaned_df['Device_Host_Name_per_fabric_label']):
+                cleaned_df.drop(columns=['Device_Host_Name_per_fabric_label'], inplace=True)
     # drop columns where all values are NA
     for column in possible_allna_values:
         if column in cleaned_df.columns and cleaned_df[column].isna().all():
@@ -149,6 +154,12 @@ def compare_zone_config(zoning_report_df):
         check_df.dropna(subset = ['Тип Wwn псевдонима'], inplace=True)
         if (zoning_valid_df['Тип Wwn псевдонима'] == 'Wwnp').all():
             zoning_valid_df.drop(columns=['Тип Wwn псевдонима'], inplace=True)
+    # drop column if each device connected to single fabric_name only
+    if 'Количество портов устройства в подсети' in zoning_valid_df.columns and \
+        'Количество портов устройства в фабрике' in zoning_valid_df.columns and \
+            zoning_valid_df['Количество портов устройства в подсети'].equals(zoning_valid_df['Количество портов устройства в фабрике']):
+                zoning_valid_df.drop(columns=['Количество портов устройства в фабрике'], inplace=True)
+
 
     # separate A and B fabrics for side by side compare
     mask_A = zoning_valid_df['Подсеть'] == 'A'

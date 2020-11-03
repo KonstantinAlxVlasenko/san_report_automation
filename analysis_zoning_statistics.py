@@ -239,7 +239,7 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
 
     # check if zone contains storage and library in a single zone
     mask_storage_lib = (zonemember_stat_notes_df[['STORAGE', 'LIB']] != 0).all(axis=1)
-    zonemember_stat_notes_df['Storage_library_note'] = np.where(mask_exclude_zone & mask_storage_lib, 'storage_library', pd.NA)
+    zonemember_stat_notes_df['Storage_library_note'] = np.where(mask_storage_lib, 'storage_library', pd.NA)
     # join both columns in a single column
     zonemember_stat_notes_df['Target_model_note'] = \
         zonemember_stat_notes_df[['Storage_model_note', 'Storage_library_note']].apply(lambda x: x.str.cat(sep=', ') \
@@ -267,7 +267,7 @@ def target_initiator_note(series):
     if series['Total_zonemembers_active'] == 0:
         return 'empty_zone'
     # if all zonememebrs are storages with local or imported device status 
-    # and no asent devices then zone considered to be replication zone 
+    # and no absent devices then zone considered to be replication zone 
     if series['STORAGE'] == series['Total_zonemembers'] and series['STORAGE']>1:
         return 'replication_zone'
     """
