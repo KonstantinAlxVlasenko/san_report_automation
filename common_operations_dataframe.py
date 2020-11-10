@@ -225,6 +225,21 @@ def count_group_members(df, group_columns, count_columns: dict):
     return df
 
 
+def translate_values(translated_df, translate_dct, translate_columns = None):
+    """Function to translate values in corresponding columns"""
+
+    if not translate_columns:
+        translate_columns = translated_df.columns
+
+    # columns which values need to be translated
+    # translate values in column if column in DataFrame
+    for column in translate_columns:
+        if column in translated_df.columns:
+            translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
+
+    return translated_df
+
+
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null
 # str1 and str2 are strings before columns respectively (default is whitespace between columns)

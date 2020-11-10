@@ -14,7 +14,7 @@ def zonemember_statistics(zoning_aggregated_df):
     # changes in zoning_aggregated_df DataFrame
     zoning_modified_df = zoning_aggregated_df.copy()
     # All classes of servers are considered to be SRV class
-    zoning_modified_df.deviceType.replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV'}, inplace=True)
+    zoning_modified_df.deviceType.replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV', 'SRV_BLADE': 'SRV', 'SRV_SYNERGY': 'SRV'}, inplace=True)
     # deviceType transformed to be combination if device class and device type
     zoning_modified_df.deviceSubtype = zoning_modified_df['deviceType'] + ' ' + zoning_modified_df['deviceSubtype']
     # servers device type is not important for zonemember analysys

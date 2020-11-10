@@ -5,11 +5,13 @@ Module to create tables
 - list of servers, storages, libraries san connection 
 """
 
+from analysis_portcmd_device_connection_statistics import device_connection_statistics
 import pandas as pd
-from common_operations_dataframe import dataframe_segmentation
+from common_operations_dataframe import dataframe_segmentation, translate_values
+from common_operations_servicefile import dct_from_columns
 
 
-def create_report_tables(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title):
+def create_report_tables(portshow_aggregated_df, device_connection_statistics_df, data_names, report_columns_usage_dct, max_title):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
     add_columns_lst = ['FW_Recommeneded', 'Driver_Recommeneded', 'FW_Supported', 'HW_Supported']
@@ -32,8 +34,11 @@ def create_report_tables(portshow_aggregated_df, data_names, report_columns_usag
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean = True)
     npiv_report_df = _clean_dataframe(npiv_report_df, 'npiv', duplicates = None, clean = True)
 
+    device_connection_statistics_report_df = device_connection_statistics_report(device_connection_statistics_df, max_title)
+
     return servers_report_df, storage_report_df, library_report_df, \
-        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df
+        hba_report_df, storage_connection_df,  library_connection_df, \
+            server_connection_df, npiv_report_df, device_connection_statistics_report_df
     
 
 def _clean_dataframe(df, mask_type, 
@@ -124,3 +129,48 @@ def _multi_fabric(df, report_columns_usage_dct):
     return df
 
 
+def device_connection_statistics_report(device_connection_statistics_df, max_title):
+    """Function to create report table out of device_connection_statistics_df DataFrame"""
+
+    translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_подключения_устройств_перевод_eng', 
+                                    'Статистика_подключения_устройств_перевод_ru', init_file = 'san_automation_info.xlsx')
+    
+
+    device_connection_statistics_report_df = device_connection_statistics_df.copy()
+    # translate notes
+    columns = [column for column in device_connection_statistics_df.columns if 'note' in column]
+    columns.append('Fabric_name')
+    device_connection_statistics_report_df = translate_values(device_connection_statistics_report_df, translate_dct, translate_columns=columns)
+    # translate column names
+    device_connection_statistics_report_df.rename(columns=translate_dct, inplace=True)
+    # drop empty columns
+    device_connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
+
+    return device_connection_statistics_report_df
+
+
+
+# def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report_columns_usage_dct, max_title):
+#     """Function to create report table out of statistics_df DataFrame"""
+
+#     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
+
+#     # create statitics report DataFrame
+#     zonemember_statistics_report_df = zonemember_statistics_df.copy()
+#     # # drop column 'chassis_name' if it is not required
+#     # if not fabric_name_usage:
+#     #     zonemember_statistics_report_df.drop(columns = ['Fabric_name'], inplace=True)
+#     # rename values in columns
+#     translate_columns = ['Fabric_name', 'Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
+#     zonemember_statistics_report_df = translate_values(zonemember_statistics_report_df, translate_dct, translate_columns)
+#     # column titles used to create dictionary to traslate column names
+#     statistic_columns_lst = ['Статистика_зон_eng', 'Статистика_зон_ru']
+#     # dictionary used to translate column names
+#     statistic_columns_dct = dct_from_columns('customer_report', max_title, *statistic_columns_lst, \
+#         init_file = 'san_automation_info.xlsx')
+#     # translate columns in fabric_statistics_report and statistics_subtotal_df DataFrames
+#     zonemember_statistics_report_df.rename(columns = statistic_columns_dct, inplace = True)
+
+#     # statistics_report_df.sort_values(by=['Фабрика', 'Подсеть', 'Имя коммутатора'], inplace=True)
+
+#     return zonemember_statistics_report_df

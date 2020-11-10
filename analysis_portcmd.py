@@ -9,6 +9,7 @@ from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, v
 from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_gateway import verify_gateway_link
 from analysis_portcmd_nameserver import nsshow_analysis_main
+from analysis_portcmd_device_connection_statistics import device_connection_statistics
 from analysis_portcmd_switch import fill_isl_link, fill_switch_info, switchparams_join, switchshow_join
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
@@ -32,8 +33,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
     # names to save data obtained after current module execution
     data_names = [
-        'portshow_aggregated', 'device_rename', 'report_columns_usage_upd', 'Сервера', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
-        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 'NPIV'
+        'portshow_aggregated', 'device_connection_statistics', 'device_rename', 'report_columns_usage_upd', 'Сервера', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
+        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 'NPIV', 'Статистика_устройств'
         ]
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
@@ -44,8 +45,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    portshow_aggregated_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, library_report_df, \
-        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = data_lst
+    portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, library_report_df, \
+        hba_report_df, storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df, device_connection_statistics_report_df = data_lst
     nsshow_unsplit_df = pd.DataFrame()
 
     if not report_columns_usage_dct:
@@ -95,19 +96,26 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_data_lst)
 
         # count Device_Host_Name instances for fabric_label, label and total in fabric
-        portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df) 
+        portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df)
+
+        # count device connection statistics
+        info = f'Counting device connection statistics'
+        print(info, end =" ")
+        device_connection_statistics_df = device_connection_statistics(portshow_aggregated_df) 
+        status_info('ok', max_title, len(info))
+
 
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-            storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df = \
-                create_report_tables(portshow_aggregated_df, data_names[3:], \
+            storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df, device_connection_statistics_report_df  = \
+                create_report_tables(portshow_aggregated_df, device_connection_statistics_df, data_names[4:-1], \
                     report_columns_usage_dct, max_title)
 
         # create list with partitioned DataFrames
         data_lst = [
-            portshow_aggregated_df, device_rename_df, report_columns_usage_dct, 
+            portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, 
             servers_report_df, storage_report_df, 
             library_report_df, hba_report_df, storage_connection_df,  
-            library_connection_df, server_connection_df, npiv_report_df
+            library_connection_df, server_connection_df, npiv_report_df, device_connection_statistics_report_df
             ]
 
         # saving data to json or csv file
@@ -116,14 +124,14 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         save_xlsx_file(expected_ag_links_df, 'expected_ag_links_df', report_data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        portshow_aggregated_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, \
+        portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, \
             library_report_df, hba_report_df, storage_connection_df, \
-                library_connection_df, server_connection_df, npiv_report_df \
+                library_connection_df, server_connection_df, npiv_report_df, device_connection_statistics_report_df \
                     = verify_data(report_data_lst, data_names, *data_lst)
         data_lst = [
-            portshow_aggregated_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, 
+            portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, 
             library_report_df, hba_report_df, storage_connection_df,  
-            library_connection_df, server_connection_df, npiv_report_df
+            library_connection_df, server_connection_df, npiv_report_df, device_connection_statistics_report_df
             ]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
