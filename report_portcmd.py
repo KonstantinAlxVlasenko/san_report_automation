@@ -147,30 +147,3 @@ def device_connection_statistics_report(device_connection_statistics_df, max_tit
     device_connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
 
     return device_connection_statistics_report_df
-
-
-
-# def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report_columns_usage_dct, max_title):
-#     """Function to create report table out of statistics_df DataFrame"""
-
-#     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
-
-#     # create statitics report DataFrame
-#     zonemember_statistics_report_df = zonemember_statistics_df.copy()
-#     # # drop column 'chassis_name' if it is not required
-#     # if not fabric_name_usage:
-#     #     zonemember_statistics_report_df.drop(columns = ['Fabric_name'], inplace=True)
-#     # rename values in columns
-#     translate_columns = ['Fabric_name', 'Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
-#     zonemember_statistics_report_df = translate_values(zonemember_statistics_report_df, translate_dct, translate_columns)
-#     # column titles used to create dictionary to traslate column names
-#     statistic_columns_lst = ['Статистика_зон_eng', 'Статистика_зон_ru']
-#     # dictionary used to translate column names
-#     statistic_columns_dct = dct_from_columns('customer_report', max_title, *statistic_columns_lst, \
-#         init_file = 'san_automation_info.xlsx')
-#     # translate columns in fabric_statistics_report and statistics_subtotal_df DataFrames
-#     zonemember_statistics_report_df.rename(columns = statistic_columns_dct, inplace = True)
-
-#     # statistics_report_df.sort_values(by=['Фабрика', 'Подсеть', 'Имя коммутатора'], inplace=True)
-
-#     return zonemember_statistics_report_df

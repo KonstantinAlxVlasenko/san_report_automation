@@ -4,6 +4,7 @@ import os
 import sys
 import xlrd
 import pandas as pd
+import numpy as np
 from common_operations_filesystem import save_xlsx_file
 from common_operations_servicefile import dct_from_columns, columns_import
 from common_operations_miscellaneous import status_info
@@ -238,6 +239,35 @@ def translate_values(translated_df, translate_dct, translate_columns = None):
             translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
 
     return translated_df
+
+
+def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
+    """Function to concatenate values in several columns (merge_columns) into summary_column 
+    as comma separated values"""
+    
+    # create summary column if not exist
+    if not summary_column in df.columns:
+        df[summary_column] = np.nan
+    
+    for column in merge_columns:
+        # value in summary column is empty
+        mask_summary_note_empty = df[summary_column].isna()
+        # value in current column is empty
+        mask_current_note_empty = df[column].isna()
+        """if value in summary column is empty take value from column to add (if it's not nan)
+        if value in column to add is empty take value from summary note column (if it's not nan)
+        if both values are empty use nan value
+        if both values in summary and current columns exist then cancatenate them"""
+        df[summary_column] = np.select(
+            [mask_summary_note_empty, mask_current_note_empty, mask_summary_note_empty & mask_current_note_empty],
+            [df[column], df[summary_column], np.nan],
+            default=df[summary_column] + sep + df[column])
+    
+    # drop merge_columns
+    if drop_merge_columns:
+        df.drop(columns=merge_columns, inplace=True)
+    
+    return df
 
 
 # auxiliary lambda function to combine two columns in DataFrame

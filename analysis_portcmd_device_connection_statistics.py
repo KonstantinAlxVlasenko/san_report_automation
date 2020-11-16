@@ -5,7 +5,7 @@ and add notes if some criteria are not fullfilled"""
 import re
 import pandas as pd
 import numpy as np
-
+from common_operations_dataframe import сoncatenate_columns
 
 unique_vc_str ='Unique_VC_quantity_'
 bandwidth_str = 'Bandwidth_'
@@ -31,9 +31,8 @@ def device_connection_statistics(portshow_aggregated_df):
     device_columns = ['Fabric_name', 'Device_Host_Name', 'Device_Location', 'deviceType', 'deviceSubtype']	
     reorder_stat_columns = [*device_columns, *stat_columns[5:]]
     device_connection_statistics_df = device_connection_statistics_df[reorder_stat_columns]
-
+    
     device_connection_statistics_df.fillna(np.nan, inplace=True)
-
     
     return device_connection_statistics_df
 
@@ -77,8 +76,6 @@ def count_device_connection_statistics(portshow_aggregated_modified_df, portshow
     """Function to count ports quantity, ports speed, ports vc and device unique vc statistics for each device"""
 
     device_connection_statistics_df = pd.DataFrame()
-    
-    
     statistics_lst =  [('Fabric_connection', portshow_aggregated_modified_df),
                        ('Fabric_label', portshow_aggregated_modified_df),
                        ('speed', portshow_aggregated_modified_df),
@@ -105,7 +102,7 @@ def count_device_connection_statistics(portshow_aggregated_modified_df, portshow
             device_connection_statistics_df = device_connection_statistics_df.merge(current_statistics_df, how='left', 
                                                                                     left_index=True, right_index=True)
     # rename 'All' column
-    device_connection_statistics_df.rename(columns={'All': device_port_quantity_str + '_Total'}, inplace=True)                
+    device_connection_statistics_df.rename(columns={'All': device_port_quantity_str + 'Total'}, inplace=True)                
 
     return device_connection_statistics_df
 
@@ -151,16 +148,33 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst):
         """Function to add Device_connection_note containg notes for unsymmetrically connected devices or
         devices with absent connection to any of Fabric_labels"""
 
-        # note devices with absent connection to any of Fabric_labels
-        device_connection_statistics_df['Device_connection_note'] = np.where(~mask_name_contains_wwn & mask_no_fabric_connection, 
-                                                                             'no_fabric_connection', pd.NA)
-    
-        # devices with noted absence of Fabric_label connection on prev step
-        mask_na_note = device_connection_statistics_df['Device_connection_note'].isna()
+        # FABRIC CONNECTION ABSENCE NOTE
+        # temporary columns to tag devices with no connection to fabric (column for each fabric_label)
+        fabric_connection_verify_columns = [(fabric_label, 'Fabric_connection_absence_' + fabric_label) for fabric_label in fabric_labels_lst]
+        
+        # check each identified device(device name doesn't contain wwnn) for fabric connection absence
+        for fabric_label, absence_column in fabric_connection_verify_columns:
+            # devices with no connection to current fabric_label
+            mask_connection_absense = device_connection_statistics_df[fabric_label] == 0
+            # if device is not connected to faric_label (connected port quantity is zero) set value in absence_column to fabric_label
+            device_connection_statistics_df[absence_column] = np.where(~mask_name_contains_wwn & mask_connection_absense, fabric_label, pd.NA)
+        
+        # concatenate columns with fabric_label connection absence 
+        device_connection_statistics_df = \
+            сoncatenate_columns(device_connection_statistics_df, summary_column='Device_connection_note', 
+                                merge_columns=[column for *_, column in fabric_connection_verify_columns])
+
+        # devices with device_connection note values
+        mask_dev_conn_notna = device_connection_statistics_df['Device_connection_note'].notna()
+        # add 'no_connection_fabric_' before absent fabric_label connection
+        device_connection_statistics_df.loc[mask_dev_conn_notna, 'Device_connection_note'] = \
+            'no_connection_fabric_' + device_connection_statistics_df['Device_connection_note']
+
+        # UNSYMMETRIC NOTE 
         # devices with equal number of ports connected to Fabric_labels (number of unique values should be equal to one)
         mask_symmetric_connection = device_connection_statistics_df[fabric_labels_lst].nunique(axis=1).eq(1)
         # note devices with different number of port connected in different Fabric_label
-        device_connection_statistics_df['Device_connection_note'] = np.where(~mask_name_contains_wwn & mask_na_note & ~mask_symmetric_connection & mask_not_all, 
+        device_connection_statistics_df['Device_connection_note'] = np.where(~mask_name_contains_wwn & ~mask_dev_conn_notna & ~mask_symmetric_connection & mask_not_all, 
                                                                              'unsymmetric_connection', device_connection_statistics_df['Device_connection_note'])
         return device_connection_statistics_df
 
@@ -182,26 +196,10 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst):
             # note for each Fabric_label
             device_connection_statistics_df[vc_note] = np.where(mask_port_number & mask_notna & mask_vc_nunique,
                                                                 fabric_label, pd.NA)
-        # merge vc notes for all Fabric_labels into summary note 
-        device_connection_statistics_df['Single_VC_note'] = np.nan
-        # column names which contain information about single virtual channel usage if it was founded on prev step
-        vc_single_columns = [column for *_, column in vc_verify_columns if device_connection_statistics_df[column].notna().any()]
-        # add each VC_note information to summary note ony by one if exist
-        for column in vc_single_columns:
-            # value in summary column is empty
-            mask_summary_note_empty = device_connection_statistics_df['Single_VC_note'].isna()
-            # value in current column is empty
-            mask_current_note_empty = device_connection_statistics_df[column].isna()
-            """if value in summary column is empty take value from column to add (if it's not nan)
-            if value in column to add is empty take value from summary note column (if it's not nan)
-            if both values are empty use nan value
-            if both values in summary note and columns to add exist then cancatenate them"""
-            device_connection_statistics_df['Single_VC_note'] = np.select(
-                [mask_summary_note_empty, mask_current_note_empty, mask_summary_note_empty & mask_current_note_empty],
-                [device_connection_statistics_df[column], device_connection_statistics_df['Single_VC_note'], np.nan],
-                default=device_connection_statistics_df['Single_VC_note'] + ', ' + device_connection_statistics_df[column])
-        # drop columns with VC_notes for each Fabric_labels
-        device_connection_statistics_df.drop(columns=[column for *_, column in vc_verify_columns], inplace=True)
+        # concatenate columns with single VC labels 
+        device_connection_statistics_df = \
+            сoncatenate_columns(device_connection_statistics_df, summary_column='Single_VC_note', 
+                                merge_columns=[column for *_, column in vc_verify_columns])
         
         return device_connection_statistics_df
 
@@ -224,18 +222,8 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst):
 
         low_speed_regex = r'^\w+?_N?[124]G?$' # A_1G, A_N1, B_2G, B_N2, A_4G, A_N4
         low_speed_columns = [column for column in device_connection_statistics_df.columns if re.search(low_speed_regex, column)]
-        # # port speeds to verify
-        # low_speed_lst = ['1N', 'N2', '2G', '4N', '4G']
-        # low_speed_columns = []
-        # # construct column names
-        # for fabric_label  in fabric_labels_lst:
-        #     for low_speed in low_speed_lst:
-        #         column = fabric_label + '_' + low_speed
-        #         if column in device_connection_statistics_df.columns:
-        #             low_speed_columns.append(column)
-
-        device_connection_statistics_df['Low_speed_note'] = pd.NA
         # if low speed devices exist in fabric
+        device_connection_statistics_df['Low_speed_note'] = pd.NA
         if low_speed_columns:
             # devices with low speed ports not equal to zero
             mask_low_speed = (device_connection_statistics_df[low_speed_columns] != 0).any(axis=1)
