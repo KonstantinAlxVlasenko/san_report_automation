@@ -228,6 +228,10 @@ def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report
 
     # create statitics report DataFrame
     zonemember_statistics_report_df = zonemember_statistics_df.copy()
+    # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
+    if (zonemember_statistics_report_df['Wwnn_to_Wwnp_number_unpacked'].dropna() == 0).all():
+        zonemember_statistics_report_df.drop(columns=['Wwnn_to_Wwnp_number_unpacked'], inplace=True)        
+
     # # drop column 'chassis_name' if it is not required
     # if not fabric_name_usage:
     #     zonemember_statistics_report_df.drop(columns = ['Fabric_name'], inplace=True)

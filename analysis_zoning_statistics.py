@@ -183,7 +183,7 @@ def defined_actual_wwn_number(aggregated_df, df_type='alias'):
     wwn_number_actual_sr = aggregated_df.groupby(group_columns[:-1]).alias_member.count()
     wwn_unpack_sr = wwn_number_actual_sr - wwn_number_defined_sr
     
-    # add dined and actual wwnp numbers to main DataFrame
+    # add defined and actual wwnp numbers to main DataFrame
     wwn_unpack_df = pd.DataFrame(wwn_unpack_sr)
     wwn_unpack_df.rename(columns={'alias_member': 'Wwnn_to_Wwnp_number_unpacked'}, inplace=True)
     
