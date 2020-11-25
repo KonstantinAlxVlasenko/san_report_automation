@@ -28,8 +28,6 @@ def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_ag
     switch_generation_df.drop_duplicates(subset = switch_generation_lst[:3], inplace = True)
     portshow_aggregated_df = portshow_aggregated_df.merge(switch_generation_df, how = 'left', on = switch_generation_lst[:3])
 
-
-
     return portshow_aggregated_df
 
 

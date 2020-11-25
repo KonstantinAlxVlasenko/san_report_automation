@@ -10,7 +10,7 @@ from common_operations_miscellaneous import force_extract_check, status_info, ve
 
 
 def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
-    isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst):
+    isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst):
     """Main function to create ISL and IFR report tables"""
     
    # report_data_lst contains information: 
@@ -45,7 +45,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
         # get aggregated DataFrames
         isl_aggregated_df, fcredge_df = \
             isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
-            isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_ports_df)
+            isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df)
 
         # after finish display status
         status_info('ok', max_title, len(info))      
@@ -78,7 +78,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
 
 
 def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, 
-    isl_df, trunk_df, fcredge_df, sfpshow_df, portcfgshow_df, switchshow_df):
+    isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_df):
     """Function to create ISL aggregated DataFrame"""
 
     # remove unlabeled fabrics and slice DataFrame to drop unnecessary columns
@@ -87,13 +87,17 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     isl_df, trunk_df, fcredge_df = switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df)
     # outer join of isl and trunk DataFrames 
     isl_aggregated_df = trunk_join(isl_df, trunk_df)
+
     # adding switchshow port information to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = porttype_join(switchshow_df, isl_aggregated_df, fcredge_df)
+
+    # adding link distance information
+    isl_aggregated_df = portshow_join(portshow_df, switchshow_df, isl_aggregated_df)
 
     # adding sfp information to isl aggregated DataFrame
     isl_aggregated_df = sfp_join(sfpshow_df, isl_aggregated_df)
 
-    # adding switch informatio to isl aggregated DataFrame
+    # adding switch information to isl aggregated DataFrame
     isl_aggregated_df = switch_join(switch_params_aggregated_df, isl_aggregated_df)
 
     # adding portcfg information to isl aggregated DataFrame
@@ -106,7 +110,10 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     # calculate link attenuation
     isl_aggregated_df = attenuation_calc(isl_aggregated_df)
     # remove unlabeled switches from isl aggregated Dataframe
-    isl_aggregated_df, fcredge_df = remove_empty_fabrics(isl_aggregated_df, fcredge_df)    
+    isl_aggregated_df, fcredge_df = remove_empty_fabrics(isl_aggregated_df, fcredge_df)
+    # add ISL number in case of trunk presence
+    isl_aggregated_df['ISL_number'].fillna(method='ffill', inplace=True)
+    
     
     return isl_aggregated_df, fcredge_df
     
@@ -195,7 +202,7 @@ def max_isl_speed(isl_aggregated_df):
     # mask to check speed in columns are not None values
     mask_speed = isl_aggregated_df[['Link_speedActual', 'Link_speedMax']].notna().all(1)
     # compare values in Actual and Maximum speed columns
-    isl_aggregated_df.loc[mask_speed, 'Link_speedActualMax']  = pd.Series(np.where(isl_aggregated_df['Link_speedActual'].eq(isl_aggregated_df['Link_speedMax']), 'Да', 'Нет'))
+    isl_aggregated_df.loc[mask_speed, 'Link_speedActualMax']  = pd.Series(np.where(isl_aggregated_df['Link_speedActual'].eq(isl_aggregated_df['Link_speedMax']), 'Yes', 'No'))
     
     return isl_aggregated_df
     
@@ -226,7 +233,7 @@ def portcfg_join(portcfgshow_df, isl_aggregated_df):
     # column names list to slice portcfg DataFrame and join with isl_aggregated Dataframe
     portcfg_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Octet_Speed_Combo', 'Speed_Cfg',  'Trunk_Port',
                    'Long_Distance', 'VC_Link_Init', 'Locked_E_Port', 'ISL_R_RDY_Mode', 'RSCN_Suppressed',
-                   'LOS_TOV_mode', 'QOS_Port', 'Rate_Limit', 'Credit_Recovery', 'Compression', 'Encryption', 
+                   'LOS_TOV_mode', 'QOS_Port', 'QOS_E_Port', 'Rate_Limit', 'Credit_Recovery', 'Compression', 'Encryption', 
                    '10G/16G_FEC', 'Fault_Delay', 'TDZ_mode', 'Fill_Word(Current)', 'FEC']
     # addition portcfg port information to isl_aggregated DataFrame
     isl_aggregated_df = dataframe_join(isl_aggregated_df, portcfgshow_df, portcfg_lst, 4)
@@ -247,8 +254,30 @@ def switch_join(switch_params_aggregated_df, isl_sfp_connected_df):
     switch_trunking_dct = {'licenses' : 'Trunking_license', 'Connected_licenses' : 'Connected_Trunking_license'}
     for lic, trunking_lic in switch_trunking_dct.items():
         isl_aggregated_df[trunking_lic] = isl_aggregated_df.loc[isl_aggregated_df[lic].notnull(), lic].apply(lambda x: 'Trunking' in x)
-        isl_aggregated_df[trunking_lic].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
+        isl_aggregated_df[trunking_lic].replace(to_replace={True: 'Yes', False: 'No'}, inplace = True)
        
+    return isl_aggregated_df
+
+
+def portshow_join(portshow_df, switchshow_df, isl_aggregated_df):
+    """Adding isl distance infromation for both ports of the ISL link"""
+
+    # add switchname and switchwwn information to portshow_df
+    # columns labels reqiured for join operation
+    switchshow_lst = ['configname', 'chassis_name', 'chassis_wwn', 'slot', 'port', 'switchName', 
+                      'switchWwn', 'speed', 'portType']
+    # create left DataFrame for join operation
+    switchshow_join_df = switchshow_df.loc[:, switchshow_lst].copy()
+    # portshow_df and switchshow_join_df DataFrames join operation
+    portshow_join_df = portshow_df.merge(switchshow_join_df, how = 'left', on = switchshow_lst[:5])
+    portshow_join_df.rename(columns={'switchName': 'SwitchName'}, inplace=True)
+
+    # add distance information from portshow_join_df to isl_aggregated_df
+    # column names list to slice sfphshow DataFrame and join with isl_aggregated Dataframe
+    portshow_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Distance']
+    # addition switchshow port information to isl_aggregated DataFrame
+    isl_aggregated_df = dataframe_join(isl_aggregated_df, portshow_join_df, portshow_lst, 4)    
+    
     return isl_aggregated_df
 
     
@@ -353,7 +382,7 @@ def trunk_join(isl_df, trunk_df):
     trunk_df  = trunk_df.astype(dtype = 'float64', errors = 'ignore')
     
     # List of columns DataFrames are joined on     
-    join_lst = ['configname', 'chassis_name', 'switch_index', 'SwitchName',
+    join_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 'SwitchName',
                 'switchWwn', 'switchRole', 'FabricID', 'FC_router', 'portIndex', 
                 'Connected_portIndex', 'Connected_SwitchName',
                 'Connected_switchWwn', 'Connected_switchDID']  

@@ -62,12 +62,12 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
             # data unpacking from iter param
             # dictionary with parameters for the current switch
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            switch_info_keys = ['configname', 'chassis_name', 'switch_index', 
+            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
             switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
             ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
-            sshow_file, _, switch_index, switch_name, *_, switch_mode = switch_info_lst
+            sshow_file, _, _, switch_index, switch_name, *_, switch_mode = switch_info_lst
                         
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} isl, trunk and trunk area ports. Switch mode: {switch_mode}'
@@ -123,12 +123,12 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                                 if match_dct[match_keys[4]]:
                                     trunk_port = line_to_list(comp_dct[comp_keys[4]], line, *switch_info_lst[:-1])
                                     # if trunk line has trunk number then remove ":" from trunk number
-                                    if trunk_port[8]:
-                                        trunk_port[8] = trunk_port[8].strip(':')
-                                        trunk_num = trunk_port[8]
+                                    if trunk_port[9]:
+                                        trunk_port[9] = trunk_port[9].strip(':')
+                                        trunk_num = trunk_port[9]
                                     # if trunk line has no number then use number from previous line
                                     else:
-                                        trunk_port[8] = trunk_num
+                                        trunk_port[9] = trunk_num
                                     # appending list with only REQUIRED trunk info for the current loop iteration 
                                     # to the list with all trunk port info
                                     trunk_lst.append(trunk_port)
@@ -151,7 +151,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                                 match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # 'porttrunkarea_match'
                                 if match_dct[match_keys[6]]:
-                                    porttrunkarea_port_lst = line_to_list(comp_dct[comp_keys[6]], line, *switch_info_lst[:5])
+                                    porttrunkarea_port_lst = line_to_list(comp_dct[comp_keys[6]], line, *switch_info_lst[:6])
                                     # due to regular expression master slot appears two times in line
                                     porttrunkarea_port_lst.pop(9)
                                     # for No_light ports port and slot numbers are '--'
