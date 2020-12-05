@@ -2,6 +2,7 @@
 """Module to set fabric names and labels automatically"""
 
 import pandas as pd
+import sys
 
 from common_operations_filesystem import save_xlsx_file
 
@@ -52,7 +53,9 @@ def fabricshow_porttype_state(switchshow_ports_df, fabricshow_df):
     switchshow_df = switchshow_ports_df.loc[(switchshow_ports_df.switchState == 'Online') & 
                                          (switchshow_ports_df.switchMode == 'Native')
                                          ]
-    
+    if switchshow_df.empty:
+        print("No Online switches in Fabric(s) found.")
+        sys.exit()
     # crosstab DataFrame contains summary for port states for switches from switchshow
     port_state_df = pd.crosstab(index = [switchshow_df.chassis_name, switchshow_df.switchName, 
                                          switchshow_df.switchWwn], columns = switchshow_df.state, margins = True)

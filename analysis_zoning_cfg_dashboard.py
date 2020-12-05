@@ -85,11 +85,13 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
 
 def count_summary(df, count_columns: list, group_columns = ['Fabric_name', 'Fabric_label']):
     """Auxiliary function to count values in groups for columns in count_columns"""
-        
+
     index_lst = [df[column] for column in group_columns if column in df.columns]
     summary_df = pd.DataFrame()
+
     for column in count_columns:
         if column in df.columns and df[column].notna().any():
+            df[column].fillna(np.nan, inplace=True)
             current_df = pd.crosstab(index=index_lst, columns=df[column], margins=True)
             current_df.drop(columns=['All'], inplace=True)
             if summary_df.empty:

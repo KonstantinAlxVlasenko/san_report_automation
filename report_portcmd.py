@@ -138,7 +138,7 @@ def device_connection_statistics_report(device_connection_statistics_df, max_tit
 
     device_connection_statistics_report_df = device_connection_statistics_df.copy()
     # translate notes
-    columns = [column for column in device_connection_statistics_df.columns if 'note' in column]
+    columns = [column for column in device_connection_statistics_df.columns if 'note' in column and device_connection_statistics_df[column].notna().any()]
     columns.append('Fabric_name')
     device_connection_statistics_report_df = translate_values(device_connection_statistics_report_df, translate_dct, translate_columns=columns)
     # translate column names
