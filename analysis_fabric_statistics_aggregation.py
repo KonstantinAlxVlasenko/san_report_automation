@@ -244,7 +244,7 @@ def n_e(group):
     # e-ports definition
     e_ports = ['E-Port', 'EX-Port', 'LS E-Port', 'LD E-Port', 'LE-Port', 'N-Port']
     # f-ports definition (n-ports)
-    f_ports = ['F-Port', 'G-Port']
+    f_ports = ['F-Port']
     # sum e-ports speed
     e_speed = group.loc[group.portType.isin(e_ports), 'speed'].sum()
     # count e-ports number
@@ -254,26 +254,43 @@ def n_e(group):
     # count f-port(n-port) number
     f_num = group.loc[group.portType.isin(f_ports), 'speed'].count()
 
-    # when e-ports number is not zero
-    if e_num != 0:
+
+    if e_num != 0 and f_num != 0:
+
         # N:E quntity ratio
-        ne_num =int(f_num/e_num)
-        # N:E bandwidth raio
-        ne_bw = int(f_speed/e_speed)
-        # string representation ratio
-        if f_num != 0:
+        if e_num <= f_num: 
+            ne_num = int(f_num/e_num)
             ne_num_str = str(ne_num)+':1'
+        else:
+            ne_num = int(e_num/f_num)
+            ne_num_str = '1:' + str(ne_num)
+
+        # N:E bandwidth raio
+        if e_speed <= f_speed:
+            ne_bw = int(f_speed/e_speed)
             ne_bw_str = str(ne_bw)+':1'
         else:
-            ne_num_str = 'no F-Ports'
-            ne_bw_str = 'no F-Ports'
-    # when no e-ports on switch 
+            ne_bw = int(e_speed/f_speed)
+            ne_bw_str = '1:' + str(ne_bw)
     else:
-        ne_num = 0
-        ne_num_str = 'no E-Ports'
-        ne_bw = 0
-        ne_bw_str = 'no E-Ports'
-        
+        ne_num = np.nan
+        ne_bw = np.nan
+        if e_num == 0 and f_num != 0:
+            # ne_num = np.nan
+            ne_num_str = 'No E-Ports'
+            # ne_bw = np.nan
+            ne_bw_str = 'No E-Ports'
+        elif e_num != 0 and f_num == 0:
+            ne_num = 0
+            ne_num_str = 'No F-Ports'
+            ne_bw = 0
+            ne_bw_str = 'No F-Ports'
+        else:
+            # ne_num = np.nan
+            ne_num_str = 'No connected ports'
+            # ne_bw = np.nan
+            ne_bw_str = 'No connected ports'
+
     columns_names = ['N:E_int', 'N:E_num', 'N:E_bw_int', 'N:E_bw']
         
     return pd.Series([ne_num, ne_num_str, ne_bw, ne_bw_str], index= columns_names)

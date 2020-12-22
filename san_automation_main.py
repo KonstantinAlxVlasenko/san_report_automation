@@ -91,7 +91,7 @@ def main():
     report_columns_usage_dct, switch_params_aggregated_df, fabric_clean_df = \
             switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, report_data_lst)
 
-    isl_aggregated_df = \
+    isl_aggregated_df, isl_statistics_df = \
         isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
     isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
 

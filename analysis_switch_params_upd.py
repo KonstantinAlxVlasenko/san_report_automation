@@ -65,6 +65,15 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
         # after finish display status
         status_info('ok', max_title, len(info))
 
+        # check if switch config files missing
+        mask_fabric = switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].notna().all(axis=1)
+        mask_no_config = switch_params_aggregated_df['chassis_name'].isna()
+        missing_configs_num = switch_params_aggregated_df.loc[mask_fabric & mask_no_config]['Fabric_name'].count()
+        if missing_configs_num:
+            info = f'{missing_configs_num} switch configuration{"s" if missing_configs_num > 1 else ""} missing'
+            print(info, end =" ")
+            status_info('warning', max_title, len(info))
+
         # partition aggregated DataFrame to required tables
         switches_report_df, fabric_report_df,  \
             switches_parameters_report_df, licenses_report_df = \
@@ -179,6 +188,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     switch_params_aggregated_df.switch_index = switch_params_aggregated_df.switch_index.astype('float64', errors='ignore')
     # complete f_s_c DataFrame with information from maps_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(maps_params_df, how = 'left', on = ['configname', 'chassis_name', 'switch_index'])
+    # maps.activePolicy is in configshow,  Active_policy is in AMS_MAPS file. 
+    switch_params_aggregated_df['maps.activePolicy'].fillna(switch_params_aggregated_df['Active_policy'], inplace=True)
     # convert switchType in f_s_c_m and switch_models DataFrames to same type
     # convert f_s_c_m_df.switchType from string to float
     switch_params_aggregated_df.switchType = switch_params_aggregated_df.switchType.astype('float64', errors='ignore')

@@ -270,6 +270,28 @@ def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ',
     return df
 
 
+def count_total(df, group_columns: list, count_columns: list, fn: str):
+    """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
+    on each iteration. Count columns defines column names for which total need to be calculated.
+    Function in string representation defines aggregation function to find summary values"""
+
+    if isinstance(count_columns, str):
+        count_columns = [count_columns]
+    
+    total_df = pd.DataFrame()
+    for _ in range(len(group_columns)):
+        current_df = df.groupby(by=group_columns)[count_columns].agg(fn)
+        current_df.reset_index(inplace=True)
+        if total_df.empty:
+            total_df = current_df.copy()
+        else:
+            total_df = pd.concat([total_df, current_df])
+        # increase group size
+        group_columns.pop()
+        
+    return total_df
+
+
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null
 # str1 and str2 are strings before columns respectively (default is whitespace between columns)
