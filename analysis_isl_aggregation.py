@@ -7,7 +7,7 @@ import pandas as pd
 from common_operations_dataframe import dataframe_join
 
 def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, 
-    isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_df):
+    isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_df, re_pattern_lst):
     """Function to create ISL aggregated DataFrame"""
 
     # remove unlabeled fabrics and slice DataFrame to drop unnecessary columns
@@ -21,7 +21,7 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     # adding link distance information
     isl_aggregated_df = portshow_join(portshow_df, switchshow_df, isl_aggregated_df)
     # adding sfp information to isl aggregated DataFrame
-    isl_aggregated_df = sfp_join(sfpshow_df, isl_aggregated_df)
+    isl_aggregated_df = sfp_join(sfpshow_df, isl_aggregated_df, re_pattern_lst)
     # adding switch information to isl aggregated DataFrame
     isl_aggregated_df = switch_join(switch_params_aggregated_df, isl_aggregated_df)
     # adding portcfg information to isl aggregated DataFrame
@@ -202,8 +202,11 @@ def portshow_join(portshow_df, switchshow_df, isl_aggregated_df):
     return isl_aggregated_df
 
     
-def sfp_join(sfpshow_df, isl_aggregated_df):
+def sfp_join(sfpshow_df, isl_aggregated_df, re_pattern_lst):
     """Adding sfp infromation for both ports of the ISL link"""
+
+    # regular expression patterns
+    comp_keys, _, comp_dct = re_pattern_lst
 
     # column names list to slice sfphshow DataFrame and join with isl_aggregated Dataframe
     sfp_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Transceiver_PN', 'Wavelength_nm', 
@@ -222,7 +225,9 @@ def sfp_join(sfpshow_df, isl_aggregated_df):
     # extract tranceivers speed and take max value
     for sfp, sfp_sp_max in sfp_speed_dct.items():
             # extract speed values
-            isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(r'^([\d,]+)_(?:Gbps|MB)')
+            # isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(r'^([\d,]+)_(?:Gbps|MB)') # TO_REMOVE
+            sfp_speed_values_re = comp_dct.get('transceiver_speed_values_comp')
+            isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(sfp_speed_values_re)
             # split string to create list of available speeds
             isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp_sp_max].str.split(',')
             # if list exist (speeds values was found) then choose maximum 

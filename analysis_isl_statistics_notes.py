@@ -6,7 +6,7 @@ import pandas as pd
 
 from common_operations_dataframe import сoncatenate_columns
 
-def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns):
+def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst):
     """Function to add notes to isl_statistics_df DataFrame"""
 
     def connection_note(isl_statistics_df):
@@ -77,32 +77,36 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns):
         return isl_statistics_df
     
     
-    def speed_note(isl_statistics_df):
+    def speed_note(isl_statistics_df, re_pattern_lst):
         """Function to verify ISL speed value and mode. Adds note if speed is in auto mode,
         speed is low (1-4 Gbps) or reduced (lower then port could provide), speed is not uniform
         for all links between pair of switches"""
 
+        # regular expression patterns
+        comp_keys, _, comp_dct = re_pattern_lst
+
         # low speed note
-        low_speed_regex = r'^N?[124]G?$' # 1G, N1, 2G, N2, 4G, N4
+        low_speed_regex = comp_dct.get('low_speed_comp')
+        # low_speed_regex = r'^N?[124]G?$' # 1G, N1, 2G, N2, 4G, N4 #TO_REMOVE
         low_speed_columns = [column for column in isl_statistics_df.columns if re.search(low_speed_regex, column)]
         # if low speed port present 
         isl_statistics_df['Speed_low_note'] = pd.NA
         if low_speed_columns:
             # devices with low speed ports not equal to zero
             mask_low_speed = (isl_statistics_df[low_speed_columns] != 0).any(axis=1)
-            isl_statistics_df['Speed_low_note'] = np.where(mask_low_speed, 'low', pd.NA)
+            isl_statistics_df['Speed_low_note'] = np.where(mask_low_speed, 'low_speed', pd.NA)
             
         # reduced speed note
         isl_statistics_df['Speed_reduced_note'] = pd.NA
         if 'Speed_Reduced' in isl_statistics_df.columns:
             mask_speed_reduced =  isl_statistics_df['Speed_Reduced'].notna() & isl_statistics_df['Speed_Reduced'] != 0
-            isl_statistics_df['Speed_reduced_note'] = np.where(mask_speed_reduced, 'reduced', pd.NA)
+            isl_statistics_df['Speed_reduced_note'] = np.where(mask_speed_reduced, 'reduced_speed', pd.NA)
         
         # auto speed note
         isl_statistics_df['Speed_auto_note'] = pd.NA
         if 'Speed_Auto' in isl_statistics_df.columns:
             mask_speed_auto = isl_statistics_df['Speed_Auto'] != 0
-            isl_statistics_df['Speed_auto_note'] = np.where(mask_speed_auto, 'auto', pd.NA)
+            isl_statistics_df['Speed_auto_note'] = np.where(mask_speed_auto, 'auto_speed', pd.NA)
         
         speed_note_columns = ['Speed_auto_note', 'Speed_low_note', 'Speed_reduced_note', 'Speed_Gbps_nonuniformity_note']
         isl_statistics_df = сoncatenate_columns(isl_statistics_df, summary_column='Speed_note', merge_columns=speed_note_columns, drop_merge_columns=True)
@@ -112,7 +116,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns):
     # add notes to isl_statistics_df DataFrame
     isl_statistics_df = connection_note(isl_statistics_df)
     isl_statistics_df = nonuniformity_note(isl_statistics_df, isl_aggregated_modified_df)
-    isl_statistics_df = speed_note(isl_statistics_df)
+    isl_statistics_df = speed_note(isl_statistics_df, re_pattern_lst)
     
     isl_statistics_df.fillna(np.nan, inplace=True)
     

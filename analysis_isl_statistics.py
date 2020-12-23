@@ -5,22 +5,21 @@ import numpy as np
 import pandas as pd
 
 from analysis_isl_statistics_notes import add_notes
-from common_operations_dataframe import сoncatenate_columns, count_total
-
+from common_operations_dataframe import count_total, сoncatenate_columns
 
 isl_group_columns = ['Fabric_name', 'Fabric_label',  
                      'chassis_name', 'SwitchName',  'switchWwn', 
                      'Connected_SwitchName', 'Connected_switchWwn']
 
 
-def isl_statistics(isl_aggregated_df):
+def isl_statistics(isl_aggregated_df, re_pattern_lst):
     """Main function to count ISL statistics"""
     
     isl_statistics_df = pd.DataFrame()
 
     if not isl_aggregated_df.empty:
         # change isl_aggregated_df DataFrame values reresenatation in order to count statistics
-        isl_aggregated_modified_df = prior_prepearation(isl_aggregated_df)
+        isl_aggregated_modified_df = prior_prepearation(isl_aggregated_df, re_pattern_lst)
         # count connection bandwidth of each pair of switches 
         isl_bandwidth_df = count_isl_bandwidth(isl_aggregated_modified_df)
         # count connection statistics of each pair of switches
@@ -35,7 +34,7 @@ def isl_statistics(isl_aggregated_df):
         # verify if fabrics are symmetric
         isl_statistics_summary_df = verify_isl_symmetry(isl_statistics_summary_df)
         # add notes to isl_statistics_df if any violations present
-        isl_statistics_df = add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns)
+        isl_statistics_df = add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst)
         # count row with index All containing total values of isl_statistics_summary_df for all fabrics
         isl_statistics_total_df = count_all_row(isl_statistics_summary_df)
         # insert 'Switch_quantity' column to place it to correct location in final statistics DataFrame 
@@ -51,9 +50,12 @@ def isl_statistics(isl_aggregated_df):
     return isl_statistics_df    
 
 
-def prior_prepearation(isl_aggregated_df):
+def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     """Function to prepare data in isl_aggregated_df to count statistics"""
-    
+
+    # regular expression patterns
+    comp_keys, _, comp_dct = re_pattern_lst
+
     columns_lst =  ['Fabric_name', 'Fabric_label',  'chassis_name', 'SwitchName',  'switchWwn', 
                     'Connected_SwitchName', 'Connected_switchWwn', 
                     'port', 'ISL_number', 'portType', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
@@ -67,8 +69,12 @@ def prior_prepearation(isl_aggregated_df):
     isl_aggregated_modified_df.replace(regex=[r'^\.\.$'], value=np.nan, inplace=True)
     
     # transceiver speed and mode extraction
-    isl_aggregated_modified_df['Transceiver_speed'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'((?:\d+,){2}\d+_\w+)') 
-    isl_aggregated_modified_df['Transceiver_mode'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'(?:\d+,){2}\d+_\w+.*?(\w+w)')
+    # isl_aggregated_modified_df['Transceiver_speed'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'((?:\d+,){2}\d+_\w+)') # TO_REMOVE
+    # isl_aggregated_modified_df['Transceiver_mode'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'(?:\d+,){2}\d+_\w+.*?(\w+w)') # TO_REMOVE
+    sfp_speed_re = comp_dct.get('transceiver_speed_comp')
+    isl_aggregated_modified_df['Transceiver_speed'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(sfp_speed_re)
+    sfp_mode_re = comp_dct.get('transceiver_mode_comp')
+    isl_aggregated_modified_df['Transceiver_mode'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(sfp_mode_re)
     # max and reduced speed tags
     isl_aggregated_modified_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)
     # auto and fixed speed tags

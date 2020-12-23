@@ -4,12 +4,15 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import dataframe_segmentation, translate_values
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
-from common_operations_miscellaneous import force_extract_check, status_info, verify_data, verify_force_run
-from common_operations_servicefile import dct_from_columns
-from analysis_isl_statistics import isl_statistics
 from analysis_isl_aggregation import isl_aggregated
+from analysis_isl_statistics import isl_statistics
+from common_operations_dataframe import (dataframe_segmentation,
+                                         translate_values)
+from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_miscellaneous import (force_extract_check, status_info,
+                                             verify_data, verify_force_run)
+from common_operations_servicefile import (data_extract_objects,
+                                           dct_from_columns)
 
 
 def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
@@ -41,6 +44,11 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
+
+        # data imported from init file (regular expression patterns) to extract values from data columns
+        # re_pattern list contains comp_keys, match_keys, comp_dct    
+        _, _, *re_pattern_lst = data_extract_objects('common_regex', max_title)
+
         # current operation information string
         info = f'Generating ISL and IFL tables'
         print(info, end =" ")
@@ -48,9 +56,9 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
         # get aggregated DataFrames
         isl_aggregated_df, fcredge_df = \
             isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
-            isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df)
+            isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, re_pattern_lst)
 
-        isl_statistics_df = isl_statistics(isl_aggregated_df)
+        isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))      
@@ -90,12 +98,9 @@ def isl_statistics_report(isl_statistics_df, report_columns_usage_dct, max_title
     isl_statistics_df_report_df = pd.DataFrame()
 
     if not isl_statistics_df.empty:
-        
         chassis_column_usage = report_columns_usage_dct.get('chassis_info_usage')
-
         translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_ISL_перевод_eng', 
                                         'Статистика_ISL_перевод_ru', init_file = 'san_automation_info.xlsx')
-        
         isl_statistics_df_report_df = isl_statistics_df.copy()
         # identify columns to drop and drop columns
         drop_columns = ['switchWwn', 'Connected_switchWwn', 'sort_column_1', 'sort_column_2']
@@ -104,7 +109,7 @@ def isl_statistics_report(isl_statistics_df, report_columns_usage_dct, max_title
         drop_columns = [column for column in drop_columns if column in isl_statistics_df.columns]
         isl_statistics_df_report_df.drop(columns=drop_columns, inplace=True)
 
-        # translate notes
+        # translate values in columns
         translate_columns = [column for column in isl_statistics_df.columns if 'note' in column and isl_statistics_df[column].notna().any()]
         translate_columns.extend(['Fabric_name', 'Trunking_lic_both_switches'])
         isl_statistics_df_report_df = translate_values(isl_statistics_df_report_df, translate_dct, translate_columns)
