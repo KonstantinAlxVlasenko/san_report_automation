@@ -71,9 +71,9 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     # transceiver speed and mode extraction
     # isl_aggregated_modified_df['Transceiver_speed'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'((?:\d+,){2}\d+_\w+)') # TO_REMOVE
     # isl_aggregated_modified_df['Transceiver_mode'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'(?:\d+,){2}\d+_\w+.*?(\w+w)') # TO_REMOVE
-    sfp_speed_re = comp_dct.get('transceiver_speed_comp')
+    sfp_speed_re = comp_dct.get('transceiver_speed')
     isl_aggregated_modified_df['Transceiver_speed'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(sfp_speed_re)
-    sfp_mode_re = comp_dct.get('transceiver_mode_comp')
+    sfp_mode_re = comp_dct.get('transceiver_mode')
     isl_aggregated_modified_df['Transceiver_mode'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(sfp_mode_re)
     # max and reduced speed tags
     isl_aggregated_modified_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)

@@ -61,7 +61,7 @@ def switchshow_labeled(switchshow_ports_df, fabricshow_ag_labels_df):
 
 
 def device_class_statistics(portshow_aggregated_df):
-    """Function to count devce classes (BLADE_SRV, SRV, STORAGE, LIB, SWITCH< VC"""
+    """Function to count devce classes (SRV_BLADE, SRV, STORAGE, LIB, SWITCH, VC"""
     
     # filter ports without switch_index number
     mask_index = pd.notna(portshow_aggregated_df.switch_index)

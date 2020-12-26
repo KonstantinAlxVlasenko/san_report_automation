@@ -36,9 +36,9 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
         # elif (synergy_hba_df['Connected_portWwn'] == series['Connected_portWwn']).any():
         #     return pd.Series(('SYNERGY_SRV', series['subtype'].split('|')[0]))
         if (series['Connected_portWwn'] == blade_hba_df['portWwn']).any():
-            return pd.Series(('BLADE_SRV', series['subtype'].split('|')[0]))
+            return pd.Series(('SRV_BLADE', series['subtype'].split('|')[0]))
         elif (series['Connected_portWwn'] == synergy_hba_df['Connected_portWwn']).any():
-            return pd.Series(('SYNERGY_SRV', series['subtype'].split('|')[0]))
+            return pd.Series(('SRV_SYNERGY', series['subtype'].split('|')[0]))
 
 
         # devices with strictly defined type and subtype
@@ -115,6 +115,10 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
             elif pd.notna(series[['portState', 'portType']]).all() and \
                 ('E-Port' in series['portType'] or 'EX-Port' in series['portType']):
                 return pd.Series(('SWITCH', 'SWITCH'))
+            # slave F-Port trunk ports have Online status but devices are on master port
+            elif pd.isna(series.Connected_portWwn) and series['portState'] == 'Online' \
+                and 'Trunk port' in series['portScn']:
+                return pd.Series((np.nan, np.nan))
             # when device_type is not defined, oui is not founded, 
             # and link is not slave AG or ISL but port is Online then device class is UNKNOWN
             elif series['portState'] == 'Online':

@@ -27,6 +27,7 @@ from collection_fcrfabric_membership import fcr_extract
 from collection_isl import interswitch_connection_extract
 from collection_maps import maps_params_extract
 from collection_nameserver import connected_devices_extract
+from collection_logs import logs_extract
 from collection_portcfg_sfp import portinfo_extract
 from collection_portcmd import portcmdshow_extract
 from collection_switch_params import switch_params_configshow_extract
@@ -77,6 +78,7 @@ def main():
     fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcrouting(switch_params_lst)
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = zoning(switch_params_lst)
     sensor_df = sensor_readings(switch_params_lst)
+    errdump_df = logs(chassis_params_fabric_lst)
     blade_module_df, blade_servers_df, blade_vc_df = blade_system(blade_folder)
     synergy_module_df, synergy_servers_df = synergy_system_extract(synergy_folder, report_data_lst)
     
@@ -232,6 +234,14 @@ def sensor_readings(switch_params_lst):
     sensor_df = list_to_dataframe(sensor_lst, report_data_lst, 'sensor', 'sensor')
 
     return sensor_df
+
+
+def logs(chassis_params_fabric_lst):
+    errdump_lst = logs_extract(chassis_params_fabric_lst, report_data_lst)
+    errdump_df = list_to_dataframe(errdump_lst, report_data_lst, 'errdump', 'log')
+
+    return errdump_df
+
 
 def blade_system(blade_folder):
     module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = blade_system_extract(blade_folder, report_data_lst)

@@ -86,8 +86,8 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         comp_keys, _, comp_dct = re_pattern_lst
 
         # low speed note
-        low_speed_regex = comp_dct.get('low_speed_comp')
-        # low_speed_regex = r'^N?[124]G?$' # 1G, N1, 2G, N2, 4G, N4 #TO_REMOVE
+        low_speed_regex = comp_dct.get('low_speed')
+        # low_speed_regex = r'^N?[124]G?$' # 1G, N1, 2G, N2, 4G, N4 # TO_REMOVE
         low_speed_columns = [column for column in isl_statistics_df.columns if re.search(low_speed_regex, column)]
         # if low speed port present 
         isl_statistics_df['Speed_low_note'] = pd.NA

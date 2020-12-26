@@ -120,8 +120,8 @@ def data_extract_objects(sheet_title, max_title, param_columns = True):
         params_names, params_add_names = None, None
     # imports base names for compile and match templates and creates corresonding names
     keys = columns_import(sheet_title, max_title, 're_names')
-    comp_keys = [key+'_comp' for key in keys]
-    match_keys = [key + '_match' for key in keys]
+    comp_keys = [key for key in keys]
+    match_keys = [key for key in keys]
     # imports string for regular expressions
     comp_values = columns_import(sheet_title,  max_title, 'comp_values')
     # creates regular expressions

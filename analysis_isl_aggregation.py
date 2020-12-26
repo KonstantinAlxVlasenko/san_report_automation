@@ -226,7 +226,7 @@ def sfp_join(sfpshow_df, isl_aggregated_df, re_pattern_lst):
     for sfp, sfp_sp_max in sfp_speed_dct.items():
             # extract speed values
             # isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(r'^([\d,]+)_(?:Gbps|MB)') # TO_REMOVE
-            sfp_speed_values_re = comp_dct.get('transceiver_speed_values_comp')
+            sfp_speed_values_re = comp_dct.get('transceiver_speed_values')
             isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(sfp_speed_values_re)
             # split string to create list of available speeds
             isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp_sp_max].str.split(',')

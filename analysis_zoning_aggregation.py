@@ -1,10 +1,8 @@
 """Module to combine set of zoning DataFrames into aggregated zoning configuration DataFrame"""
 
 
-import  re
 import numpy as np
 import pandas as pd
-
 
 from analysis_zoning_aggregation_aux_fn import (
     alias_cfg_type, replace_wwnn, sort_dataframe,
@@ -84,7 +82,8 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
     # change columns order
     cfg_join_df = cfg_join_df.reindex(columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone', 'zone_duplicates_free'])
     # add zone members (aliases or WWN) for each zone in configs-zones DataFrame
-    zoning_aggregated_df = cfg_join_df.merge(zone_join_df, how='left', on= ['Fabric_name', 'Fabric_label', 'zone'])
+    # zoning_aggregated_df = cfg_join_df.merge(zone_join_df, how='left', on= ['Fabric_name', 'Fabric_label', 'zone']) # merge order changed
+    zoning_aggregated_df = zone_join_df.merge(cfg_join_df, how='left', on= ['Fabric_name', 'Fabric_label', 'zone'])
     # add WWN for each alias in zone configuration configs-zones-aliases
     alias_join_df.rename(columns = {'alias': 'zone_member'}, inplace = True)
     zoning_aggregated_df = zoning_aggregated_df.merge(alias_join_df, how='left', on = ['Fabric_name', 'Fabric_label', 'zone_member'])

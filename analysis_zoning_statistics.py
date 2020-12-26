@@ -280,8 +280,10 @@ def target_initiator_note(series):
         if series['STORAGE_LIB'] > 0:
             return 'no_initiator'
     # if zone contains initiator(s) but not targets then zone considered to be target's less zone
-    if series['SRV'] >= 1 and series['STORAGE_LIB'] == 0:
+    if series['SRV'] == 1 and series['STORAGE_LIB'] == 0:
             return 'no_target'
+    if series['SRV'] > 1 and series['STORAGE_LIB'] == 0:
+            return 'no_target, several_initiators'
     # if zone contains more then one initiator and it's not a peerzone 
     # then initiator number exceeds threshold
     if series['SRV'] > 1:

@@ -250,7 +250,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
                                                 line = file.readline()
                                                 if not line:
                                                     break
-                                        # if line doesn't coreesponds to any reg expression pattern then switch line
+                                        # if line doesn't coreespond to any reg expression pattern then switch line
                                         # until zone description border reached
                                         else:
                                             line = file.readline()

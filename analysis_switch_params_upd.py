@@ -182,6 +182,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     switch_params_aggregated_df = switch_params_aggregated_df.merge(chassis_params_df, how = 'left', on=['configname', 'chassis_name', 'chassis_wwn'])
 
     switch_params_aggregated_df = ag_switch_info(switch_params_aggregated_df, ag_principal_df)
+    # # add chassis wwn in case if chassis_wwn missing
+    # switch_params_aggregated_df['chassis_wwn'].fillna(switch_params_aggregated_df['boot.licid'], inplace=True)
 
     # convert switch_index in f_s_c and maps_params DataFrames to same type
     maps_params_df.switch_index = maps_params_df.switch_index.astype('float64', errors='ignore')
