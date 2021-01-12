@@ -54,6 +54,10 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False)
     """
     
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
+
+    options = {}
+    options['strings_to_formulas'] = False
+    options['strings_to_urls'] = False
     
     # report_steps_dct for each data_name contains: export_to_excel flag, 
     # force_extract flag, report_type, step_info, data_description
@@ -75,7 +79,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False)
     current_date = str(date.today())
     # construct excel filename
     file_name = customer_name + '_' + report_mark + '_' + current_date + '.xlsx'
-    # file_name = customer_name + '_' + report_mark + '_' + 'report_' + current_date + '.xlsx'
+
     # information string
     info = f'Exporting {sheet_title} table to {report_mark} file'
     print(info, end =" ")
@@ -108,7 +112,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False)
         # if required export DataFrame to the new sheet
         if file_mode:
             try:
-                with pd.ExcelWriter(file_path, engine='openpyxl',  mode=file_mode) as writer:  # pylint: disable=abstract-class-instantiated
+                with pd.ExcelWriter(file_path, mode=file_mode, options=options) as writer:  # pylint: disable=abstract-class-instantiated
                     # table of content item generation start
                     # if file is new then create table of content
                     if file_mode == 'w':

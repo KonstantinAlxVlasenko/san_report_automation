@@ -104,7 +104,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     return segmented_dataframes_lst
 
 
-def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates = True):
+def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=True, drop_na=True):
     """
     Function to fill null values with values from another DataFrame with the same column names.
     Function accepts left Dataframe with null values, right DataFrame with filled values,
@@ -113,6 +113,7 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates 
     columns need to be present in left and right DataFrames. filled_lst must be present in right_df.
     If some columns from filled_lst missing in left_df it is added and the filled with values from right_df.
     If drop duplicate values in join columns of right DataFrame is not required pass remove_duplicates as False.
+    If drop nan values in join columns in right DataFrame is not required pass drop_na as False.
     Function returns left DataFrame with filled null values in filled_lst columns 
     """
 
@@ -125,7 +126,8 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates 
     # cut off unnecessary columns from right DataFrame
     right_join_df = right_df.loc[:, join_lst + filled_lst].copy()
     # drop rows with null values in columns to join on
-    right_join_df.dropna(subset = join_lst, inplace = True)
+    if drop_na:
+        right_join_df.dropna(subset = join_lst, inplace = True)
     # if required (deafult) drop duplicates values from join columns 
     # to avoid rows duplication in left DataDrame
     if remove_duplicates:

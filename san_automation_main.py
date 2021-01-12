@@ -10,6 +10,7 @@ import os
 
 import pandas as pd
 
+from analysis_errdump import errdump_main
 from analysis_sensor import sensor_analysis_main
 from analysis_zoning import zoning_analysis_main
 from analysis_err_sfp_cfg import err_sfp_cfg_analysis_main
@@ -114,6 +115,9 @@ def main():
     fabric_statistics_df = \
         fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
                                 nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst)
+
+    errdump_aggregated_df, raslog_counter_df = \
+        errdump_main(errdump_df, switchshow_ports_df, switch_params_aggregated_df, portshow_aggregated_df, report_columns_usage_dct, report_data_lst)
       
 
 def config_preparation(customer_name, project_folder, ssave_folder, max_title):
