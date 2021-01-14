@@ -136,9 +136,11 @@ def native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df):
     fabricshow_summary_columns = ['chassis_name', 'Principal_switch_name', 
                                   'Principal_switch_wwn', 'Fabric_ID', 
                                   'Fabric_name', 'Fabric_label']
-    fabricshow_summary_join_df = fabricshow_summary_df[fabricshow_summary_columns]
+    fabricshow_summary_join_df = fabricshow_summary_df[fabricshow_summary_columns].copy()
     
     # left join on fabricshow_ag and fabricshow_summary_join DataFrames
+    fabricshow_summary_join_df['Fabric_ID'] = fabricshow_summary_join_df['Fabric_ID'].astype('str')
+
     fabricshow_ag_labels_df = fabricshow_ag_df.merge(fabricshow_summary_join_df, how='left', 
                                                      on = ['chassis_name', 'Principal_switch_name', 
                                                            'Principal_switch_wwn', 'Fabric_ID'])

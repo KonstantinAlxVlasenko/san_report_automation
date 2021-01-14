@@ -4,6 +4,8 @@
 import pandas as pd
 import sys
 
+from pandas.core import series
+
 from common_operations_filesystem import save_xlsx_file
 
 # auxiliary global variables for auto_fabrics_labeling function
@@ -124,6 +126,8 @@ def _auto_fabrics_labeling(row):
     # apply method calls function on first row two times
     # flag to check if function has been already called 
     global called
+    # bug was fixed so no need in call variable no more. left temporary. should be removed after checking
+    called = True
     
     # called function flag is on
     if called:
@@ -165,7 +169,6 @@ def _auto_fabrics_labeling(row):
         else:
             fabric_num_current = None
             fabric_label_current = None
-
         return [fabric_num_current, fabric_label_current]
     # called function flag is off
     # first time function is called do nothing

@@ -69,10 +69,12 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         # re_pattern list contains comp_keys, match_keys, comp_dct    
         _, _, *re_pattern_lst = data_extract_objects('nameserver', max_title)
 
-        oui_df = dataframe_import('oui', max_title) 
+        oui_df = dataframe_import('oui', max_title, columns=['Connected_oui', 'type', 'subtype'])
+
         # current operation information string
         info = f'Generating connected devices table'
         print(info, end =" ") 
+        
 
         portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df = \
             portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -169,8 +171,6 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # retrieve storage, host, HBA information from Name Server service and FDMI data
     nsshow_join_df, nsshow_unsplit_df = \
         nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst)
-
-
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = \
         alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
@@ -188,7 +188,6 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
             columns=[*portshow_aggregated_df.columns.tolist(), 'deviceType', 'deviceSubtype'])
     # add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)
     portshow_aggregated_df = oui_join(portshow_aggregated_df, oui_df)
-    
     # preliminarily assisgn to all initiators type SRV
     mask_initiator = portshow_aggregated_df.Device_type.isin(['Physical Initiator', 'NPIV Initiator'])
     portshow_aggregated_df.loc[mask_initiator, ['deviceType', 'deviceSubtype']] = ['SRV', 'SRV']
@@ -201,7 +200,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df.Device_Port = \
         portshow_aggregated_df.apply(lambda series: find_msa_port(series) \
         if (pd.notna(series['PortName']) and  series['deviceSubtype'] == 'MSA') else series['Device_Port'], axis=1)   
-    
+
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = \
         verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)

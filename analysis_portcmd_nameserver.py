@@ -107,6 +107,7 @@ def nsshow_clean(nsshow_labeled_df, re_pattern_lst):
         # nsshow_join_df[symb_column].replace(to_replace = r'Embedded-AG', value = np.nan, regex=True, inplace = True)
         # # hostname_clean_comp
         # nsshow_join_df[symb_column] = nsshow_join_df[symb_column].replace(comp_dct[comp_keys[0]], np.nan, regex=True)
+
         # hostname_clean_comp
         nsshow_join_df[symb_column].replace(to_replace = comp_dct[comp_keys[0]], value = np.nan, regex=True, inplace = True)
     
@@ -283,6 +284,11 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         if match.group(3):
             series['Device_Name'] = match.group(1) + " " + match.group(3)
         series['nodeSymbUsed'] = 'yes'
+    # data_domain_match node_symb
+    elif not pd.isnull(node_symb) and match_node_dct[match_keys[23]]:
+        match = match_node_dct[match_keys[23]]
+        series['Device_Model'] = match.group(1)
+        series['nodeSymbUsed'] = 'yes'
     # xp_msa_match port_symb
     elif not pd.isnull(port_symb) and match_port_dct[match_keys[14]]:
         match = match_port_dct[match_keys[14]]
@@ -350,6 +356,8 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, re_pattern_lst):
     fdmi_labeled_df.PortName.fillna(fdmi_labeled_df.WWNp, inplace = True)
     # hostname_clean_comp
     fdmi_labeled_df.Host_Name = fdmi_labeled_df.Host_Name.replace(comp_dct[comp_keys[0]], np.nan, regex=True)
+    # remove point at the end
+    fdmi_labeled_df.Host_Name = fdmi_labeled_df.Host_Name.str.rstrip('.')
     # perenthesis_remove_comp
     fdmi_labeled_df.HBA_Driver = fdmi_labeled_df.HBA_Driver.str.extract(comp_dct[comp_keys[18]])
     fdmi_labeled_df.HBA_Firmware = fdmi_labeled_df.HBA_Firmware.str.extract(comp_dct[comp_keys[18]])

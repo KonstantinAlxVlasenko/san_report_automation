@@ -179,9 +179,12 @@ def message_extract(errdump_aggregated_df, re_pattern_lst):
 def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
     """Function to add port and connected device information to errdump_aggregated_df"""
     
+
+
+    mask_device_name = portshow_aggregated_df['Device_Host_Name'].notna()
     # if Message_portIndex is present but port number is not then fillna slot and port number from portshow
     if (errdump_aggregated_df['Message_portIndex'].notna() & errdump_aggregated_df['port'].isna()).any():
-        mask_device_name = portshow_aggregated_df['Device_Host_Name'].notna()
+        
         portshow_join_df = portshow_aggregated_df.loc[mask_device_name].copy()
         portshow_join_df.rename(columns={'portIndex': 'Message_portIndex'}, inplace=True)
         portshow_join_columns = ['configname', 'chassis_name', 'chassis_wwn', 'Message_portIndex']
@@ -195,11 +198,6 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
     errdump_aggregated_df.loc[mask_portnumber & mask_slot_na, 'slot'] = \
         errdump_aggregated_df.loc[mask_portnumber & mask_slot_na, 'slot'].fillna('0')
         
-    # mask_pid = errdump_aggregated_df['Connected_portId'].notna()
-    # errdump_pid_df = errdump_aggregated_df.loc[mask_pid].copy()
-        
-    
-    
     # add port and connected device information based chassis info, slot and port number
     portshow_columns = ['configname', 'chassis_name', 'chassis_wwn',
                           'slot', 'port', 'portIndex',
@@ -209,19 +207,24 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
                           'deviceType', 'deviceSubtype']
     
     portshow_join_df = portshow_aggregated_df[portshow_columns].copy()
-    errdump_aggregated_df = errdump_aggregated_df.merge(portshow_join_df, how='left', on=portshow_columns[:5])
+    if errdump_aggregated_df[['slot', 'port']].notna().all(axis=1).any():
+        errdump_aggregated_df = errdump_aggregated_df.merge(portshow_join_df, how='left', on=portshow_columns[:5])
     
+    # TO_REMOVE
     # errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], portshow_columns[5:], remove_duplicates=False, drop_na=False)
-    
+
+    # add empty columns if there was no merge with portshow_join_df
+    add_empty_columns = [column for column in portshow_columns[3:] if not column in errdump_aggregated_df.columns]
+    errdump_aggregated_df[add_empty_columns] = np.nan   
     
     # add device information based in pid
-    # mask_device_name = portshow_aggregated_df['Device_Host_Name'].notna()
-    portshow_join_df = portshow_aggregated_df.loc[mask_device_name].copy()
-    portshow_join_df['Message_portId'] = portshow_join_df['Connected_portId']
-    errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_join_df, 
-                                             join_lst=[*portshow_columns[:3], 'Message_portId'], 
-                                             filled_lst=portshow_columns[3:], remove_duplicates=False, drop_na=False)
-    
+    if errdump_aggregated_df['Message_portId'].notna().any():
+        portshow_join_df = portshow_aggregated_df.loc[mask_device_name].copy()
+        portshow_join_df['Message_portId'] = portshow_join_df['Connected_portId']
+        errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_join_df, 
+                                                join_lst=[*portshow_columns[:3], 'Message_portId'], 
+                                                filled_lst=portshow_columns[3:], remove_duplicates=False, drop_na=False)
+
     # concatenate devce name and device port columns
     errdump_aggregated_df['Device_Host_Name_Port'] = errdump_aggregated_df[['Device_Host_Name', 'Device_Port']].stack().groupby(level=0).agg(' '.join)
     

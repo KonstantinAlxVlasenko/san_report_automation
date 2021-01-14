@@ -123,7 +123,9 @@ def create_device_rename_form(portshow_aggregated_df):
     to use it as form to complete with new device names
     """
 
-    mask_columns_lst = ['Fabric_name', 'Device_Host_Name', 'Group_Name', 'deviceType', 'deviceSubtype', 'Host_Name']
+    mask_columns_lst = ['Fabric_name', 'Device_Host_Name', 'Group_Name', 
+                        'deviceType', 'deviceSubtype', 'Host_Name', 
+                        'alias', 'Connected_portWwn']
     # no need to change server host name extracted from name server and fdmi
     mask_empty_host_name =  portshow_aggregated_df['Host_Name'].isna()
     # storage, library and server name can be changed only
@@ -142,16 +144,35 @@ def create_device_rename_form(portshow_aggregated_df):
     and one device can have several Group_Names thus generating duplication in tables.
     To avoid this perform gropuby based on Device_Host_Name reqiured'''
 
-    # fill empty values with 'no_grp_name' tag to perform Group_Name join aggregation
-    manual_device_rename_df['Group_Name'].fillna('no_grp_name', inplace=True)
-    manual_device_rename_df = \
-        manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).\
-            agg({'Group_Name': ', '.join, 
-                    'deviceType': 'first', 'deviceSubtype': 'first'})
-    manual_device_rename_df.reset_index(inplace=True, drop=True)
-    # remove 'no_grp_name' tag for devices with no Group_Name
-    mask_no_grp_name = manual_device_rename_df['Group_Name'].str.contains('no_grp_name')
-    manual_device_rename_df['Group_Name'] = manual_device_rename_df['Group_Name'].where(~mask_no_grp_name, np.nan)
+    # add number of ports in each 'Device_Host_Name'
+    manual_device_rename_df['Port_quantity'] = \
+        manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).Connected_portWwn.transform('count')
+
+    # join group names, aliases and pWwns for each Device_Host_Name
+    manual_device_rename_df = manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).\
+                                                                agg({'Group_Name': lambda x : ', '.join(y for y in x if y==y), 
+                                                                        'alias': lambda x : ', '.join(y for y in x if y==y), 
+                                                                        'Connected_portWwn': lambda x : ', '.join(y for y in x if y==y),
+                                                                        'deviceType': 'first', 'deviceSubtype': 'first', 
+                                                                        'Port_quantity': 'first'})
+
+    # drop duplicated values from cell
+    for column in ['Group_Name', 'alias']:
+        manual_device_rename_df[column] = manual_device_rename_df[column].str.split(', ').apply(set).str.join(', ')
+    # replace '' (empty string) with np.nan
+    manual_device_rename_df = manual_device_rename_df.replace(r'^\s*$', np.NaN, regex=True)
+
+    # TO_REMOVE
+    # # fill empty values with 'no_grp_name' tag to perform Group_Name join aggregation
+    # manual_device_rename_df['Group_Name'].fillna('no_grp_name', inplace=True)
+    # manual_device_rename_df = \
+    #     manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).\
+    #         agg({'Group_Name': ', '.join, 
+    #                 'deviceType': 'first', 'deviceSubtype': 'first'})
+    # manual_device_rename_df.reset_index(inplace=True, drop=True)
+    # # remove 'no_grp_name' tag for devices with no Group_Name
+    # mask_no_grp_name = manual_device_rename_df['Group_Name'].str.contains('no_grp_name')
+    # manual_device_rename_df['Group_Name'] = manual_device_rename_df['Group_Name'].where(~mask_no_grp_name, np.nan)
     
     # create new column for new device names manual imput 
     manual_device_rename_df['Device_Host_Name_rename'] = np.nan

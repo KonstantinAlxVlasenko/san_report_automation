@@ -42,7 +42,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     # clean fabricshow DataFrame from unneccessary data
     fabric_clean_df = fabric_clean(fabricshow_ag_labels_df)
     # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
+    # procedure execution explicitly requested for output data or data used during fn execution
     force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:

@@ -6,7 +6,7 @@ import sys
 import xlrd
 import pandas as pd
 from common_operations_miscellaneous import status_info
-
+import warnings
 
 
 
@@ -81,6 +81,8 @@ def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xl
                         columns = None, index_name = None, header = 0, display_status=True):
     """Function to import dataframe from exel file"""
 
+    warnings.filterwarnings('ignore', category=UserWarning, module="openpyxl")
+
     init_file_base = os.path.basename(init_file)
     # file to store all required data to process configuratin files
     # init_file = 'san_automation_info.xlsx'
@@ -89,7 +91,7 @@ def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xl
         print(info, end = ' ')
     # try read data in excel
     try:
-        dataframe = pd.read_excel(init_file, sheet_name = sheet_title, usecols = columns, index_col = index_name, header = header)
+        dataframe = pd.read_excel(init_file, sheet_name=sheet_title, usecols=columns, index_col=index_name, header=header)
     # if file is not found
     except FileNotFoundError:
         if display_status:
