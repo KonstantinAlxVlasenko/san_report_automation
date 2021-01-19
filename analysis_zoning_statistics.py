@@ -265,7 +265,7 @@ def target_initiator_note(series):
     # if there are no local or imported zonemembers in fabric of zoning config switch
     # current zone is empty (neither actual initiators nor targets are present)
     if series['Total_zonemembers_active'] == 0:
-        return 'empty_zone'
+        return 'no_target, no_initiator'
     # if all zonememebrs are storages with local or imported device status 
     # and no absent devices then zone considered to be replication zone 
     if series['STORAGE'] == series['Total_zonemembers'] and series['STORAGE']>1:
@@ -282,13 +282,22 @@ def target_initiator_note(series):
     # if zone contains initiator(s) but not targets then zone considered to be target's less zone
     if series['SRV'] == 1 and series['STORAGE_LIB'] == 0:
             return 'no_target'
+    # if zone contains more then one initiator and no targets
+    # and it's not a peerzone  then 'no_target, several_initiators' tag
+    # if it's a peer zone then 'no_target' tag
     if series['SRV'] > 1 and series['STORAGE_LIB'] == 0:
+        if 'peer' in series.index and 'property' in series.index:
+            if series['peer'] == 0 and series['property'] == 0:
+                return 'no_target, several_initiators'
+            elif series['peer'] != 0 or series['property'] != 0:
+                return 'no_target' 
+        else:
             return 'no_target, several_initiators'
     # if zone contains more then one initiator and it's not a peerzone 
     # then initiator number exceeds threshold
     if series['SRV'] > 1:
-        if 'peer' in series.index:
-            if series['peer'] == 0:
+        if 'peer' in series.index and 'property' in series.index:
+            if series['peer'] == 0 and series['peer'] == 0:
                 return 'several_initiators'
         else:
             return 'several_initiators'

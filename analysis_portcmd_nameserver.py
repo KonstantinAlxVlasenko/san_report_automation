@@ -8,6 +8,7 @@ import re
 
 import numpy as np
 import pandas as pd
+import warnings
 
 
 def nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst):
@@ -62,7 +63,8 @@ def device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df):
     nscamshow_labeled_df.set_index(keys = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     nsshow_labeled_df.set_index(keys = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     # fillna empty device type cells
-    nsshow_labeled_df[['Device_type', 'PortSymb', 'NodeSymb']] = nsshow_labeled_df[['Device_type', 'PortSymb', 'NodeSymb']].fillna(nscamshow_labeled_df[['Device_type', 'PortSymb', 'NodeSymb']])
+    nsshow_labeled_df[['Device_type', 'PortSymb', 'NodeSymb']] = \
+        nsshow_labeled_df[['Device_type', 'PortSymb', 'NodeSymb']].fillna(nscamshow_labeled_df[['Device_type', 'PortSymb', 'NodeSymb']])
 
     # nsshow_join_df.Device_type.fillna(nscamshow_labeled_df.Device_type, inplace = True)
     # reset index
@@ -85,6 +87,7 @@ def nsshow_clean(nsshow_labeled_df, re_pattern_lst):
         ]
 
     nsshow_join_df = nsshow_labeled_df.loc[:, nsshow_lst]
+    nsshow_join_df.fillna(np.nan, inplace=True)
     
     # nsshow_join_df['PortSymbOrig'] = nsshow_join_df['PortSymb']
     # nsshow_join_df['NodeSymbOrig'] = nsshow_join_df['NodeSymb']
@@ -94,20 +97,16 @@ def nsshow_clean(nsshow_labeled_df, re_pattern_lst):
 
     # clean 'PortSymb' and 'NodeSymb' columns
     for symb_column in symb_columns:
-        # symb_clean_comp. removes brackets and quotation marks
-        nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.extract(comp_dct[comp_keys[1]])
+        # symb_clean_comp removes brackets and quotation marks
+        warnings.filterwarnings("ignore", 'This pattern has match groups')
+        mask_symb_clean = nsshow_join_df[symb_column].str.contains(comp_dct[comp_keys[1]], regex=True, na=False)
+        nsshow_join_df.loc[mask_symb_clean, symb_column] = nsshow_join_df.loc[mask_symb_clean, symb_column].str.extract(comp_dct[comp_keys[1]]).values
         # replace multiple whitespaces with single whitespace
         nsshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
         # replace cells with one digit or whatespaces only with None value
         nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
         # remove whitespace from the right and left side
         nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
-        # # 
-        # # hostname_clean_comp
-        # nsshow_join_df[symb_column].replace(to_replace = r'Embedded-AG', value = np.nan, regex=True, inplace = True)
-        # # hostname_clean_comp
-        # nsshow_join_df[symb_column] = nsshow_join_df[symb_column].replace(comp_dct[comp_keys[0]], np.nan, regex=True)
-
         # hostname_clean_comp
         nsshow_join_df[symb_column].replace(to_replace = comp_dct[comp_keys[0]], value = np.nan, regex=True, inplace = True)
     
@@ -223,6 +222,13 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         series['HBA_Driver'] = match.group(3)
         series['HBA_Firmware'] = match.group(4)
         series['Host_Name'] = match.group(5).rstrip('.')
+        series['nodeSymbUsed'] = 'yes'
+    # ag_switch_match node_symb
+    elif not pd.isnull(node_symb) and match_node_dct[match_keys[25]]:
+        match = match_node_dct[match_keys[25]]
+        series['Device_Name'] = match.group(1)
+        series['IP_Address'] = match.group(2)
+        series['Device_Fw'] = match.group(3)
         series['nodeSymbUsed'] = 'yes'
     # hpux_match node_symb
     elif not pd.isnull(node_symb) and match_node_dct[match_keys[6]]:
@@ -358,10 +364,25 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, re_pattern_lst):
     fdmi_labeled_df.Host_Name = fdmi_labeled_df.Host_Name.replace(comp_dct[comp_keys[0]], np.nan, regex=True)
     # remove point at the end
     fdmi_labeled_df.Host_Name = fdmi_labeled_df.Host_Name.str.rstrip('.')
-    # perenthesis_remove_comp
-    fdmi_labeled_df.HBA_Driver = fdmi_labeled_df.HBA_Driver.str.extract(comp_dct[comp_keys[18]])
-    fdmi_labeled_df.HBA_Firmware = fdmi_labeled_df.HBA_Firmware.str.extract(comp_dct[comp_keys[18]])
-    fdmi_labeled_df.Host_OS = fdmi_labeled_df.Host_OS.str.extract(comp_dct[comp_keys[18]])
+    # perenthesis_remove_comp remove parehthesis and brackets values
+    for column in ['HBA_Driver', 'HBA_Firmware', 'Host_OS']:
+        # pattern contains groups but str.cotains used to identify mask
+        # supress warning message
+        warnings.filterwarnings("ignore", 'This pattern has match groups')
+        current_mask = fdmi_labeled_df[column].str.contains(comp_dct[comp_keys[18]], regex=True, na=False)
+        fdmi_labeled_df.loc[current_mask, column] = \
+            fdmi_labeled_df.loc[current_mask, column].str.extract(comp_dct[comp_keys[18]]).values
+    # release_remove_comp
+    warnings.filterwarnings("ignore", 'This pattern has match groups')
+    mask_release = fdmi_labeled_df['Host_OS'].str.contains(comp_dct[comp_keys[24]], regex=True, na=False)
+    fdmi_labeled_df.loc[mask_release, 'Host_OS'] = \
+        fdmi_labeled_df.loc[mask_release, 'Host_OS'].str.extract(comp_dct[comp_keys[24]]).values
+
+    # TO_REMOVE
+    # fdmi_labeled_df.HBA_Driver = fdmi_labeled_df.HBA_Driver.str.extract(comp_dct[comp_keys[18]])
+    # fdmi_labeled_df.HBA_Firmware = fdmi_labeled_df.HBA_Firmware.str.extract(comp_dct[comp_keys[18]])
+    # fdmi_labeled_df.Host_OS = fdmi_labeled_df.Host_OS.str.extract(comp_dct[comp_keys[18]])
+    # fdmi_labeled_df.Host_OS = fdmi_labeled_df.Host_OS.str.extract(comp_dct[comp_keys[24]])
 
     # drop duplcate WWNs in labeled fdmi DataFrame
     fdmi_labeled_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)

@@ -114,7 +114,7 @@ def compare_zone_config(zoning_report_df):
 
     # list of invalid zones to remove from compare report
     if 'Примечание. Количество таргетов и инициаторов в зоне' in zoning_report_df.columns:
-        invalid_zone_lst = ['нет инициатора', 'нет таргета', 'нет инициатора, нет таргета']
+        invalid_zone_lst = ['нет инициатора', 'нет таргета', 'нет инициатора, нет таргета', 'нет таргета, несколько инициаторов']
         mask_valid_zone = ~zoning_report_df['Примечание. Количество таргетов и инициаторов в зоне'].isin(invalid_zone_lst)
         mask_applied = True
     # take effective configuration only if defined configuration(s) exist

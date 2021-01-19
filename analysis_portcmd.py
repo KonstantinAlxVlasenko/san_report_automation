@@ -4,19 +4,22 @@ import numpy as np
 import pandas as pd
 
 from analysis_portcmd_devicename_correction import devicename_correction_main
-from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
-from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna
-from analysis_portcmd_devicetype import oui_join, type_check
-from analysis_portcmd_gateway import verify_gateway_link
-from analysis_portcmd_nameserver import nsshow_analysis_main
+# from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
+# from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna
+# from analysis_portcmd_devicetype import oui_join, type_check
+# from analysis_portcmd_gateway import verify_gateway_link
+# from analysis_portcmd_nameserver import nsshow_analysis_main
 from analysis_portcmd_device_connection_statistics import device_connection_statistics
-from analysis_portcmd_switch import fill_isl_link, fill_switch_info, switchparams_join, switchshow_join
+from analysis_portcmd_aggregation import portshow_aggregated
+# from analysis_portcmd_switch import fill_isl_link, fill_switch_info, switchparams_join, switchshow_join
+
+
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
-from common_operations_dataframe import dataframe_fabric_labeling, count_group_members
+from common_operations_dataframe import count_group_members
 from report_portcmd import create_report_tables
 
 
@@ -86,17 +89,12 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
         # after finish display status
         status_info('ok', max_title, len(info))
-
-        if (portshow_aggregated_df['deviceType'] == 'UNKNOWN').any():
-            unknown_count = len(portshow_aggregated_df[portshow_aggregated_df['deviceType'] == 'UNKNOWN'])
-            info = f'{unknown_count} {"port" if unknown_count == 1 else "ports"} with UNKNOWN device Class found'
-            print(info, end =" ")
-            status_info('warning', max_title, len(info))
-
+        # show warning if any UNKNOWN device class founded, if any PortSymb or NodeSymb is not parsed,
+        # if new switch founded
+        warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, max_title)        
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_data_lst)
-
         # count Device_Host_Name instances for fabric_label, label and total in fabric
         portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df)
 
@@ -106,12 +104,10 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         device_connection_statistics_df = device_connection_statistics(portshow_aggregated_df) 
         status_info('ok', max_title, len(info))
 
-
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
             storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df, device_connection_statistics_report_df  = \
                 create_report_tables(portshow_aggregated_df, device_connection_statistics_df, data_names[4:-1], \
                     report_columns_usage_dct, max_title)
-
         # create list with partitioned DataFrames
         data_lst = [
             portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, 
@@ -140,220 +136,6 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         save_xlsx_file(data_frame, data_name, report_data_lst)
 
     return portshow_aggregated_df
-
-
-def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
-                        isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, switch_models_df, alias_df, oui_df, fdmi_df, 
-                        blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, re_pattern_lst, report_data_lst):
-    """
-    Function to fill portshow DataFrame with information from DataFrames passed as params
-    and define fabric device types
-    """
-    
-    # lower case WWNp
-    blade_servers_df.portWwn = blade_servers_df.portWwn.str.lower()
-    portshow_df.Connected_portWwn = portshow_df.Connected_portWwn.str.lower()
-
-
-    # add switch information (switchName, portType, portSpeed) to portshow DataFrame
-    portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
-
-    
-
-    # add fabric information (FabricName, FabricLabel)
-    portshow_aggregated_df = dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
-    # add switchMode to portshow_aggregated DataFrame
-    portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_df, 
-                                                switch_params_aggregated_df, report_data_lst)
-    # prepare alias_df (label fabrics, replace WWNn with WWNp if present)
-    alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df = \
-        alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df)
-    # retrieve storage, host, HBA information from Name Server service and FDMI data
-    nsshow_join_df, nsshow_unsplit_df = \
-        nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst)
-    # add nsshow and alias informormation to portshow_aggregated_df DataFrame
-    portshow_aggregated_df = \
-        alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
-    # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
-    portshow_aggregated_df = \
-        blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, re_pattern_lst)
-    # fillna portshow_aggregated DataFrame null values with values from blade_vc_join_df
-    portshow_aggregated_df = \
-        blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synergy_module_df)
-    # calculate virtual channel id for medium priority traffic
-    portshow_aggregated_df = vc_id(portshow_aggregated_df)
-    # add 'deviceType', 'deviceSubtype' columns
-    portshow_aggregated_df = \
-        portshow_aggregated_df.reindex(
-            columns=[*portshow_aggregated_df.columns.tolist(), 'deviceType', 'deviceSubtype'])
-    # add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)
-    portshow_aggregated_df = oui_join(portshow_aggregated_df, oui_df)
-    # preliminarily assisgn to all initiators type SRV
-    mask_initiator = portshow_aggregated_df.Device_type.isin(['Physical Initiator', 'NPIV Initiator'])
-    portshow_aggregated_df.loc[mask_initiator, ['deviceType', 'deviceSubtype']] = ['SRV', 'SRV']
-    # define oui for each connected device to identify device type
-    switches_oui = switch_params_aggregated_df['switchWwn'].str.slice(start = 6)
-    # final device type define
-    portshow_aggregated_df[['deviceType', 'deviceSubtype']] = portshow_aggregated_df.apply(
-        lambda series: type_check(series, switches_oui, blade_servers_df, synergy_servers_df), axis = 1)
-    # identify MSA port numbers (A1-A4, B1-B4) based on PortWwn
-    portshow_aggregated_df.Device_Port = \
-        portshow_aggregated_df.apply(lambda series: find_msa_port(series) \
-        if (pd.notna(series['PortName']) and  series['deviceSubtype'] == 'MSA') else series['Device_Port'], axis=1)   
-
-    # verify access gateway links
-    portshow_aggregated_df, expected_ag_links_df = \
-        verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)
-    # fill isl links information
-    portshow_aggregated_df = \
-        fill_isl_link(portshow_aggregated_df, isl_aggregated_df)
-    # fill connected switch information
-    portshow_aggregated_df = \
-        fill_switch_info(portshow_aggregated_df, switch_params_df, 
-                            switch_params_aggregated_df, report_data_lst)
-    # libraries Device_Host_Name correction to avoid hba information from FDMI DataFrame usage for library name
-    portshow_aggregated_df.Device_Host_Name = \
-        portshow_aggregated_df.apply(lambda series: lib_name_correction(series) \
-        if pd.notna(series[['deviceType', 'Device_Name']]).all() else series['Device_Host_Name'], axis=1)
-    # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias group name values
-    portshow_aggregated_df = group_name_fillna(portshow_aggregated_df)
-    # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias values 
-    portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
-    # fill portshow_aggregated DataFrame Device_Host_Name column null values for VC modules 
-    # with combination of 'VC' and serial number
-    portshow_aggregated_df = vc_name_fillna(portshow_aggregated_df)
-
-    # if Device_Host_Name is still empty fill empty values in portshow_aggregated_df Device_Host_Name column 
-    # with combination of device class and it's wwnp
-    portshow_aggregated_df.Device_Host_Name = \
-        portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
-
-    
-    # sorting DataFrame
-    sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
-                    'switchWwn', 'switchName']
-    sort_order = [True, True, False, True, False, True]
-    portshow_aggregated_df.sort_values(by=sort_columns, ascending=sort_order, inplace=True)
-
-    return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df
-
-
-def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
-    """Function to add porttype (Target, Initiator) and alias to portshow_aggregated DataFrame"""
-    
-    nsshow_join_df.drop(columns = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn'], inplace = True)
-
-    # adding porttype (Target, Initiator) to portshow_aggregated DataFrame
-    portshow_aggregated_df = portshow_aggregated_df.merge(nsshow_join_df, how = 'left', 
-                                                          left_on = ['Fabric_name', 'Fabric_label', 'Connected_portWwn'], 
-                                                          right_on = ['Fabric_name', 'Fabric_label', 'PortName'])
-    
-    # if switch in AG mode then device type must be replaced to Physical instead of NPIV
-    mask_ag = portshow_aggregated_df.switchMode == 'Access Gateway Mode'
-    portshow_aggregated_df.loc[mask_ag, 'Device_type'] = \
-        portshow_aggregated_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
-
-    # add aliases to portshow_aggregated_df
-    portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 
-                                                          on = ['Fabric_name', 'Fabric_label', 'PortName'])
-
-    # add Unknown(initiator/target) tag for all F-port and N-port for which Device_type is not found 
-    mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
-    mask_device_type_empty = portshow_aggregated_df['Device_type'].isna()
-    mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk port')
-    portshow_aggregated_df.loc[mask_nport_fport & mask_device_type_empty & mask_not_trunk, 'Device_type'] = 'Unknown(initiator/target)'
-
-    return portshow_aggregated_df
-
-
-def device_name_fillna(series):
-    """
-    Function to fill empty values in portshow_aggregated_df Device_Host_Name column
-    with combination of device class and it's wwnn
-    """
-
-    mask_switch = series['deviceType'] == 'SWITCH'
-    # mask_vc = series['deviceType'] == 'VC'
-    mask_name_notna = pd.notna(series['Device_Host_Name'])
-    mask_devicetype_wwn_isna =  pd.isna(series[['deviceType', 'NodeName']]).any()
-    # if device is switch or already has name no action required
-    if mask_switch or mask_name_notna:
-        return series['Device_Host_Name']
-    # if no device class defined or no wwn then it's not possible to concatenate to values
-    if  mask_devicetype_wwn_isna:
-        return np.nan
-    
-    return series['deviceType'] + ' ' + series['NodeName']
-
-
-def vc_id(portshow_aggregated_df):
-    """
-    Function to calculate virtual channel id for medium priority traffic.
-    VC2, VC3, VC4, VC5
-    """
-
-    # extract AreaID from PortID address
-    portshow_aggregated_df['Virtual_Channel'] = portshow_aggregated_df.Connected_portId.str.slice(start=2, stop=4)
-    # convert string AreaID to integer with base 16 (hexadicimal)
-    # vc id defined as remainder of AreaID division by four plus 2
-    portshow_aggregated_df.Virtual_Channel = portshow_aggregated_df.Virtual_Channel.apply(lambda x: int(x, 16)%4 + 2)
-    # add VC to vc_id
-    portshow_aggregated_df.Virtual_Channel = 'VC' + portshow_aggregated_df.Virtual_Channel.astype('str')
-
-    return portshow_aggregated_df
-
-
-def lib_name_correction(series):
-    """
-    Function avoid usage of HBA Host_Name value from FDMI DataFrame 
-    for libraries Device_Host_Name in portshowaggregated DataFrame
-    """
-
-    # libraries mask
-    mask_lib = series['deviceType'] == 'LIB'
-    # correct device name for libraries
-    if mask_lib:
-        return series['Device_Name']
-    else:
-        return series['Device_Host_Name']
-
-
-def find_msa_port(series):
-    """
-    Function to identify port name (A1-A4, B1-B4) for the MSA Storage
-    based on second digit of PortWwn number (0-3 A1-A4, 4-7 B1-B4)
-    """ 
-    # if pd.isna(series['PortName']):
-    #     return series['Device_Port']
-    # print(series['PortName'])
-
-    # port name based on second digit of portWwn
-    port_num = int(series['PortName'][1])
-    # Controller A ports
-    if port_num in range(4):
-        return 'A' + str(port_num+1)
-    # Controller B ports
-    elif port_num in range(4,8):
-        return 'B' + str(port_num-3)
-        
-    return series['Device_Port']
-
-#  TO REMOVE
-# def device_ports_per_group(portshow_aggregated_df):
-#     """Function to count device ports for each device on (fabric_name, fabric_label), 
-#     fabric_label and total_fabrics levels based on Device_Host_Name column."""
-
-    
-#     group_columns = ['Fabric_name',	'Fabric_label', 'Device_Host_Name']
-#     group_level_lst = ['_per_fabric_name_and_label', '_per_fabric_label', '_total_fabrics']
-#     instance_column_dct = dict()
-
-#     for level in group_level_lst:
-#         instance_column_dct['Device_Host_Name'] = 'Device_Host_Name' + level
-#         portshow_aggregated_df = instance_number_per_group(portshow_aggregated_df, group_columns, instance_column_dct)
-#         group_columns.pop(0)
-
-#     return portshow_aggregated_df
 
 
 def device_ports_per_group(portshow_aggregated_df):
@@ -386,3 +168,36 @@ def device_ports_per_group(portshow_aggregated_df):
     portshow_aggregated_df = portshow_aggregated_df.merge(device_hostname_stat_native_df, how='left', on=port_columns_lst[:3])
 
     return portshow_aggregated_df
+
+
+def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, max_title):
+    """Function to display WARNING notification if any deviceType is UNKNOWN,
+    if any PortSymb or NodeSymb was not parsed or if new switch founded which was
+    not previously discovered"""
+
+    # warning if UKNOWN device class present
+    if (portshow_aggregated_df['deviceType'] == 'UNKNOWN').any():
+        unknown_count = len(portshow_aggregated_df[portshow_aggregated_df['deviceType'] == 'UNKNOWN'])
+        info = f'{unknown_count} {"port" if unknown_count == 1 else "ports"} with UNKNOWN device Class found'
+        print(info, end =" ")
+        status_info('warning', max_title, len(info))
+    # warning if any values in PortSymb or NodeSymb were not parsed
+    if not nsshow_unsplit_df.empty:
+        portsymb_unsplit_count = nsshow_unsplit_df['PortSymb'].notna().sum()
+        nodesymb_unsplit_count = nsshow_unsplit_df['NodeSymb'].notna().sum()
+        unsplit_lst = [[portsymb_unsplit_count, 'PortSymb'], [nodesymb_unsplit_count, 'NodeSymb']]
+        unsplit_str = ' and '.join([str(num) + " " + name for num, name in unsplit_lst if num])
+        info = f'{unsplit_str} {"is" if portsymb_unsplit_count + nodesymb_unsplit_count == 1 else "are"} UNPARSED'
+        print(info, end =" ")
+        status_info('warning', max_title, len(info))
+    # warning if unknown switches was found
+    switch_name_set = set(switch_params_aggregated_df['switchName'])
+    # all founded switches in portshow_aggregated_df
+    mask_switch = portshow_aggregated_df['deviceType'] == 'SWITCH'
+    portshow_switch_name_set = set(portshow_aggregated_df.loc[mask_switch, 'Device_Host_Name'])
+    # if unknown switches found
+    if not portshow_switch_name_set.issubset(switch_name_set):
+        unknown_count = len(portshow_switch_name_set.difference(switch_name_set))
+        info = f'{unknown_count} NEW {"switch" if unknown_count == 1 else "switches"} founded'
+        print(info, end =" ")
+        status_info('warning', max_title, len(info))

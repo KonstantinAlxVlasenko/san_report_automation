@@ -40,7 +40,6 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
         elif (series['Connected_portWwn'] == synergy_hba_df['Connected_portWwn']).any():
             return pd.Series(('SRV_SYNERGY', series['subtype'].split('|')[0]))
 
-
         # devices with strictly defined type and subtype
         elif not '|' in series['type'] and not '|' in  series['subtype']:
             return pd.Series((series.type, series.subtype))
@@ -52,6 +51,8 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
                 return pd.Series(('SWITCH', series.subtype))
             elif series['switchMode'] == 'Access Gateway Mode' and series['portType'] == 'N-Port':
                 return pd.Series(('SWITCH', 'AG'))
+            elif pd.notna(series['HBA_Manufacturer']) and 'AG Brocade' in series['HBA_Manufacturer']:
+                return pd.Series(('SWITCH', series.subtype))
             else:
                 return pd.Series(('SRV', series.subtype))
 

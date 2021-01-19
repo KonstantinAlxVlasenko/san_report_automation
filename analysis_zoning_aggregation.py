@@ -87,6 +87,9 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
     # add WWN for each alias in zone configuration configs-zones-aliases
     alias_join_df.rename(columns = {'alias': 'zone_member'}, inplace = True)
     zoning_aggregated_df = zoning_aggregated_df.merge(alias_join_df, how='left', on = ['Fabric_name', 'Fabric_label', 'zone_member'])
+    # fill empty cfg and cfg_type
+    zoning_aggregated_df['cfg'].fillna('-', inplace=True)
+    zoning_aggregated_df['cfg_type'].fillna('defined', inplace=True)
     # if zonemember defined directly through wwn omitting alias then copy wwn to alias_member column
     zoning_aggregated_df.alias_member.fillna(zoning_aggregated_df.zone_member, inplace=True)
     # add peerzones zonemember type (Property, Principal, Peer)

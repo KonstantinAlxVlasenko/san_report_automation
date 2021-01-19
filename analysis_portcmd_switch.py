@@ -1,6 +1,7 @@
 """Module to fill ISL links and switches information in portcmd DataFrame"""
 
 import pandas as pd
+import numpy as np
 import sys
 
 from common_operations_dataframe import dataframe_fillna
@@ -103,8 +104,11 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     switch_params_columns_lst = ['Fabric_name', 'Fabric_label', 'oui_board_sn',
                                 'chassis_name', 'boot.ipa',
                                 'ssn', 'FOS_version',
-                                'HPE_modelName', 'Device_Location']
+                                'Brocade_modelName', 'HPE_modelName', 'Device_Location']
     switch_params_join_df = switch_params_aggregated_df.loc[:, switch_params_columns_lst].copy()
+    switch_params_join_df['HPE_modelName'].replace('x', np.nan, inplace=True)
+    switch_params_join_df['HPE_modelName'].fillna(switch_params_join_df['Brocade_modelName'], inplace=True)
+    switch_params_join_df.drop(columns=['Brocade_modelName'], inplace=True)
 
     # rename columns to correspond columns in portshow_aggregated_df
     switch_params_columns_dct = {
@@ -116,6 +120,7 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     
     # # fill empty values in portshow_aggregated_df from switch_params_join_df
     switch_join_columns_lst = switch_params_join_df.columns.to_list()
+    portshow_aggregated_df['Device_Model'].replace('^x$', np.nan, regex=True, inplace=True)
     portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
                                                 join_lst = switch_join_columns_lst[:3], filled_lst = switch_join_columns_lst[3:])
 

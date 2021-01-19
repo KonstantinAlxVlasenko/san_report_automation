@@ -10,17 +10,6 @@ from common_operations_miscellaneous import (
 from common_operations_servicefile import columns_import, data_extract_objects
 
 
-# regex_peerzone = r'^(SWITCHCMD /fabos/cliexec/)?zoneshow --peerzone all:$'
-# regex_end = r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$'
-# regex_zone = r'^ *zone: *([\w$^-]+) *$'
-# regex_effective = r'^ *Effective +configuration *: *$'
-# regex_zoneend = r'^ *(cfg:|zone:|alias:|real [\w.]+|\*\* *SS CMD END *\*\*|Effective +configuration *:)'
-# regex_zonemember = r'[\w$-^]+'
-
-# regex_property_member = r'^ +([PC][a-z]+) +(?:Member|by): +[\w$-^]+$'
-# regex_principal_peer = r'^ +(Principal|Peer) +Member\(s\):$'
-# regex_peer_member_end = r'^ *(zone:|real [\w.]+|\*\* *SS CMD END *\*\*|Effective +configuration *|(Peer|Principal) +Member\(s\):|\d+ Peer +Zones +in +Eff +Cfg)'
-
 def zoning_extract(switch_params_lst, report_data_lst):
     """Function to extract zoning information"""
 
@@ -101,7 +90,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
                         if not line:
                             break
                         # cfgshow section start
-                        if re.search(comp_dct[comp_keys[0]], line):
+                        if re.search(comp_dct[comp_keys[0]], line) and not collected['cfgshow']:
                             # when section is found corresponding collected dict values changed to True
                             collected['cfgshow'] = True
                             # control flag to check if Effective configuration line passed
@@ -112,7 +101,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
                                 while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
                                     line = file.readline()
                                     if not line:
-                                        break
+                                        break    
                             # switchcmd_end_comp
                             while not re.search(comp_dct[comp_keys[4]], line):                                
                                 # dictionary with match names as keys and match result of current line with all imported regular expressions as values
@@ -191,8 +180,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
                                     break
                         # cfgshow section end
                         # peerzone section start
-                        elif re.search(comp_dct[comp_keys[8]], line):
-                            
+                        elif re.search(comp_dct[comp_keys[8]], line) and not collected['peerzone']:
                             # when section is found corresponding collected dict values changed to True
                             collected['peerzone'] = True
                             # control flag to check if Effective configuration line passed
@@ -270,6 +258,6 @@ def zoning_extract(switch_params_lst, report_data_lst):
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst = verify_data(report_data_lst, data_names, *data_lst)
-            
+
     return cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst
 

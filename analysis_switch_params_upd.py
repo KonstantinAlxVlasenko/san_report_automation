@@ -68,9 +68,9 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
         # check if switch config files missing
         mask_fabric = switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].notna().all(axis=1)
         mask_no_config = switch_params_aggregated_df['chassis_name'].isna()
-        missing_configs_num = switch_params_aggregated_df.loc[mask_fabric & mask_no_config]['Fabric_name'].count()
+        missing_configs_num = switch_params_aggregated_df.loc[mask_no_config]['Fabric_name'].count()
         if missing_configs_num:
-            info = f'{missing_configs_num} switch configuration{"s" if missing_configs_num > 1 else ""} missing'
+            info = f'{missing_configs_num} switch configuration{"s" if missing_configs_num > 1 else ""} MISSING'
             print(info, end =" ")
             status_info('warning', max_title, len(info))
 

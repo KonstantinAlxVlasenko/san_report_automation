@@ -147,6 +147,7 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
                                             break                        
                                 # switchcmd_end_comp
                                 while not re.search(comp_dct[comp_keys[9]], line):
+                                    # line = file.readline()
                                     match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                     # port_pid__match
                                     if match_dct[match_keys[7]]:
@@ -159,11 +160,11 @@ def connected_devices_extract(switch_params_lst, report_data_lst):
                                         line = file.readline()                                
                                         # pid_switchcmd_end_comp
                                         while not re.search(comp_dct[comp_keys[8]], line):
-                                            line = file.readline()
                                             match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                             # nsshow_port_match
                                             if match_dct[match_keys[2]]:
-                                                nsshow_port_dct[match_dct[match_keys[2]].group(1).rstrip()] = match_dct[match_keys[2]].group(2).rstrip()                                       
+                                                nsshow_port_dct[match_dct[match_keys[2]].group(1).rstrip()] = match_dct[match_keys[2]].group(2).rstrip()
+                                            line = file.readline()
                                             if not line:
                                                 break
                                                 

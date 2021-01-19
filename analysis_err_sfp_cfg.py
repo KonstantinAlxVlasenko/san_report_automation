@@ -51,6 +51,16 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
         portshow_sfp_aggregated_df = port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_df)
         # after finish display status
         status_info('ok', max_title, len(info))
+
+        # warning if UKNOWN SFP present
+        if (portshow_sfp_aggregated_df['Transceiver_Supported'] == 'Unknown SFP').any():
+            info_columns = ['Fabric_name', 'Fabric_label', 'configname', 'chassis_name', 'chassis_wwn', 'slot',	'port', 'Transceiver_Supported']
+            portshow_sfp_info_df = portshow_sfp_aggregated_df.drop_duplicates(subset=info_columns).copy()
+            unknown_count = len(portshow_sfp_info_df[portshow_sfp_info_df['Transceiver_Supported'] == 'Unknown SFP'])
+            info = f'{unknown_count} {"port" if unknown_count == 1 else "ports"} with UNKNOWN supported SFP tag found'
+            print(info, end =" ")
+            status_info('warning', max_title, len(info))
+
         # create reaport tables from port_complete_df DataFrtame
         error_report_df, sfp_report_df, portcfg_report_df = \
             create_report_tables(portshow_sfp_aggregated_df, data_names[1:], report_columns_usage_dct, max_title)
