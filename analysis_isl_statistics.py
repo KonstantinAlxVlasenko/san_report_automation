@@ -35,6 +35,8 @@ def isl_statistics(isl_aggregated_df, re_pattern_lst):
         isl_statistics_summary_df = verify_isl_symmetry(isl_statistics_summary_df)
         # add notes to isl_statistics_df if any violations present
         isl_statistics_df = add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst)
+
+
         # count row with index All containing total values of isl_statistics_summary_df for all fabrics
         isl_statistics_total_df = count_all_row(isl_statistics_summary_df)
         # insert 'Switch_quantity' column to place it to correct location in final statistics DataFrame 

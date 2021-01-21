@@ -24,11 +24,15 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         # trunkimg licence present on both switches
         mask_trunk_lic =  isl_statistics_df['Trunking_lic_both_switches'] == 'Yes'
         mask_trunk_absence = mask_port_quantity & mask_single_link_isl & mask_trunk_lic
-        isl_statistics_df['Connection_note'] = np.where(mask_trunk_absence, 'trunk_missing', pd.NA)
+        # TO_REMOVE
+        # isl_statistics_df['Connection_note'] = np.where(mask_trunk_absence, 'trunk_missing', pd.NA)
+        isl_statistics_df.loc[mask_trunk_absence, 'Connection_note'] = 'link(s)_out_of_trunk'
         
         # nonredundant connection consists of single port only
         mask_nonredundant_link = isl_statistics_df['Port_quantity'] == 1
-        isl_statistics_df['Connection_note'] = np.where(mask_nonredundant_link, 'nonredundant_connection', pd.NA)
+        # TO_REMOVE
+        # isl_statistics_df['Connection_note'] = np.where(mask_nonredundant_link, 'nonredundant_connection', pd.NA)
+        isl_statistics_df.loc[mask_nonredundant_link, 'Connection_note'] = 'nonredundant_connection'
         
         return isl_statistics_df
     
@@ -115,9 +119,9 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
     
     # add notes to isl_statistics_df DataFrame
     isl_statistics_df = connection_note(isl_statistics_df)
+    
     isl_statistics_df = nonuniformity_note(isl_statistics_df, isl_aggregated_modified_df)
     isl_statistics_df = speed_note(isl_statistics_df, re_pattern_lst)
-    
     isl_statistics_df.fillna(np.nan, inplace=True)
     
     return isl_statistics_df

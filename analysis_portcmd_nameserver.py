@@ -121,7 +121,7 @@ def nsshow_symb_split(nsshow_join_df, re_pattern_lst):
 
     # columns list to which PortSymb and NodeSymb information splitted up to
     nsshow_symb_columns = [
-        'portSymbUsed', 'nodeSymbUsed', 'Device_Manufacturer', 'Device_Model', 
+        'portSymbUsed', 'portSymbPattern', 'nodeSymbUsed', 'nodeSymbPattern', 'Device_Manufacturer', 'Device_Model', 
         'Device_SN', 'Device_Name', 'Device_Port', 'Device_Fw', 'Device_Location', 'IP_Address', 'HBA_Manufacturer', 
         'HBA_Model', 'HBA_Description', 'Host_Name', 'Host_OS', 'HBA_Firmware', 'HBA_Driver'
         ]
@@ -137,8 +137,6 @@ def nsshow_symb_split(nsshow_join_df, re_pattern_lst):
     # mask with shows rows containing PortSymb or NodeSymb values
     mask2 = nsshow_join_df[['PortSymb',	'NodeSymb']].notna().any(axis=1)
     nsshow_unsplit_df = nsshow_join_df.loc[mask1&mask2]
-    # drop columns with split flags 
-    nsshow_join_df.drop(columns = ['portSymbUsed', 'nodeSymbUsed'], inplace = True)
 
     return nsshow_join_df, nsshow_unsplit_df
 
@@ -175,6 +173,18 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
             match = match_port_dct[match_keys[10]]
             series['Device_Port'] = match.group(1)
             series['HBA_Model'] = match.group(2)
+            series['portSymbUsed'] = 'yes'
+    # netapp_node_match node_symb
+    elif not pd.isnull(node_symb) and match_node_dct[match_keys[21]]:
+        match = match_node_dct[match_keys[21]]
+        series['Device_Manufacturer'] = match.group(2)
+        series['Device_Model'] = match.group(1)
+        series['Device_Name'] = match.group(3)
+        series['nodeSymbUsed'] = 'yes'
+        # netapp_port_match port_symb
+        if not pd.isnull(port_symb) and match_port_dct[match_keys[26]]:
+            match = match_port_dct[match_keys[26]]
+            series['Device_Port'] = match.group(1)
             series['portSymbUsed'] = 'yes'
     # qlogic_match node_symb
     elif not pd.isnull(node_symb) and match_node_dct[match_keys[2]]:
@@ -264,13 +274,7 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         series['HBA_Driver'] = match.group(1)
         series['Device_Port'] = match.group(2)
         series['nodeSymbUsed'] = 'yes'
-    # netapp_match node_symb
-    elif not pd.isnull(node_symb) and match_node_dct[match_keys[21]]:
-        match = match_node_dct[match_keys[21]]
-        series['Device_Manufacturer'] = match.group(2)
-        series['Device_Model'] = match.group(1)
-        series['Device_Name'] = match.group(3)
-        series['nodeSymbUsed'] = 'yes'
+
     # storeonce_port_match port_symb
     elif not pd.isnull(port_symb) and match_port_dct[match_keys[8]]:
         match = match_port_dct[match_keys[8]]
@@ -344,9 +348,9 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         series['portSymbUsed'] = 'yes'
     # if no match was found copy values with no split
     else:
-        if not pd.isnull(node_symb):
+        if not pd.isnull(node_symb) and pd.isnull(series['nodeSymbUsed']):
             series['Device_Name'] = series['NodeSymb']
-        if not pd.isnull(port_symb):
+        if not pd.isnull(port_symb) and pd.isnull(series['portSymbUsed']):
             series['Device_Port'] = series['PortSymb']
 
     return pd.Series([series[column] for column in nsshow_symb_columns])

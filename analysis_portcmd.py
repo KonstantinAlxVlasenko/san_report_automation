@@ -16,7 +16,7 @@ from analysis_portcmd_aggregation import portshow_aggregated
 
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
-                                             verify_force_run)
+                                             verify_force_run, reply_request)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
 from common_operations_dataframe import count_group_members
@@ -46,6 +46,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_data_lst, *data_names)
+    # flag to forcible save portshow_aggregated_df if required
+    portshow_force_flag = False
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, library_report_df, \
@@ -91,7 +93,9 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         status_info('ok', max_title, len(info))
         # show warning if any UNKNOWN device class founded, if any PortSymb or NodeSymb is not parsed,
         # if new switch founded
-        warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, max_title)        
+        portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag = \
+            warning_notification(portshow_aggregated_df, switch_params_aggregated_df, 
+            nsshow_unsplit_df, expected_ag_links_df, report_data_lst)        
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_data_lst)
@@ -118,8 +122,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
-        save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst)
-        save_xlsx_file(expected_ag_links_df, 'expected_ag_links_df', report_data_lst)
+        save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, nsshow_unsplit_force_flag)
+        save_xlsx_file(expected_ag_links_df, 'expected_ag_links', report_data_lst, expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, \
@@ -133,7 +137,10 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             ]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        force_flag = False
+        if data_name == 'portshow_aggregated':
+            force_flag = portshow_force_flag
+        save_xlsx_file(data_frame, data_name, report_data_lst, force_flag)
 
     return portshow_aggregated_df
 
@@ -170,10 +177,20 @@ def device_ports_per_group(portshow_aggregated_df):
     return portshow_aggregated_df
 
 
-def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, max_title):
-    """Function to display WARNING notification if any deviceType is UNKNOWN,
+def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, expected_ag_links_df, report_data_lst):
+    """Function to show WARNING notification if any deviceType is UNKNOWN,
     if any PortSymb or NodeSymb was not parsed or if new switch founded which was
     not previously discovered"""
+
+    *_, max_title, report_steps_dct = report_data_lst
+    portshow_force_flag = False
+    nsshow_unsplit_force_flag = False
+    expected_ag_links_force_flag = False
+
+
+    portshow_export_flag, *_ = report_steps_dct['portshow_aggregated']
+    nsshow_unsplit_export_flag, *_ = report_steps_dct['nsshow_unsplit']
+    expected_ag_links_export_flag, *_ = report_steps_dct['expected_ag_links']
 
     # warning if UKNOWN device class present
     if (portshow_aggregated_df['deviceType'] == 'UNKNOWN').any():
@@ -181,6 +198,11 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         info = f'{unknown_count} {"port" if unknown_count == 1 else "ports"} with UNKNOWN device Class found'
         print(info, end =" ")
         status_info('warning', max_title, len(info))
+        # ask if save portshow_aggregated_df
+        if not portshow_export_flag:
+            reply = reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            if reply == 'y':
+                portshow_force_flag = True
     # warning if any values in PortSymb or NodeSymb were not parsed
     if not nsshow_unsplit_df.empty:
         portsymb_unsplit_count = nsshow_unsplit_df['PortSymb'].notna().sum()
@@ -190,6 +212,11 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         info = f'{unsplit_str} {"is" if portsymb_unsplit_count + nodesymb_unsplit_count == 1 else "are"} UNPARSED'
         print(info, end =" ")
         status_info('warning', max_title, len(info))
+        # ask if save nsshow_unsplit
+        if not nsshow_unsplit_export_flag:
+            reply = reply_request("Do you want to save 'nsshow_unsplit'? (y)es/(n)o: ")
+            if reply == 'y':
+                nsshow_unsplit_force_flag = True        
     # warning if unknown switches was found
     switch_name_set = set(switch_params_aggregated_df['switchName'])
     # all founded switches in portshow_aggregated_df
@@ -201,3 +228,22 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         info = f'{unknown_count} NEW {"switch" if unknown_count == 1 else "switches"} founded'
         print(info, end =" ")
         status_info('warning', max_title, len(info))
+        # ask if save portshow_aggregated_df
+        if not portshow_export_flag and not portshow_force_flag:
+            reply = reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            if reply == 'y':
+                portshow_force_flag = True
+    # if any unconfirmed AG links found
+    if not expected_ag_links_df.empty:
+        info = f'Unconfirmed AG link(s) found'
+        print(info, end =" ")
+        status_info('warning', max_title, len(info))
+        # ask if save expected_ag_links_df
+        if not expected_ag_links_export_flag:
+            reply = reply_request("Do you want to save 'expected_ag_link'? (y)es/(n)o: ")
+            if reply == 'y':
+                expected_ag_links_force_flag = True
+
+
+    return portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag
+

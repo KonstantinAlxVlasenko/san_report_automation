@@ -60,6 +60,8 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
 
         isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst)
 
+
+
         # after finish display status
         status_info('ok', max_title, len(info))      
 
