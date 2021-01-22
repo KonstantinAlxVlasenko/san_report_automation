@@ -235,7 +235,8 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
                 portshow_force_flag = True
     # if any unconfirmed AG links found
     if not expected_ag_links_df.empty:
-        info = f'Unconfirmed AG link(s) found'
+        unknown_count = expected_ag_links_df['chassis_name'].notna().sum()
+        info = f'{unknown_count} UNCONFIRMED AG {"link" if unknown_count == 1 else "links"} founded'
         print(info, end =" ")
         status_info('warning', max_title, len(info))
         # ask if save expected_ag_links_df

@@ -127,7 +127,7 @@ def data_extract_objects(sheet_title, max_title, param_columns = True):
     # imports string for regular expressions
     comp_values = columns_import(sheet_title,  max_title, 'comp_values')
     # creates regular expressions
-    comp_values_re = [re.compile(fr"{element}") for element in comp_values]
+    comp_values_re = [re.compile(fr"{element}", re.IGNORECASE) for element in comp_values]
     # creates dictionary with regular expressions  
     comp_dct = dict(zip(comp_keys, comp_values_re))
     
