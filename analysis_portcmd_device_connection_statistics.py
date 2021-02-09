@@ -61,10 +61,12 @@ def prior_preparation(portshow_aggregated_df):
     # set column name tag for Fabric_labels for later port number count
     portshow_aggregated_modified_df['Fabric_connection'] = device_port_quantity_str + portshow_aggregated_modified_df['Fabric_label']
     
-    # create DataFrame with unique VC for each device only to verify if Virtual channel divercitu present for each device
-    portshow_aggregated_vc_unique_df = portshow_aggregated_modified_df.drop_duplicates().copy()
+    # create DataFrame with unique VC for each device only to verify if Virtual channel diversity present for each device
+    portshow_aggregated_vc_unique_df = portshow_aggregated_modified_df.copy()
+    portshow_aggregated_vc_unique_df.drop(columns=['speed', 'Fabric_connection'], inplace=True)
+    portshow_aggregated_vc_unique_df.drop_duplicates(inplace=True)
+    # portshow_aggregated_vc_unique_df = portshow_aggregated_modified_df.drop_duplicates().copy()
     portshow_aggregated_vc_unique_df['Unique_Virtual_Channel'] = unique_vc_str +  portshow_aggregated_vc_unique_df['Fabric_label']
-
     # fabric_labels used in Fabric
     fabric_labels_lst = portshow_aggregated_modified_df['Fabric_label'].unique()
     fabric_labels_lst.sort()

@@ -149,7 +149,7 @@ def message_extract(errdump_aggregated_df, re_pattern_lst):
     
     # extract corresponding values if regex pattern applicable
     for pattern, extracted_columns in extract_pattern_columns_lst:
-        # pattern contains groups but str.costains used to identify mask
+        # pattern contains groups but str.cotains used to identify mask
         # supress warning message
         warnings.filterwarnings("ignore", 'This pattern has match groups')
         mask = errdump_aggregated_df['Message'].str.contains(pattern, regex=True)
@@ -178,8 +178,6 @@ def message_extract(errdump_aggregated_df, re_pattern_lst):
 
 def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
     """Function to add port and connected device information to errdump_aggregated_df"""
-    
-
 
     mask_device_name = portshow_aggregated_df['Device_Host_Name'].notna()
     # if Message_portIndex is present but port number is not then fillna slot and port number from portshow
@@ -200,7 +198,7 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
         
     # add port and connected device information based chassis info, slot and port number
     portshow_columns = ['configname', 'chassis_name', 'chassis_wwn',
-                          'slot', 'port', 'portIndex',
+                          'slot', 'port', 'portIndex', 'Index_slot_port',
                           'portType', 'portState', 'speed',
                           'Connected_portId', 'Connected_portWwn',
                           'Device_Host_Name', 'Device_Port', 'Device_Location',
@@ -224,6 +222,10 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
         errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_join_df, 
                                                 join_lst=[*portshow_columns[:3], 'Message_portId'], 
                                                 filled_lst=portshow_columns[3:], remove_duplicates=False, drop_na=False)
+
+    # add fabric name and label for switches with chassis info, slot and port
+    errdump_aggregated_df = \
+        dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], ['Fabric_name', 'Fabric_label'])
 
     # concatenate devce name and device port columns
     errdump_aggregated_df['Device_Host_Name_Port'] = errdump_aggregated_df[['Device_Host_Name', 'Device_Port']].stack().groupby(level=0).agg(' '.join)
@@ -256,7 +258,7 @@ def errdump_filter(errdump_aggregated_df):
                            'switchName', 'switchWwn', 'Fabric_name', 'Fabric_label',
                            'config_collection_date', 'Message_portIndex', 'Message_portType',
                            'slot', 'port', 'Condition', 'Current_value', 'Dashboard_category',
-                           'obj', 'Message_status', 'portIndex', 'portType', 'portState',
+                           'obj', 'Message_status', 'portIndex', 'Index_slot_port', 'portType', 'portState',
                            'speed', 'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'deviceType']
     
     errdump_filtered_df = errdump_filtered_df[errdump_grp_columns].copy()
@@ -285,7 +287,8 @@ def errdump_statistics(errdump_filtered_df):
                            'Fabric_name', 'Fabric_label', 'config_collection_date',
                            'Message_ID', 'Severity', 'Message_portIndex', 'Message_portType','slot', 'port',
                            'Condition', 'Dashboard_category', 'obj', 'Message_status',
-                           'portIndex', 'portType', 'portState', 'speed', 'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'deviceType']
+                           'portIndex', 'Index_slot_port', 'portType', 'portState', 'speed', 
+                           'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'deviceType']
     
     # group log messages by month, device and log message
     errdump_grouper = errdump_filtered_df.groupby([pd.Grouper(freq='M', kind='period'), *errdump_grp_columns])

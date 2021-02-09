@@ -212,9 +212,10 @@ def absent_device(zoning_aggregated_df, data_name, translate_dct, report_columns
     """Function to create table with absent and unavailable remote devices in zoning configuration"""
     
     mask_absent = zoning_aggregated_df.Fabric_device_status.isin(['absent', 'remote_na'])
-    absent_columns = ['Fabric_name', 'Fabric_label', 'cfg',	'cfg_type',	'zone_member', 'alias_member', 'Fabric_device_status', 'zone']
+    absent_columns = ['Fabric_name', 'Fabric_label', 'cfg',	'cfg_type',	'zone_member', 'alias_member', 
+                        'Fabric_device_status', 'zonemember_Fabric_name', 'zonemember_Fabric_label', 'zone']
     absent_device_df = zoning_aggregated_df.loc[mask_absent, absent_columns]
-    absent_device_df = absent_device_df.groupby(absent_columns[:-1], as_index = False).agg({'zone': ', '.join})
+    absent_device_df = absent_device_df.groupby(absent_columns[:-1], as_index = False, dropna=False).agg({'zone': ', '.join})
     absent_device_df = translate_values(absent_device_df, translate_dct, ['Fabric_device_status'])
     zoning_absent_device_report_df, = dataframe_segmentation(absent_device_df, data_name, report_columns_usage_dct, max_title)
 

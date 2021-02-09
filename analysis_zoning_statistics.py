@@ -3,43 +3,13 @@
 import numpy as np
 import pandas as pd
 import re
+from common_operations_dataframe import dataframe_fillna
 
 
 def zonemember_statistics(zoning_aggregated_df):
     """Main function to create zonemembers statistics"""
 
-    statistics_columns_lst = ['deviceType', 'deviceSubtype', 'Device_type', 'Wwn_type', 'peerzone_member_type'] 
-
-    # to count zonemeber stitistics it is required to make
-    # changes in zoning_aggregated_df DataFrame
-    zoning_modified_df = zoning_aggregated_df.copy()
-    # All classes of servers are considered to be SRV class
-    zoning_modified_df.deviceType.replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV', 'SRV_BLADE': 'SRV', 'SRV_SYNERGY': 'SRV'}, inplace=True)
-    # deviceType transformed to be combination if device class and device type
-    zoning_modified_df.deviceSubtype = zoning_modified_df['deviceType'] + ' ' + zoning_modified_df['deviceSubtype']
-    # servers device type is not important for zonemember analysys
-    mask_srv = zoning_modified_df.deviceType.str.contains('SRV', na=False)
-    zoning_modified_df.deviceSubtype = np.where(mask_srv, np.nan, zoning_modified_df.deviceSubtype)
-    """
-    We are interested to count connected devices statistics only.
-    Connected devices are in the same fabric with the switch which 
-    zoning configurutaion defined in (local) or imported to that fabric
-    in case of LSAN zones (imported).
-    Ports with status remote_na, initializing and configured considered to be
-    not connected (np.nan) and thus it's 'deviceType', 'deviceSubtype', 'Device_type', 
-    'Wwn_type', 'peerzone_member_type' are not taking into acccount.
-    'peerzone_member_type' for Peerzone property member is not changed and counted in statistics. 
-    But device status for not connected ports is reflected in zonemember statistics.
-    """  
-    mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
-    mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
-
-    zoning_modified_df[statistics_columns_lst] = \
-        zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan, np.nan)), axis=1)
-
-    mask_zone_name = zoning_modified_df['zone_duplicates_free'].isna()
-    zoning_modified_df['zone_tag'] = zoning_modified_df['zone_duplicates_free'].where(mask_zone_name, 'zone_tag')
-    zoning_modified_df['lsan_tag'] = zoning_modified_df['lsan_tag'].where(~mask_zone_name, np.nan)
+    zoning_modified_df, zoning_duplicated_df = modify_zoning(zoning_aggregated_df)
 
     # get statistics DataFrames for zone and cfgtype level statistics
     zonemember_zonelevel_stat_df = count_zonemember_statistics(zoning_modified_df)
@@ -57,10 +27,17 @@ def zonemember_statistics(zoning_aggregated_df):
     # if zone is empty (no active devices) fill device_type columns (target/initiator) with zeroes
     device_type_columns = [column for column in zonemember_zonelevel_stat_df.columns if ('initiator' in column.lower() or 'target' in column.lower())]
     mask_empty_zone = zonemember_zonelevel_stat_df['Total_zonemembers_active'] == 0
-    zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns] = zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns].fillna(0)
+    zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns] = \
+        zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns].fillna(0)
 
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
     zonemember_zonelevel_stat_df = note_zonemember_statistics(zonemember_zonelevel_stat_df)
+    # add list of identical (duplicated) zones to each zone in statistics
+    zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
+    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
+                                                        join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+    mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator'])
+    zonemember_zonelevel_stat_df['zone_duplicated'] = zonemember_zonelevel_stat_df['zone_duplicated'].where(mask_valid_zone)
     # concatenate both statistics
     zonemember_statistics_df = pd.concat([zonemember_zonelevel_stat_df, zonemember_cfgtypelevel_stat_df], ignore_index=True)
         
@@ -75,7 +52,7 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
     """
 
     # column names for which statistics is counted for
-    columns_lst = ['zone_tag', 'lsan_tag', 'Fabric_device_status', 'peerzone_member_type',
+    columns_lst = ['zone_tag', 'lsan_tag', 'zone_duplicated_tag', 'Fabric_device_status', 'peerzone_member_type',
                     'deviceType', 'deviceSubtype',
                     'Device_type', 'Wwn_type', 'zone_member_type']
 
@@ -303,3 +280,75 @@ def target_initiator_note(series):
             return 'several_initiators'
     
     return np.nan
+
+
+def verify_duplicated_zones(zoning_aggregated_df):
+    """Function to find duplicated zones (zones with identical set of PortWwns)"""
+
+    columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type']
+    zoning_cp_df = zoning_aggregated_df.copy()
+    # drop rows with empty PortWwwns (absent zonemembers)
+    zoning_cp_df.dropna(subset=['PortName'], inplace=True)
+    
+    # group PortWwns of each zone to sorted set thus removing duplicates and present it as comma separated list
+    grp_columns = columns + ['zone']
+    zoning_grp_df = zoning_cp_df.groupby(by=grp_columns)['PortName'].agg(lambda x: ', '.join(sorted(set(x))))
+    zoning_grp_df = pd.DataFrame(zoning_grp_df)
+    zoning_grp_df.reset_index(inplace=True)
+
+    grp_columns = columns + ['PortName']
+    # filter duplicated zones only (zones with equal set of PortWwns for each Fabric)
+    zoning_duplicated_df = zoning_grp_df.loc[zoning_grp_df.duplicated(subset=grp_columns, keep=False)].copy()
+    zoning_duplicated_df['zone_duplicated_tag'] = 'zone_duplicated_tag'
+    # add column with identical zones list for each duplicated zone 
+    zoning_duplicated_df['zone_duplicated'] = zoning_duplicated_df.groupby(by=grp_columns)['zone'].transform(', '.join)
+    # add column with zone names (for merge purposes further)
+    zoning_duplicated_df['zone_duplicates_free'] = zoning_duplicated_df['zone']
+
+    return zoning_duplicated_df
+
+
+def modify_zoning(zoning_aggregated_df):
+    """Function to modify zoning_aggregated_df DataFrame to count statistics"""
+
+    statistics_columns_lst = ['deviceType', 'deviceSubtype', 'Device_type', 'Wwn_type', 'peerzone_member_type'] 
+
+    # to count zonemeber stitistics it is required to make
+    # changes in zoning_aggregated_df DataFrame
+    zoning_modified_df = zoning_aggregated_df.copy()
+    # All classes of servers are considered to be SRV class
+    zoning_modified_df.deviceType.replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV', 'SRV_BLADE': 'SRV', 'SRV_SYNERGY': 'SRV'}, inplace=True)
+    # deviceType transformed to be combination if device class and device type
+    zoning_modified_df.deviceSubtype = zoning_modified_df['deviceType'] + ' ' + zoning_modified_df['deviceSubtype']
+    # servers device type is not important for zonemember analysys
+    mask_srv = zoning_modified_df.deviceType.str.contains('SRV', na=False)
+    zoning_modified_df.deviceSubtype = np.where(mask_srv, np.nan, zoning_modified_df.deviceSubtype)
+    """
+    We are interested to count connected devices statistics only.
+    Connected devices are in the same fabric with the switch which 
+    zoning configurutaion defined in (local) or imported to that fabric
+    in case of LSAN zones (imported).
+    Ports with status remote_na, initializing and configured considered to be
+    not connected (np.nan) and thus it's 'deviceType', 'deviceSubtype', 'Device_type', 
+    'Wwn_type', 'peerzone_member_type' are not taking into acccount.
+    'peerzone_member_type' for Peerzone property member is not changed and counted in statistics. 
+    But device status for not connected ports is reflected in zonemember statistics.
+    """  
+    mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
+    mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
+
+    zoning_modified_df[statistics_columns_lst] = \
+        zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan, np.nan)), axis=1)
+
+    mask_zone_name = zoning_modified_df['zone_duplicates_free'].isna()
+    zoning_modified_df['zone_tag'] = zoning_modified_df['zone_duplicates_free'].where(mask_zone_name, 'zone_tag')
+    zoning_modified_df['lsan_tag'] = zoning_modified_df['lsan_tag'].where(~mask_zone_name, np.nan)
+
+    # verify duplicated zones (zones with the same set of PortWwns)
+    zoning_duplicated_df = verify_duplicated_zones(zoning_aggregated_df)
+    zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone_duplicates_free', 'zone_duplicated_tag']
+    # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
+    zoning_modified_df = \
+        dataframe_fillna(zoning_modified_df, zoning_duplicated_df, join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+
+    return zoning_modified_df, zoning_duplicated_df
