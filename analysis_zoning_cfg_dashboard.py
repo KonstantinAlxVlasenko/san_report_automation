@@ -13,6 +13,10 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     mask_cfg_summary = zonemember_statistics_df['zone'].isna()
     # DataFrame with information for each zone (zonelevel)
     zonelevel_statistics_effective_df = zonemember_statistics_df.loc[mask_zone_effective & ~mask_cfg_summary].copy()
+    # add zone_duplicated_tag
+    mask_not_duplicated_zone = zonelevel_statistics_effective_df['zone_duplicated'].isna()
+    zonelevel_statistics_effective_df['zone_duplicated'] = zonelevel_statistics_effective_df['zone_duplicated'].where(mask_not_duplicated_zone, 'zone_duplicated_tag')
+
     # DataFrame with summary for all zones in Fabric (cfg level)
     cfglevel_statistics_effective_df = zonemember_statistics_df.loc[mask_zone_effective & mask_cfg_summary].copy()
 
@@ -29,7 +33,8 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zonelevel_statistics_effective_df['zone_Wwnn_tag'] = \
         np.where(zonelevel_statistics_effective_df['Wwnn'] > 0, 'zone_Wwnn_tag', pd.NA)
     zone_notes_summary_df = \
-        count_summary(zonelevel_statistics_effective_df, count_columns=['Target_Initiator_note', 'Target_model_note', 'zone_Wwnn_tag'])
+        count_summary(zonelevel_statistics_effective_df, count_columns=['zone_duplicated', 'Target_Initiator_note', 'Target_model_note', 'zone_Wwnn_tag'])
+
 
     # count device ports in zoning configuration for each ports state 
     # (local, remote_imported, remote_na, remote_initializing, absent, remote_configured)
@@ -97,7 +102,7 @@ def count_summary(df, count_columns: list, group_columns = ['Fabric_name', 'Fabr
             if summary_df.empty:
                 summary_df = current_df.copy()
             else:
-                summary_df = summary_df.merge(current_df, how='left', on=group_columns)
+                summary_df = summary_df.merge(current_df, how='outer', on=group_columns)
                 
     summary_df.reset_index(inplace=True)
                 
@@ -120,7 +125,7 @@ def find_mean_max_min(df, count_columns: dict, group_columns = ['Fabric_name', '
         if summary_df.empty:
             summary_df = current_df.copy()
         else:
-            summary_df = summary_df.merge(current_df, how='left', on=group_columns)
+            summary_df = summary_df.merge(current_df, how='outer', on=group_columns)
             
     return summary_df
 
