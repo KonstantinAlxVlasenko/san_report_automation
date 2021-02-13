@@ -54,11 +54,14 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
     # column names for which statistics is counted for
     columns_lst = ['zone_tag', 'lsan_tag', 'zone_duplicated_tag', 'Fabric_device_status', 'peerzone_member_type',
                     'deviceType', 'deviceSubtype',
-                    'Device_type', 'Wwn_type', 'zone_member_type']
+                    'Device_type', 'Wwn_type', 'Wwnp_duplicated', 'zone_member_type']
 
     wwnn_duplicates_columns = ['Fabric_name', 'Fabric_label', 
                                 'cfg', 'cfg_type', 'zone', 
                                 'zone_member', 'alias_member']
+
+    wwnp_duplicated_columns = ['Fabric_name', 'Fabric_label', 
+                                'cfg', 'cfg_type', 'zone', 'PortName']
 
     columns_lst = [column for column in columns_lst if zoning_modified_deafult_df[column].notna().any()]
 
@@ -87,7 +90,8 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
             zoning_modified_df.drop_duplicates(subset=wwnn_duplicates_columns[:-1], inplace=True)
             mask_property_member = zoning_modified_df['peerzone_member_type'] == 'property'
             zoning_modified_df = zoning_modified_df.loc[~mask_property_member]
-
+        if column == 'Wwnp_duplicated':
+            zoning_modified_df.drop_duplicates(subset=wwnp_duplicated_columns, inplace=True)
         # list of series(columns) grouping performed on
         index_lst = [zoning_modified_df.Fabric_name, zoning_modified_df.Fabric_label,
                     zoning_modified_df.cfg, zoning_modified_df.cfg_type,
@@ -323,6 +327,9 @@ def modify_zoning(zoning_aggregated_df):
     # servers device type is not important for zonemember analysys
     mask_srv = zoning_modified_df.deviceType.str.contains('SRV', na=False)
     zoning_modified_df.deviceSubtype = np.where(mask_srv, np.nan, zoning_modified_df.deviceSubtype)
+    # tag duplicated PortWwnp in zone 
+    mask_wwnp_duplicated = zoning_modified_df['wwnp_instance_number_per_zone'] > 1
+    zoning_modified_df['Wwnp_duplicated'] = np.where(mask_wwnp_duplicated, 'Wwnp_duplicated', np.nan)
     """
     We are interested to count connected devices statistics only.
     Connected devices are in the same fabric with the switch which 
@@ -350,5 +357,7 @@ def modify_zoning(zoning_aggregated_df):
     # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
     zoning_modified_df = \
         dataframe_fillna(zoning_modified_df, zoning_duplicated_df, join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+
+    zoning_modified_df.replace(to_replace='nan', value=np.nan, inplace=True)
 
     return zoning_modified_df, zoning_duplicated_df

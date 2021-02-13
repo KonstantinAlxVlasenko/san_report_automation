@@ -74,31 +74,41 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
             print(info, end =" ")
             status_info('warning', max_title, len(info))
 
-        # partition aggregated DataFrame to required tables
-        switches_report_df, fabric_report_df,  \
-            switches_parameters_report_df, licenses_report_df = \
-                dataframe_segmentation(switch_params_aggregated_df, data_names[2:-1], \
-                    report_columns_usage_dct, max_title)
+        switches_report_df, fabric_report_df, switches_parameters_report_df, \
+            licenses_report_df, global_fabric_parameters_report_df = \
+                switchs_params_report(switch_params_aggregated_df, data_names, report_columns_usage_dct, max_title)
 
-        # global parameters are equal for all switches in one fabric thus checking Principal switches only
-        mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
-        switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal].copy()
-        global_fabric_parameters_report_df, = dataframe_segmentation(switch_params_principal_df, data_names[-1], \
-                    report_columns_usage_dct, max_title)            
+        # # partition aggregated DataFrame to required tables
+        # switches_report_df, fabric_report_df,  \
+        #     switches_parameters_report_df, licenses_report_df = \
+        #         dataframe_segmentation(switch_params_aggregated_df, data_names[2:-1], \
+        #             report_columns_usage_dct, max_title)
 
-        # drop rows with empty switch names columns
-        fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-        switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-        licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+        # # global parameters are equal for all switches in one fabric thus checking Principal switches only
+        # mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
+        # switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal].copy()
+        # global_fabric_parameters_report_df, = dataframe_segmentation(switch_params_principal_df, data_names[-1], \
+        #             report_columns_usage_dct, max_title)            
 
-        # TO_REMOVE No need to drop duplicates coz Principal switches only used before
-        # # parameters are equal for all switches in one fabric
-        # if report_columns_usage_dct['fabric_name_usage']:
-        #     global_fabric_parameters_report_df.drop_duplicates(subset=['Фабрика', 'Подсеть'], inplace=True)
-        # else:
-        #     global_fabric_parameters_report_df.drop_duplicates(subset=['Подсеть'], inplace=True)
+        # # drop rows with empty switch names columns
+        # fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+        # switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+        # licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+
+        # # drop fabric_id if all have same value
+        # if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
+        #     fabric_report_df.drop(columns=['Fabric ID'], inplace=True)        
+
+        # # TO_REMOVE No need to drop duplicates coz Principal switches only used before
+        # # # parameters are equal for all switches in one fabric
+        # # if report_columns_usage_dct['fabric_name_usage']:
+        # #     global_fabric_parameters_report_df.drop_duplicates(subset=['Фабрика', 'Подсеть'], inplace=True)
+        # # else:
+        # #     global_fabric_parameters_report_df.drop_duplicates(subset=['Подсеть'], inplace=True)
         
-        global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)      
+        # global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)      
+
+
 
         # create list with partitioned DataFrames
         data_lst = [report_columns_usage_dct, switch_params_aggregated_df, 
@@ -251,3 +261,40 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
         switch_params_aggregated_df = switch_params_aggregated_df.reindex(columns = [*switch_params_aggregated_df.columns.to_list(), 'Device_Location'])
 
     return switch_params_aggregated_df
+
+
+def switchs_params_report(switch_params_aggregated_df, data_names, report_columns_usage_dct, max_title):
+    """Function to create switch related report tables"""
+
+    # partition aggregated DataFrame to required tables
+    switches_report_df, fabric_report_df,  \
+        switches_parameters_report_df, licenses_report_df = \
+            dataframe_segmentation(switch_params_aggregated_df, data_names[2:-1], \
+                report_columns_usage_dct, max_title)
+
+    # global parameters are equal for all switches in one fabric thus checking Principal switches only
+    mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
+    switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal].copy()
+    global_fabric_parameters_report_df, = dataframe_segmentation(switch_params_principal_df, data_names[-1], \
+                report_columns_usage_dct, max_title)            
+
+    # drop rows with empty switch names columns
+    fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+    switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+    licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+
+    # drop fabric_id if all have same value
+    if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
+        fabric_report_df.drop(columns=['Fabric ID'], inplace=True)        
+
+    # TO_REMOVE No need to drop duplicates coz Principal switches only used before
+    # # parameters are equal for all switches in one fabric
+    # if report_columns_usage_dct['fabric_name_usage']:
+    #     global_fabric_parameters_report_df.drop_duplicates(subset=['Фабрика', 'Подсеть'], inplace=True)
+    # else:
+    #     global_fabric_parameters_report_df.drop_duplicates(subset=['Подсеть'], inplace=True)
+    
+    global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)  
+
+    return switches_report_df, fabric_report_df, switches_parameters_report_df, \
+                licenses_report_df, global_fabric_parameters_report_df

@@ -1,7 +1,6 @@
 """Module to create zoning configuration related reports"""
 
 import pandas as pd
-import numpy as np
 
 
 from common_operations_dataframe import dataframe_segmentation
@@ -49,7 +48,7 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     
     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
     # list of columns to check if all values in column are NA
-    possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 'peerzone_member_type']
+    possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 'peerzone_member_type', 'zone_duplicated']
     # dictionary of items to check if all values in column (dict key) are equal to certain value (dict value)
     possible_identical_values = {'Wwn_type': 'Wwnp', 'cfg_type': 'effective', 'Member_in_cfg_Fabric': 'Да', 
                                             'Fabric_device_status': 'local', 'portType': 'F-Port', }
@@ -159,7 +158,10 @@ def compare_zone_config(zoning_report_df):
         'Количество портов устройства в фабрике' in zoning_valid_df.columns and \
             zoning_valid_df['Количество портов устройства в подсети'].equals(zoning_valid_df['Количество портов устройства в фабрике']):
                 zoning_valid_df.drop(columns=['Количество портов устройства в фабрике'], inplace=True)
-
+    # drop column with duplicated zones if it's empty
+    if 'Дубликаты зоны' in zoning_valid_df.columns and \
+        zoning_valid_df['Дубликаты зоны'].isna().all():
+            zoning_valid_df.drop(columns=['Дубликаты зоны'], inplace=True)
 
     # separate A and B fabrics for side by side compare
     mask_A = zoning_valid_df['Подсеть'] == 'A'
@@ -204,7 +206,6 @@ def unzoned_device_report(portshow_cfg_aggregated_df, data_names, report_columns
     unzoned_device_report_df, = dataframe_segmentation(unzoned_device_df, data_names[0], report_columns_usage_dct, max_title)
     no_alias_device_report_df, = dataframe_segmentation(no_alias_device_df, data_names[1], report_columns_usage_dct, max_title)
 
-
     return unzoned_device_report_df, no_alias_device_report_df
 
 
@@ -231,7 +232,10 @@ def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report
     zonemember_statistics_report_df = zonemember_statistics_df.copy()
     # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
     if (zonemember_statistics_report_df['Wwnn_to_Wwnp_number_unpacked'].dropna() == 0).all():
-        zonemember_statistics_report_df.drop(columns=['Wwnn_to_Wwnp_number_unpacked'], inplace=True)        
+        zonemember_statistics_report_df.drop(columns=['Wwnn_to_Wwnp_number_unpacked'], inplace=True)
+    # drop column with identical zones if there is no any
+    if zonemember_statistics_report_df['zone_duplicated'].isna().all():
+        zonemember_statistics_report_df.drop(columns=['zone_duplicated'], inplace=True)
 
     # # drop column 'chassis_name' if it is not required
     # if not fabric_name_usage:

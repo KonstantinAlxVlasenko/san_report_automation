@@ -29,11 +29,14 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zone_type_summary_df.loc[('All', ''), :] = zone_type_summary_df.sum(numeric_only=True, axis=0)
     zone_type_summary_df.reset_index(inplace=True)
 
-    # count qunatity of zones with each type of note (no_target, no_initiator, wwnn_zones, etc)
+    # count qunatity of zones with each type of note (no_target, no_initiator, wwnn_zones, wwnp_duplicated_zones etc)
     zonelevel_statistics_effective_df['zone_Wwnn_tag'] = \
         np.where(zonelevel_statistics_effective_df['Wwnn'] > 0, 'zone_Wwnn_tag', pd.NA)
+    zonelevel_statistics_effective_df['zone_Wwnp_duplicated_tag'] = \
+        np.where(zonelevel_statistics_effective_df['Wwnp_duplicated'] > 0, 'zone_Wwnp_duplicated_tag', pd.NA)
     zone_notes_summary_df = \
-        count_summary(zonelevel_statistics_effective_df, count_columns=['zone_duplicated', 'Target_Initiator_note', 'Target_model_note', 'zone_Wwnn_tag'])
+        count_summary(zonelevel_statistics_effective_df, \
+            count_columns=['zone_duplicated', 'Target_Initiator_note', 'Target_model_note', 'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag'])
 
 
     # count device ports in zoning configuration for each ports state 
@@ -83,7 +86,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     summary_lst = [zone_notes_summary_df, zoned_ports_status_summary_df, zoned_vs_total_ports_summary_df, alias_vs_active_ports_per_zone_df, alias_ports_vs_zone_usage_df]
     for df in summary_lst:
         if not df.empty:
-            active_cfg_statistics_df = active_cfg_statistics_df.merge(df, how='left', on=['Fabric_name', 'Fabric_label'])
+            active_cfg_statistics_df = active_cfg_statistics_df.merge(df, how='outer', on=['Fabric_name', 'Fabric_label'])
 
     return active_cfg_statistics_df
 
