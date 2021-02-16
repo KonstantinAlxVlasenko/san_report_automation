@@ -25,6 +25,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zone_type_columns = [column for column in zone_type_columns if column in cfglevel_statistics_effective_df.columns]
     zone_type_summary_df = cfglevel_statistics_effective_df.loc[:, zone_type_columns].copy()
     zone_type_summary_df.set_index(['Fabric_name', 'Fabric_label'], inplace=True)
+    zone_type_summary_df.fillna(0, inplace=True)
     # summarize all zone types
     zone_type_summary_df.loc[('All', ''), :] = zone_type_summary_df.sum(numeric_only=True, axis=0)
     zone_type_summary_df.reset_index(inplace=True)
@@ -106,7 +107,8 @@ def count_summary(df, count_columns: list, group_columns = ['Fabric_name', 'Fabr
                 summary_df = current_df.copy()
             else:
                 summary_df = summary_df.merge(current_df, how='outer', on=group_columns)
-                
+
+    summary_df.fillna(0, inplace=True)            
     summary_df.reset_index(inplace=True)
                 
     return summary_df

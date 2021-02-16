@@ -225,7 +225,7 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
     # if unknown switches found
     if not portshow_switch_name_set.issubset(switch_name_set):
         unknown_count = len(portshow_switch_name_set.difference(switch_name_set))
-        info = f'{unknown_count} NEW {"switch" if unknown_count == 1 else "switches"} founded'
+        info = f'{unknown_count} NEW {"switch" if unknown_count == 1 else "switches"} detected'
         print(info, end =" ")
         status_info('warning', max_title, len(info))
         # ask if save portshow_aggregated_df
@@ -236,7 +236,7 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
     # if any unconfirmed AG links found
     if not expected_ag_links_df.empty:
         unknown_count = expected_ag_links_df['chassis_name'].notna().sum()
-        info = f'{unknown_count} UNCONFIRMED AG {"link" if unknown_count == 1 else "links"} founded'
+        info = f'{unknown_count} AG {"link" if unknown_count == 1 else "links"} detected'
         print(info, end =" ")
         status_info('warning', max_title, len(info))
         # ask if save expected_ag_links_df
