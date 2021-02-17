@@ -15,6 +15,7 @@ isl_group_columns = ['Fabric_name', 'Fabric_label',
 def isl_statistics(isl_aggregated_df, re_pattern_lst):
     """Main function to count ISL statistics"""
     
+    # isl_statistics_df = isl_aggregated_df[['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 'SwitchName', 'switchWwn']].copy()
     isl_statistics_df = pd.DataFrame()
 
     if not isl_aggregated_df.empty:

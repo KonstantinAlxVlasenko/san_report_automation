@@ -104,16 +104,22 @@ def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
     zoning_aggregated_df['Member_in_cfg_Fabric'] = \
         (zoning_aggregated_df['Fabric_name'] == zoning_aggregated_df['zonemember_Fabric_name']) & \
             (zoning_aggregated_df['Fabric_label'] == zoning_aggregated_df['zonemember_Fabric_label'])
+    
     zoning_aggregated_df['Fabric_device_status'] = np.nan
     zoning_aggregated_df['Fabric_device_status'] = zoning_aggregated_df['Fabric_device_status'].fillna(zoning_aggregated_df['Member_in_cfg_Fabric'])
     # remove False values for devices which are not connected to any fabric (leave blank)
     zoning_aggregated_df['Member_in_cfg_Fabric'] = \
         zoning_aggregated_df['Member_in_cfg_Fabric'].where(pd.notna(zoning_aggregated_df.zonemember_Fabric_name), np.nan)
+
     zoning_aggregated_df['Fabric_device_status'] = \
         zoning_aggregated_df['Fabric_device_status'].where(pd.notna(zoning_aggregated_df.zonemember_Fabric_name), 'absent')
+
     # Replace 0 and 1 with Yes and No
     zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={1: 'Да', 0: 'Нет'}, inplace = True)
-    zoning_aggregated_df['Fabric_device_status'].replace(to_replace={1: 'local', 0: 'remote_na'}, inplace = True)
+    zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
+    zoning_aggregated_df['Fabric_device_status'].replace(to_replace={1: 'local', 0: 'remote_na', True: 'local'}, inplace = True)
+    zoning_aggregated_df['Fabric_device_status'].replace(to_replace={True: 'local', False: 'remote_na'}, inplace = True)
+
     # mark devices which are not in the same fabric with principal switch where configiguration defined
     # but which is part of LSAN zone for that fabric and device status is Imported as Yes 
     mask_member_imported = zoning_aggregated_df['LSAN_device_state'].str.contains('Imported', na=False)
@@ -122,7 +128,7 @@ def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
     mask_fabric_name = pd.notna(zoning_aggregated_df['zonemember_Fabric_name'])
 
     zoning_aggregated_df['Member_in_cfg_Fabric'] = \
-        np.where((mask_member_imported&mask_fabric_name), 'Да', zoning_aggregated_df['Member_in_cfg_Fabric'])
+        np.where((mask_member_imported & mask_fabric_name), 'Да', zoning_aggregated_df['Member_in_cfg_Fabric'])
     zoning_aggregated_df['Fabric_device_status'] = \
         np.where((mask_member_imported & mask_fabric_name), 'remote_imported', zoning_aggregated_df['Fabric_device_status'])
     zoning_aggregated_df['Fabric_device_status'] = \

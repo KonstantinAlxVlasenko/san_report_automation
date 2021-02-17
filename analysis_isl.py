@@ -60,8 +60,6 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
 
         isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst)
 
-
-
         # after finish display status
         status_info('ok', max_title, len(info))      
 
@@ -97,6 +95,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
 def isl_statistics_report(isl_statistics_df, report_columns_usage_dct, max_title):
     """Function to create report table out of isl_statistics_df DataFrame"""
 
+    # isl_statistics_df_report_df = pd.DataFrame('Фабрика', 'Подсеть',	'Имя шасси', 'Имя коммутатора')
     isl_statistics_df_report_df = pd.DataFrame()
 
     if not isl_statistics_df.empty:

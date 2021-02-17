@@ -5,8 +5,9 @@ import pandas as pd
 import re
 from common_operations_dataframe import dataframe_fillna
 
+from common_operations_filesystem import load_data, save_data, save_xlsx_file
 
-def zonemember_statistics(zoning_aggregated_df):
+def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     """Main function to create zonemembers statistics"""
 
     zoning_modified_df, zoning_duplicated_df = modify_zoning(zoning_aggregated_df)
@@ -26,6 +27,7 @@ def zonemember_statistics(zoning_aggregated_df):
 
     # if zone is empty (no active devices) fill device_type columns (target/initiator) with zeroes
     device_type_columns = [column for column in zonemember_zonelevel_stat_df.columns if ('initiator' in column.lower() or 'target' in column.lower())]
+
     mask_empty_zone = zonemember_zonelevel_stat_df['Total_zonemembers_active'] == 0
     zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns] = \
         zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns].fillna(0)
@@ -67,23 +69,11 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
 
     # list to merge diffrenet parameters statistics into single DataFrame
     merge_lst = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
-    # # list of series(columns) grouping performed on
-    # index_lst = [zoning_modified_df.Fabric_name, zoning_modified_df.Fabric_label,
-    #             zoning_modified_df.cfg, zoning_modified_df.cfg_type,
-    #             zoning_modified_df.zone]
-    # # for cfg type level statistics drop zone
-    # # from lists grouping and merging on
-    # if not zone:
-    #     index_lst = index_lst[:-1]
-    #     merge_lst = merge_lst[:-1]
 
     # aggregated zoning_statistics DataFrame is initially empty
     zone_aggregated_statistics_df = pd.DataFrame()
     for column in columns_lst:
         zoning_modified_df = zoning_modified_deafult_df.copy()
-        # print('\n')
-        # print('------------------------------------------------')
-        # print(zone, column)
         if column == 'Wwn_type':
             zoning_modified_df.drop_duplicates(subset=wwnn_duplicates_columns, inplace=True)
         if column == 'zone_member_type':
@@ -105,12 +95,10 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
             index_lst = index_lst[:-1]
             merge_lst = merge_lst[:-1]
 
-
         # count statistics for each column from columns_lst
         column_statistics_df = pd.crosstab(index = index_lst,
                                     columns = zoning_modified_df[column],
                                     margins=True)
-
         # drop All column for all statistics except for device class
         if column == 'deviceType':
             column_statistics_df.rename(columns={'All': 'Total_zonemembers_active'}, inplace=True)
@@ -122,14 +110,6 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
             column_statistics_df['Wwnn'] = 0
         else:
             column_statistics_df.drop(columns=['All'], inplace=True)
-
-        # if not zone:
-        #     print('---------')
-        #     print(zone_aggregated_statistics_df)
-        #     print(merge_lst)
-        #     print('\n+++++++')
-        #     print(column_statistics_df)
-        #     print('\n=======')
 
         # for the first iteration (aggregated DataFrame is empty)
         if zone_aggregated_statistics_df.empty:
@@ -229,10 +209,13 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     # drop columns if all values are NA
     zonemember_stat_notes_df.dropna(how='all', axis='columns', inplace=True)
     # check if there are SRV, STORAGE and LIB devices classes in zones
-    # if none of the zones contain any of device class then drop this class from statistcics DataFRame
+    # if none of the zones contain any of device class then drop this class from statistcics DataFrame
     for column in target_initiators_lst:
         if (zonemember_stat_notes_df[column] == 0).all():
             zonemember_stat_notes_df.drop(columns=column, inplace=True)
+
+    if not 'Target_Initiator_note' in zonemember_stat_notes_df.columns:
+        zonemember_stat_notes_df['Target_Initiator_note'] = np.nan
 
     return zonemember_stat_notes_df
 
@@ -330,6 +313,7 @@ def modify_zoning(zoning_aggregated_df):
     # tag duplicated PortWwnp in zone 
     mask_wwnp_duplicated = zoning_modified_df['wwnp_instance_number_per_zone'] > 1
     zoning_modified_df['Wwnp_duplicated'] = np.where(mask_wwnp_duplicated, 'Wwnp_duplicated', np.nan)
+
     """
     We are interested to count connected devices statistics only.
     Connected devices are in the same fabric with the switch which 

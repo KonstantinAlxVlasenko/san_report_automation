@@ -10,6 +10,7 @@ from datetime import date
 import openpyxl
 # import xlrd
 import pandas as pd
+import numpy as np
 
 from common_operations_miscellaneous import status_info
 
@@ -228,6 +229,8 @@ def save_data(report_data_list, data_names, *args):
                     # with information string
                     if data_exported_flat.empty:
                         empty_data = True
+                        if len(data_exported_flat.columns) == 0:
+                            data_exported_flat['EMPTY'] = np.nan
                         data_exported_flat.loc[0] = 'NO DATA FOUND'
                     # save single level Index DataFrame to csv
                     data_exported_flat.to_csv(file, index=False)

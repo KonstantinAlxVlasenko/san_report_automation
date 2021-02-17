@@ -48,7 +48,7 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     
     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
     # list of columns to check if all values in column are NA
-    possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 'peerzone_member_type', 'zone_duplicated']
+    possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 'peerzone_member_type', 'zone_duplicated', 'Target_Initiator_note']
     # dictionary of items to check if all values in column (dict key) are equal to certain value (dict value)
     possible_identical_values = {'Wwn_type': 'Wwnp', 'cfg_type': 'effective', 'Member_in_cfg_Fabric': 'Да', 
                                             'Fabric_device_status': 'local', 'portType': 'F-Port', }
@@ -162,6 +162,10 @@ def compare_zone_config(zoning_report_df):
     if 'Дубликаты зоны' in zoning_valid_df.columns and \
         zoning_valid_df['Дубликаты зоны'].isna().all():
             zoning_valid_df.drop(columns=['Дубликаты зоны'], inplace=True)
+    # drop column with duplicated zones if it's empty
+    if 'Примечание. Количество таргетов и инициаторов в зоне' in zoning_valid_df.columns and \
+        zoning_valid_df['Примечание. Количество таргетов и инициаторов в зоне'].isna().all():
+            zoning_valid_df.drop(columns=['Примечание. Количество таргетов и инициаторов в зоне'], inplace=True)
 
     # separate A and B fabrics for side by side compare
     mask_A = zoning_valid_df['Подсеть'] == 'A'
@@ -230,12 +234,16 @@ def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report
 
     # create statitics report DataFrame
     zonemember_statistics_report_df = zonemember_statistics_df.copy()
+
+    possible_allna_columns = ['zone_duplicated', 'Target_Initiator_note']
+
+    for column in possible_allna_columns:
+        if zonemember_statistics_report_df[column].isna().all():
+            zonemember_statistics_report_df.drop(columns=[column], inplace=True)
+
     # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
     if (zonemember_statistics_report_df['Wwnn_to_Wwnp_number_unpacked'].dropna() == 0).all():
         zonemember_statistics_report_df.drop(columns=['Wwnn_to_Wwnp_number_unpacked'], inplace=True)
-    # drop column with identical zones if there is no any
-    if zonemember_statistics_report_df['zone_duplicated'].isna().all():
-        zonemember_statistics_report_df.drop(columns=['zone_duplicated'], inplace=True)
 
     # # drop column 'chassis_name' if it is not required
     # if not fabric_name_usage:

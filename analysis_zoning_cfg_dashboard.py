@@ -31,6 +31,9 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zone_type_summary_df.reset_index(inplace=True)
 
     # count qunatity of zones with each type of note (no_target, no_initiator, wwnn_zones, wwnp_duplicated_zones etc)
+    for column in ['Wwnn', 'Wwnp_duplicated']:
+        if not column in zonelevel_statistics_effective_df.columns:
+            zonelevel_statistics_effective_df[column] = 0
     zonelevel_statistics_effective_df['zone_Wwnn_tag'] = \
         np.where(zonelevel_statistics_effective_df['Wwnn'] > 0, 'zone_Wwnn_tag', pd.NA)
     zonelevel_statistics_effective_df['zone_Wwnp_duplicated_tag'] = \

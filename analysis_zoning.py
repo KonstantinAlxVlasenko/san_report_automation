@@ -61,7 +61,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
 
         # create comprehesive statistics DataFrame with Fabric summaries and
         # zones statistics DataFrame without summaries  
-        zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df)
+        zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df, report_data_lst)
         # add zoning statistics notes to zoning aggregated DataFrame
         zoning_aggregated_df = note_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df)
         # check all fabric devices (Wwnp) for usage in zoning configuration
