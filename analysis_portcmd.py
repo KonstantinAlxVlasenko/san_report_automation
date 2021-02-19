@@ -122,8 +122,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
-        save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, nsshow_unsplit_force_flag)
-        save_xlsx_file(expected_ag_links_df, 'expected_ag_links', report_data_lst, expected_ag_links_force_flag)
+        save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, force_flag = nsshow_unsplit_force_flag)
+        save_xlsx_file(expected_ag_links_df, 'expected_ag_links', report_data_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         portshow_aggregated_df, device_connection_statistics_df, device_rename_df, report_columns_usage_dct, servers_report_df, storage_report_df, \
@@ -140,7 +140,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         force_flag = False
         if data_name == 'portshow_aggregated':
             force_flag = portshow_force_flag
-        save_xlsx_file(data_frame, data_name, report_data_lst, force_flag)
+        save_xlsx_file(data_frame, data_name, report_data_lst, force_flag=force_flag)
 
     return portshow_aggregated_df
 

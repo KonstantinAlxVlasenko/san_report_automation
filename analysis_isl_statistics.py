@@ -12,7 +12,7 @@ isl_group_columns = ['Fabric_name', 'Fabric_label',
                      'Connected_SwitchName', 'Connected_switchWwn']
 
 
-def isl_statistics(isl_aggregated_df, re_pattern_lst):
+def isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst):
     """Main function to count ISL statistics"""
     
     # isl_statistics_df = isl_aggregated_df[['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 'SwitchName', 'switchWwn']].copy()
@@ -31,13 +31,11 @@ def isl_statistics(isl_aggregated_df, re_pattern_lst):
         # verify if Trunking licence installed on both switches of connection
         isl_statistics_df = verify_trunking_lic(isl_aggregated_modified_df, isl_statistics_df)
         # count switches connection statistics for Fabric_lable and Fabric_name levels
-        isl_statistics_summary_df = isl_statistics_summary(isl_statistics_df)
+        isl_statistics_summary_df = isl_statistics_summary(isl_statistics_df, report_data_lst)
         # verify if fabrics are symmetric
         isl_statistics_summary_df = verify_isl_symmetry(isl_statistics_summary_df)
         # add notes to isl_statistics_df if any violations present
         isl_statistics_df = add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst)
-
-
         # count row with index All containing total values of isl_statistics_summary_df for all fabrics
         isl_statistics_total_df = count_all_row(isl_statistics_summary_df)
         # insert 'Switch_quantity' column to place it to correct location in final statistics DataFrame 
@@ -65,6 +63,11 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
                     'Distance', 'Transceiver_mode', 'Trunking_license',  'Connected_Trunking_license', 
                     'Trunk_Port', 'Encryption', 'Compression', 'QOS_Port', 'QOS_E_Port', 'FEC', '10G/16G_FEC',
                     'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode']
+
+    xisl_columns = ['Base_Switch', 'Allow_XISL_Use', 'Base_switch_in_chassis',
+                    'Connected_Base_Switch', 'Connected_Allow_XISL_Use', 'Connected_Base_switch_in_chassis']
+
+    columns_lst.extend(xisl_columns)
     
     isl_aggregated_modified_df = isl_aggregated_df[columns_lst].copy()
     
@@ -72,8 +75,6 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     isl_aggregated_modified_df.replace(regex=[r'^\.\.$'], value=np.nan, inplace=True)
     
     # transceiver speed and mode extraction
-    # isl_aggregated_modified_df['Transceiver_speed'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'((?:\d+,){2}\d+_\w+)') # TO_REMOVE
-    # isl_aggregated_modified_df['Transceiver_mode'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(r'(?:\d+,){2}\d+_\w+.*?(\w+w)') # TO_REMOVE
     sfp_speed_re = comp_dct.get('transceiver_speed')
     isl_aggregated_modified_df['Transceiver_speed'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(sfp_speed_re)
     sfp_mode_re = comp_dct.get('transceiver_mode')
@@ -99,6 +100,14 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     for column in port_settings_columns:
         mask_setting_on = isl_aggregated_modified_df[column].notna()
         isl_aggregated_modified_df.loc[mask_setting_on, column] = column + '_' + isl_aggregated_modified_df[column]
+
+    # mark logical isl links.
+    # base switch: NO, Allow_XISL: ON, chassis contains base switch: 'Yes (for switch and connecetd switch)
+    mask_xisl = (isl_aggregated_modified_df[xisl_columns] == ['No', 'ON', 'Yes']*2).all(axis=1)
+    mask_unavailable_speed = isl_aggregated_modified_df['speed'] == '--'
+
+    isl_aggregated_modified_df.loc[mask_xisl & mask_unavailable_speed, 'speed'] = \
+        isl_aggregated_modified_df.loc[mask_xisl & mask_unavailable_speed, 'speed'] = 'XISL'
         
     return isl_aggregated_modified_df
 
@@ -121,7 +130,7 @@ def count_isl_statistics(isl_aggregated_modified_df, isl_bandwidth_df):
     applied transceivers speed and mode statistics for each pair of switches connection"""
 
     isl_statistics_df = pd.DataFrame()
-    statistics_lst =  ['port', 'ISL', 'portType', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
+    statistics_lst =  ['port', 'ISL', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
                     'Transceiver_speed', 'Transceiver_mode', 'Distance',
                     'TRUNK', 'Encryption', 'Compression', 'QOS', 'FEC',
                     'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode']
@@ -211,7 +220,7 @@ def sort_isl(isl_statistics_df):
     return isl_statistics_df
     
 
-def isl_statistics_summary(isl_statistics_df):
+def isl_statistics_summary(isl_statistics_df, report_data_lst):
     """Function to count ISL statistics summary for fabric_label and fabric_name levels.
     Total Bandwidwidth counts for link. Others statistics for ports (for both switches of ISL link)"""
 
@@ -234,8 +243,10 @@ def isl_statistics_summary(isl_statistics_df):
     it is enough to drop duplicates by both sorting columns thus leaving unique links only""" 
     
     unique_isl_columns = ['Fabric_name', 'Fabric_label',  'sort_column_1', 'sort_column_2']                 
-    unique_isl_statistics_df = isl_statistics_df.drop_duplicates(subset=unique_isl_columns)
+    unique_isl_statistics_df = isl_statistics_df.drop_duplicates(subset=unique_isl_columns).copy()
     # count sum bandwidth statistics for each fabric
+    unique_isl_statistics_df['Bandwidth_Gbps'] = \
+        unique_isl_statistics_df['Bandwidth_Gbps'].astype('int64', errors='ignore')
     unique_isl_bandwidth_total_df = count_total(unique_isl_statistics_df, grp_columns.copy(), 'Bandwidth_Gbps', sum)
     
     # switch_quantity summary

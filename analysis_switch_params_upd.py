@@ -195,6 +195,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     # # add chassis wwn in case if chassis_wwn missing
     # switch_params_aggregated_df['chassis_wwn'].fillna(switch_params_aggregated_df['boot.licid'], inplace=True)
 
+    switch_params_aggregated_df = verify_base_in_chassis(switch_params_aggregated_df)
+
     # convert switch_index in f_s_c and maps_params DataFrames to same type
     maps_params_df.switch_index = maps_params_df.switch_index.astype('float64', errors='ignore')
     switch_params_aggregated_df.switch_index = switch_params_aggregated_df.switch_index.astype('float64', errors='ignore')
@@ -263,6 +265,23 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
     return switch_params_aggregated_df
 
 
+def verify_base_in_chassis(switch_params_aggregated_df):
+    """Function t verify if base switch present in chassis"""
+
+    grp_columns = ['configname', 'chassis_name', 'chassis_wwn']
+
+    switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df['Base_Switch']
+    switch_params_aggregated_df['Base_switch_in_chassis'].fillna('_', inplace=True)
+    # join base switch tags for all logical switches in chassis
+    switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df.groupby(by=grp_columns)['Base_switch_in_chassis'].transform(', '.join)
+    # if base switch tag present on any switch in chassis then 'Base_switch_in_chassis' tag is 'Yes'
+    mask_base_in_chassis =  switch_params_aggregated_df['Base_switch_in_chassis'].str.contains('Yes')
+    switch_params_aggregated_df['Base_switch_in_chassis'] = np.where(mask_base_in_chassis, 'Yes', pd.NA)
+    switch_params_aggregated_df['Base_switch_in_chassis'].fillna(np.nan, inplace=True)
+
+    return switch_params_aggregated_df
+
+
 def switchs_params_report(switch_params_aggregated_df, data_names, report_columns_usage_dct, max_title):
     """Function to create switch related report tables"""
 
@@ -285,14 +304,10 @@ def switchs_params_report(switch_params_aggregated_df, data_names, report_column
 
     # drop fabric_id if all have same value
     if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
-        fabric_report_df.drop(columns=['Fabric ID'], inplace=True)        
-
-    # TO_REMOVE No need to drop duplicates coz Principal switches only used before
-    # # parameters are equal for all switches in one fabric
-    # if report_columns_usage_dct['fabric_name_usage']:
-    #     global_fabric_parameters_report_df.drop_duplicates(subset=['Фабрика', 'Подсеть'], inplace=True)
-    # else:
-    #     global_fabric_parameters_report_df.drop_duplicates(subset=['Подсеть'], inplace=True)
+        fabric_report_df.drop(columns=['Fabric ID'], inplace=True)
+    # drop Fabric_Name (not Fabric_name) if column is empty
+    if fabric_report_df['Название фабрики'].isna().all():
+        fabric_report_df.drop(columns=['Название фабрики'], inplace=True)         
     
     global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)  
 

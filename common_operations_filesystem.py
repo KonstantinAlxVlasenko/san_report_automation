@@ -47,7 +47,7 @@ def check_valid_path(path):
         
 
 # saving DataFrame to excel file
-def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False):
+def save_xlsx_file(data_frame, sheet_title, report_data_lst, current_date=str(date.today()), force_flag = False):
     """
     Check if excel file exists, check if dataframe sheet is in file, 
     delete sheet with stored dataframe (if sheet tabs number > 1)
@@ -77,7 +77,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, force_flag = False)
     else:
         report_mark = report_type
           
-    current_date = str(date.today())
+    # current_date = str(date.today())
     # construct excel filename
     file_name = customer_name + '_' + report_mark + '_' + current_date + '.xlsx'
 

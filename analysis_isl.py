@@ -58,7 +58,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
             isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
             isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, re_pattern_lst)
 
-        isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst)
+        isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))      

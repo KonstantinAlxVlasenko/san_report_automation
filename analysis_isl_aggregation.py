@@ -166,7 +166,8 @@ def switch_join(switch_params_aggregated_df, isl_sfp_connected_df):
     """Adding switch licenses, max speed, description"""
 
     # column names list to slice switch_params_aggregated DataFrame and join with isl_aggregated Dataframe
-    switch_lst = ['SwitchName', 'switchWwn', 'switchType','licenses', 'switch_speedMax', 'HPE_modelName']   
+    switch_lst = ['SwitchName', 'switchWwn', 'switchType','licenses', 'switch_speedMax', 'HPE_modelName', 
+                    'Base_Switch', 'Allow_XISL_Use', 'Base_switch_in_chassis']   
     # addition switch parameters information to isl_aggregated DataFrame
     isl_aggregated_df = dataframe_join(isl_sfp_connected_df, switch_params_aggregated_df, switch_lst, 2)
     # convert switchType column to float for later sorting
