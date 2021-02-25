@@ -9,6 +9,12 @@ from common_operations_dataframe import сoncatenate_columns
 def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst):
     """Function to add notes to isl_statistics_df DataFrame"""
 
+    if not 'XISL' in isl_statistics_df.columns:
+        isl_statistics_df['XISL'] = 0
+    # inter switch connection have physical links (not logical only)
+    # logical link always displayed as single link
+    
+
     def connection_note(isl_statistics_df):
         """Function to verify if any links out of trunk present (if trunking licences are on both switches)
         and if connection is redundant"""
@@ -17,8 +23,8 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         # columns with ISL tag (links quantity in ISL) in isl_statistics_df
         isl_columns = [column for column in isl_statistics_df.columns if 'ISL' in column]
         # conditions for trunk presence
-        # switches connected with more then one ISL
-        mask_port_quantity = isl_statistics_df['Port_quantity'] > 1
+        # switches connected with more then one ISL (excluding XISL)
+        mask_port_quantity = (isl_statistics_df['Port_quantity'] - isl_statistics_df['XISL']) > 1
         # link out of trunk present (any ISL contains single link)
         mask_single_link_isl = (isl_statistics_df[isl_columns] == 1).any(axis=1)
         # trunkimg licence present on both switches
@@ -28,8 +34,18 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         # isl_statistics_df['Connection_note'] = np.where(mask_trunk_absence, 'trunk_missing', pd.NA)
         isl_statistics_df.loc[mask_trunk_absence, 'Connection_note'] = 'link(s)_out_of_trunk'
         
-        # nonredundant connection consists of single port only
-        mask_nonredundant_link = isl_statistics_df['Port_quantity'] == 1
+        """
+        nonredundant connection
+        Port_Quantity XISL Difference Status
+        1             0    1          nonredundant
+        1             1    0          redundant
+        2             0    2          redundant
+        2             1    1          nonredundant
+        3             0    3          redundant
+        3             1    2          redundant
+        Summary: Difference == 1 is nonredundant
+        """
+        mask_nonredundant_link = (isl_statistics_df['Port_quantity'] - isl_statistics_df['XISL']) == 1
         # TO_REMOVE
         # isl_statistics_df['Connection_note'] = np.where(mask_nonredundant_link, 'nonredundant_connection', pd.NA)
         isl_statistics_df.loc[mask_nonredundant_link, 'Connection_note'] = 'nonredundant_connection'
@@ -106,11 +122,12 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
             mask_speed_reduced =  isl_statistics_df['Speed_Reduced'].notna() & isl_statistics_df['Speed_Reduced'] != 0
             isl_statistics_df['Speed_reduced_note'] = np.where(mask_speed_reduced, 'reduced_speed', pd.NA)
         
-        # auto speed note
+        # auto speed note (xisl excluded)
         isl_statistics_df['Speed_auto_note'] = pd.NA
         if 'Speed_Auto' in isl_statistics_df.columns:
             mask_speed_auto = isl_statistics_df['Speed_Auto'] != 0
-            isl_statistics_df['Speed_auto_note'] = np.where(mask_speed_auto, 'auto_speed', pd.NA)
+            mask_not_xisl_only = isl_statistics_df['Port_quantity'] > isl_statistics_df['XISL']
+            isl_statistics_df['Speed_auto_note'] = np.where(mask_speed_auto & mask_not_xisl_only, 'auto_speed', pd.NA)
         
         speed_note_columns = ['Speed_auto_note', 'Speed_low_note', 'Speed_reduced_note', 'Speed_Gbps_nonuniformity_note']
         isl_statistics_df = сoncatenate_columns(isl_statistics_df, summary_column='Speed_note', merge_columns=speed_note_columns, drop_merge_columns=True)
@@ -123,5 +140,8 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
     isl_statistics_df = nonuniformity_note(isl_statistics_df, isl_aggregated_modified_df)
     isl_statistics_df = speed_note(isl_statistics_df, re_pattern_lst)
     isl_statistics_df.fillna(np.nan, inplace=True)
+
+    if (isl_statistics_df['XISL'] == 0).all():
+        isl_statistics_df.drop(columns=['XISL'], inplace=True)
     
     return isl_statistics_df

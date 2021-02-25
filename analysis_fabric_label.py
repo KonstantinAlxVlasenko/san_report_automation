@@ -13,7 +13,7 @@ from analysis_fabric_label_auto import auto_fabrics_labeling
 from analysis_fabric_label_manual import manual_fabrics_labeling
 
 
-def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst):
+def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_data_lst):
     """Function to set Fabric labels"""
 
     # report_data_lst contains information: 
@@ -40,19 +40,22 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
     if force_run:             
         print('\nSETTING UP FABRICS NAMES AND LABELS  ...\n')
 
-        fabricshow_summary_df = auto_fabrics_labeling(switchshow_ports_df, fabricshow_df, report_data_lst)
+        fabricshow_summary_df = auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, report_data_lst)
 
         # display automatic fabric labeling
         info_labels = ['Fabric_name', 'Fabric_label', 'chassis_name', 'Principal_switch_name', 'Fabric_ID', 
-                    'FC_Route', 'Total_switch', 'Domain_IDs', 'Switch_names', 'Total_Online_ports']
+                    'FC_Route', 'Total_switch', 'Domain_IDs', 'Switch_names', 'Device_ports', 'Online_ports', 'LS_type', 'Fabric_Name']
         # service file name for detailed information
         current_date = str(date.today())
         file_name = customer_name + '_' + report_steps_dct['fabricshow_summary'][2] + '_' + current_date + '.xlsx' 
         # file_name = customer_name + '_analysis_report_' + current_date + '.xlsx'
         print('\nAutomatic fabrics labeling\n')
+        # set option to show all columns
+        pd.set_option('max_columns', None)
+        pd.set_option('expand_frame_repr', False)
         print(fabricshow_summary_df.loc[:, info_labels])
-        print(f"\nFor detailed switch port types and numbers statistic in each fabric check '{file_name}' file \
-        'fabricshow_statistics' sheet in\n'{report_path}'' directory")
+        print(f"\nFor detailed switch port types and numbers statistic in each fabric check '{file_name}' file 'fabricshow_statistics' sheet in")
+        print(f'{report_path} directory')
         print('ATTN! CLOSE file after check\n')
         
         # ask user if Automatic Fabric labeling need to be corrected
@@ -60,13 +63,15 @@ def fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, repor
         reply = reply_request(query)
         if reply == 'y':
             # saving DataFrame to Excel to check during manual labeling if required
-            save_xlsx_file(fabricshow_summary_df, 'fabricshow_summary', report_data_lst)
+            save_xlsx_file(fabricshow_summary_df, 'fabricshow_summary', report_data_lst, force_flag=True)
             fabricshow_summary_df = manual_fabrics_labeling(fabricshow_summary_df, info_labels)
         
         # takes all switches working in Native and AG switches
         # merge the in one DataFrame and identify which Fabrics they belong too with fabricshow_summary DataFrame
         fabricshow_ag_labels_df = native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df)
-
+        # disable option to show all columns
+        pd.reset_option('max_columns')
+        pd.reset_option('expand_frame_repr')
         # create list with partitioned DataFrames
         data_lst = [fabricshow_ag_labels_df]
         # saving data to json or csv file

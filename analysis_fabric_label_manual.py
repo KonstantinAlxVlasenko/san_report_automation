@@ -34,11 +34,11 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
             # printing actual fabricshow_summary DataFrame
             print('\nCurrent fabric labeling\n')
             print(fabricshow_summary_df.loc[:, info_labels])
-            # printing menu options to choose to work with DataFrame
-            # save, reset, exit or fabric index number to change
-            print('\nS/s - Save changes in labeling\nR/r - Reset to default labeling\nV/v - Veriify labeling\nX/x - Exit without saving')
-            print(f"{', '.join(fabric_indexes_str_lst)} - Choose fabric index to change labeling\n")
-
+        
+        # printing menu options to choose to work with DataFrame
+        # save, reset, exit or fabric index number to change
+        print('\nS/s - Save changes in labeling\nR/r - Reset to default labeling\nV/v - Veriify labeling\nX/x - Exit without saving')
+        print(f"{', '.join(fabric_indexes_str_lst)} - Choose fabric index to change labeling\n")
         # reset input_option value after each iteration to enter while loop
         input_option = reply_request("Choose option: ", reply_options = full_options_lst, show_reply = True)
         
@@ -57,30 +57,57 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
             
             # list to save user input
             reply_lst = []
+            # initial user input to check if nan is entered
+            value = 'empty'
             # ask user to change labels and names by looping over rename_options_dct 
             for option_name, option_column in rename_options_dct.items():
-                reply = reply_request(f'Do you want to change Fabric {option_name}? (y)es/(n)o: ')
-                # save user input to the list
-                reply_lst.append(reply)
-                # if user want to change name or label ask to enter new value
-                if reply == 'y':
-                    current_value = fabricshow_summary_df.loc[fabric_num, rename_options_dct[option_name]]
-                    value = input(f'\nEnter new Fabric {option_name}. Current value is {current_value}: ')
-                    value = value.strip()
-                    # 0 or None means no labeling
-                    if value in ['0', 'None']:
-                        value = None
-                    elif len(value) == 0:
-                        value = current_value
-                        print(f'Fabric {option_name} was not changed')
-                    # change values in fabricshow_summary DataFrame 
-                    fabricshow_summary_df.loc[fabric_num, option_column] = value
+                if value:
+                    reply = reply_request(f'Do you want to change Fabric {option_name}? (y)es/(n)o: ')
+                    # save user input to the list
+                    reply_lst.append(reply)
+                    # if user want to change name or label ask to enter new value
+                    if reply == 'y':
+                        current_value = fabricshow_summary_df.loc[fabric_num, rename_options_dct[option_name]]
+                        value = input(f'\nEnter new Fabric {option_name}. 0 or None will remove fabric from assessment. Current value is {current_value}: ')
+                        value = value.strip()
+                        # 0 or None means no labeling
+                        if value.lower() in ['0', 'none']:
+                            value = None
+                            fabricshow_summary_df.loc[fabric_num, ['Fabric_name', 'Fabric_label']] = [np.nan, np.nan] 
+                        elif len(value) == 0:
+                            value = current_value
+                            print(f'Fabric {option_name} was not changed')
+                        else:
+                            # change values in fabricshow_summary DataFrame 
+                            fabricshow_summary_df.loc[fabric_num, option_column] = value
             # if user didn't reply "no" two times
             if reply_lst != ['n']*2:
                 print('\n')
                 # print current fabric information after change
                 print(fabricshow_summary_df.iloc[fabric_num])
                 print('\n')
+                # verify if Fabric names or label is NaN and ask input
+                label_name_uniformity = fabricshow_summary_df.loc[fabric_num, rename_options_dct.values()].isna().nunique() == 1
+                if not label_name_uniformity:
+                    print('Fabric NAME and Fabric LABEL fields BOTH must have values')
+                    # verify which label have Nan value
+                    nan_option_name, = [key for key, value in rename_options_dct.items() if pd.isna(fabricshow_summary_df.loc[fabric_num, value])]
+                    while True:
+                        current_value = fabricshow_summary_df.loc[fabric_num, rename_options_dct[nan_option_name]]
+                        value = input(f'\nEnter new Fabric {nan_option_name}. Current value is {current_value}: ')
+                        value = value.strip()
+                        # 0, None or '' means no labeling
+                        if value in ['0', 'None', '', 'none']:
+                            print(f"Fabric {nan_option_name} must have value.")
+                            continue
+                        else:
+                            fabricshow_summary_df.loc[fabric_num, rename_options_dct[nan_option_name]] = value
+                            print('\n')
+                            # print current fabric information after change
+                            print(fabricshow_summary_df.iloc[fabric_num])
+                            print('\n')
+                            break
+
                 reply = reply_request('Do you want to keep changes? (y)es/(n)o: ')
                 # when user doesn't want to keep data fabricshow_summary DataFrame
                 # returns to the state saved bedore current iteration

@@ -84,7 +84,7 @@ def main():
     synergy_module_df, synergy_servers_df = synergy_system_extract(synergy_folder, report_data_lst)
     
     # set fabric names and labels
-    fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, fabricshow_df, ag_principal_df, report_data_lst)
+    fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_data_lst)
 
     blade_module_loc_df = blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst)
 
