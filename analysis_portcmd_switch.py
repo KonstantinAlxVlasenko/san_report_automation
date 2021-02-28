@@ -40,7 +40,7 @@ def switchshow_join(portshow_df, switchshow_df):
     
     # columns labels reqiured for join operation
     switchshow_lst = ['configname', 'chassis_name', 'chassis_wwn', 'slot', 'port', 'switchName', 
-                      'switchWwn', 'speed', 'portType']
+                      'switchWwn', 'speed', 'portType', 'connection_details']
     # create left DataFrame for join operation
     switchshow_join_df = switchshow_df.loc[:, switchshow_lst].copy()
     # portshow_df and switchshow_join_df DataFrames join operation

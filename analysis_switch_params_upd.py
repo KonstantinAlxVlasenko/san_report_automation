@@ -181,6 +181,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     """Function to complete fabric DataFrame with information from 
     chassis_params_fabric, switch_params, maps_params DataFrames """
 
+
+
     # complete fabric DataFrame with information from switch_params DataFrame
     switch_params_aggregated_df = fabric_clean_df.merge(switch_params_df, how = 'left', on = ['switchWwn', 'switchName'])
     switch_params_aggregated_df['SwitchName'].fillna(switch_params_aggregated_df['switchName'], inplace=True)
@@ -273,7 +275,7 @@ def verify_base_in_chassis(switch_params_aggregated_df):
     switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df['Base_Switch']
     switch_params_aggregated_df['Base_switch_in_chassis'].fillna('_', inplace=True)
     # join base switch tags for all logical switches in chassis
-    switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df.groupby(by=grp_columns)['Base_switch_in_chassis'].transform(', '.join)
+    switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df.groupby(by=grp_columns, dropna=False)['Base_switch_in_chassis'].transform(', '.join)
     # if base switch tag present on any switch in chassis then 'Base_switch_in_chassis' tag is 'Yes'
     mask_base_in_chassis =  switch_params_aggregated_df['Base_switch_in_chassis'].str.contains('Yes')
     switch_params_aggregated_df['Base_switch_in_chassis'] = np.where(mask_base_in_chassis, 'Yes', pd.NA)

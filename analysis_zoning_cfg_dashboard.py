@@ -59,11 +59,23 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     mask_online = portshow_zoned_aggregated_df['portState'] == 'Online'
     # to avoid device port duplication Native mode switches should be taken into account
     mask_native_mode = portshow_zoned_aggregated_df['switchMode'] == 'Native'
+
     portshow_zoned_aggregated_cp_df = portshow_zoned_aggregated_df.loc[mask_online & mask_device_ports & mask_native_mode].copy()
+    # mask shows devices not in effective configuration
+    mask_not_effective = portshow_zoned_aggregated_cp_df['cfg_type'] != 'effective'
+    # mask shows device connected to the port
+    mask_device_type = portshow_zoned_aggregated_cp_df['deviceType'].notna()
+
     # create new column filled with 'Total_device_ports' value for all device ports
     portshow_zoned_aggregated_cp_df['Total_device_ports'] = \
         portshow_zoned_aggregated_cp_df['deviceType'].where(portshow_zoned_aggregated_cp_df['deviceType'].isna(), 'Total_device_ports')
-    zoned_vs_total_ports_summary_df = count_summary(portshow_zoned_aggregated_cp_df, count_columns=['Total_device_ports'])
+    # create new column filled with 'Total_unzoned_ports' value for ports which are not part of effective zoning configuration
+    portshow_zoned_aggregated_cp_df['Total_unzoned_ports'] = \
+        np.where(mask_not_effective & mask_device_type, 'Total_unzoned_ports', pd.NA)
+    portshow_zoned_aggregated_cp_df.fillna(np.nan, inplace=True)
+
+    zoned_vs_total_ports_summary_df = count_summary(portshow_zoned_aggregated_cp_df, count_columns=['Total_device_ports', 'Total_unzoned_ports'])
+
 
     # count mean, max, min values for alias qunatity and active ports quantity in zones for each Fabric
     # zonemember might be presented as alias, Wwnp or Domain Index
