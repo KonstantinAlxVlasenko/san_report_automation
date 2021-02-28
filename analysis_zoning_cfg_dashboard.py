@@ -15,7 +15,8 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zonelevel_statistics_effective_df = zonemember_statistics_df.loc[mask_zone_effective & ~mask_cfg_summary].copy()
     # add zone_duplicated_tag
     mask_not_duplicated_zone = zonelevel_statistics_effective_df['zone_duplicated'].isna()
-    zonelevel_statistics_effective_df['zone_duplicated'] = zonelevel_statistics_effective_df['zone_duplicated'].where(mask_not_duplicated_zone, 'zone_duplicated_tag')
+    zonelevel_statistics_effective_df['zone_duplicated'] = \
+        zonelevel_statistics_effective_df['zone_duplicated'].where(mask_not_duplicated_zone, 'zone_duplicated_tag')
 
     # DataFrame with summary for all zones in Fabric (cfg level)
     cfglevel_statistics_effective_df = zonemember_statistics_df.loc[mask_zone_effective & mask_cfg_summary].copy()
@@ -38,10 +39,29 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         np.where(zonelevel_statistics_effective_df['Wwnn'] > 0, 'zone_Wwnn_tag', pd.NA)
     zonelevel_statistics_effective_df['zone_Wwnp_duplicated_tag'] = \
         np.where(zonelevel_statistics_effective_df['Wwnp_duplicated'] > 0, 'zone_Wwnp_duplicated_tag', pd.NA)
+
+    # add column with tags (correct_zone, commented_zone, non_working_zone)
+    for column in ['Target_Initiator_note', 'Target_model_note']:
+        if not column in zonelevel_statistics_effective_df.columns:
+            zonelevel_statistics_effective_df[column] = np.nan
+
+    non_working_zone_tags = ['no_initiator', 'no_target', 'no_target, no_initiator', 'no_target, several_initiators']
+    mask_non_working_zone = zonelevel_statistics_effective_df['Target_Initiator_note'].isin(non_working_zone_tags)
+    
+    mask_several_initiators = zonelevel_statistics_effective_df['Target_Initiator_note'] == 'several_initiators'
+    storage_models_tags = ['different_storages', 'storage_library']
+    mask_storage_models = zonelevel_statistics_effective_df['Target_model_note'].isin(storage_models_tags)
+    mask_wwnn = zonelevel_statistics_effective_df['zone_Wwnn_tag'] == 'zone_Wwnn_tag'
+    mask_wwnp_duplicated = zonelevel_statistics_effective_df['zone_Wwnp_duplicated_tag'] == 'zone_Wwnp_duplicated_tag'
+    mask_commented_zone = mask_several_initiators | mask_storage_models | mask_wwnn | mask_wwnp_duplicated
+    zonelevel_statistics_effective_df['zone_note_summary'] = np.select(
+        [mask_non_working_zone, mask_commented_zone],
+        ['non-working_zone', 'commented_zone'], default='correct_zone')
+
     zone_notes_summary_df = \
         count_summary(zonelevel_statistics_effective_df, \
-            count_columns=['zone_duplicated', 'Target_Initiator_note', 'Target_model_note', 'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag'])
-
+            count_columns=['zone_duplicated', 'Target_Initiator_note', 'Target_model_note', 
+                                'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_note_summary' ])
 
     # count device ports in zoning configuration for each ports state 
     # (local, remote_imported, remote_na, remote_initializing, absent, remote_configured)
@@ -52,7 +72,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zoned_ports_status_df.drop_duplicates(subset=port_status_columns, inplace=True)
     zoned_ports_status_summary_df = count_summary(zoned_ports_status_df, count_columns=['Fabric_device_status'])
 
-    # count active device ports in Fabric
+    # count active and unzoned device ports in Fabric
     portshow_zoned_aggregated_cp_df = portshow_zoned_aggregated_df.copy()
     # switch and vc ports should not be included zoning configuration 
     mask_device_ports = ~portshow_zoned_aggregated_df['deviceType'].isin(['SWITCH', 'VC'])
@@ -73,7 +93,6 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     portshow_zoned_aggregated_cp_df['Total_unzoned_ports'] = \
         np.where(mask_not_effective & mask_device_type, 'Total_unzoned_ports', pd.NA)
     portshow_zoned_aggregated_cp_df.fillna(np.nan, inplace=True)
-
     zoned_vs_total_ports_summary_df = count_summary(portshow_zoned_aggregated_cp_df, count_columns=['Total_device_ports', 'Total_unzoned_ports'])
 
 
