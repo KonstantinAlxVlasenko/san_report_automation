@@ -34,15 +34,27 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
 
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
     zonemember_zonelevel_stat_df = note_zonemember_statistics(zonemember_zonelevel_stat_df)
+    # add note if zone is not used in effective configuration
+    grp_columns = ['Fabric_name', 'Fabric_label', 'zone']
+    zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = zonemember_zonelevel_stat_df.groupby(by=grp_columns)['cfg_type'].transform(lambda x: ', '.join(set(x)))
+    mask_non_effective = ~zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].str.contains('effective')
+    zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = np.where(mask_non_effective, 'unused_zone', pd.NA)
+    zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].fillna(np.nan, inplace=True)
+
     # add list of identical (duplicated) zones to each zone in statistics
     zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
     zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
                                                         join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+    # remove duplicated zones list if current zone is non-working zone (duplication of working zones only required)
+    # list of duplicated zones is removed but duplication tag remains  
     mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator'])
     zonemember_zonelevel_stat_df['zone_duplicated'] = zonemember_zonelevel_stat_df['zone_duplicated'].where(mask_valid_zone)
+    # sort values
+    zonemember_zonelevel_stat_df.sort_values(by=['Fabric_name', 'Fabric_label', 'cfg_type', 'cfg', 'zone'],
+                                                ascending=[True, True, False, True, True], inplace=True, ignore_index=True)
     # concatenate both statistics
     zonemember_statistics_df = pd.concat([zonemember_zonelevel_stat_df, zonemember_cfgtypelevel_stat_df], ignore_index=True)
-        
+
     return zonemember_statistics_df, zonemember_zonelevel_stat_df
 
 
@@ -216,7 +228,7 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
 
     if not 'Target_Initiator_note' in zonemember_stat_notes_df.columns:
         zonemember_stat_notes_df['Target_Initiator_note'] = np.nan
-
+    
     return zonemember_stat_notes_df
 
 

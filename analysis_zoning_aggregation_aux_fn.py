@@ -38,7 +38,8 @@ def wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
 
 
 def replace_wwnn(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
-    """Function to replace each wwnn in zoning configuration with it's wwnp if any wwnn is present"""
+    """Function to replace each wwnn in zoning configuration with it's wwnp
+    if wwnn is present in the same fabric."""
 
     # create DataFrame with WWNP and WWNN
     port_node_name_df = portshow_aggregated_df[['Fabric_name', 'Fabric_label', 'PortName', 'NodeName']].copy()

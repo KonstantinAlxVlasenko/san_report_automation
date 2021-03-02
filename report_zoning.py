@@ -35,7 +35,7 @@ def create_report(aggregated_df, data_name, translate_dct, report_columns_usage_
 
     # pylint: disable=unbalanced-tuple-unpacking
     cleaned_df = drop_columns(aggregated_df, report_columns_usage_dct)
-    translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
+    translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note']
     cleaned_df = translate_values(cleaned_df, translate_dct, translate_columns)
     # take required data from aggregated DataFrame to create report
     report_df, = dataframe_segmentation(cleaned_df, data_name, report_columns_usage_dct, max_title)
@@ -48,7 +48,9 @@ def drop_columns(aggregated_df, report_columns_usage_dct):
     
     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
     # list of columns to check if all values in column are NA
-    possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 'peerzone_member_type', 'zone_duplicated', 'Target_Initiator_note']
+    possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 
+                                'peerzone_member_type', 'zone_duplicated', 
+                                'Target_Initiator_note', 'Effective_cfg_usage_note']
     # dictionary of items to check if all values in column (dict key) are equal to certain value (dict value)
     possible_identical_values = {'Wwn_type': 'Wwnp', 'cfg_type': 'effective', 'Member_in_cfg_Fabric': 'Да', 
                                             'Fabric_device_status': 'local', 'portType': 'F-Port', }
@@ -120,9 +122,6 @@ def compare_zone_config(zoning_report_df):
     if 'Тип конфигурации' in zoning_report_df.columns:
         mask_effective = zoning_report_df['Тип конфигурации'] == 'effective'
         mask_valid_zone = mask_effective & mask_valid_zone if mask_applied else mask_effective
-        # if mask_applied:
-        #     mask_valid_zone = mask_effective & mask_valid_zone
-        # else:
 
     if mask_applied:    
         zoning_valid_df = zoning_report_df.loc[mask_valid_zone].copy()
@@ -130,6 +129,8 @@ def compare_zone_config(zoning_report_df):
         zoning_valid_df = zoning_report_df.copy()
 
     """Clean zoning_valid_df DataFrame from excessive columns if values are not informative"""
+    if 'Примечание. Зона в активной конфигурации' in zoning_report_df.columns: 
+        zoning_valid_df.drop(columns=['Примечание. Зона в активной конфигурации'], inplace=True)
     # drop device status column if all ports are available
     if 'Статус устройства в сети конфигурации' in zoning_valid_df.columns and (zoning_valid_df['Статус устройства в сети конфигурации'] == 'доступно').all():
         zoning_valid_df.drop(columns=['Статус устройства в сети конфигурации'], inplace=True)
@@ -235,7 +236,7 @@ def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report
     # create statitics report DataFrame
     zonemember_statistics_report_df = zonemember_statistics_df.copy()
 
-    possible_allna_columns = ['zone_duplicated', 'Target_Initiator_note']
+    possible_allna_columns = ['zone_duplicated', 'Target_Initiator_note', 'Effective_cfg_usage_note']
 
     for column in possible_allna_columns:
         if zonemember_statistics_report_df[column].isna().all():
@@ -249,7 +250,7 @@ def zonemember_statistics_report(zonemember_statistics_df, translate_dct, report
     # if not fabric_name_usage:
     #     zonemember_statistics_report_df.drop(columns = ['Fabric_name'], inplace=True)
     # rename values in columns
-    translate_columns = ['Fabric_name', 'Fabric_device_status', 'Target_Initiator_note', 'Target_model_note']
+    translate_columns = ['Fabric_name', 'Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note']
     zonemember_statistics_report_df = translate_values(zonemember_statistics_report_df, translate_dct, translate_columns)
     # column titles used to create dictionary to traslate column names
     statistic_columns_lst = ['Статистика_зон_eng', 'Статистика_зон_ru']

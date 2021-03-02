@@ -113,9 +113,9 @@ def note_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df
     
     # create DataFrame with note columns only
     zone_columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
-    note_columns = ['Target_Initiator_note', 'Target_model_note', 'zone_duplicated']
+    note_columns = ['Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note', 'zone_duplicated']
     note_columns = [column for column in note_columns if column in zonemember_zonelevel_stat_df.columns]
-    zonenote_df = zonemember_zonelevel_stat_df.reindex(columns = [*zone_columns, *note_columns])
+    zonenote_df = zonemember_zonelevel_stat_df.reindex(columns = [*zone_columns, *note_columns]).copy()
     # compliment aggregated DataFrame 
     zoning_aggregated_df = zoning_aggregated_df.merge(zonenote_df, how='left', on=zone_columns)
 

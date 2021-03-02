@@ -11,8 +11,9 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     # filter out effective zones only 
     mask_zone_effective = zonemember_statistics_df['cfg_type'] == 'effective'
     mask_cfg_summary = zonemember_statistics_df['zone'].isna()
-    # DataFrame with information for each zone (zonelevel)
+    # DataFrame with information for each zone (zonelevel) effective and common
     zonelevel_statistics_effective_df = zonemember_statistics_df.loc[mask_zone_effective & ~mask_cfg_summary].copy()
+    zonelevel_statistics_df = zonemember_statistics_df.loc[~mask_cfg_summary].copy()
     # add zone_duplicated_tag
     mask_not_duplicated_zone = zonelevel_statistics_effective_df['zone_duplicated'].isna()
     zonelevel_statistics_effective_df['zone_duplicated'] = \
@@ -62,6 +63,12 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         count_summary(zonelevel_statistics_effective_df, \
             count_columns=['zone_duplicated', 'Target_Initiator_note', 'Target_model_note', 
                                 'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_note_summary' ])
+    
+    # add unused zones counter (zones wich are not part of active configuaration)
+    # remove duplicated zones
+    zonelevel_statistics_duplicates_free_df = \
+        zonelevel_statistics_df.drop_duplicates(subset=['Fabric_name', 'Fabric_label', 'zone']).copy()
+    zone_unused_summary = count_summary(zonelevel_statistics_duplicates_free_df, count_columns=['Effective_cfg_usage_note'])
 
     # count device ports in zoning configuration for each ports state 
     # (local, remote_imported, remote_na, remote_initializing, absent, remote_configured)
@@ -118,7 +125,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
 
     # merge all summary DataFrames into one
     active_cfg_statistics_df = zone_type_summary_df 
-    summary_lst = [zone_notes_summary_df, zoned_ports_status_summary_df, zoned_vs_total_ports_summary_df, alias_vs_active_ports_per_zone_df, alias_ports_vs_zone_usage_df]
+    summary_lst = [zone_notes_summary_df, zone_unused_summary, zoned_ports_status_summary_df, zoned_vs_total_ports_summary_df, alias_vs_active_ports_per_zone_df, alias_ports_vs_zone_usage_df]
     for df in summary_lst:
         if not df.empty:
             active_cfg_statistics_df = active_cfg_statistics_df.merge(df, how='outer', on=['Fabric_name', 'Fabric_label'])
