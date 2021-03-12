@@ -9,7 +9,7 @@ import pandas as pd
 from common_operations_dataframe import dataframe_segmentation
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
-                                             verify_force_run)
+                                             verify_force_run, reply_request)
 from common_operations_servicefile import dataframe_import
 
 
@@ -19,6 +19,8 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
+    portshow_sfp_force_flag = False
+    portshow_sfp_export_flag, *_ = report_steps_dct['portshow_sfp_aggregated']
 
     # names to save data obtained after current module execution
     data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов']
@@ -60,6 +62,11 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
             info = f'{unknown_count} {"port" if unknown_count == 1 else "ports"} with UNKNOWN supported SFP tag found'
             print(info, end =" ")
             status_info('warning', max_title, len(info))
+            # ask if save portshow_aggregated_df
+            if not portshow_sfp_export_flag:
+                reply = reply_request("Do you want to save 'portshow_sfp_aggregated'? (y)es/(n)o: ")
+                if reply == 'y':
+                    portshow_sfp_force_flag = True
 
         # create reaport tables from port_complete_df DataFrtame
         error_report_df, sfp_report_df, portcfg_report_df = \
@@ -74,7 +81,10 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df
         data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        force_flag = False
+        if data_name == 'portshow_sfp_aggregated':
+            force_flag = portshow_sfp_force_flag
+        save_xlsx_file(data_frame, data_name, report_data_lst, force_flag=force_flag)
 
     return portshow_sfp_aggregated_df
 

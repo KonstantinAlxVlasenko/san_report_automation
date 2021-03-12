@@ -1,4 +1,4 @@
-"""Module to with auxiliary function to process zonong configuration in analysis_zoning_aggregation module"""
+"""Module with auxiliary functions to process zoning configuration in analysis_zoning_aggregation module"""
 
 import re
 import numpy as np
@@ -44,8 +44,7 @@ def replace_wwnn(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_
     # create DataFrame with WWNP and WWNN
     port_node_name_df = portshow_aggregated_df[['Fabric_name', 'Fabric_label', 'PortName', 'NodeName']].copy()
     port_node_name_df.dropna(subset = ['Fabric_name', 'Fabric_label', 'PortName', 'NodeName'], inplace=True)
-    # check if
-
+    # check if Wwnn corresponds to two or more Wwnps
     port_node_name_df['Wwnn_unpack'] = np.nan
     mask_duplicated_wwnn = ~port_node_name_df.duplicated(subset=['Fabric_name', 'Fabric_label', 'NodeName'], keep=False)
     port_node_name_df['Wwnn_unpack'] = port_node_name_df['Wwnn_unpack'].where(mask_duplicated_wwnn, 'Да')

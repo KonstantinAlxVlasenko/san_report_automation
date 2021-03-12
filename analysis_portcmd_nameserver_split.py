@@ -176,14 +176,15 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
             series['Device_Port'] = match.group(4)
             series['portSymbUsed'] = 'yes'
             series['portSymbPattern'] = 16
-    # cna_adapter_match node_symb duplicate with qlogic_cna_match port_symb 5
-    elif not pd.isnull(node_symb) and match_node_dct[match_keys[19]]:
-        match = match_node_dct[match_keys[19]]
-        series['HBA_Model'] = match.group(1)
-        series['HBA_Driver'] = match.group(2)
-        series['Device_Port'] = match.group(3)
-        series['nodeSymbUsed'] = 'yes'
-        series['nodeSymbPattern'] = 19
+    # TO_REMOVE duplicated
+    # # cna_adapter_match node_symb duplicate with qlogic_cna_match port_symb 5
+    # elif not pd.isnull(node_symb) and match_node_dct[match_keys[19]]:
+    #     match = match_node_dct[match_keys[19]]
+    #     series['HBA_Model'] = match.group(1)
+    #     series['HBA_Driver'] = match.group(2)
+    #     series['Device_Port'] = match.group(3)
+    #     series['nodeSymbUsed'] = 'yes'
+    #     series['nodeSymbPattern'] = 19
     # qlogic_brocade_match port_symb
     elif not pd.isnull(port_symb) and match_port_dct[match_keys[27]]:
         match = match_port_dct[match_keys[27]]
@@ -275,6 +276,14 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         series['HBA_Manufacturer'] = match.group(1)
         series['portSymbUsed'] = 'yes'
         series['portSymbPattern'] = 3
+    # dell_storage_match port_symb
+    elif not pd.isnull(port_symb) and match_port_dct[match_keys[28]]:
+        match = match_port_dct[match_keys[28]]
+        series['Device_Model'] = match.group(2)
+        series['Device_Name'] = match.group(3)
+        series['Device_Port'] = match.group(1)
+        series['portSymbUsed'] = 'yes'
+        series['portSymbPattern'] = 28
     # if no match was found copy values with no split
     else:
         if not pd.isnull(node_symb) and pd.isnull(series['nodeSymbUsed']):

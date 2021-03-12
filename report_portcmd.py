@@ -120,6 +120,8 @@ def _multi_fabric(df, report_columns_usage_dct):
     if not 'Имя устройства' in df_columns:
         return df
 
+    df['Фабрика'].fillna('nan', inplace=True)
+
     if report_columns_usage_dct['fabric_name_usage'] and not df['Имя устройства'].is_unique:
         # if severeal aliases for one wwnp then combine all into one alias
         identical_values = {k: 'first' for k in df.columns[2:]}

@@ -42,6 +42,8 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
         portshow_aggregated_df = device_rename(portshow_aggregated_df, device_rename_df)
         status_info('ok', max_title, len(info))
     else:
+        # to ask if group usage required
+        force_group_name_usage_update_flag = 1
         status_info('skip', max_title, len(info))
 
     # check if device Group_Name should be used in report tables (alias group name)

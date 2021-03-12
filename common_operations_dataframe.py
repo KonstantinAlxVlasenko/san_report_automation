@@ -294,6 +294,65 @@ def count_total(df, group_columns: list, count_columns: list, fn: str):
     return total_df
 
 
+def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabric_label'], margin_column_row=None):
+    """Auxiliary function to count values in groups for columns in count_columns.
+    Parameter margin_column_row is tuple of doubled booleans tuples ((False, True), (True, False), etc). 
+    It defines if margin for column and row should be calculated for column values from count_columns list.
+    By default column All is dropped and row All is kept"""
+
+    # by deafult keep summary row but remove summary column
+    if not margin_column_row:
+        margin_column_row =  ((False, True),) * len(count_columns)
+    if len(count_columns) != len(margin_column_row):
+        print('\n')
+        print('Parameters count_columns and margin_column_row in count_frequency function have different length')
+        exit()
+
+    index_lst = [df[column] for column in group_columns if column in df.columns]
+    frequency_df = pd.DataFrame()
+
+    for column, (margin_column, margin_row) in zip(count_columns, margin_column_row):
+        if column in df.columns and df[column].notna().any():
+            df[column].fillna(np.nan, inplace=True)
+            current_df = pd.crosstab(index=index_lst, columns=df[column], margins=any((margin_column, margin_row)))
+            if any((margin_column, margin_row)):
+                # drop column All
+                if not margin_column:
+                    current_df.drop(columns=['All'], inplace=True)
+                # drop row All
+                if not margin_row:
+                    current_df.drop(index=['All'], inplace=True)
+            if frequency_df.empty:
+                frequency_df = current_df.copy()
+            else:
+                frequency_df = frequency_df.merge(current_df, how='outer', on=group_columns)
+
+    frequency_df.fillna(0, inplace=True)            
+    frequency_df.reset_index(inplace=True)
+                
+    return frequency_df
+
+
+def find_mean_max_min(df, count_columns: dict, group_columns = ['Fabric_name', 'Fabric_label']):
+    """Auxiliary function to find mean, max and min values in groups for columns in count_columns
+    and rename columns with corresponding keys from count_columns"""
+    
+    summary_df = pd.DataFrame()
+    for count_column, rename_column in count_columns.items():
+        current_df = df.groupby(by = group_columns)[count_column].agg(['mean', 'max', 'min'])
+        current_df['mean'] = current_df['mean'].round(1)
+        rename_dct = {}
+        for column in current_df.columns:
+            rename_dct[column] = rename_column + '_' + column
+        current_df.rename(columns=rename_dct, inplace=True)
+        current_df.reset_index(inplace=True)
+        if summary_df.empty:
+            summary_df = current_df.copy()
+        else:
+            summary_df = summary_df.merge(current_df, how='outer', on=group_columns)
+            
+    return summary_df
+
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null
 # str1 and str2 are strings before columns respectively (default is whitespace between columns)

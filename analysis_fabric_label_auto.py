@@ -91,9 +91,11 @@ def fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow
         sys.exit()
     # crosstab DataFrame contains summary for port states for switches from switchshow
 
-    mask_device_port = ~switchshow_df['portType'].str.contains('E-Port', na=False)
-    mask_port_notna = switchshow_df['portType'].notna()
-    switchshow_df.loc[mask_port_notna & mask_device_port,  ['device_port']] = 'Device_ports'
+    mask_device_port = switchshow_df['portType'].str.contains('F-Port', na=False)
+    # TO_REMOVE
+    # mask_port_notna = switchshow_df['portType'].notna()
+    # switchshow_df.loc[mask_port_notna & mask_device_port,  ['device_port']] = 'Device_ports'
+    switchshow_df.loc[mask_device_port,  ['device_port']] = 'Device_ports'
 
     port_state_df = pd.crosstab(index = [switchshow_df.chassis_name, switchshow_df.switchName, 
                                          switchshow_df.switchWwn], columns = switchshow_df.state, margins = True)
@@ -138,6 +140,10 @@ def fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow
     fabricshow_porttype_state_df[non_object_columns]  = fabricshow_porttype_state_df[non_object_columns].fillna(0)
     # converting all values to integer
     fabricshow_porttype_state_df[non_object_columns] = fabricshow_porttype_state_df[non_object_columns].astype('int64', errors='ignore')
+
+    # columns contains object type and required to fillna with 'unknown'
+    object_columns =['Fabric_Name', 'LS_type']
+    fabricshow_porttype_state_df[object_columns]  = fabricshow_porttype_state_df[object_columns].fillna('unknown')
     
     return fabricshow_porttype_state_df
 
