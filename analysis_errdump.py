@@ -145,6 +145,7 @@ def message_extract(errdump_aggregated_df, re_pattern_lst):
         [comp_dct['maps_current_value'],  ['Condition', 'Current_value', 'Dashboard_category']],
         [comp_dct['maps_object'], ['Condition', 'obj']],
         [comp_dct['c2_message_1'], ['Condition', 'slot', 'port', 'Message_portIndex', 'Message_portId']],
+        [comp_dct['slow_drain_device'], ['slot', 'port', 'Message_portIndex', 'Condition']],
         ]        
     
     # extract corresponding values if regex pattern applicable

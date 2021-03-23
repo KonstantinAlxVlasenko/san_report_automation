@@ -3,7 +3,7 @@ import re
 
 import pandas as pd
 
-from common_operations_filesystem import (create_files_list, load_data,
+from common_operations_filesystem import (find_files, load_data,
                                           save_data)
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
@@ -55,8 +55,8 @@ def blade_system_extract(blade_folder, report_data_lst):
             print('\nEXTRACTING BLADES SYSTEM INFORMATION ...\n')   
             
             # collects files in folder with txt extension
-            txt_files = create_files_list(blade_folder, '.txt', max_title)
-            log_files = create_files_list(blade_folder, '.log', max_title)
+            txt_files = find_files(blade_folder, max_title, filename_extension='txt')
+            log_files = find_files(blade_folder, max_title, filename_extenstion='log')
             blade_configs_lst = txt_files + log_files
             # number of files to check
             configs_num = len(blade_configs_lst)  

@@ -1,0 +1,4 @@
+                           ----- showhost -d -----
+                           ----- shownet -----
+                           ----- showsys -d -----
+                           ----- showport -----

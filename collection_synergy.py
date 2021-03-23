@@ -1,17 +1,18 @@
+"""Module to extract blade system information"""
+
+
 import os
 import re
 
 import pandas as pd
 import numpy as np
 
-from common_operations_filesystem import (create_files_list, load_data,
+from common_operations_filesystem import (find_files, load_data,
                                           save_data, save_xlsx_file)
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data, verify_force_run)
 from common_operations_servicefile import columns_import, data_extract_objects
 from common_operations_dataframe import wise_combine
-
-"""Module to extract blade system information"""
 
 
 def synergy_system_extract(synergy_folder, report_data_lst):
@@ -79,7 +80,7 @@ def synergy_system_extract(synergy_folder, report_data_lst):
             print('\nEXTRACTING SYNERGY SYSTEM INFORMATION ...\n')   
             
             # collects files in folder with xlsm extension
-            synergy_config_lst = create_files_list(synergy_folder, '.xlsm', max_title)
+            synergy_config_lst = find_files(synergy_folder, max_title, filename_extension='xlsm')
             # number of files to check
             configs_num = len(synergy_config_lst)
 

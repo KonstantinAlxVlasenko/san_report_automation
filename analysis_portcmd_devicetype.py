@@ -83,6 +83,8 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
         elif series['type'] == 'SRV|STORAGE':
             if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
                 return pd.Series(('SRV', series['subtype'].split('|')[0]))
+            elif pd.notna(series.HBA_Manufacturer) and 'qlogic' in series['HBA_Manufacturer'].lower():
+                return pd.Series(('SRV', series['subtype'].split('|')[0]))
             else:
                 return pd.Series(('STORAGE', series['subtype'].split('|')[1]))
             

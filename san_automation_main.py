@@ -35,6 +35,7 @@ from collection_switch_params import switch_params_configshow_extract
 from collection_zoning import zoning_extract
 from collection_sensor import sensor_extract
 from collection_synergy import synergy_system_extract
+from collection_3par import storage_3par_extract
 from common_operations_dataframe import list_to_dataframe
 from common_operations_servicefile import (columns_import, dataframe_import,
                                            dct_from_columns,
@@ -51,7 +52,7 @@ report_data_lst = []
 start_max_title = 60
 
 # get report entry values from report file
-customer_name, project_folder, ssave_folder, blade_folder, synergy_folder = report_entry_values(start_max_title)
+customer_name, project_folder, ssave_folder, blade_folder, synergy_folder, local_3par_folder = report_entry_values(start_max_title)
 max_title = find_max_title(ssave_folder)
 
 print('\n\n')
@@ -82,6 +83,7 @@ def main():
     errdump_df = logs(chassis_params_fabric_lst)
     blade_module_df, blade_servers_df, blade_vc_df = blade_system(blade_folder)
     synergy_module_df, synergy_servers_df = synergy_system_extract(synergy_folder, report_data_lst)
+    system_3par_df, port_3par_df, host_3par_df = storage_3par(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_data_lst)
     
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_data_lst)
@@ -256,7 +258,14 @@ def blade_system(blade_folder):
     return blade_module_df, blade_servers_df, blade_vc_df
 
 
+def storage_3par(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_data_lst):
+    system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst \
+        = storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_data_lst)
+    system_3par_df = list_to_dataframe(system_3par_comprehensive_lst, report_data_lst, 'system_3par', '3par')
+    port_3par_df = list_to_dataframe(port_3par_comprehensive_lst, report_data_lst, 'port_3par', '3par', columns_title_import = 'port_columns')
+    host_3par_df = list_to_dataframe(host_3par_comprehensive_lst, report_data_lst, 'host_3par', '3par', columns_title_import = 'host_columns')
 
+    return system_3par_df, port_3par_df, host_3par_df
 
 
 if __name__ == "__main__":

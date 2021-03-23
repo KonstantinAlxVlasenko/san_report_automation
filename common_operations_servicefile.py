@@ -30,9 +30,14 @@ def report_entry_values(max_title):
         synergy_folder = os.path.normpath(report_entry_df.loc['synergy_meddler_folder', 'value'])
     else:
         synergy_folder = None
+
+    if not pd.isna(report_entry_df.loc['3par_inserv_folder', 'value']):
+        local_3par_folder = os.path.normpath(report_entry_df.loc['3par_inserv_folder', 'value'])
+    else:
+        local_3par_folder = None
     
 
-    return customer_name, project_folder, ssave_folder, blade_folder, synergy_folder
+    return customer_name, project_folder, ssave_folder, blade_folder, synergy_folder, local_3par_folder
 
 
 def columns_import(sheet_title, max_title, *args, 

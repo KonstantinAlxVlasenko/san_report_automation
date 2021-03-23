@@ -6,7 +6,7 @@ import os
 import sys
 # from os import makedirs
 from datetime import date
-
+import re
 import openpyxl
 # import xlrd
 import pandas as pd
@@ -312,13 +312,46 @@ def load_data(report_data_list, *args):
            
     return data_imported
 
+# TO_REMOVE
+# def create_files_list(folder, file_extension, max_title,):
+#     """
+#     Function to create list with files. Takes directory to check
+#     and file extension as a parameters. Returns list of files with the extension
+#     founded in root folder and nested folders.
+#     """
+#     info = f'Checking {os.path.basename(folder)} for configuration files'
+#     print(info, end =" ") 
 
-def create_files_list(folder, file_extension, max_title,):
+#     # check if ssave_path folder exist
+#     check_valid_path(folder)
+   
+#     # list to save configuration data files
+#     files_lst = []
+
+#     # going through all directories inside ssave folder to find configurutaion data
+#     for root, _, files in os.walk(folder):
+#         for file in files:
+#             if file.endswith(file_extension):
+#                 file_path = os.path.normpath(os.path.join(root, file))
+#                 files_lst.append(file_path)
+
+#     if len(files_lst) == 0:
+#         status_info('no data', max_title, len(info))
+#     else:
+#         status_info('ok', max_title, len(info))
+              
+#     return files_lst
+
+
+def find_files(folder, max_title, filename_contains='', filename_extension=''):
     """
-    Function to create list with files. Takes directory to check
-    and file extension as a parameters. Returns list of files with the extension
-    founded in root folder and nested folders.
+    Function to create list with files. Takes directory, regex_pattern to verify if filename
+    contains that pattern (default empty string) and filename extension (default is empty string)
+    as parameters. Returns list of files with the extension deteceted in root folder defined as
+    folder parameter and it's nested folders. If both parameters are default functions returns
+    list of all files in directory
     """
+
     info = f'Checking {os.path.basename(folder)} for configuration files'
     print(info, end =" ") 
 
@@ -328,10 +361,10 @@ def create_files_list(folder, file_extension, max_title,):
     # list to save configuration data files
     files_lst = []
 
-    # going through all directories inside ssave folder to find configurutaion data
+    # going through all directories inside ssave folder to find configuration data
     for root, _, files in os.walk(folder):
         for file in files:
-            if file.endswith(file_extension):
+            if file.endswith(filename_extension) and re.search(filename_contains, file):
                 file_path = os.path.normpath(os.path.join(root, file))
                 files_lst.append(file_path)
 
@@ -341,6 +374,7 @@ def create_files_list(folder, file_extension, max_title,):
         status_info('ok', max_title, len(info))
               
     return files_lst
+
 
 
 def create_hyperlink(ws, at_cell, sheet_name, cell_ref='A1', display_name=None):
