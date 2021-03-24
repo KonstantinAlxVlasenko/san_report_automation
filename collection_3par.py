@@ -4,11 +4,12 @@ extract configuaration information from downloaded and local files"""
 
 import os
 import re
+import shutil
 import subprocess
 import sys
+
 import pandas as pd
 
-import shutil
 from common_operations_filesystem import (create_folder, find_files, load_data,
                                           save_data)
 from common_operations_miscellaneous import (force_extract_check, line_to_list,
@@ -23,7 +24,6 @@ S3MFT = r's3mft.exe'
 def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_data_lst):
     """Function to extract 3PAR storage information"""
     
-
     # report_data_lst contains information: 
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
@@ -61,7 +61,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
 
         # data imported from init file to extract values from config file
         params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('3par', max_title)
-        
+        # verify if 3par systems registered in fabric NameServer
         ns_3par_df = verify_ns_3par(nsshow_df, nscamshow_df, comp_dct)
 
         if not ns_3par_df.empty:
@@ -69,14 +69,13 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
             print('3PAR Storage Systems detected in SAN')
             print(ns_3par_df)
             print('\n')
-
-            configs_3par_lst = configs_download(project_folder, local_3par_folder, comp_dct, max_title)
+            # find configuration files to parse (download from STATs, local folder or use configurations
+            # downloaded on previous iterations)
+            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, comp_dct, max_title)
 
             if configs_3par_lst:
-
                 print('\nEXTRACTING 3PAR STORAGE INFORMATION ...\n')   
                 # number of files to check
-
                 configs_num = len(configs_3par_lst)  
 
                 for i, config_3par in enumerate(configs_3par_lst):       
@@ -110,7 +109,6 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
     return system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst
 
 
-
 def verify_ns_3par(nsshow_df, nscamshow_df, comp_dct):
     """Function to verify if 3PAR storage systems present in fabrics by checking
     local and cached Name Server DataFrames"""
@@ -121,60 +119,73 @@ def verify_ns_3par(nsshow_df, nscamshow_df, comp_dct):
 
     for ns_df in ns_lst:
         ns_3par_df = ns_df.copy()
+        # extract 3par records
         ns_3par_df[storage_columns] =  ns_3par_df['NodeSymb'].str.extract(comp_dct['ns_3par'])
         ns_3par_df = ns_3par_df[storage_columns].copy()
         ns_3par_df.dropna(subset=['Serial_Number'], inplace=True)
         ns_3par_lst.append(ns_3par_df)
         
     ns_3par_df, nscam_3par_df = ns_3par_lst
+    # concatenate local and cached NS 3PAR records
     ns_3par_df = pd.concat([ns_3par_df, nscam_3par_df])
     ns_3par_df.drop_duplicates(inplace=True)
     ns_3par_df.reset_index(drop=True, inplace=True)
     return ns_3par_df
 
 
-def configs_download(project_folder, local_3par_folder, comp_dct, max_title):
+def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_dct, max_title):
     """Function to prepare 3PAR configuration files for parsing. 
-    Download in from STATs and local folders"""
+    Download in from STATs and local (defined in report.xlsx file) folders"""
 
+    # folder for 3par config files download is in project folder
     download_folder = os.path.join(project_folder, '3par_configs')
+    # verify if download folder exist (created on previous iterations)
     download_folder_exist = verify_download_folder(download_folder, create=False)
-    update_configs = True
 
+    # if downlad folder exist and there are 3par config files
+    # ask if user wants to use them or download new files after removing existing
     if download_folder_exist:
         configs_downloaded_lst = find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
-        configs_downloaded_num = len(configs_downloaded_lst)
-        if configs_downloaded_num:
+        if configs_downloaded_lst:
             print('\n')
-            print(f'{configs_downloaded_num} 3PAR configuration files found in download folder.')
+            print(f'{len(configs_downloaded_lst)} 3PAR configuration files found in download folder.')
             print('Do you want to USE EXISTING FILES to extract port and host information?')
             print("If you want to update configuarion files and reply 'no' then existing files are removed.")
             query = "Please select '(y)es' (use existing) or '(n)o' (update): "
             reply = reply_request(query)
             if reply == 'n':
+                # delete 3par config files
                 remove_files(configs_downloaded_lst, max_title)
             else:
-                update_configs = False
-
-    if update_configs:
-        print('\n')
-        query = 'Do you want to download configuration files from STATs? (y)es/(n)o: '
+                return configs_downloaded_lst
+    
+    # download from STATs
+    print('\n')
+    query = 'Do you want DOWNLOAD configuration files from STATs? (y)es/(n)o: '
+    reply = reply_request(query)
+    if reply == 'y':
+        query = 'Are you connected to HPE network?: '
         reply = reply_request(query)
         if reply == 'y':
+            # download configs from STATs
             stats_download(ns_3par_df, download_folder, max_title)
+        else:
+            print('STATs is only available within HPE network.')
 
-        # find configuration files in local 3PAR folder
-        if local_3par_folder:
-            configs_local_lst = find_files(local_3par_folder, max_title, filename_contains=comp_dct['configname_3par'])
-            # configs_local_num = len(configs_local_lst)
-            if configs_local_lst:
-                print('\n')
-                print(f'{len(configs_local_lst)} 3PAR configuration files found in local folder.')
-                query = 'Do you want COPY CONFIGS from local to download folder? (y)es/(n)o: '
-                reply = reply_request(query)
-                if reply == 'y':
-                    local_download(configs_local_lst, download_folder, max_title)
+    # find configuration files in local 3PAR folder
+    if local_3par_folder:
+        configs_local_lst = find_files(local_3par_folder, max_title, filename_contains=comp_dct['configname_3par'])
+        if configs_local_lst:
+            print('\n')
+            print(f'{len(configs_local_lst)} 3PAR configuration files found in local folder.')
+            query = 'Do you want COPY configuration files from LOCAL to download folder? (y)es/(n)o: '
+            reply = reply_request(query)
+            if reply == 'y':
+                # download configs from loacl folder
+                local_download(configs_local_lst, download_folder, max_title)
 
+    # create configs list in download folder if it exist (if user reject download config files
+    # from both sources download folder is not created)
     download_folder_exist = verify_download_folder(download_folder, create=False)
     if download_folder_exist:
         configs_3par_lst = find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
@@ -203,6 +214,7 @@ def remove_files(files_lst, max_title):
         filename = os.path.basename(file)
         info = ' '*16 + f'[{i+1} of {len(files_lst)}]: Removing file {filename}'
         print(info, end=' ')
+        # verify if file exist
         if os.path.isfile(file) or os.path.islink(file):
             try:
                 os.remove(file)
@@ -219,25 +231,27 @@ def stats_download(ns_3par_df, download_folder, max_title):
     """Function to download 3PAR configuration files from STATs with
     help of s3mft program"""
 
+    # verifu if download folder exist and create one if not (default behaviour)
     verify_download_folder(download_folder, max_title)
-    
+    # list of serial numbers and models
     sn_lst = ns_3par_df['Serial_Number'].tolist()
     model_lst = ns_3par_df['System_Model'].tolist()
 
     s3mft_path = os.path.join(S3MFT_DIR, S3MFT)
     s3mft_path = os.path.normpath(s3mft_path)
-
     print('\n')
 
     for i, (model, sn) in enumerate(zip(model_lst, sn_lst)):
         info = ' '*16 + f'[{i+1} of {len(sn_lst)}]: Downloading config for {model} {sn}'
         print(info, end=" ")
         try:
+            # request for latest 3par config file
             config = subprocess.check_output(f'"{s3mft_path}" -n {sn} -p config -stlatest', shell=True, text=True)
             if config:
                 config = config.strip('\n')
-                # os.chdir(os.path.normpath(download_folder))
+                # download config if it's exist
                 run =  subprocess.run(fr'"{s3mft_path}" -filename "{config}" -fnp -fo -outdir "{download_folder}" -quiet', shell=True)
+                # verify if file exist (downloaded) and return corresponnding status
                 config_filename = os.path.basename(config)
                 config_filename = 'array_' + sn + '_' + config_filename
                 config_file = os.path.join(download_folder, config_filename)        
@@ -247,6 +261,7 @@ def stats_download(ns_3par_df, download_folder, max_title):
                     status_info('fail', max_title, len(info))
             else:
                 status_info('skip', max_title, len(info))
+        # if s3mft was not able to retreive config filename
         except subprocess.CalledProcessError as e:
             status_info('fail', max_title, len(info))
             print('\n')
@@ -259,9 +274,11 @@ def local_download(configs_local_lst, download_folder, max_title):
     """Function to copy 3PAR configuration files from local folder
     to download folder"""
 
+    # verifu if download folder exist and create one if not (default behaviour)
     verify_download_folder(download_folder, max_title)
 
     print('\n')
+    # copy all files from configs_local_lst to download folder
     for i, source_file in enumerate(configs_local_lst):
         filename = os.path.basename(source_file)
         info = ' '*16 + f'[{i+1} of {len(configs_local_lst)}]: copying file {filename}'
@@ -271,7 +288,7 @@ def local_download(configs_local_lst, download_folder, max_title):
             try:
                 shutil.copy2(source_file, download_folder)
                 status_info('ok', max_title, len(info))
-            except Error as e:
+            except shutil.Error as e:
                 status_info('failed', max_title, len(info))
                 print('\n')
                 print(e)
@@ -317,8 +334,6 @@ def parse_config(config_3par, params, params_add, comp_keys, match_keys, comp_dc
                         showsys_dct[result.group(1).strip()] = result.group(2).strip()  
                     if not line:
                         break
-                # creating list with REQUIRED enclosure information only
-                # enclosure_lst = [enclosure_dct.get(param) for param in enclosure_params]
             # showsys section end
             # port section start
             elif re.search(comp_dct['showport_header'], line) and not collected['port']:
@@ -347,7 +362,6 @@ def parse_config(config_3par, params, params_add, comp_keys, match_keys, comp_dc
                     line = file.readline()
                     if not line:
                         break
-                
             # host section end
             # ip_address section start
             elif re.search(comp_dct['ip_address'], line) and not collected['ip']:
