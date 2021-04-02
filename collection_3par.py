@@ -17,7 +17,7 @@ from common_operations_miscellaneous import (force_extract_check, line_to_list,
                                              update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
 
-S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0048\WINDOWS'
+S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0055\WINDOWS'
 S3MFT = r's3mft.exe'
 
 

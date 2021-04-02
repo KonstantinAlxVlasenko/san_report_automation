@@ -1,11 +1,12 @@
 """Module to extend portshow_df DataFrame with information from switch, nameserver, 
 blade and synergy enclosures DataFrames"""
 
+from common_operations_filesystem import save_xlsx_file
 import numpy as np
 import pandas as pd
 
 from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
-from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna
+from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna, storage_3par_fillna
 from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_gateway import verify_gateway_link
 from analysis_portcmd_nameserver import nsshow_analysis_main
@@ -15,7 +16,8 @@ from common_operations_dataframe import dataframe_fabric_labeling
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
                         isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, switch_models_df, alias_df, oui_df, fdmi_df, 
-                        blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, re_pattern_lst, report_data_lst):
+                        blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df, 
+                        re_pattern_lst, report_data_lst):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
@@ -46,6 +48,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # fillna portshow_aggregated DataFrame null values with values from blade_vc_join_df
     portshow_aggregated_df = \
         blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synergy_module_df)
+    # fillna portshow_aggregated DataFrame null values with values from collected 3PAR configs
+    portshow_aggregated_df = \
+        storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df)
     # calculate virtual channel id for medium priority traffic
     portshow_aggregated_df = vc_id(portshow_aggregated_df)
     # add 'deviceType', 'deviceSubtype' columns

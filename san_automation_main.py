@@ -21,6 +21,7 @@ from analysis_fabric_statistics import fabricstatistics_main
 from analysis_isl import isl_main
 from analysis_portcmd import portcmd_analysis_main
 from analysis_switch_params import fabric_main
+from analysis_storage_host import storage_host_analysis_main
 from collection_bladesystem import blade_system_extract
 from collection_chassis_params import chassis_params_extract
 from collection_fabric_membership import fabricshow_extract
@@ -101,8 +102,10 @@ def main():
     isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst)
 
     portshow_aggregated_df = \
-        portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, \
-            alias_df, fdmi_df, blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, report_columns_usage_dct, report_data_lst)
+        portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, 
+                                nsshow_df, nscamshow_df, ag_principal_df, alias_df, fdmi_df, blade_module_df, 
+                                blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
+                                system_3par_df, port_3par_df, report_columns_usage_dct, report_data_lst)
 
     portshow_sfp_aggregated_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
 
@@ -111,6 +114,9 @@ def main():
                                 cfg_df, zone_df, alias_df, cfg_effective_df, 
                                     fcrfabric_df, lsan_df, peerzone_df,
                                         report_columns_usage_dct, report_data_lst)
+
+    storage_host_aggregated_df = storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df, zoning_aggregated_df, report_columns_usage_dct, report_data_lst)
+    
 
     sensor_aggregated_df = sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_usage_dct, report_data_lst)
 

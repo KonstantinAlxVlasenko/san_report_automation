@@ -24,6 +24,8 @@ def nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_
     nsshow_join_df, nsshow_unsplit_df = nsshow_symb_split(nsshow_join_df, re_pattern_lst)
     # fillna hba information
     nsshow_join_df = hba_fillna(nsshow_join_df, fdmi_labeled_df, re_pattern_lst)
+    # fill Device_Host_Name for libs, storages, switches
+    nsshow_join_df.Device_Host_Name.fillna(nsshow_join_df.Device_Name, inplace = True)
 
     return nsshow_join_df, nsshow_unsplit_df
 
@@ -156,6 +158,8 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, re_pattern_lst):
     nsshow_join_df.reset_index(inplace = True)
 
     nsshow_join_df['Device_Host_Name'] = nsshow_join_df.Host_Name
-    nsshow_join_df.Device_Host_Name.fillna(nsshow_join_df.Device_Name, inplace = True)
+    
+    # TO REMOVE reloocated to main module
+    # nsshow_join_df.Device_Host_Name.fillna(nsshow_join_df.Device_Name, inplace = True)
 
     return nsshow_join_df

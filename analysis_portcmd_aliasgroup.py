@@ -45,6 +45,9 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     # fabric labeling alias DataFrame
     alias_prep_df =  alias_df.rename(columns = {'principal_switchName': 'switchName', 'principal_switchWwn': 'switchWwn'})
     alias_labeled_df = alias_prep_df.merge(fabric_labels_df, how = 'left', on = fabric_labels_lst[:5])
+
+
+
     # replacing WWNn with WWNp if any
     # create alias_join DataFrame
     alias_lst = ['Fabric_name', 'Fabric_label', 'alias', 'alias_member']
@@ -54,14 +57,16 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     # merging alias_join and nsshow_join DataFrame
     # if alias_member column contains WWNn then new column contains corresponding WWNp for that WWNn
     alias_wwnn_wwnp_df = alias_join_df.merge(nsshow_join_df, how = 'left', left_on = ['Fabric_name', 'Fabric_label', 'alias_member'], \
-                                                                                    right_on = ['Fabric_name', 'Fabric_label', 'NodeName'])
+                                                                            right_on = ['Fabric_name', 'Fabric_label', 'NodeName'])
     # fill empty cells in WWNn -> WWNp column with alias_member WWNp values thus filtering off all WWNn values
     alias_wwnp_df = alias_wwnn_wwnp_df.copy()   
-    alias_wwnp_df.PortName.fillna(alias_join_df['alias_member'], inplace = True)
+    # alias_wwnp_df.PortName.fillna(alias_join_df['alias_member'], inplace = True)
+    alias_wwnp_df.PortName.fillna(alias_wwnp_df['alias_member'], inplace = True)
     # drop possibly mixed WWNp and WWNn column alias_memeber and pure WWNn column
     alias_wwnp_df.drop(columns = ['alias_member', 'NodeName'], inplace = True)
-    # if severeal aliases for one wwnp then combine all into one alias
-    alias_wwnp_df = alias_wwnp_df.groupby(['Fabric_name', 'Fabric_label', 'PortName'], as_index = False).agg(', '.join)
+    # if severeal aliases for one wwnp then combine all into one alias or
+    # if in the same alias wwnn and wwnp from single device present thenn unique aliases arr joined (set usage) 
+    alias_wwnp_df = alias_wwnp_df.groupby(['Fabric_name', 'Fabric_label', 'PortName'], as_index = False).agg(lambda x: ', '.join(set(x)))
 
     return alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df
 

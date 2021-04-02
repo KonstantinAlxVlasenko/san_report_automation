@@ -58,7 +58,7 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         series['Device_Manufacturer'] = match.group(3)
         series['Device_Model'] = match.group(2)
         series['Device_SN'] = match.group(4)
-        series['Device_Name'] = match.group(1)
+        series['Device_Name_reserved'] = match.group(1)
         series['Device_Fw'] = match.group(5)
         series['nodeSymbUsed'] = 'yes'
         series['nodeSymbPattern'] = 9

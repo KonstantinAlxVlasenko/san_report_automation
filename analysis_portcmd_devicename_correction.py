@@ -134,11 +134,18 @@ def create_device_rename_form(portshow_aggregated_df):
     mask_device_class = ~portshow_aggregated_df['deviceType'].isin(['SWITCH', 'VC'])
     # if no Device_Host_Name defined then no device connected
     mask_device_host_name = portshow_aggregated_df['Device_Host_Name'].notna()
+    
+    # no need to rename 3PARs with parsed configs
+    mask_3par = portshow_aggregated_df['deviceSubtype'].str.lower() == '3par'
+    mask_device_name = portshow_aggregated_df['Device_Name'].notna()
+    mask_3par_parsed = mask_3par & mask_device_name
+
     # join all masks
-    mask_complete =  mask_device_class & mask_empty_host_name & mask_device_host_name
+    mask_complete =  mask_device_class & mask_empty_host_name & mask_device_host_name & ~mask_3par_parsed
 
     manual_device_rename_df = portshow_aggregated_df.loc[mask_complete , mask_columns_lst].copy()
     manual_device_rename_df.drop_duplicates(inplace=True)
+
     # drop unnecessary column
     manual_device_rename_df.drop(columns=['Host_Name'], inplace=True)
 
@@ -149,6 +156,8 @@ def create_device_rename_form(portshow_aggregated_df):
     # add number of ports in each 'Device_Host_Name'
     manual_device_rename_df['Port_quantity'] = \
         manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).Connected_portWwn.transform('count')
+
+    manual_device_rename_df['Group_Name'].fillna('nan', inplace=True)
 
     # join group names, aliases and pWwns for each Device_Host_Name
     manual_device_rename_df = manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).\

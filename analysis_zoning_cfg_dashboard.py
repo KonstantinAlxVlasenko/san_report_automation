@@ -116,16 +116,18 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         alias_count_columns = ['zonemember_alias', 'zonemember_wwn', 'zonemember_domain_portindex']
         alias_count_columns = [column for column in alias_count_columns if column in zonelevel_statistics_effective_df.columns]
         # sum all "aliases" for each zone
-        zonelevel_statistics_effective_df['Total_alias'] = zonelevel_statistics_effective_df[alias_count_columns].sum(axis=1)
+        zonelevel_statistics_effective_df['Total_alias'] = \
+            zonelevel_statistics_effective_df[alias_count_columns].sum(axis=1)
         # count statistics for each Fabric
         count_columns_dct = {'Total_alias': 'alias_per_zone', 'Total_zonemembers_active': 'active_ports_per_zone'}
-        alias_vs_active_ports_per_zone_df = find_mean_max_min(zonelevel_statistics_effective_df, count_columns = count_columns_dct)
+        alias_vs_active_ports_per_zone_df = \
+            find_mean_max_min(zonelevel_statistics_effective_df, count_columns = count_columns_dct)
         return alias_vs_active_ports_per_zone_df
 
 
     def count_alias_port_zone_statistics(alias_aggregated_df):
         """Function to count mean, max, min values for defined ports, active ports number and 
-        number zones alias applied in in aliases for each Fabric"""
+        number zones alias applied in in aliases for each Fabric in effective cfg"""
 
         mask_alias_effective = alias_aggregated_df['cfg_type'] == 'effective'
         alias_effective_df = alias_aggregated_df.loc[mask_alias_effective].copy()
