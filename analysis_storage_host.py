@@ -48,7 +48,8 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
         print(info, end =" ") 
 
         # aggregated DataFrames
-        storage_host_aggregated_df = storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df)
+        storage_host_aggregated_df = \
+            storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df, zoning_aggregated_df)
 
         # after finish display status
         status_info('ok', max_title, len(info))
@@ -76,7 +77,7 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
     return storage_host_aggregated_df
 
 
-def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df):
+def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df, zoning_aggregated_df):
     
     storage_host_aggregated_df = host_3par_df.copy()
     # add system_name
@@ -134,7 +135,40 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
 
     storage_host_aggregated_df.fillna(np.nan, inplace=True)
 
+    # prepare zoning
+    mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
+    mask_effective = zoning_aggregated_df['cfg_type'] == 'effective'
+    zoning_valid_df = zoning_aggregated_df.loc[mask_effective & mask_connected].copy()
+
+    storage_host_aggregated_df['zone'] = \
+        storage_host_aggregated_df.apply(lambda series: verify_storage_host_zoning(series, zoning_valid_df), axis=1)
+
+    # sort aggregated DataFrame
+    sort_columns = ['System_Name', 'Host_Id', 'Host_Name', 'Storage_Port']
+    storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
+
     return storage_host_aggregated_df
+
+
+
+def verify_storage_host_zoning(series, zoning_valid_df):
+    
+    if series['Host_Storage_Fabric_equal'] == 'Yes':
+        group_columns = ['Fabric_name', 'Fabric_label', 'zone']
+        storage_host_sr = series[['Storage_Port_Wwnp', 'Host_Wwnp']]
+        
+        storage_host_zone_df = \
+            zoning_valid_df.groupby(by=group_columns).filter(lambda zone: storage_host_sr.isin(zone['PortName']).all())
+        
+        mask_same_fabic = (storage_host_zone_df['Fabric_name'] == series['Storage_Fabric_name']) & \
+                            (storage_host_zone_df['Fabric_label'] == series['Storage_Fabric_label'])
+        zoning_valid_df = storage_host_zone_df.loc[mask_same_fabic].copy()
+
+        if not zoning_valid_df.empty:
+            zone_sr = zoning_valid_df['zone'].drop_duplicates()
+            zones_str = ', '.join(zone_sr.to_list())
+            
+            return zones_str
 
 
 def storage_host_report(storage_host_aggregated_df, data_names, report_columns_usage_dct, max_title):
@@ -149,6 +183,12 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
         if column in storage_host_report_df.columns and storage_host_report_df[column].isna().all():
             storage_host_report_df.drop(columns=[column], inplace=True)
 
+    # mask_valid_host = storage_host_report_df['Host_Storage_Fabric_equal'] == 'Yes'
+    # storage_host_valid_df = storage_host_report_df.loc[mask_valid_host].copy()
+
+    # storage_host_report_df = clean_df(storage_host_report_df)
+    # storage_host_valid_df = clean_df(storage_host_valid_df)
+
 
     verify_columns = ['Host_Storage_Fabric_equal', 'Persona_correct']
     for column in verify_columns:
@@ -162,3 +202,13 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     storage_host_report_df = translate_values(storage_host_report_df, translate_dct)
 
     return storage_host_report_df
+
+
+# def clean_df(df):
+
+#     verify_columns = ['Host_Storage_Fabric_equal', 'Persona_correct']
+#     for column in verify_columns:
+#         if column in df.columns and not (df[column] == 'No').any():
+#             df.drop(columns=[column], inplace=True)
+
+#     return df
