@@ -21,6 +21,8 @@ def status_info(status, max_title, len_info_string, shift=0):
     # space between current operation information and status of its execution filled with dots
     print(status.rjust(str_length - len_info_string, '.'))
 
+    return status
+
 
 def line_to_list(re_object, line, *args):
     """
@@ -184,7 +186,11 @@ def reply_request(question: str, reply_options = ['y', 'yes', 'n', 'no'], show_r
     else:
         if show_reply:
             print(f'Your choice: {reply}')
-    return reply[0]
+    
+    if reply in ['yes', 'no']:
+        return reply[0]
+    else:
+        return reply
 
 
 

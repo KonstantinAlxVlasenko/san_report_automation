@@ -77,7 +77,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                     if re.search(r'^\| Section: SSHOW_PORT \|$', line):
                         # when section is found corresponding collected dict values changed to True
                         collected['portshow'] = True
-                        while not re.search(r'^\| ... rebuilt finished\|$',line):
+                        while not re.search(r'^\| ... rebuilt finished *\|$',line):
                             line = file.readline()
                             if not line:
                                 break

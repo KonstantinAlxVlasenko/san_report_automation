@@ -175,13 +175,17 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     
     storage_host_report_df = storage_host_aggregated_df.copy()
 
-    if (storage_host_report_df['Host_Wwn'] == storage_host_report_df['Host_Wwnp']).all():
-        storage_host_report_df.drop(columns=['Host_Wwn'], inplace=True)
+    storage_host_report_df = drop_equal_columns(storage_host_report_df, columns_pairs=[('Host_Wwnp', 'Host_Wwn')])
 
-    possible_allna_columns = ['Device_Port', 'Device_Location']
-    for column in possible_allna_columns:
-        if column in storage_host_report_df.columns and storage_host_report_df[column].isna().all():
-            storage_host_report_df.drop(columns=[column], inplace=True)
+    # if (storage_host_report_df['Host_Wwn'] == storage_host_report_df['Host_Wwnp']).all():
+    #     storage_host_report_df.drop(columns=['Host_Wwn'], inplace=True)
+
+    # possible_allna_columns = ['Device_Port', 'Device_Location']
+    # for column in possible_allna_columns:
+    #     if column in storage_host_report_df.columns and storage_host_report_df[column].isna().all():
+    #         storage_host_report_df.drop(columns=[column], inplace=True)
+
+    storage_host_report_df = drop_all_na(storage_host_report_df, ['Device_Port', 'Device_Location'])
 
     # mask_valid_host = storage_host_report_df['Host_Storage_Fabric_equal'] == 'Yes'
     # storage_host_valid_df = storage_host_report_df.loc[mask_valid_host].copy()
@@ -190,10 +194,13 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     # storage_host_valid_df = clean_df(storage_host_valid_df)
 
 
-    verify_columns = ['Host_Storage_Fabric_equal', 'Persona_correct']
-    for column in verify_columns:
-        if column in storage_host_report_df.columns and not (storage_host_report_df[column] == 'No').any():
-            storage_host_report_df.drop(columns=[column], inplace=True)
+    # verify_columns = ['Host_Storage_Fabric_equal', 'Persona_correct']
+    # for column in verify_columns:
+    #     if column in storage_host_report_df.columns and not (storage_host_report_df[column] == 'No').any():
+    #         storage_host_report_df.drop(columns=[column], inplace=True)
+
+    columns_values = {'Host_Storage_Fabric_equal': 'Yes', 'Persona_correct': 'Yes'}
+    storage_host_report_df = drop_all_identical(storage_host_report_df, columns_values, dropna=True)
             
     storage_host_report_df, = dataframe_segmentation(storage_host_report_df, data_names[1:], report_columns_usage_dct, max_title)
 
@@ -204,11 +211,74 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     return storage_host_report_df
 
 
-# def clean_df(df):
+def drop_all_na(df, columns: list):
+    """Function to drop columns if all values are nan"""
 
-#     verify_columns = ['Host_Storage_Fabric_equal', 'Persona_correct']
-#     for column in verify_columns:
-#         if column in df.columns and not (df[column] == 'No').any():
-#             df.drop(columns=[column], inplace=True)
+    for column in columns:
+        if column in df.columns and df[column].isna().all():
+            df.drop(columns=[column], inplace=True)
+    return df
 
-#     return df
+
+def drop_all_identical(df, columns_values: dict, dropna=False):
+    """Function to drop columns where all values are equal to certian value.
+    dropna parameter defines if nan values for each column should be droppped 
+    or not before its checking"""
+
+    for column, value in columns_values.items():
+        if column in df.columns:
+            if dropna and (df[column].dropna() == value).all():
+                df.drop(columns=[column], inplace=True)
+            elif not dropna and (df[column] == value).all():
+                df.drop(columns=[column], inplace=True)
+    return df
+
+
+def drop_equal_columns(df, columns_pairs: list):
+    """Function to drop one of two columns if both have equal values.
+    Parameter columns_pairs is a list of tuples. Each tuple contains 
+    two columns to check"""
+
+    columns_dropped_lst = []
+    for column_main, column_dropped in columns_pairs:
+        if column_main in df.columns and column_dropped in df.columns:
+            if df[column_main].equals(df[column_dropped]):
+                columns_dropped_lst.append(column_dropped)
+
+    if columns_dropped_lst:
+        df.drop(columns=columns_dropped_lst, inplace=True)   
+    return df
+
+
+def drop_equal_columns_pairs(df, columns_main: list, columns_droped: list, dropna=False):
+    """Function to check if values from columns_main and columns_droped columns are respectively equal to each other.
+    If they are then drop columns_droped columns. dropna parameter defines if nan values in columns_droped
+    columns should be dropped or not before checking"""
+
+    # create DataFrame copy in case if dropna is reaquired
+    check_df = df.copy()
+    # check if columns are in the DataFrame
+    columns_main = [column for column in columns_main if column in check_df.columns]
+    columns_droped = [column for column in columns_droped if column in check_df.columns]
+    
+    if len(columns_main) != len(columns_droped):
+        print('Checked and main columns quantity must be equal')
+        exit()
+
+    if dropna:
+        check_df.dropna(subset = columns_droped, inplace=True)
+
+    # by default columns are droped
+    drop_columns = True
+    # if any pair of checked columns are not equal then columns are not droped
+    for column_main, column_droped in zip(columns_main, columns_droped):
+        if not check_df[column_main].equals(check_df[column_droped]):
+            drop_columns = False
+
+    if drop_columns:
+        df.drop(columns=columns_droped, inplace=True)
+    
+    return df
+
+
+

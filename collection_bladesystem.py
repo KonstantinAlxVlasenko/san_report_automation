@@ -56,7 +56,7 @@ def blade_system_extract(blade_folder, report_data_lst):
             
             # collects files in folder with txt extension
             txt_files = find_files(blade_folder, max_title, filename_extension='txt')
-            log_files = find_files(blade_folder, max_title, filename_extenstion='log')
+            log_files = find_files(blade_folder, max_title, filename_extension='log')
             blade_configs_lst = txt_files + log_files
             # number of files to check
             configs_num = len(blade_configs_lst)  
@@ -249,7 +249,10 @@ def blade_system_extract(blade_folder, report_data_lst):
                                                 if match_dct[match_keys[8]]:
                                                     result = match_dct[match_keys[8]]
                                                     flex_description = result.group(1)
-                                                    flex_model = re.search(comp_dct[comp_keys[13]], line).group(1)
+                                                    if re.search(comp_dct[comp_keys[13]], line):
+                                                        flex_model = re.search(comp_dct[comp_keys[13]], line).group(1)
+                                                    else:
+                                                        flex_model = None
                                                 elif match_dct[match_keys[15]]:
                                                     result = match_dct[match_keys[15]]
                                                     flex_description = result.group(1)

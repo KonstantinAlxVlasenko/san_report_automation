@@ -66,7 +66,7 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     alias_wwnp_df.drop(columns = ['alias_member', 'NodeName'], inplace = True)
     # if severeal aliases for one wwnp then combine all into one alias or
     # if in the same alias wwnn and wwnp from single device present thenn unique aliases arr joined (set usage) 
-    alias_wwnp_df = alias_wwnp_df.groupby(['Fabric_name', 'Fabric_label', 'PortName'], as_index = False).agg(lambda x: ', '.join(set(x)))
+    alias_wwnp_df = alias_wwnp_df.groupby(['Fabric_name', 'Fabric_label', 'PortName'], as_index = False).agg(lambda x: ', '.join(sorted(set(x))))
 
     return alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df
 

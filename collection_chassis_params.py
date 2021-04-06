@@ -182,7 +182,7 @@ def chassis_params_extract(all_config_data, report_data_lst):
                                 line = file.readline()
                                 if not line:
                                     break
-                     # LS indexes identification end                  
+                    # LS indexes identification end                  
                             
             # additional values which need to be added to the chassis params dictionary
             # chassis_params_add order (configname, ams_maps_log, chassis_name, snmp_server, syslog_server, timezone_h:m, uptime, cpu_average_load, memory_usage, flash_usage, licenses)
@@ -209,5 +209,5 @@ def chassis_params_extract(all_config_data, report_data_lst):
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         chassis_params_fabric_lst = verify_data(report_data_lst, data_names, *data_lst)
-        
+
     return chassis_params_fabric_lst
