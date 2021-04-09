@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import date, timedelta
 
 import pandas as pd
 
@@ -144,7 +145,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_dct, re
     # verify if download folder exist (created on previous iterations)
     download_folder_exist = verify_download_folder(download_folder, create=False)
 
-    # if downlad folder exist and there are 3par config files
+    # if download folder exist and there are 3par config files
     # ask if user wants to use them or download new files after removing existing
     if download_folder_exist:
         configs_downloaded_lst = find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
@@ -228,6 +229,7 @@ def remove_files(files_lst, max_title):
                 print(e.strerror)
         else:
             status_info('skip', max_title, len(info))
+    print('\n')
 
 
 def stats_download(ns_3par_df, download_folder, max_title):
@@ -242,6 +244,10 @@ def stats_download(ns_3par_df, download_folder, max_title):
 
     s3mft_path = os.path.join(S3MFT_DIR, S3MFT)
     s3mft_path = os.path.normpath(s3mft_path)
+
+    today = date.today().strftime("%y%m%d")
+    yesterday = (date.today() - timedelta(1)).strftime("%y%m%d")
+
     print('\n')
 
     for i, (model, sn) in enumerate(zip(model_lst, sn_lst)):
@@ -253,17 +259,22 @@ def stats_download(ns_3par_df, download_folder, max_title):
             config_str = config_str.strip('\n')
             *_, config = config_str.split('\n')
             if config and ' ' not in config:
-                # download config if it's exist
-                run =  subprocess.run(fr'"{s3mft_path}" -filename "{config}" -fnp -fo -outdir "{download_folder}" -quiet', shell=True)
-                # verify if file exist (downloaded) and return corresponnding status
-                config_filename = os.path.basename(config)
-                config_filename = 'array_' + sn + '_' + config_filename
-                config_file = os.path.join(download_folder, config_filename)        
-                if not run.returncode and os.path.isfile(config_file):
-                    status = status_info('ok', max_title, len(info))
+                # download configs within one day only
+                if today in config or yesterday in config:
+                    # download config if it's exist
+                    run =  subprocess.run(fr'"{s3mft_path}" -filename "{config}" -fnp -fo -outdir "{download_folder}" -quiet', shell=True)
+                    # verify if file exist (downloaded) and return corresponnding status
+                    config_filename = os.path.basename(config)
+                    config_filename = 'array_' + sn + '_' + config_filename
+                    config_file = os.path.join(download_folder, config_filename)        
+                    if not run.returncode and os.path.isfile(config_file):
+                        status = status_info('ok', max_title, len(info))
+                    else:
+                        status = status_info('fail', max_title, len(info))
                 else:
-                    status = status_info('fail', max_title, len(info))
+                    status = status_info('skip', max_title, len(info))
             else:
+                config = None
                 status = status_info('skip', max_title, len(info))
         # if s3mft was not able to retreive config filename
         except subprocess.CalledProcessError as e:
@@ -273,7 +284,7 @@ def stats_download(ns_3par_df, download_folder, max_title):
             print(e)
             sys.exit()
         
-        ns_3par_df.loc[i, 'Download_status'] = status.lower()
+        ns_3par_df.loc[i, ['configname', 'Download_status']] = [config, status.lower()]
 
     return ns_3par_df
 
@@ -293,7 +304,7 @@ def stats_download_summary(ns_3par_df, report_data_lst):
         query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
         reply = reply_request(query)
         if reply == 'y':
-            save_xlsx_file(ns_3par_df, 'ns_3par', report_data_lst, force_flag=True)
+            save_xlsx_file(ns_3par_df, 'stats_summary', report_data_lst, force_flag=True)
 
 
 def local_download(configs_local_lst, download_folder, max_title):

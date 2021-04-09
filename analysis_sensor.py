@@ -9,7 +9,6 @@ from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import dct_from_columns
 from common_operations_dataframe import dataframe_segmentation
-from report_zoning import zoning_report_main
 
 
 def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_usage_dct, report_data_lst):

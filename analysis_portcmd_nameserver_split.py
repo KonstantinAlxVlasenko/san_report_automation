@@ -15,8 +15,8 @@ def nsshow_symb_split(nsshow_join_df, re_pattern_lst):
     # columns list to which PortSymb and NodeSymb information splitted up to
     nsshow_symb_columns = [
         'portSymbUsed', 'portSymbPattern', 'nodeSymbUsed', 'nodeSymbPattern', 'Device_Manufacturer', 'Device_Model', 
-        'Device_SN', 'Device_Name', 'Device_Port', 'Device_Fw', 'Device_Location', 'IP_Address', 'HBA_Manufacturer', 
-        'HBA_Model', 'HBA_Description', 'Host_Name', 'Host_OS', 'HBA_Firmware', 'HBA_Driver'
+        'Device_SN', 'Device_Name', 'Device_Name_reserved', 'Device_Port', 'Device_Fw', 'Device_Location', 'IP_Address', 
+        'HBA_Manufacturer', 'HBA_Model', 'HBA_Description', 'Host_Name', 'Host_OS', 'HBA_Firmware', 'HBA_Driver'
         ]
 
     # add  and HBA information empty columns to NameServer DataFrame

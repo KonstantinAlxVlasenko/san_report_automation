@@ -22,8 +22,7 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    # data_names = ['storage_host_aggregated']
-    data_names = ['storage_host_aggregated', 'Презентация']
+    data_names = ['storage_host_aggregated', 'Презентация', 'Презентация_A&B']
 
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
@@ -32,8 +31,7 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    # storage_host_aggregated_df, = data_lst
-    storage_host_aggregated_df, storage_host_report_df = data_lst
+    storage_host_aggregated_df, storage_host_report_df,  storage_host_compare_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'fabric_labels', 'system_3par', 'port_3par', 'host_3par']
@@ -46,38 +44,34 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
         # current operation information string
         info = f'Generating storage hosts table'
         print(info, end =" ") 
-
         # aggregated DataFrames
         storage_host_aggregated_df = \
             storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df, zoning_aggregated_df)
-
         # after finish display status
         status_info('ok', max_title, len(info))
-
         # report tables
-        storage_host_report_df = storage_host_report(storage_host_aggregated_df, data_names, report_columns_usage_dct, max_title)
-
+        storage_host_report_df, storage_host_compare_report_df = \
+            storage_host_report(storage_host_aggregated_df, data_names, report_columns_usage_dct, max_title)
         # create list with partitioned DataFrames
-        # data_lst = [storage_host_aggregated_df]
-        data_lst = [storage_host_aggregated_df, storage_host_report_df]
+        data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
-
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         # storage_host_aggregated_df, = verify_data(report_data_lst, data_names, *data_lst)
-        storage_host_aggregated_df, storage_host_report_df = verify_data(report_data_lst, data_names, *data_lst)
-
-        # data_lst = [storage_host_aggregated_df]
-        data_lst = [storage_host_aggregated_df, storage_host_report_df]
+        storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df \
+            = verify_data(report_data_lst, data_names, *data_lst)
+        data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
-
     return storage_host_aggregated_df
 
 
 def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df, zoning_aggregated_df):
+
+    if system_3par_df.empty:
+        return pd.DataFrame()
     
     storage_host_aggregated_df = host_3par_df.copy()
     # add system_name
@@ -88,9 +82,10 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
 
     # convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)
     for wwn_column in ['Host_Wwn', 'NodeName', 'PortName']:
-        mask_wwn = storage_host_aggregated_df[wwn_column].notna()
-        storage_host_aggregated_df.loc[mask_wwn, wwn_column] = storage_host_aggregated_df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
-        storage_host_aggregated_df[wwn_column] = storage_host_aggregated_df[wwn_column].str.lower()
+        if storage_host_aggregated_df[wwn_column].notna().any():
+            mask_wwn = storage_host_aggregated_df[wwn_column].notna()
+            storage_host_aggregated_df.loc[mask_wwn, wwn_column] = storage_host_aggregated_df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
+            storage_host_aggregated_df[wwn_column] = storage_host_aggregated_df[wwn_column].str.lower()
         
     # add controllers ports Fabric_name and Fabric_label
     storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=['Fabric_name', 'Fabric_label'])
@@ -112,7 +107,9 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
 
     # add host information
-    host_columns = ['Fabric_name', 'Fabric_label', 'chassis_name', 'switchName', 'Index_slot_port', 'Connected_portId', 'Device_Host_Name', 'Device_Port', 'Host_OS', 'Device_Location']
+    host_columns = ['Fabric_name', 'Fabric_label', 'chassis_name', 'switchName', 'Index_slot_port', 'Connected_portId', 
+                    'Device_Host_Name', 'Device_Port', 'Host_OS', 'Device_Location', 
+                    'Device_Host_Name_per_fabric_name_and_label',	'Device_Host_Name_per_fabric_label', 'Device_Host_Name_total_fabrics']
     storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=host_columns, remove_duplicates=False)
 
     # rename host columns
@@ -152,72 +149,82 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
 
 
 def verify_storage_host_zoning(series, zoning_valid_df):
+    """Auxiliary function to find zones in effective configuration with storage port and server"""
     
+    # verify rows where storage port and server are in same fabric only
     if series['Host_Storage_Fabric_equal'] == 'Yes':
         group_columns = ['Fabric_name', 'Fabric_label', 'zone']
         storage_host_sr = series[['Storage_Port_Wwnp', 'Host_Wwnp']]
         
+        # find zones with storage port wwnp and host wwnp
         storage_host_zone_df = \
             zoning_valid_df.groupby(by=group_columns).filter(lambda zone: storage_host_sr.isin(zone['PortName']).all())
-        
+        # get zones defined in the same fabric as storage port connection fabric
         mask_same_fabic = (storage_host_zone_df['Fabric_name'] == series['Storage_Fabric_name']) & \
                             (storage_host_zone_df['Fabric_label'] == series['Storage_Fabric_label'])
         zoning_valid_df = storage_host_zone_df.loc[mask_same_fabic].copy()
-
+        # if zones are found return string of zones separated by commas
         if not zoning_valid_df.empty:
             zone_sr = zoning_valid_df['zone'].drop_duplicates()
             zones_str = ', '.join(zone_sr.to_list())
-            
             return zones_str
 
 
 def storage_host_report(storage_host_aggregated_df, data_names, report_columns_usage_dct, max_title):
+    """Function to create storage_host and storage_host fabric_label comparision DataFrames"""
+
+    if storage_host_aggregated_df.empty:
+        return pd.DataFrame(), pd.DataFrame()
     
     storage_host_report_df = storage_host_aggregated_df.copy()
+    # dataframe where hosts and storage port are in the same fabric
+    mask_same_fabic = storage_host_aggregated_df['Host_Storage_Fabric_equal'] == 'Yes'
+    storage_host_valid_df = storage_host_aggregated_df.loc[mask_same_fabic].copy()
 
-    storage_host_report_df = drop_equal_columns(storage_host_report_df, columns_pairs=[('Host_Wwnp', 'Host_Wwn')])
-
-    # if (storage_host_report_df['Host_Wwn'] == storage_host_report_df['Host_Wwnp']).all():
-    #     storage_host_report_df.drop(columns=['Host_Wwn'], inplace=True)
-
-    # possible_allna_columns = ['Device_Port', 'Device_Location']
-    # for column in possible_allna_columns:
-    #     if column in storage_host_report_df.columns and storage_host_report_df[column].isna().all():
-    #         storage_host_report_df.drop(columns=[column], inplace=True)
-
-    storage_host_report_df = drop_all_na(storage_host_report_df, ['Device_Port', 'Device_Location'])
-
-    # mask_valid_host = storage_host_report_df['Host_Storage_Fabric_equal'] == 'Yes'
-    # storage_host_valid_df = storage_host_report_df.loc[mask_valid_host].copy()
-
-    # storage_host_report_df = clean_df(storage_host_report_df)
-    # storage_host_valid_df = clean_df(storage_host_valid_df)
-
-
-    # verify_columns = ['Host_Storage_Fabric_equal', 'Persona_correct']
-    # for column in verify_columns:
-    #     if column in storage_host_report_df.columns and not (storage_host_report_df[column] == 'No').any():
-    #         storage_host_report_df.drop(columns=[column], inplace=True)
-
-    columns_values = {'Host_Storage_Fabric_equal': 'Yes', 'Persona_correct': 'Yes'}
-    storage_host_report_df = drop_all_identical(storage_host_report_df, columns_values, dropna=True)
-            
-    storage_host_report_df, = dataframe_segmentation(storage_host_report_df, data_names[1:], report_columns_usage_dct, max_title)
-
-    # translate values
+    # drop uninformative columns 
+    storage_host_report_df = clean_storage_host(storage_host_report_df)
+    storage_host_valid_df = clean_storage_host(storage_host_valid_df)
+    # slice required columns and translate column names
+    storage_host_report_df, = dataframe_segmentation(storage_host_report_df, data_names[1:2], report_columns_usage_dct, max_title)
+    storage_host_valid_df, = dataframe_segmentation(storage_host_valid_df, data_names[1:2], report_columns_usage_dct, max_title)
+    # translate values in columns
     translate_dct = {'Yes': 'Да', 'No': 'Нет'}
     storage_host_report_df = translate_values(storage_host_report_df, translate_dct)
+    storage_host_valid_df = translate_values(storage_host_valid_df, translate_dct)
+    # create comparision storage_host DataFrame based on Fabric_labels
+    storage_host_compare_report_df = dataframe_redistribute(storage_host_valid_df, column='Подсеть')
+    return storage_host_report_df, storage_host_compare_report_df
 
-    return storage_host_report_df
+
+def clean_storage_host(df):
+    """Function to clean storage_host and storage_host_valid (storage port and host are in the same fabric)"""
+
+    # drop second column in each tuple of the list if values in columns of the tuple are equal
+    df = drop_equal_columns(df, columns_pairs=[('Host_Wwnp', 'Host_Wwn'), 
+                                                ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label')])
+    # drop empty columns
+    df = drop_all_na(df, ['Device_Port', 'Device_Location'])
+    # drop columns where all values are equal to the item value
+    columns_values = {'Host_Storage_Fabric_equal': 'Yes', 'Persona_correct': 'Yes'}
+    df = drop_all_identical(df, columns_values, dropna=True)
+    # drop second pair of Fabric_name, Fabric_label if the columns are respectively equal 
+    df = drop_equal_columns_pairs(df, columns_main=['Storage_Fabric_name', 'Storage_Fabric_label'], 
+                                        columns_droped=['Host_Fabric_name', 'Host_Fabric_label'], dropna=False)
+    # rename first pair of Fabric_name, Fabric_label if second one was droped in prev step
+    if not 'Host_Fabric_name' in df.columns:
+        df.rename(columns={'Storage_Fabric_name': 'Fabric_name', 'Storage_Fabric_label': 'Fabric_label'}, inplace=True)
+    return df
 
 
 def drop_all_na(df, columns: list):
     """Function to drop columns if all values are nan"""
 
+    clean_df = df.copy()
+
     for column in columns:
         if column in df.columns and df[column].isna().all():
-            df.drop(columns=[column], inplace=True)
-    return df
+            clean_df.drop(columns=[column], inplace=True)
+    return clean_df
 
 
 def drop_all_identical(df, columns_values: dict, dropna=False):
@@ -225,13 +232,15 @@ def drop_all_identical(df, columns_values: dict, dropna=False):
     dropna parameter defines if nan values for each column should be droppped 
     or not before its checking"""
 
+    clean_df = df.copy()    
+
     for column, value in columns_values.items():
         if column in df.columns:
             if dropna and (df[column].dropna() == value).all():
-                df.drop(columns=[column], inplace=True)
+                clean_df.drop(columns=[column], inplace=True)
             elif not dropna and (df[column] == value).all():
-                df.drop(columns=[column], inplace=True)
-    return df
+                clean_df.drop(columns=[column], inplace=True)
+    return clean_df
 
 
 def drop_equal_columns(df, columns_pairs: list):
@@ -239,6 +248,7 @@ def drop_equal_columns(df, columns_pairs: list):
     Parameter columns_pairs is a list of tuples. Each tuple contains 
     two columns to check"""
 
+    clean_df = df.copy()
     columns_dropped_lst = []
     for column_main, column_dropped in columns_pairs:
         if column_main in df.columns and column_dropped in df.columns:
@@ -246,8 +256,8 @@ def drop_equal_columns(df, columns_pairs: list):
                 columns_dropped_lst.append(column_dropped)
 
     if columns_dropped_lst:
-        df.drop(columns=columns_dropped_lst, inplace=True)   
-    return df
+        clean_df.drop(columns=columns_dropped_lst, inplace=True)   
+    return clean_df
 
 
 def drop_equal_columns_pairs(df, columns_main: list, columns_droped: list, dropna=False):
@@ -255,7 +265,8 @@ def drop_equal_columns_pairs(df, columns_main: list, columns_droped: list, dropn
     If they are then drop columns_droped columns. dropna parameter defines if nan values in columns_droped
     columns should be dropped or not before checking"""
 
-    # create DataFrame copy in case if dropna is reaquired
+    clean_df = df.copy()
+    # create DataFrame copy in case if dropna is required
     check_df = df.copy()
     # check if columns are in the DataFrame
     columns_main = [column for column in columns_main if column in check_df.columns]
@@ -276,9 +287,32 @@ def drop_equal_columns_pairs(df, columns_main: list, columns_droped: list, dropn
             drop_columns = False
 
     if drop_columns:
-        df.drop(columns=columns_droped, inplace=True)
+        clean_df.drop(columns=columns_droped, inplace=True)
     
-    return df
+    return clean_df
 
+
+def dataframe_redistribute(df, column: str):
+    """Function to create comparision DataFrame. 
+    Initial DataFrame df is sliced based on unique values in designated column.
+    Then sliced DataFrames concatenated horizontally which indexes were previously reset."""
+    
+    if not column in df.columns:
+        print('\n')
+        print(f"Column {column} doesn't exist")
+        return df
+
+    column_values = sorted(df[column].unique().tolist())
+    sorted_df_lst = []
+    for value in column_values:
+        mask_value = df[column] == value
+        tmp_df = df.loc[mask_value].copy()
+        tmp_df.reset_index(inplace=True, drop=True)
+        sorted_df_lst.append(tmp_df.copy())
+    
+    return pd.concat(sorted_df_lst, axis=1)
+
+
+        
 
 

@@ -124,7 +124,7 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
                 return pd.Series((np.nan, np.nan))
             # when device_type is not defined, oui is not founded, 
             # and link is not slave AG or ISL but port is Online then device class is UNKNOWN
-            elif series['portState'] == 'Online':
+            elif series['portState'] == 'Online' and series['portType'] != 'D-Port':
                 return pd.Series(('UNKNOWN', 'UNKNOWN'))
             else:
                 return pd.Series((np.nan, np.nan))
