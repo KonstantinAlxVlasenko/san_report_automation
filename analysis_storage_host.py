@@ -81,11 +81,14 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, port_3par_df, join_lst=['configname', 'Storage_Port'], filled_lst=['NodeName', 'PortName'])
 
     # convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)
-    for wwn_column in ['Host_Wwn', 'NodeName', 'PortName']:
-        if storage_host_aggregated_df[wwn_column].notna().any():
-            mask_wwn = storage_host_aggregated_df[wwn_column].notna()
-            storage_host_aggregated_df.loc[mask_wwn, wwn_column] = storage_host_aggregated_df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
-            storage_host_aggregated_df[wwn_column] = storage_host_aggregated_df[wwn_column].str.lower()
+    storage_host_aggregated_df = convert_wwn(storage_host_aggregated_df, ['Host_Wwn', 'NodeName', 'PortName'])
+
+    # TO_REMOVE
+    # for wwn_column in ['Host_Wwn', 'NodeName', 'PortName']:
+    #     if storage_host_aggregated_df[wwn_column].notna().any():
+    #         mask_wwn = storage_host_aggregated_df[wwn_column].notna()
+    #         storage_host_aggregated_df.loc[mask_wwn, wwn_column] = storage_host_aggregated_df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
+    #         storage_host_aggregated_df[wwn_column] = storage_host_aggregated_df[wwn_column].str.lower()
         
     # add controllers ports Fabric_name and Fabric_label
     storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=['Fabric_name', 'Fabric_label'])
@@ -95,12 +98,17 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
 
     # 'clean' Wwn column to have Wwnp only
-    storage_host_aggregated_df['NodeName'] = storage_host_aggregated_df['Host_Wwn']
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
-                                    join_lst=['Fabric_name', 'Fabric_label', 'NodeName'], 
-                                    filled_lst=['PortName'], remove_duplicates=False)
-    storage_host_aggregated_df['PortName'].fillna(storage_host_aggregated_df['Host_Wwn'], inplace=True)
-    storage_host_aggregated_df.drop(columns=['NodeName'], inplace=True)
+    storage_host_aggregated_df = replace_wwnn(storage_host_aggregated_df, 'Host_Wwn', 
+                                                portshow_aggregated_df, ['NodeName', 'PortName'], 
+                                                fabric_columns = ['Fabric_name', 'Fabric_label'])
+
+    # TO_REMOVE
+    # storage_host_aggregated_df['NodeName'] = storage_host_aggregated_df['Host_Wwn']
+    # storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
+    #                                 join_lst=['Fabric_name', 'Fabric_label', 'NodeName'], 
+    #                                 filled_lst=['PortName'], remove_duplicates=False)
+    # storage_host_aggregated_df['PortName'].fillna(storage_host_aggregated_df['Host_Wwn'], inplace=True)
+    # storage_host_aggregated_df.drop(columns=['NodeName'], inplace=True)
 
     # rename controllers Fabric_name and Fabric_label
     rename_columns = {'Fabric_name': 'Storage_Fabric_name', 'Fabric_label': 'Storage_Fabric_label'}
@@ -110,46 +118,170 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     host_columns = ['Fabric_name', 'Fabric_label', 'chassis_name', 'switchName', 'Index_slot_port', 'Connected_portId', 
                     'Device_Host_Name', 'Device_Port', 'Host_OS', 'Device_Location', 
                     'Device_Host_Name_per_fabric_name_and_label',	'Device_Host_Name_per_fabric_label', 'Device_Host_Name_total_fabrics']
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=host_columns, remove_duplicates=False)
+    storage_host_aggregated_df = \
+        dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=host_columns, remove_duplicates=False)
 
     # rename host columns
     rename_columns = {'Fabric_name': 'Host_Fabric_name', 'Fabric_label': 'Host_Fabric_label', 'PortName': 'Host_Wwnp'}
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
 
     # verify if host and storage ports are in the same fabric
-    mask_same_fabic = (storage_host_aggregated_df['Host_Fabric_name'] == storage_host_aggregated_df['Storage_Fabric_name']) & \
-                        (storage_host_aggregated_df['Host_Fabric_label'] == storage_host_aggregated_df['Storage_Fabric_label'])
-    mask_fabric_notna = storage_host_aggregated_df[['Host_Fabric_name', 'Storage_Fabric_name', 'Host_Fabric_label', 'Storage_Fabric_label']].notna().all(axis=1)
-    storage_host_aggregated_df['Host_Storage_Fabric_equal'] = np.select([mask_fabric_notna & mask_same_fabic, mask_fabric_notna & ~mask_same_fabic], ['Yes', 'No'], default=pd.NA)
+    storage_host_aggregated_df = sequential_equality_note(storage_host_aggregated_df, 
+                                                            ['Host_Fabric_name', 'Host_Fabric_label'], 
+                                                            ['Storage_Fabric_name', 'Storage_Fabric_label'],
+                                                            'Host_Storage_Fabric_equal')
+
+    # TO_REMOVE
+    # mask_same_fabic = (storage_host_aggregated_df['Host_Fabric_name'] == storage_host_aggregated_df['Storage_Fabric_name']) & \
+    #                     (storage_host_aggregated_df['Host_Fabric_label'] == storage_host_aggregated_df['Storage_Fabric_label'])
+    # mask_fabric_notna = storage_host_aggregated_df[['Host_Fabric_name', 'Storage_Fabric_name', 'Host_Fabric_label', 'Storage_Fabric_label']].notna().all(axis=1)
+    # storage_host_aggregated_df['Host_Storage_Fabric_equal'] = np.select([mask_fabric_notna & mask_same_fabic, mask_fabric_notna & ~mask_same_fabic], ['Yes', 'No'], default=pd.NA)
 
     # verify persona (host mode) is defined in coreespondence with host os
-    mask_vmware = storage_host_aggregated_df['Persona'].str.lower().str.contains('vmware') & storage_host_aggregated_df['Host_OS'].str.lower().str.contains('vmware')
-    mask_windows = storage_host_aggregated_df['Persona'].str.lower().str.contains('windows') & storage_host_aggregated_df['Host_OS'].str.lower().str.contains('windows')
-    mask_linux = storage_host_aggregated_df['Persona'].str.lower().str.contains('generic') & storage_host_aggregated_df['Host_OS'].str.lower().str.contains('linux')
-    mask_persona_correct = mask_vmware | mask_windows | mask_linux
+    storage_host_aggregated_df = verify_host_mode(storage_host_aggregated_df)
+
+    # TO_REMOVE
+    # mask_vmware = storage_host_aggregated_df['Persona'].str.lower().str.contains('vmware') & storage_host_aggregated_df['Host_OS'].str.lower().str.contains('vmware')
+    # mask_windows = storage_host_aggregated_df['Persona'].str.lower().str.contains('windows') & storage_host_aggregated_df['Host_OS'].str.lower().str.contains('windows')
+    # mask_linux = storage_host_aggregated_df['Persona'].str.lower().str.contains('generic') & storage_host_aggregated_df['Host_OS'].str.lower().str.contains('linux')
+    # mask_persona_correct = mask_vmware | mask_windows | mask_linux
+    # mask_os_notna = storage_host_aggregated_df[['Persona', 'Host_OS']].notna().all(axis=1)
+    # storage_host_aggregated_df['Persona_correct'] = np.select([mask_os_notna & mask_persona_correct, mask_os_notna & ~mask_persona_correct], ['Yes', 'No'], default=pd.NA)
+    # storage_host_aggregated_df.fillna(np.nan, inplace=True)
+
+    # verify if storage port and host port are zoned
+    storage_host_aggregated_df = verify_storage_host_zoning(storage_host_aggregated_df, zoning_aggregated_df)
+
+    # TO_REMOVE
+    # # prepare zoning
+    # mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
+    # mask_effective = zoning_aggregated_df['cfg_type'] == 'effective'
+    # zoning_valid_df = zoning_aggregated_df.loc[mask_effective & mask_connected].copy()
+    # storage_host_aggregated_df['zone'] = \
+    #     storage_host_aggregated_df.apply(lambda series: find_zones(series, zoning_valid_df), axis=1)
+
+    # sort aggregated DataFrame
+    sort_columns = ['System_Name', 'Host_Id', 'Host_Name', 'Storage_Port']
+    storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
+    return storage_host_aggregated_df
+
+
+def verify_host_mode(storage_host_aggregated_df):
+    # verify persona (host mode) is defined in coreespondence with host os
+
+    os_lst = ['vmware', 'windows', 'linux']
+    mask_persona_correct = None
+    for os_type in os_lst:
+        os_mode = os_type if os_type != 'linux' else 'generic'
+        mask_os = (storage_host_aggregated_df['Persona'].str.lower().str.contains(os_mode) & \
+                    storage_host_aggregated_df['Host_OS'].str.lower().str.contains(os_type))
+        if mask_persona_correct:
+            mask_persona_correct = mask_persona_correct | mask_os
+        else:
+            mask_persona_correct = mask_os
+
     mask_os_notna = storage_host_aggregated_df[['Persona', 'Host_OS']].notna().all(axis=1)
-    storage_host_aggregated_df['Persona_correct'] = np.select([mask_os_notna & mask_persona_correct, mask_os_notna & ~mask_persona_correct], ['Yes', 'No'], default=pd.NA)
-
+    storage_host_aggregated_df['Persona_correct'] = \
+        np.select([mask_os_notna & mask_persona_correct, mask_os_notna & ~mask_persona_correct], ['Yes', 'No'], default=pd.NA)
     storage_host_aggregated_df.fillna(np.nan, inplace=True)
+    
+    return storage_host_aggregated_df
 
-    # prepare zoning
+
+def  convert_wwn(df, wwn_columns: list):
+    """Function to convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)"""
+
+    for wwn_column in wwn_columns:
+        if wwn_column in df.columns and df[wwn_column].notna().any():
+            mask_wwn = df[wwn_column].notna()
+            df.loc[mask_wwn, wwn_column] = df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
+            df[wwn_column] = df[wwn_column].str.lower()
+    return df
+
+
+def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list, fabric_columns: list=[]):
+    """Function to replace wwnn in wwn_column (column with presumably mixed wwnn and wwnp values) 
+    of wwn_df DataFrame with corresponding wwnp value if wwnn is present. wwnn_wwnp_df DataFrame contains strictly defined 
+    wwnn and wwnp values in corresponding columns which passed as wwnn_wwnp_columns parameter.
+    fabric_columns contains additional columns if required find wwnp for wwnn in certain fabric only."""
+    
+    wwnn_column, wwnp_column = wwnn_wwnp_columns
+    join_columns = fabric_columns.append(wwnn_column)
+
+    if wwnp_column in wwn_df.columns:
+        wwn_df[wwnp_column] = np.nan
+
+    # assume that all values in wwn_column are wwnns
+    wwn_df[wwnn_column] = wwn_df[wwn_column]
+    # find corresponding wwnp value from wwnn_wwnp_df for each presumed wwnn in wwn_df
+    # rows with filled values in wwnp_column have confirmed wwnn value in  wwnn_column column of wwn_df
+    wwn_df = dataframe_fillna(wwn_df, wwnn_wwnp_df, 
+                                    join_lst=join_columns, 
+                                    filled_lst=[wwnp_column], remove_duplicates=False)
+    # when rows have empty values in wwnp_column mean wwn doesn't exist in fabric or it is wwnp
+    wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True)
+    wwn_df.drop(columns=[wwnn_column], inplace=True)
+    return wwn_df
+
+
+# def sequential_equality(df, columns1: list, columns2: list, result_column: str):
+
+#     mask_lst = [df[column1] == df[column2] for column1, column2 in zip(columns1, columns2)]
+#     if mask_lst:
+#         mask_equality = (mask_lst[0])
+#         if len(mask_lst) > 1:
+#             for mask in mask_lst[1:]:
+#                 mask_equality = mask_equality & (mask)
+
+#     columns = columns1 + columns2
+#     mask_notna = df[columns].notna().all(axis=1)
+#     df[result_column] = np.select([mask_notna & mask_equality, mask_notna & ~mask_equality], ['Yes', 'No'], default=pd.NA)
+
+#     return df
+
+
+def sequential_equality_note(df, columns1: list, columns2: list, note_column: str):
+    """Function to check if values in the list of columns1 and columns2 are sequentially equal
+    for rows where all values are not na. note_column contains 'Yes' if corresponding values 
+    are equal and 'No' if they aren't. Rows with any absent value from columns1 and column2
+    have na in note_column"""
+    
+    # to compare more than two columns for sequantial equality they must have equal column names
+    # for corresponding columns. two DataFrames sliced from df DataFrame.
+    df1 = df[columns1].copy()
+    df2 = df[columns2].copy()
+    # rename column names in df2 to correspond names in df1
+    rename_dct = {column2: column1 for column1, column2 in zip(columns1, columns2)}
+    df2.rename(columns=rename_dct, inplace=True)
+    # mask where values in corresponding columns are equal
+    mask_equality = (df1 == df2).all(axis=1)
+    # only rows with notna values for all columns from columns1 and columns2 lists are taken into account
+    columns = columns1 + columns2
+    mask_notna = df[columns].notna().all(axis=1)
+    # check equality and fill note_column with 'Yes' or 'No'
+    df[note_column] = np.select([mask_notna & mask_equality, mask_notna & ~mask_equality], ['Yes', 'No'], default=pd.NA)
+    df.fillna(np.nan, inplace=True)
+
+    return df
+
+
+def verify_storage_host_zoning(storage_host_aggregated_df, zoning_aggregated_df):
+    """Function to verify if storage port and host port are zoned"""
+    
+    # prepare zoning (slice effective zoning and local or imported ports only)
     mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
     mask_effective = zoning_aggregated_df['cfg_type'] == 'effective'
     zoning_valid_df = zoning_aggregated_df.loc[mask_effective & mask_connected].copy()
 
     storage_host_aggregated_df['zone'] = \
-        storage_host_aggregated_df.apply(lambda series: verify_storage_host_zoning(series, zoning_valid_df), axis=1)
-
-    # sort aggregated DataFrame
-    sort_columns = ['System_Name', 'Host_Id', 'Host_Name', 'Storage_Port']
-    storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
+        storage_host_aggregated_df.apply(lambda series: find_zones(series, zoning_valid_df), axis=1)
 
     return storage_host_aggregated_df
 
 
-
-def verify_storage_host_zoning(series, zoning_valid_df):
-    """Auxiliary function to find zones in effective configuration with storage port and server"""
+def find_zones(series, zoning_valid_df):
+    """Auxiliary function for verify_storage_host_zoning fn 
+    to find zones in effective configuration with storage port and server"""
     
     # verify rows where storage port and server are in same fabric only
     if series['Host_Storage_Fabric_equal'] == 'Yes':
@@ -192,7 +324,7 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     storage_host_report_df = translate_values(storage_host_report_df, translate_dct)
     storage_host_valid_df = translate_values(storage_host_valid_df, translate_dct)
     # create comparision storage_host DataFrame based on Fabric_labels
-    storage_host_compare_report_df = dataframe_redistribute(storage_host_valid_df, column='Подсеть')
+    storage_host_compare_report_df = dataframe_slice_concatenate(storage_host_valid_df, column='Подсеть')
     return storage_host_report_df, storage_host_compare_report_df
 
 
@@ -292,7 +424,7 @@ def drop_equal_columns_pairs(df, columns_main: list, columns_droped: list, dropn
     return clean_df
 
 
-def dataframe_redistribute(df, column: str):
+def dataframe_slice_concatenate(df, column: str):
     """Function to create comparision DataFrame. 
     Initial DataFrame df is sliced based on unique values in designated column.
     Then sliced DataFrames concatenated horizontally which indexes were previously reset."""
