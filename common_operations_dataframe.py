@@ -1,8 +1,9 @@
-"""Module with auxiliary finctions to perform operations on DataFrames"""
+"""Module with auxiliary functions to perform operations on DataFrames"""
 
 import os
 import sys
 import xlrd
+import re
 import pandas as pd
 import numpy as np
 from common_operations_filesystem import save_xlsx_file
@@ -356,6 +357,70 @@ def find_mean_max_min(df, count_columns: dict, group_columns = ['Fabric_name', '
             summary_df = summary_df.merge(current_df, how='outer', on=group_columns)
             
     return summary_df
+
+
+def sequential_equality_note(df, columns1: list, columns2: list, note_column: str):
+    """Function to check if values in the list of columns1 and columns2 are sequentially equal
+    for rows where all values are not na. note_column contains 'Yes' if corresponding values 
+    are equal and 'No' if they aren't. Rows with any absent value from columns1 and column2
+    have na in note_column"""
+    
+    # to compare more than two columns for sequantial equality they must have equal column names
+    # for corresponding columns. two DataFrames sliced from df DataFrame.
+    df1 = df[columns1].copy()
+    df2 = df[columns2].copy()
+    # rename column names in df2 to correspond names in df1
+    rename_dct = {column2: column1 for column1, column2 in zip(columns1, columns2)}
+    df2.rename(columns=rename_dct, inplace=True)
+    # mask where values in corresponding columns are equal
+    mask_equality = (df1 == df2).all(axis=1)
+    # only rows with notna values for all columns from columns1 and columns2 lists are taken into account
+    columns = columns1 + columns2
+    mask_notna = df[columns].notna().all(axis=1)
+    # check equality and fill note_column with 'Yes' or 'No'
+    df[note_column] = np.select([mask_notna & mask_equality, mask_notna & ~mask_equality], ['Yes', 'No'], default=pd.NA)
+    df.fillna(np.nan, inplace=True)
+
+    return df
+
+
+def  convert_wwn(df, wwn_columns: list):
+    """Function to convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)"""
+
+    for wwn_column in wwn_columns:
+        if wwn_column in df.columns and df[wwn_column].notna().any():
+            mask_wwn = df[wwn_column].notna()
+            df.loc[mask_wwn, wwn_column] = df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
+            df[wwn_column] = df[wwn_column].str.lower()
+    return df
+
+
+def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list, fabric_columns: list=[]):
+    """Function to replace wwnn in wwn_column (column with presumably mixed wwnn and wwnp values) 
+    of wwn_df DataFrame with corresponding wwnp value if wwnn is present. wwnn_wwnp_df DataFrame contains strictly defined 
+    wwnn and wwnp values in corresponding columns which passed as wwnn_wwnp_columns parameter.
+    fabric_columns contains additional columns if required find wwnp for wwnn in certain fabric only."""
+    
+    wwnn_column, wwnp_column = wwnn_wwnp_columns
+    join_columns = [*fabric_columns, wwnn_column]
+
+    if wwnp_column in wwn_df.columns:
+        wwn_df[wwnp_column] = np.nan
+
+    # assume that all values in wwn_column are wwnns
+    wwn_df[wwnn_column] = wwn_df[wwn_column]
+    # find corresponding wwnp value from wwnn_wwnp_df for each presumed wwnn in wwn_df
+    # rows with filled values in wwnp_column have confirmed wwnn value in  wwnn_column column of wwn_df
+    wwn_df = dataframe_fillna(wwn_df, wwnn_wwnp_df, 
+                                    join_lst=join_columns, 
+                                    filled_lst=[wwnp_column], remove_duplicates=False)
+    # when rows have empty values in wwnp_column mean wwn doesn't exist in fabric or it is wwnp
+    wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True)
+    wwn_df.drop(columns=[wwnn_column], inplace=True)
+    return wwn_df
+
+
+
 
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null
