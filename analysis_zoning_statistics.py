@@ -7,6 +7,8 @@ from common_operations_dataframe import dataframe_fillna
 
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 
+invalid_zone_tags = ['no_initiator', 'no_target', 'no_target, no_initiator', 'no_target, several_initiators']
+
 def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     """Main function to create zonemembers statistics"""
 
@@ -66,7 +68,7 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
     """
 
     # column names for which statistics is counted for
-    columns_lst = ['zone_tag', 'lsan_tag', 'zone_duplicated_tag', 'Fabric_device_status', 'peerzone_member_type',
+    columns_lst = ['zone_tag', 'qos_tag', 'lsan_tag', 'tdz_tag', 'zone_duplicated_tag', 'Fabric_device_status', 'peerzone_member_type',
                     'deviceType', 'deviceSubtype',
                     'Device_type', 'Wwn_type', 'Wwnp_duplicated', 'zone_member_type']
 
@@ -77,7 +79,9 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
     wwnp_duplicated_columns = ['Fabric_name', 'Fabric_label', 
                                 'cfg', 'cfg_type', 'zone', 'PortName']
 
-    columns_lst = [column for column in columns_lst if zoning_modified_deafult_df[column].notna().any()]
+    columns_lst = [column for column in columns_lst 
+                    if column in zoning_modified_deafult_df.columns 
+                    and zoning_modified_deafult_df[column].notna().any()]
 
     # list to merge diffrenet parameters statistics into single DataFrame
     merge_lst = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
@@ -339,13 +343,23 @@ def modify_zoning(zoning_aggregated_df):
     """  
     mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
     mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
-
+    # axis 1 replace values with nan along the row
     zoning_modified_df[statistics_columns_lst] = \
-        zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan, np.nan)), axis=1)
+    zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan*len(statistics_columns_lst))), axis=1)
+    
+    # TO_REMOVE due different series len and columns number
+    # zoning_modified_df[statistics_columns_lst] = \
+    #     zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan, np.nan)), axis=1)
 
     mask_zone_name = zoning_modified_df['zone_duplicates_free'].isna()
     zoning_modified_df['zone_tag'] = zoning_modified_df['zone_duplicates_free'].where(mask_zone_name, 'zone_tag')
+    # lsan_tag was added in analysis_zoning_aggregation module
     zoning_modified_df['lsan_tag'] = zoning_modified_df['lsan_tag'].where(~mask_zone_name, np.nan)
+    # add tdz_tag
+    zoning_modified_df = verify_tdz(zoning_modified_df)
+    # add qos zone tag
+    mask_qos = zoning_modified_df['zone_duplicates_free'].str.contains(r'^QOS[LMH]\d')
+    zoning_modified_df.loc[~mask_zone_name & mask_qos, 'qos_tag'] = 'qos_tag'
 
     # verify duplicated zones (zones with the same set of PortWwns)
     zoning_duplicated_df = verify_duplicated_zones(zoning_aggregated_df)
@@ -357,3 +371,27 @@ def modify_zoning(zoning_aggregated_df):
     zoning_modified_df.replace(to_replace='nan', value=np.nan, inplace=True)
 
     return zoning_modified_df, zoning_duplicated_df
+
+
+def verify_tdz(zoning_modified_df):
+    """Function to find target driven zones zones"""
+    
+    if 'peerzone_member_type' in zoning_modified_df.columns and zoning_modified_df['peerzone_member_type'].notna().any():
+        # zone need to be efficient and peer type
+        # mask_valid_zone = ~zoning_modified_df['Target_Initiator_note'].isin(invalid_zone_tags)
+        mask_property = zoning_modified_df['peerzone_member_type'] == 'principal'
+        zoning_tdz_df = zoning_modified_df.loc[mask_property].copy()
+        zoning_tdz_df.dropna(subset=['PortName'], inplace=True)
+        
+        # zone name need contain tdz tag and principal member Wwnp (without colons)
+        zoning_tdz_df['PortName_colon_free'] = zoning_tdz_df['PortName'].str.replace(r':', '')
+        zoning_tdz_df = zoning_tdz_df.loc[zoning_tdz_df.apply(lambda x: 'tdz' in x.zone and x.PortName_colon_free in x.zone, axis=1)].copy()
+        
+        # zone_duplicates_free and tdz_tag columns used for dataframe_fillna
+        zoning_tdz_df['zone_duplicates_free'] = zoning_tdz_df['zone']
+        zoning_tdz_df['tdz_tag'] = 'tdz_tag'
+
+        tdz_columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone_duplicates_free', 'tdz_tag']
+        zoning_modified_df = dataframe_fillna(zoning_modified_df, zoning_tdz_df, filled_lst=tdz_columns[-1:], join_lst=tdz_columns[:-1])
+
+    return zoning_modified_df

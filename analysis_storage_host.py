@@ -159,9 +159,13 @@ def verify_storage_host_zoning(storage_host_aggregated_df, zoning_aggregated_df)
     mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
     mask_effective = zoning_aggregated_df['cfg_type'] == 'effective'
     zoning_valid_df = zoning_aggregated_df.loc[mask_effective & mask_connected].copy()
+    # find zones with 3PAR storages only to reduce search time
+    group_columns = ['Fabric_name', 'Fabric_label', 'zone']
+    zone_3par_df = \
+        zoning_valid_df.groupby(by=group_columns).filter(lambda zone: zone['deviceSubtype'].str.lower().isin(['3par']).any())
 
     storage_host_aggregated_df['zone'] = \
-        storage_host_aggregated_df.apply(lambda series: find_zones(series, zoning_valid_df), axis=1)
+        storage_host_aggregated_df.apply(lambda series: find_zones(series, zone_3par_df), axis=1)
 
     return storage_host_aggregated_df
 
@@ -174,10 +178,14 @@ def find_zones(series, zoning_valid_df):
     if series['Host_Storage_Fabric_equal'] == 'Yes':
         group_columns = ['Fabric_name', 'Fabric_label', 'zone']
         storage_host_sr = series[['Storage_Port_Wwnp', 'Host_Wwnp']]
+
+        mask_same_fabic = (zoning_valid_df['Fabric_name'] == series['Storage_Fabric_name']) & \
+                            (zoning_valid_df['Fabric_label'] == series['Storage_Fabric_label'])
+        zoning_valid_fabric_df = zoning_valid_df.loc[mask_same_fabic].copy()
         
         # find zones with storage port wwnp and host wwnp
         storage_host_zone_df = \
-            zoning_valid_df.groupby(by=group_columns).filter(lambda zone: storage_host_sr.isin(zone['PortName']).all())
+            zoning_valid_fabric_df.groupby(by=group_columns).filter(lambda zone: storage_host_sr.isin(zone['PortName']).all())
         # get zones defined in the same fabric as storage port connection fabric
         mask_same_fabic = (storage_host_zone_df['Fabric_name'] == series['Storage_Fabric_name']) & \
                             (storage_host_zone_df['Fabric_label'] == series['Storage_Fabric_label'])

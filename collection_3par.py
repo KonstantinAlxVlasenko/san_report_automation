@@ -10,6 +10,7 @@ import sys
 from datetime import date, timedelta
 
 import pandas as pd
+import numpy as np
 
 from common_operations_filesystem import (create_folder, find_files, load_data,
                                           save_data, save_xlsx_file)
@@ -18,7 +19,7 @@ from common_operations_miscellaneous import (force_extract_check, line_to_list,
                                              update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
 
-S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0055\WINDOWS'
+S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0087\WINDOWS'
 S3MFT = r's3mft.exe'
 
 
@@ -72,7 +73,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
             print('\n')
             # find configuration files to parse (download from STATs, local folder or use configurations
             # downloaded on previous iterations)
-            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, comp_dct, report_data_lst)
+            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_data_lst)
 
             if configs_3par_lst:
                 print('\nEXTRACTING 3PAR STORAGE INFORMATION ...\n')   
@@ -134,7 +135,7 @@ def verify_ns_3par(nsshow_df, nscamshow_df, comp_dct):
     return ns_3par_df
 
 
-def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_dct, report_data_lst):
+def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_data_lst):
     """Function to prepare 3PAR configuration files for parsing. 
     Download in from STATs and local (defined in report.xlsx file) folders"""
 
@@ -172,7 +173,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_dct, re
         if reply == 'y':
             # download configs from STATs
             ns_3par_df = stats_download(ns_3par_df, download_folder, max_title)
-            stats_download_summary(ns_3par_df, report_data_lst)
+            # download_summary(ns_3par_df, report_data_lst)
         else:
             print('STATs is only available within HPE network.')
 
@@ -186,8 +187,10 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_dct, re
             reply = reply_request(query)
             if reply == 'y':
                 # download configs from loacl folder
-                local_download(configs_local_lst, download_folder, max_title)
+                ns_3par_df = local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, match_keys, comp_dct, max_title)
+                # download_summary(ns_3par_df, report_data_lst)
 
+    download_summary(ns_3par_df, report_data_lst)
     # create configs list in download folder if it exist (if user reject download config files
     # from both sources download folder is not created)
     download_folder_exist = verify_download_folder(download_folder, create=False)
@@ -284,53 +287,86 @@ def stats_download(ns_3par_df, download_folder, max_title):
             print(e)
             sys.exit()
         
-        ns_3par_df.loc[i, ['configname', 'Download_status']] = [config, status.lower()]
+        ns_3par_df.loc[i, ['configname', 'STATs_status']] = [config, status.lower()]
 
     return ns_3par_df
 
 
-def stats_download_summary(ns_3par_df, report_data_lst):
+def download_summary(ns_3par_df, report_data_lst):
     """Function to print configurations download from STATs summary and
     save summary to file if user agreed"""
+
+    if not 'STATs_status' in ns_3par_df.columns and \
+        not 'Local_status' in ns_3par_df.columns:
+        ns_3par_df['Status'] = 'skip'
 
     print('\n')
     print('3PAR Storage Systems configuaration download summary')
     print(ns_3par_df)
     print('\n')
 
-    if 'Download_status' in ns_3par_df.columns and \
-        ns_3par_df['Download_status'].isin(['skip', 'fail']).any():
-        print('Some configurations are missing.')
-        query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
-        reply = reply_request(query)
-        if reply == 'y':
-            save_xlsx_file(ns_3par_df, 'stats_summary', report_data_lst, force_flag=True)
+    # if 'STATs_status' in ns_3par_df.columns and \
+    #     ns_3par_df['STATs_status'].isin(['skip', 'fail']).any():
+        # print('Some configurations are missing.')
+    query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
+    reply = reply_request(query)
+    if reply == 'y':
+        save_xlsx_file(ns_3par_df, 'stats_summary', report_data_lst, force_flag=True)
 
 
-def local_download(configs_local_lst, download_folder, max_title):
+def local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, match_keys, comp_dct, max_title):
     """Function to copy 3PAR configuration files from local folder
     to download folder"""
 
     # verifu if download folder exist and create one if not (default behaviour)
     verify_download_folder(download_folder, max_title)
 
+    if not 'STATs_status' in ns_3par_df.columns:
+        ns_3par_df['STATs_status'] = np.nan
+        drop_stats_column = True
+    else:
+        drop_stats_column = False
+
+    ns_3par_df[['filename', 'Local_status']] = np.nan
+
+    sn_lst = ns_3par_df['Serial_Number'].tolist()
+
     print('\n')
-    # copy all files from configs_local_lst to download folder
+    # copy files from configs_local_lst to download folder
     for i, source_file in enumerate(configs_local_lst):
+        
         filename = os.path.basename(source_file)
-        info = ' '*16 + f'[{i+1} of {len(configs_local_lst)}]: copying file {filename}'
-        print(info, end=' ')
+
         if os.path.isfile(source_file) or os.path.islink(source_file):
-            # destination_file = os.path.join(download_folder, filename)
-            try:
-                shutil.copy2(source_file, download_folder)
-                status_info('ok', max_title, len(info))
-            except shutil.Error as e:
-                status_info('failed', max_title, len(info))
-                print('\n')
-                print(e)
+            model, sn = parse_serial(source_file, comp_keys, match_keys, comp_dct)
+            info = ' '*16 + f'[{i+1} of {len(configs_local_lst)}]: copying {filename} for {model} {sn}'
+            print(info, end=' ')
+            mask_sn = ns_3par_df['Serial_Number'] == sn
+            status_ok = (ns_3par_df.loc[mask_sn, ['STATs_status', 'Local_status']] == 'ok').any().any()
+            # copy config if 3par is in NameServer and was not downloaded from STATs or local folder before
+            if sn in sn_lst and not status_ok:
+                # destination_file = os.path.join(download_folder, filename)
+                status = 'unknown'
+                try:
+                    shutil.copy2(source_file, download_folder)
+                    status = status_info('ok', max_title, len(info))
+                except shutil.Error as e:
+                    status = status_info('failed', max_title, len(info))
+                    print('\n')
+                    print(e)
+                finally:
+                    ns_3par_df.loc[mask_sn, ['filename', 'Local_status']] = [filename, status.lower()]
+            else:
+                status = status_info('skip', max_title, len(info))
         else:
+            info = ' '*16 + f'[{i+1} of {len(configs_local_lst)}]: copying {filename}'
+            print(info, end=' ')
             status_info('skip', max_title, len(info))
+
+    if drop_stats_column:
+        ns_3par_df.drop(columns=['STATs_status'], inplace=True)
+
+    return ns_3par_df
 
 
 def parse_config(config_3par, params, params_add, comp_keys, match_keys, comp_dct):
@@ -420,6 +456,41 @@ def parse_config(config_3par, params, params_add, comp_keys, match_keys, comp_dc
         showsys_lst.append([showsys_dct.get(param) for param in params])
 
     return showsys_lst, port_lst, host_lst
+
+
+def parse_serial(config_3par, comp_keys, match_keys, comp_dct):
+    """Function to parse 3PAR serial number""" 
+
+    # search control dictionary. continue to check file until all parameters groups are found
+    collected = {'serial': False}
+    sn = None
+    model = None
+    
+    with open(config_3par, encoding='utf-8', errors='ignore') as file:
+        # check file until all groups of parameters extracted
+        while not all(collected.values()):
+            line = file.readline()
+            if not line:
+                break
+            # showsys section start
+            if re.search(comp_dct['showsys_header'], line) and not collected['serial']:
+                collected['serial'] = True
+                # while not reach empty line
+                while not re.search(comp_dct['section_end'],line):
+                    line = file.readline()
+                    # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                    # name_value_pair_match
+                    if match_dct['serial_number']:
+                        result = match_dct['serial_number']
+                        sn = result.group(1).strip()
+                    elif match_dct['system_model']:
+                        result = match_dct['system_model']
+                        model = result.group(1).strip()
+                    if not line:
+                        break
+            # showsys section end
+    return model, sn
 
 
 

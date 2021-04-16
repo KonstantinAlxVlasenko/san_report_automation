@@ -229,7 +229,8 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
         dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], ['Fabric_name', 'Fabric_label'])
 
     # concatenate devce name and device port columns
-    errdump_aggregated_df['Device_Host_Name_Port'] = errdump_aggregated_df[['Device_Host_Name', 'Device_Port']].stack().groupby(level=0).agg(' '.join)
+    errdump_aggregated_df['Device_Host_Name_Port'] = \
+        errdump_aggregated_df[['Device_Host_Name', 'Device_Port']].stack().groupby(level=0).agg(' port '.join)
     
     return errdump_aggregated_df
 

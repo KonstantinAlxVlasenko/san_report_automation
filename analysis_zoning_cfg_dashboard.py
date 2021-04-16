@@ -32,7 +32,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     def count_zone_type(cfglevel_statistics_effective_df):
         """Count quantity of each zone type (all zones, lsan and peer zones)"""
 
-        zone_type_columns = ['Fabric_name', 'Fabric_label', 'zone_tag', 'lsan_tag', 'property']
+        zone_type_columns = ['Fabric_name', 'Fabric_label', 'zone_tag', 'qos_tag', 'lsan_tag', 'property', 'tdz_tag']
         zone_type_columns = [column for column in zone_type_columns if column in cfglevel_statistics_effective_df.columns]
         zone_type_summary_df = cfglevel_statistics_effective_df.loc[:, zone_type_columns].copy()
         zone_type_summary_df.set_index(['Fabric_name', 'Fabric_label'], inplace=True)
