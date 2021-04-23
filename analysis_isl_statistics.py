@@ -61,7 +61,7 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
                     'Connected_SwitchName', 'Connected_switchWwn', 
                     'port', 'ISL_number', 'portType', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
                     'Distance', 'Transceiver_mode', 'Trunking_license',  'Connected_Trunking_license', 
-                    'Trunk_Port', 'Encryption', 'Compression', 'QOS_Port', 'QOS_E_Port', 'FEC', '10G/16G_FEC',
+                    'Trunk_Port', 'Credit_Recovery', 'Encryption', 'Compression', 'QOS_Port', 'QOS_E_Port', 'FEC', '10G/16G_FEC',
                     'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode']
 
     xisl_columns = ['Base_Switch', 'Allow_XISL_Use', 'Base_switch_in_chassis',
@@ -93,7 +93,7 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     isl_aggregated_modified_df['FEC'].fillna(isl_aggregated_modified_df['10G/16G_FEC'], inplace=True)
     
     port_settings_columns = ['Distance', 'Transceiver_speed', 'Transceiver_mode', 'ISL', 'TRUNK',  'Encryption', 
-                             'Compression', 'QOS', 'FEC', 'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode']
+                             'Compression', 'QOS', 'FEC', 'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode', 'Credit_Recovery']
     # convert ISL number value to str type for concatenation with 'ISL' tag
     isl_aggregated_modified_df['ISL'] = isl_aggregated_modified_df['ISL'].astype('str', errors='ignore')
     # add column name for each non empty value in port_settings_columns
@@ -133,7 +133,7 @@ def count_isl_statistics(isl_aggregated_modified_df, isl_bandwidth_df):
     statistics_lst =  ['port', 'ISL', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
                     'Transceiver_speed', 'Transceiver_mode', 'Distance',
                     'TRUNK', 'Encryption', 'Compression', 'QOS', 'FEC',
-                    'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode']
+                    'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode', 'Credit_Recovery']
     # drop empty columns from the list
     statistics_lst = [column for column in statistics_lst if isl_aggregated_modified_df[column].notna().any()]
     # index list to groupby switches connection on to count statistics

@@ -352,7 +352,7 @@ def find_files(folder, max_title, filename_contains='', filename_extension=''):
     list of all files in directory
     """
 
-    info = f'Checking {os.path.basename(folder)} for configuration files'
+    info = f'Checking {os.path.basename(folder)} folder for configuration files'
     print(info, end =" ") 
 
     # check if ssave_path folder exist
@@ -374,7 +374,6 @@ def find_files(folder, max_title, filename_contains='', filename_extension=''):
         status_info('ok', max_title, len(info))
               
     return files_lst
-
 
 
 def create_hyperlink(ws, at_cell, sheet_name, cell_ref='A1', display_name=None):
