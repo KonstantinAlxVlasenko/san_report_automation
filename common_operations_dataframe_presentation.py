@@ -55,9 +55,6 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
             for column in dataframe_to_segment_df.columns:
                 if 'Fabric_name' in column and column in data_columns_names_eng_dct[dataframe_name]:
                     data_columns_names_eng_dct[dataframe_name].remove(column)
-                # TO_REMOVE multiple Fabric_name columns added
-                # if 'Fabric_name' in data_columns_names_eng_dct[dataframe_name]:
-                #     data_columns_names_eng_dct[dataframe_name].remove('Fabric_name')
         # if device names correction applied then no need to use alias group name column
         if not group_name_usage:
             if 'Group_Name' in data_columns_names_eng_dct[dataframe_name]:
@@ -83,7 +80,7 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
     return segmented_dataframes_lst
 
 
-def translate_values(translated_df, translate_dct, translate_columns = None):
+def translate_values(translated_df, translate_dct={'Yes': 'Да', 'No': 'Нет'}, translate_columns = None):
     """Function to translate values in corresponding columns"""
 
     if not translate_columns:

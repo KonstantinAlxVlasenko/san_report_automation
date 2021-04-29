@@ -1,13 +1,13 @@
 """
 Module to create tables 
 - list of servers, storages, libraries
-- list of hbafw and drivers
+- list of hba fw and drivers
 - list of servers, storages, libraries san connection 
 """
 
 from analysis_portcmd_device_connection_statistics import device_connection_statistics
 import pandas as pd
-from common_operations_dataframe import dataframe_segmentation, translate_values
+from common_operations_dataframe_presentation import dataframe_segmentation, translate_values
 from common_operations_servicefile import dct_from_columns
 
 
@@ -29,6 +29,7 @@ def create_report_tables(portshow_aggregated_df, device_connection_statistics_df
     storage_report_df = _multi_fabric(storage_report_df, report_columns_usage_dct)
     library_report_df = _clean_dataframe(library_report_df, 'lib')
     storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean = True)
+    storage_connection_df = translate_values(storage_connection_df)
 
     library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean = True)
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean = True)
@@ -135,7 +136,6 @@ def device_connection_statistics_report(device_connection_statistics_df, max_tit
 
     translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_подключения_устройств_перевод_eng', 
                                     'Статистика_подключения_устройств_перевод_ru', init_file = 'san_automation_info.xlsx')
-    
 
     device_connection_statistics_report_df = device_connection_statistics_df.copy()
     # translate notes

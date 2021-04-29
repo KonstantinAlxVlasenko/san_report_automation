@@ -233,7 +233,7 @@ def count_group_members(df, group_columns, count_columns: dict):
     return df
 
 
-def translate_values(translated_df, translate_dct, translate_columns = None):
+def translate_values(translated_df, translate_dct={'Yes': 'Да', 'No': 'Нет'}, translate_columns = None):
     """Function to translate values in corresponding columns"""
 
     if not translate_columns:

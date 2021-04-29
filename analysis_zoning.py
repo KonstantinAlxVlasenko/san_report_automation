@@ -10,7 +10,7 @@ from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from analysis_zoning_alias_dashboard import alias_dashboard
 from analysis_zoning_cfg_dashboard import cfg_dashborad
-from report_zoning import zoning_report_main
+from report_zoning_refactoring import zoning_report_main
 
 
 def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 

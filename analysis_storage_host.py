@@ -91,6 +91,7 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     rename_columns = {'NodeName': 'Storage_Port_Wwnn', 'PortName': 'Storage_Port_Wwnp'}
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
     # 'clean' Wwn column to have Wwnp only. check Wwnn -> Wwnp correspondance in all fabrics
+    
     # TO_REMOVE check Wwnn -> Wwnp correspondance in all fabrics
     # storage_host_aggregated_df = replace_wwnn(storage_host_aggregated_df, 'Host_Wwn', 
     #                                             portshow_aggregated_df, ['NodeName', 'PortName'], 
@@ -216,7 +217,6 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     storage_host_report_df = storage_host_aggregated_df.copy()
     # dataframe where hosts and storage port are in the same fabric or host imported to storage fabric
     mask_local_imported = storage_host_aggregated_df['Fabric_host_status'].isin(['local', 'remote_imported'])
-    # mask_same_fabic = storage_host_aggregated_df['Host_Storage_Fabric_equal'] == 'Yes'
     storage_host_valid_df = storage_host_aggregated_df.loc[mask_local_imported].copy()
 
     # drop uninformative columns 

@@ -38,7 +38,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
     # names to save data obtained after current module execution
     data_names = [
-        'portshow_aggregated', 'device_connection_statistics', 'device_rename', 'report_columns_usage_upd', 'Сервера', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
+        'portshow_aggregated', 'device_connection_statistics', 'device_rename', 'report_columns_usage_upd', 'Серверы', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
         'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 'NPIV', 'Статистика_устройств'
         ]
     # service step information
