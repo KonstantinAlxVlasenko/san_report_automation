@@ -11,7 +11,8 @@ from common_operations_dataframe_presentation import dataframe_segmentation, tra
 from common_operations_servicefile import dct_from_columns
 
 
-def create_report_tables(portshow_aggregated_df, device_connection_statistics_df, data_names, report_columns_usage_dct, max_title):
+def create_report_tables(portshow_aggregated_df, storage_connection_statistics_df, 
+                            device_connection_statistics_df, data_names, report_columns_usage_dct, max_title):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
     add_columns_lst = ['FW_Recommeneded', 'Driver_Recommeneded', 'FW_Supported', 'HW_Supported']
@@ -23,23 +24,25 @@ def create_report_tables(portshow_aggregated_df, device_connection_statistics_df
         dataframe_segmentation(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title)
     
     # clean and sort DataFrames
+    # device report
     servers_report_df = _clean_dataframe(servers_report_df, 'srv')
     hba_report_df = _clean_dataframe(hba_report_df, 'srv', duplicates = ['Идентификатор порта WWPN'])
     storage_report_df = _clean_dataframe(storage_report_df, 'stor')
     storage_report_df = _multi_fabric(storage_report_df, report_columns_usage_dct)
     library_report_df = _clean_dataframe(library_report_df, 'lib')
+    # device connection reports
     storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean = True)
     storage_connection_df = translate_values(storage_connection_df)
-
     library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean = True)
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean = True)
     npiv_report_df = _clean_dataframe(npiv_report_df, 'npiv', duplicates = None, clean = True)
-
-    device_connection_statistics_report_df = device_connection_statistics_report(device_connection_statistics_df, max_title)
-
-    return servers_report_df, storage_report_df, library_report_df, \
-        hba_report_df, storage_connection_df,  library_connection_df, \
-            server_connection_df, npiv_report_df, device_connection_statistics_report_df
+    # device connection statistics reports
+    storage_connection_statistics_report_df = connection_statistics_report(storage_connection_statistics_df, max_title)
+    device_connection_statistics_report_df = connection_statistics_report(device_connection_statistics_df, max_title)
+    
+    return servers_report_df, storage_report_df, library_report_df, hba_report_df, \
+            storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df, \
+                storage_connection_statistics_report_df, device_connection_statistics_report_df
     
 
 def _clean_dataframe(df, mask_type, 
@@ -104,8 +107,6 @@ def _clean_dataframe(df, mask_type,
         'Количество портов устройства в фабрике' in df.columns and \
             df['Количество портов устройства в подсети'].equals(df['Количество портов устройства в фабрике']):
                 df.drop(columns=['Количество портов устройства в фабрике'], inplace=True)
-
-
     return df
 
 
@@ -127,24 +128,41 @@ def _multi_fabric(df, report_columns_usage_dct):
         identical_values = {k: 'first' for k in df.columns[2:]}
         df = df.groupby(['Имя устройства'], as_index = False).agg({**{'Фабрика': ', '.join}, **identical_values})
         df = df.reindex(columns = df_columns)
-
     return df
 
+# TO_REMOVE
+# def device_connection_statistics_report(device_connection_statistics_df, max_title):
+#     """Function to create report table out of device_connection_statistics_df DataFrame"""
 
-def device_connection_statistics_report(device_connection_statistics_df, max_title):
-    """Function to create report table out of device_connection_statistics_df DataFrame"""
+#     translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_подключения_устройств_перевод_eng', 
+#                                     'Статистика_подключения_устройств_перевод_ru', init_file = 'san_automation_info.xlsx')
+
+#     device_connection_statistics_report_df = device_connection_statistics_df.copy()
+#     # translate notes
+#     columns = [column for column in device_connection_statistics_df.columns if 'note' in column and device_connection_statistics_df[column].notna().any()]
+#     columns.append('Fabric_name')
+#     device_connection_statistics_report_df = translate_values(device_connection_statistics_report_df, translate_dct, translate_columns=columns)
+#     # translate column names
+#     device_connection_statistics_report_df.rename(columns=translate_dct, inplace=True)
+#     # drop empty columns
+#     device_connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
+
+#     return device_connection_statistics_report_df
+
+
+def connection_statistics_report(connection_statistics_df, max_title):
+    """Function to create report table out of connection_statistics_df DataFrame"""
 
     translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_подключения_устройств_перевод_eng', 
                                     'Статистика_подключения_устройств_перевод_ru', init_file = 'san_automation_info.xlsx')
 
-    device_connection_statistics_report_df = device_connection_statistics_df.copy()
+    connection_statistics_report_df = connection_statistics_df.copy()
     # translate notes
-    columns = [column for column in device_connection_statistics_df.columns if 'note' in column and device_connection_statistics_df[column].notna().any()]
+    columns = [column for column in connection_statistics_df.columns if 'note' in column and connection_statistics_df[column].notna().any()]
     columns.append('Fabric_name')
-    device_connection_statistics_report_df = translate_values(device_connection_statistics_report_df, translate_dct, translate_columns=columns)
+    connection_statistics_report_df = translate_values(connection_statistics_report_df, translate_dct, translate_columns=columns)
     # translate column names
-    device_connection_statistics_report_df.rename(columns=translate_dct, inplace=True)
+    connection_statistics_report_df.rename(columns=translate_dct, inplace=True)
     # drop empty columns
-    device_connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
-
-    return device_connection_statistics_report_df
+    connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
+    return connection_statistics_report_df

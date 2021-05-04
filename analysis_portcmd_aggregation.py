@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
-from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna, storage_3par_fillna
+from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna
+from analysis_portcmd_storage import storage_3par_fillna
 from analysis_portcmd_devicetype import oui_join, type_check
 from analysis_portcmd_gateway import verify_gateway_link
 from analysis_portcmd_nameserver import nsshow_analysis_main

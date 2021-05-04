@@ -49,7 +49,7 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
                                                         join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
     # remove duplicated zones list if current zone is non-working zone (duplication of working zones only required)
     # list of duplicated zones is removed but duplication tag remains  
-    mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator'])
+    mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
     zonemember_zonelevel_stat_df['zone_duplicated'] = zonemember_zonelevel_stat_df['zone_duplicated'].where(mask_valid_zone)
     # sort values
     zonemember_zonelevel_stat_df.sort_values(by=['Fabric_name', 'Fabric_label', 'cfg_type', 'cfg', 'zone'],

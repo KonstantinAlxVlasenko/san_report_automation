@@ -6,6 +6,7 @@ import xlrd
 import re
 import pandas as pd
 import numpy as np
+import warnings
 from common_operations_filesystem import save_xlsx_file
 from common_operations_servicefile import dct_from_columns, columns_import
 from common_operations_miscellaneous import status_info
@@ -299,7 +300,7 @@ def count_total(df, group_columns: list, count_columns: list, fn: str):
     return total_df
 
 
-def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabric_label'], margin_column_row=None):
+def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabric_label'], margin_column_row:tuple=None):
     """Auxiliary function to count values in groups for columns in count_columns.
     Parameter margin_column_row is tuple of doubled booleans tuples ((False, True), (True, False), etc). 
     It defines if margin for column and row should be calculated for column values from count_columns list.
@@ -320,6 +321,7 @@ def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabr
         if column in df.columns and df[column].notna().any():
             df[column].fillna(np.nan, inplace=True)
             current_df = pd.crosstab(index=index_lst, columns=df[column], margins=any((margin_column, margin_row)))
+            current_df = current_df.sort_index()
             if any((margin_column, margin_row)):
                 # drop column All
                 if not margin_column:
@@ -419,6 +421,25 @@ def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list,
     wwn_df.drop(columns=[wwnn_column], inplace=True)
     return wwn_df
 
+
+def extract_values_from_column(df, extracted_column: str, pattern_column_lst: list):
+    """Function to extract values from column. df and column are location from which data extracted.
+    pattern_column_lst is the list containing tuples with two elements. Fist one is the regex pattern 
+    with groups to be extracted. Second is the list of columns (groups) in which extracted values
+    should be stored. Number of groups in pattern and column names have to be equal within tuple
+    but may differ for different tuples.
+    pattern_columns_lst = [(pattern1, ['ColumnA', 'ColumnB', 'ColumnC']), 
+                           (pattern2, [''ColumnA', 'ColumnD'])]
+    """
+    
+    for pattern, columns in pattern_column_lst:
+        # pattern contains groups but str.cotains used to identify mask
+        # supress warning message
+        warnings.filterwarnings("ignore", 'This pattern has match groups')
+        mask = df[extracted_column].str.contains(pattern, regex=True)
+        df.loc[mask, columns] = df.loc[mask, extracted_column].str.extract(pattern).values
+    
+    return df
 
 
 
