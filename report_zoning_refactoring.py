@@ -68,12 +68,6 @@ def drop_excessive_columns(df, report_columns_usage_dct):
     # then zonemember Fabric name and label columns are excessive 
     cleaned_df = drop_equal_columns_pairs(cleaned_df, columns_main=['Fabric_name', 'Fabric_label'], 
                                         columns_droped=['zonemember_Fabric_name', 'zonemember_Fabric_label'], dropna=True)
-    
-    # TO_REMOVE (all fabirc_name columns dropped at segmentation)
-    # # if zonemembers or aliases are not in the same fabric with the switch of zoning config definition
-    # # but there is only one fabric then zonemember_Fabric_name column is excessive
-    # if not fabric_name_usage and ('zonemember_Fabric_name' in cleaned_df.columns):
-    #     cleaned_df.drop(columns=['zonemember_Fabric_name'], inplace=True)
 
     # if all aliases contain one member only
     # if all devices connected to one fabric_label only
@@ -88,7 +82,6 @@ def drop_excessive_columns(df, report_columns_usage_dct):
     # drop columns where all values without dropping NA are equal to certian value
     possible_identical_values = {'cfg_type': 'effective'}
     cleaned_df = drop_all_identical(cleaned_df, possible_identical_values, dropna=False)
-
     return cleaned_df
 
 
@@ -158,12 +151,11 @@ def statistics_report(statistics_df, data_name, translate_dct, max_title):
 
     if data_name == 'Статистика_зон':
         possible_allna_columns = ['zone_duplicated', 'Target_Initiator_note', 'Effective_cfg_usage_note']
-        for column in possible_allna_columns:
-            if statistics_df[column].isna().all():
-                statistics_df.drop(columns=[column], inplace=True)
+        statistics_report_df = drop_all_na(statistics_report_df, possible_allna_columns)
+
         # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
-        if (statistics_df['Wwnn_to_Wwnp_number_unpacked'].dropna() == 0).all():
-            statistics_df.drop(columns=['Wwnn_to_Wwnp_number_unpacked'], inplace=True)
+        statistics_report_df = drop_all_identical(statistics_report_df, 
+                                                    columns_values={'Wwnn_to_Wwnp_number_unpacked': 0}, dropna=True)
 
     # rename values in columns
     if data_name == 'Статистика_зон':

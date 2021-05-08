@@ -96,14 +96,15 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
     comp_keys, _, comp_dct = re_pattern_lst
 
     # find storages (3PAR, MSA) with non-empty ports numbers in portshow_aggregated_df
-    mask_storage_type = portshow_aggregated_df['deviceSubtype'].str.lower().isin(['3par', 'msa'])
+    mask_storage_type = portshow_aggregated_df['deviceSubtype'].str.lower().isin(['3par', 'msa', 'emc'])
     mask_storage_port = portshow_aggregated_df['Device_Port'].notna()
     storage_columns = ['Fabric_name', 'Fabric_label', 'Device_Host_Name', 'Device_Port', 'deviceSubtype']
     storage_ports_df = portshow_aggregated_df.loc[mask_storage_type & mask_storage_port, storage_columns ].copy()
     storage_ports_df.drop_duplicates(inplace=True)
 
     # extract controller, slot, port indexes
-    pattern_columns_lst = [(comp_dct['3par_ctrl_slot_port'], ['Controller', 'Slot', 'Port']), 
+    pattern_columns_lst = [(comp_dct['3par_ctrl_slot_port'], ['Controller', 'Slot', 'Port']),
+                            (comp_dct['emc_ctrl_slot_port'], ['Controller', 'Slot', 'Port']), 
                             (comp_dct['msa_ctrl_port'], ['Controller', 'Port']),]
     storage_ports_df = extract_values_from_column(storage_ports_df, 'Device_Port', pattern_columns_lst)
 

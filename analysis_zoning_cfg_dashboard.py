@@ -24,6 +24,10 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         mask_not_duplicated_zone = zonelevel_statistics_effective_df['zone_duplicated'].isna()
         zonelevel_statistics_effective_df['zone_duplicated'] = \
             zonelevel_statistics_effective_df['zone_duplicated'].where(mask_not_duplicated_zone, 'zone_duplicated_tag')
+        # add zone_paired tag
+        mask_not_paired_zone = zonelevel_statistics_effective_df['zone_paired'].isna()
+        zonelevel_statistics_effective_df['zone_paired'] = \
+            zonelevel_statistics_effective_df['zone_paired'].where(mask_not_paired_zone, 'zone_paired_tag')
         # DataFrame with summary for all zones in Fabric (cfg level)
         cfglevel_statistics_effective_df = zonemember_statistics_df.loc[mask_zone_effective & mask_cfg_summary].copy()
         return zonelevel_statistics_effective_df, zonelevel_statistics_df, cfglevel_statistics_effective_df
@@ -80,7 +84,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
 
         zone_notes_summary_df = \
             count_frequency(zonelevel_statistics_effective_df, \
-                count_columns=['zone_duplicated', 'Target_Initiator_note', 'Target_model_note', 
+                count_columns=['zone_duplicated', 'zone_paired', 'Target_Initiator_note', 'Target_model_note', 
                                     'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_note_summary' ])
         return zone_notes_summary_df
     

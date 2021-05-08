@@ -5,9 +5,11 @@ Module to create tables
 - list of servers, storages, libraries san connection 
 """
 
-from analysis_portcmd_device_connection_statistics import device_connection_statistics
+
 import pandas as pd
-from common_operations_dataframe_presentation import dataframe_segmentation, translate_values
+
+from common_operations_dataframe_presentation import (dataframe_segmentation,
+                                                      translate_values)
 from common_operations_servicefile import dct_from_columns
 
 

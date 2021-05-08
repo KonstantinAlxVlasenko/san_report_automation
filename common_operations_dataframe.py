@@ -153,6 +153,36 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=
     return left_df
 
 
+def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
+    """Function to concatenate values in several columns (merge_columns) into summary_column 
+    as comma separated values"""
+    
+    # create summary column if not exist
+    if not summary_column in df.columns:
+        df[summary_column] = np.nan
+    
+    for column in merge_columns:
+        # value in summary column is empty
+        mask_summary_note_empty = df[summary_column].isna()
+        # value in current column is empty
+        mask_current_note_empty = df[column].isna()
+        """if value in summary column is empty take value from column to add (if it's not nan)
+        if value in column to add is empty take value from summary note column (if it's not nan)
+        if both values are empty use nan value
+        if both values in summary and current columns exist then cancatenate them"""
+        df[summary_column] = np.select(
+            [mask_summary_note_empty, mask_current_note_empty, mask_summary_note_empty & mask_current_note_empty],
+            [df[column], df[summary_column], np.nan],
+            default=df[summary_column] + sep + df[column])
+    
+    # drop merge_columns
+    if drop_merge_columns:
+        df.drop(columns=merge_columns, inplace=True)
+    
+    return df
+
+
+
 def list_to_dataframe(data_lst, report_data_lst, sheet_title_export, sheet_title_import = None, 
                         columns = columns_import, columns_title_import = 'columns'):
     """Function to export list to DataFrame and then save it to excel report file
@@ -247,35 +277,6 @@ def translate_values(translated_df, translate_dct={'Yes': 'Да', 'No': 'Нет'
             translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
 
     return translated_df
-
-
-def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
-    """Function to concatenate values in several columns (merge_columns) into summary_column 
-    as comma separated values"""
-    
-    # create summary column if not exist
-    if not summary_column in df.columns:
-        df[summary_column] = np.nan
-    
-    for column in merge_columns:
-        # value in summary column is empty
-        mask_summary_note_empty = df[summary_column].isna()
-        # value in current column is empty
-        mask_current_note_empty = df[column].isna()
-        """if value in summary column is empty take value from column to add (if it's not nan)
-        if value in column to add is empty take value from summary note column (if it's not nan)
-        if both values are empty use nan value
-        if both values in summary and current columns exist then cancatenate them"""
-        df[summary_column] = np.select(
-            [mask_summary_note_empty, mask_current_note_empty, mask_summary_note_empty & mask_current_note_empty],
-            [df[column], df[summary_column], np.nan],
-            default=df[summary_column] + sep + df[column])
-    
-    # drop merge_columns
-    if drop_merge_columns:
-        df.drop(columns=merge_columns, inplace=True)
-    
-    return df
 
 
 def count_total(df, group_columns: list, count_columns: list, fn: str):
