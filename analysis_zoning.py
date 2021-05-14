@@ -120,9 +120,11 @@ def statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_s
     
     # create DataFrame with note columns only
     zone_columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
-    note_columns = ['Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note', 
-                    'zone_duplicated', 'zone_paired', 'Pair_zone_note',
-                    'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
+    note_columns = ['Zone_name_device_names_ratio', 'Zone_name_device_names_related',
+                    'zone_duplicated', 'zone_paired',
+                    'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related',
+                    'Pair_zone_note',
+                    'Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note']
     note_columns = [column for column in note_columns if column in zonemember_zonelevel_stat_df.columns]
     zonenote_df = zonemember_zonelevel_stat_df.reindex(columns = [*zone_columns, *note_columns]).copy()
     # compliment aggregated DataFrame 

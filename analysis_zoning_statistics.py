@@ -38,7 +38,8 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
         zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns].fillna(0)
 
     # add list of zone pairs to each zone in statistics
-    zoning_paired_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone', 
+    zoning_paired_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone',
+                                'Zone_name_device_names_ratio', 'Zone_name_device_names_related', 
                                 'All_devices_multiple_fabric_label_connection', 'zone_paired',
                                 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
     zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
@@ -75,8 +76,12 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     # remove duplicated and paired zones list if current zone is non-working zone (duplication of working zones only required)
     # list of duplicated zones is removed but duplication tag remains  
     mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
-    columns = ['zone_duplicated', 'zone_paired', 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
+    columns = ['zone_duplicated', 'zone_paired', 
+                'Zone_name_device_names_ratio', 'Zone_name_device_names_related',
+                'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
     zonemember_zonelevel_stat_df[columns] = zonemember_zonelevel_stat_df[columns].where(mask_valid_zone)
+
+    # TO_REMOVE 
     # zonemember_zonelevel_stat_df['zone_duplicated'] = zonemember_zonelevel_stat_df['zone_duplicated'].where(mask_valid_zone)
     # zonemember_zonelevel_stat_df['zone_paired'] = zonemember_zonelevel_stat_df['zone_paired'].where(mask_valid_zone)
 

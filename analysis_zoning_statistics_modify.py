@@ -1,6 +1,7 @@
 """Module to modify zoning_aggregated_df DataFrame to count statistics 
 and find pair zones, duplicated and target driven zones"""
 
+import itertools
 from difflib import SequenceMatcher
 
 import numpy as np
@@ -204,24 +205,73 @@ def verify_pair_zones(zoning_aggregated_df):
     zone_paired_columns = list(zone_paired_columns)
     zoning_pairs_df = сoncatenate_columns(zoning_pairs_df, summary_column='zone_paired', 
                                             merge_columns=zone_paired_columns, sep=', ', drop_merge_columns=True)
+    # add zone_paired_tag
     mask_zone_notna = zoning_pairs_df['zone_paired'].notna()
     zoning_pairs_df.loc[mask_zone_notna, 'zone_paired_tag'] = 'zone_paired_tag'
     zoning_pairs_df['zone_duplicates_free'] = zoning_pairs_df['zone']
-    # verify if zone name and it's pair zone name related
-    zoning_pairs_df = calculate_zone_names_ratio(zoning_pairs_df)
-
+    # verify if zonename related with pair zone name and device names included in each zone
+    zoning_pairs_df = verify_zonename_ratio(zoning_pairs_df)
     return zoning_pairs_df
 
 
-def calculate_zone_names_ratio(zoning_pairs_df):
-    """Function to verify if zone name and it's pair zone name related"""
+def verify_zonename_ratio(zoning_pairs_df):
+    """Function to verify if zonename related with pair zone name and device names included in each zone"""
 
+    # verify if zone name and it's pair zone name related
     mask_notna = zoning_pairs_df[['zone', 'zone_paired']].notna().all(axis=1)
     zoning_pairs_df.loc[mask_notna, 'Zone_and_Pairzone_names_ratio'] = \
-        zoning_pairs_df.loc[mask_notna, ['zone', 'zone_paired']].apply(lambda x: round(SequenceMatcher(None, x[0], x[1]).ratio(), 2), axis=1)
-    mask_ratio = zoning_pairs_df['Zone_and_Pairzone_names_ratio'] >= 0.9
-    zoning_pairs_df['Zone_and_Pairzone_names_related'] = \
-        np.select([mask_notna & mask_ratio, mask_notna & ~mask_ratio], ['Yes', 'No'], default=pd.NA)
-    zoning_pairs_df.fillna(np.nan, inplace=True)
-
+        zoning_pairs_df.loc[mask_notna, ['zone', 'zone_paired']].apply(lambda x: round(SequenceMatcher(None, x[0].upper(), x[1].upper()).ratio(), 2), axis=1)
+    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_and_Pairzone_names_ratio', 0.9, 'Zone_and_Pairzone_names_related')
+    # verify if zone name related with device names included in this zone
+    zoning_pairs_df['Zone_name_device_names_ratio'] = zoning_pairs_df.apply(lambda series: calculate_zonename_devicenames_ratio(series), axis=1)
+    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_name_device_names_ratio', 0.65, 'Zone_name_device_names_related')
     return zoning_pairs_df
+
+
+# def calculate_zone_names_ratio(zoning_pairs_df):
+#     """Function to verify if zone name and it's pair zone name related"""
+
+#     mask_notna = zoning_pairs_df[['zone', 'zone_paired']].notna().all(axis=1)
+#     zoning_pairs_df.loc[mask_notna, 'Zone_and_Pairzone_names_ratio'] = \
+#         zoning_pairs_df.loc[mask_notna, ['zone', 'zone_paired']].apply(lambda x: round(SequenceMatcher(None, x[0].upper(), x[1].upper()).ratio(), 2), axis=1)
+    
+#     # mask_ratio = zoning_pairs_df['Zone_and_Pairzone_names_ratio'] >= 0.9
+#     # zoning_pairs_df['Zone_and_Pairzone_names_related'] = \
+#     #     np.select([mask_notna & mask_ratio, mask_notna & ~mask_ratio], ['Yes', 'No'], default=pd.NA)
+#     # zoning_pairs_df.fillna(np.nan, inplace=True)
+
+#     return zoning_pairs_df
+
+
+def calculate_zonename_devicenames_ratio(series):
+    """Function to count ratio in which zone name related with device names included in this zone.
+    By applying device names permutations maximum ratio value is calaculated"""
+    
+    # use upper case for consistency
+    zone_name = series['zone'].upper()
+    device_names = series['Device_Host_Name'].upper().split(', ')
+    # device names permutations
+    device_names_permutations = itertools.permutations(device_names)
+    # list containing all ration values
+    ratio_lst = []
+    
+    for permuation in device_names_permutations:
+        # join device names for current names permutation to string
+        device_names_str = ''.join(permuation)
+        ratio = round(SequenceMatcher(None, zone_name, device_names_str).ratio(), 2)
+        ratio_lst.append(ratio)
+
+    return max(ratio_lst)
+
+
+def threshold_exceed(df, value_column: str, threshold: float, result_column: str):
+    """Function to check if value in value_column exceeds threshold.
+    'Yes' or 'No' in result_column"""
+    
+    mask_value_notna = df[value_column].notna()
+    mask_threshold_exceeded = df[value_column] >= threshold
+    df[result_column] = np.select([mask_value_notna & mask_threshold_exceeded, 
+                                   mask_value_notna & ~mask_threshold_exceeded], 
+                                  ['Yes', 'No'], default=pd.NA)
+    df.fillna(np.nan, inplace=True)
+    return df
