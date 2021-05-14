@@ -45,7 +45,9 @@ def create_report(aggregated_df, data_name, translate_dct, report_columns_usage_
 
     # pylint: disable=unbalanced-tuple-unpacking
     cleaned_df = drop_excessive_columns(aggregated_df, report_columns_usage_dct)
-    translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note']
+    translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 
+                            'Effective_cfg_usage_note', 'Pair_zone_note', 'Multiple_fabric_label_connection',
+                            'Zone_and_Pairzone_names_related']
     cleaned_df = translate_values(cleaned_df, translate_dct, translate_columns)
     # take required data from aggregated DataFrame to create report
     report_df, = dataframe_segmentation(cleaned_df, data_name, report_columns_usage_dct, max_title)
@@ -59,7 +61,8 @@ def drop_excessive_columns(df, report_columns_usage_dct):
     # list of columns to check if all values in column are NA
     possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 
                                 'peerzone_member_type', 'zone_duplicated', 
-                                'Target_Initiator_note', 'Effective_cfg_usage_note', 'Device_Port']
+                                'Target_Initiator_note', 'Effective_cfg_usage_note', 'Pair_zone_note',
+                                'Device_Port', 'Storage_Port_Type']
     # dictionary of items to check if all values in column (dict key) are equal to certain value (dict value)
 
     cleaned_df = df.copy()
@@ -72,12 +75,14 @@ def drop_excessive_columns(df, report_columns_usage_dct):
     # if all aliases contain one member only
     # if all devices connected to one fabric_label only
     cleaned_df = drop_equal_columns(cleaned_df, columns_pairs=[('zone_member', 'zonemember_duplicates_free'),
-                                                        ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label')])
+                                                                ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
+                                                                ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
     # drop columns where all values are NA
     cleaned_df = drop_all_na(cleaned_df, possible_allna_values)
     # drop columns where all values after dropping NA are equal to certian value
     possible_identical_values = {'Wwn_type': 'Wwnp', 'Member_in_cfg_Fabric': 'Да', 
-                                            'Fabric_device_status': 'local', 'portType': 'F-Port', }
+                                'Fabric_device_status': 'local', 'portType': 'F-Port', 
+                                'Storage_Port_Type': 'host'}
     cleaned_df = drop_all_identical(cleaned_df, possible_identical_values, dropna=True)
     # drop columns where all values without dropping NA are equal to certian value
     possible_identical_values = {'cfg_type': 'effective'}
@@ -159,8 +164,11 @@ def statistics_report(statistics_df, data_name, translate_dct, max_title):
 
     # rename values in columns
     if data_name == 'Статистика_зон':
-        translate_columns = ['Fabric_name', 'Fabric_device_status', 'Target_Initiator_note', 
-                                'Target_model_note', 'Effective_cfg_usage_note']
+        translate_columns = ['Fabric_name', 'Fabric_device_status', 
+                                'Target_Initiator_note', 'Target_model_note', 
+                                'Effective_cfg_usage_note', 'Pair_zone_note',
+                                'All_devices_multiple_fabric_label_connection',
+                                'Zone_and_Pairzone_names_related']
     else:
         translate_columns = ['Fabric_name']
     statistics_report_df = \

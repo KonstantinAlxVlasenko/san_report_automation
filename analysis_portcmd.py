@@ -164,18 +164,22 @@ def device_ports_per_group(portshow_aggregated_df):
     portshow_native_df = portshow_aggregated_df.loc[mask_switch_native]
     
     group_columns = ['Fabric_name',	'Fabric_label', 'Device_Host_Name']
-    group_level_lst = ['_per_fabric_name_and_label', '_per_fabric_label', '_total_fabrics']
+    group_level_lst = ['_per_fabric_name_and_label', '_per_fabric_label', '_per_fabric_name', '_total_fabrics']
     instance_column_dct = dict()
 
     for level in group_level_lst:
         instance_column_dct['Device_Host_Name'] = 'Device_Host_Name' + level
-        portshow_native_df = count_group_members(portshow_native_df, group_columns, instance_column_dct)
-        group_columns.pop(0)
+        if not level == '_per_fabric_name':
+            portshow_native_df = count_group_members(portshow_native_df, group_columns, instance_column_dct)
+            group_columns.pop(0)
+        else:
+            portshow_native_df = count_group_members(portshow_native_df, ['Fabric_name', 'Device_Host_Name'], instance_column_dct)
 
 
     port_columns_lst = ['Fabric_name', 'Fabric_label', 'Connected_portWwn', 
                         'Device_Host_Name_per_fabric_name_and_label', 
-                        'Device_Host_Name_per_fabric_label', 
+                        'Device_Host_Name_per_fabric_label',
+                        'Device_Host_Name_per_fabric_name',
                         'Device_Host_Name_total_fabrics']
 
     device_hostname_stat_native_df = portshow_native_df[port_columns_lst].copy()

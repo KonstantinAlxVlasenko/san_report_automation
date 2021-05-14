@@ -37,6 +37,19 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns] = \
         zonemember_zonelevel_stat_df.loc[mask_empty_zone, device_type_columns].fillna(0)
 
+    # add list of zone pairs to each zone in statistics
+    zoning_paired_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone', 
+                                'All_devices_multiple_fabric_label_connection', 'zone_paired',
+                                'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
+    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
+                                                        join_lst=zoning_paired_columns[:4], filled_lst=zoning_paired_columns[4:])
+
+    # add list of identical (duplicated) zones to each zone in statistics
+    zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
+    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
+                                                        join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+
+
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
     zonemember_zonelevel_stat_df = note_zonemember_statistics(zonemember_zonelevel_stat_df)
     # add note if zone is not used in effective configuration
@@ -46,22 +59,27 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = np.where(mask_non_effective, 'unused_zone', pd.NA)
     zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].fillna(np.nan, inplace=True)
 
-    # add list of identical (duplicated) zones to each zone in statistics
-    zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
-    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
-                                                        join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+
+    # TO_REMOVE rellocated up
+    # # add list of identical (duplicated) zones to each zone in statistics
+    # zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
+    # zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
+    #                                                     join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+    # # add list of zone pairs to each zone in statistics
+    # zoning_paired_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone', 
+    #                             'All_devices_multiple_fabric_label_connection', 'zone_paired']
+    # zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
+    #                                                     join_lst=zoning_paired_columns[:4], filled_lst=zoning_paired_columns[4:])
 
 
-    # add list of zone pairs to each zone in statistics
-    zoning_paired_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone', 'zone_paired']
-    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
-                                                        join_lst=zoning_paired_columns[:-1], filled_lst=[zoning_paired_columns[-1]])
-                        
     # remove duplicated and paired zones list if current zone is non-working zone (duplication of working zones only required)
     # list of duplicated zones is removed but duplication tag remains  
     mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
-    zonemember_zonelevel_stat_df['zone_duplicated'] = zonemember_zonelevel_stat_df['zone_duplicated'].where(mask_valid_zone)
-    zonemember_zonelevel_stat_df['zone_paired'] = zonemember_zonelevel_stat_df['zone_paired'].where(mask_valid_zone)
+    columns = ['zone_duplicated', 'zone_paired', 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
+    zonemember_zonelevel_stat_df[columns] = zonemember_zonelevel_stat_df[columns].where(mask_valid_zone)
+    # zonemember_zonelevel_stat_df['zone_duplicated'] = zonemember_zonelevel_stat_df['zone_duplicated'].where(mask_valid_zone)
+    # zonemember_zonelevel_stat_df['zone_paired'] = zonemember_zonelevel_stat_df['zone_paired'].where(mask_valid_zone)
+
     # sort values
     zonemember_zonelevel_stat_df.sort_values(by=['Fabric_name', 'Fabric_label', 'cfg_type', 'cfg', 'zone'],
                                                 ascending=[True, True, False, True, True], inplace=True, ignore_index=True)

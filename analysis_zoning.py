@@ -64,7 +64,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
         # zones statistics DataFrame without summaries  
         zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df, report_data_lst)
         # add zoning statistics notes, zone duplicates and zone pairs to zoning aggregated DataFrame
-        zoning_aggregated_df = note_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df)
+        zoning_aggregated_df = statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df)
         # check all fabric devices (Wwnp) for usage in zoning configuration
         portshow_zoned_aggregated_df = verify_cfg_type(portshow_aggregated_df, zoning_aggregated_df, ['PortName'])
         # create alias configuration statistics
@@ -112,7 +112,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     return zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df
 
 
-def note_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df):
+def statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df):
     """
     Function to compliment zoning_aggregated_df DataFrame with 'Target_Initiator'and 'Target_model' notes 
     obtained from zone statistics DataFrame analysis
@@ -120,7 +120,9 @@ def note_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df
     
     # create DataFrame with note columns only
     zone_columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
-    note_columns = ['Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note', 'zone_duplicated', 'zone_paired']
+    note_columns = ['Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note', 
+                    'zone_duplicated', 'zone_paired', 'Pair_zone_note',
+                    'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
     note_columns = [column for column in note_columns if column in zonemember_zonelevel_stat_df.columns]
     zonenote_df = zonemember_zonelevel_stat_df.reindex(columns = [*zone_columns, *note_columns]).copy()
     # compliment aggregated DataFrame 

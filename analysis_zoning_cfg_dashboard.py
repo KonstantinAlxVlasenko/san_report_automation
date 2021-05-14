@@ -84,8 +84,8 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
 
         zone_notes_summary_df = \
             count_frequency(zonelevel_statistics_effective_df, \
-                count_columns=['zone_duplicated', 'zone_paired', 'Target_Initiator_note', 'Target_model_note', 
-                                    'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_note_summary' ])
+                count_columns=['zone_duplicated', 'zone_paired', 'Pair_zone_note', 'Target_Initiator_note', 'Target_model_note', 
+                                    'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_note_summary'])
         return zone_notes_summary_df
     
 

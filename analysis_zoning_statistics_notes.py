@@ -51,7 +51,6 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     else:
         zonemember_stat_notes_df['Storage_model_note'] = np.nan
 
-    # zonemember_stat_notes_df['Storage_library_note'] = np.nan
 
     # check if zone contains storage and library in a single zone
     mask_storage_lib = (zonemember_stat_notes_df[['STORAGE', 'LIB']] != 0).all(axis=1)
@@ -71,6 +70,14 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
 
     if not 'Target_Initiator_note' in zonemember_stat_notes_df.columns:
         zonemember_stat_notes_df['Target_Initiator_note'] = np.nan
+
+    # add pair_zone_note
+    mask_device_connection = zonemember_stat_notes_df['All_devices_multiple_fabric_label_connection'] == 'Yes'
+    mask_no_pair_zone = zonemember_stat_notes_df['zone_paired'].isna()
+    # valid zones
+    invalid_zone_tags = ['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators']
+    mask_valid_zone = ~zonemember_stat_notes_df['Target_Initiator_note'].isin(invalid_zone_tags)
+    zonemember_stat_notes_df.loc[mask_valid_zone & mask_device_connection & mask_no_pair_zone, 'Pair_zone_note'] = 'pair_zone_not_found'
     
     return zonemember_stat_notes_df
 

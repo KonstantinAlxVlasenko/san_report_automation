@@ -185,12 +185,12 @@ def verify_cfg_type(aggregated_df, zoning_aggregated_df, search_lst):
 def sort_dataframe(zoning_aggregated_df, alias_aggregated_df):
     """Function to sort zoning configuration based on config type, fabric labels and devices zoned"""
 
-    sort_zone_lst = ['Fabric_label', 'Fabric_name', 'cfg_type', 'cfg' , 'zone', 'deviceType', 'zone_member']
+    sort_zone_lst = ['Fabric_label', 'Fabric_name', 'cfg_type', 'cfg' , 'zone', 'deviceType', 'Device_Host_Name', 'zone_member']
     # sort_zone_lst = ['cfg_type', 'Fabric_label', 'cfg', 'zone', 'deviceType', 'zone_member', 'Fabric_name']
     sort_alias_lst = ['cfg_type', 'Fabric_label', 'Fabric_name', 'zone_member', 'Wwn_type']
 
     zoning_aggregated_df.sort_values(by=sort_zone_lst, \
-        ascending=[True, True, False, *4*[True]], inplace=True)
+        ascending=[True, True, False, *5*[True]], inplace=True)
     # zoning_aggregated_df.sort_values(by=sort_zone_lst, \
     #     ascending=[False, *6*[True]], inplace=True)
     alias_aggregated_df.sort_values(by=sort_alias_lst, \
@@ -312,21 +312,34 @@ def verify_zonemember_type(aggregated_df, column = 'zone_member'):
 #     return df
 
 
-def verify_device_hostname_instances(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
+
+def verify_device_hostname_instances(aggregated_df, portshow_aggregated_df):
     """Function to add Device_Host_Name instances number on (fabric_name, fabric_label), 
     fabric_label and total_fabrics levels based on PortName (WWNp)"""
 
-    port_columns_lst = ['Fabric_name', 'Fabric_label', 'PortName', 
-                        'Device_Host_Name_per_fabric_name_and_label', 
-                        'Device_Host_Name_per_fabric_label', 
-                        'Device_Host_Name_total_fabrics']
+    fabric_wwnp_columns = ['Fabric_name', 'Fabric_label', 'PortName']
+    device_port_columns = ['Storage_Port_Type',
+                            'Device_Host_Name_per_fabric_name_and_label', 
+                            'Device_Host_Name_per_fabric_label',
+                            'Device_Host_Name_per_fabric_name', 
+                            'Device_Host_Name_total_fabrics']
+
+    device_port_columns = [column for column in device_port_columns if column in portshow_aggregated_df.columns]
 
     # AG mode switches dropped to avoid duplicate  connection information
     mask_switch_native = portshow_aggregated_df['switchMode'] == 'Native'
-    portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, port_columns_lst].copy()
+    portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, [*fabric_wwnp_columns, *device_port_columns]].copy()
     portcmd_join_df.dropna(subset=['PortName'], inplace=True)
-                                              
-    zoning_aggregated_df = zoning_aggregated_df.merge(portcmd_join_df, how='left', on=port_columns_lst[:3])
-    alias_aggregated_df = alias_aggregated_df.merge(portcmd_join_df, how='left', on=port_columns_lst[:3])
 
-    return zoning_aggregated_df, alias_aggregated_df
+    aggregated_df = aggregated_df.merge(portcmd_join_df, how='left', on=fabric_wwnp_columns)
+
+    # verify if device is present in other faric_labels of the same fabric_name
+    aggregated_df[device_port_columns[1:]] = aggregated_df[device_port_columns[1:]].apply(pd.to_numeric)
+    mask_multiple_fabric_label_connection = \
+        aggregated_df['Device_Host_Name_per_fabric_name'] > aggregated_df['Device_Host_Name_per_fabric_name_and_label']
+    mask_notna = aggregated_df[['Device_Host_Name_per_fabric_name', 'Device_Host_Name_per_fabric_name_and_label']].notna().all(axis=1)
+    aggregated_df['Multiple_fabric_label_connection'] = np.where(mask_multiple_fabric_label_connection & mask_notna, 'Yes', 'No')
+    # remove information from lines without port nember information
+    aggregated_df['Multiple_fabric_label_connection'] = aggregated_df['Multiple_fabric_label_connection'].where(mask_notna, np.nan)
+
+    return aggregated_df

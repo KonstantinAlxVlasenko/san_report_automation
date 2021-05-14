@@ -209,7 +209,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     config_set_num = len(all_files_to_parse_lst)
     
     print('\n\nPREREQUISITES 3. PROCESSING SUPPORTSAVE FILES WITH SANTOOLBOX\n')
-    print(f'Parsed configuration files is moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
+    print(f'Parsed configuration files are moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
     
     # going throgh each configuration set (switch) in unpased list
     for i,switch_files_to_parse_lst in enumerate(all_files_to_parse_lst):

@@ -1,8 +1,11 @@
 """Module to modify zoning_aggregated_df DataFrame to count statistics 
 and find pair zones, duplicated and target driven zones"""
 
+from difflib import SequenceMatcher
+
 import numpy as np
 import pandas as pd
+
 from common_operations_dataframe import dataframe_fillna, сoncatenate_columns
 
 
@@ -129,29 +132,37 @@ def verify_pair_zones(zoning_aggregated_df):
     """Function to find pair zone or zones in other fabric_labels of the same fabric_name"""
 
     columns = ['Fabric_name', 'Fabric_label', 'cfg_type']
-    zoning_cp_df = zoning_aggregated_df.copy()
-    # drop rows with empty PortWwwns (absent zonemembers)
-    zoning_cp_df.dropna(subset=['PortName'], inplace=True)
+    mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'remote_imported'])
+    zoning_cp_df = zoning_aggregated_df.loc[mask_connected].copy()
+    # TO_REMOVE
+    # # drop rows with empty PortWwwns (absent zonemembers)
+    # zoning_cp_df.dropna(subset=['PortName'], inplace=True)
+
     # drop duplicated Wwnp in each zone
     zoning_cp_df.drop_duplicates(subset=[*columns, 'zone', 'PortName'], inplace=True)
 
-    # group device names of each zone to sorted set thus removing duplicates and present it as comma separated list
+    # verify if all devices in each zone are connected to other faric_labels of the same fabric_name
     grp_columns = columns + ['zone']
+    mask_all_devices_multiple_fabric_label_connection = \
+        zoning_cp_df.groupby(by=grp_columns)['Multiple_fabric_label_connection'].transform(lambda series: series.isin(['Yes']).all())
+    zoning_cp_df['All_devices_multiple_fabric_label_connection'] = np.where(mask_all_devices_multiple_fabric_label_connection, 'Yes', 'No')
+
+    # group device names of each zone to sorted set thus removing duplicates and present it as comma separated list
+    grp_columns.append('All_devices_multiple_fabric_label_connection')
     zoning_grp_df = zoning_cp_df.groupby(by=grp_columns)['Device_Host_Name'].agg(lambda x: ', '.join(sorted(set(x))))
     zoning_grp_df = pd.DataFrame(zoning_grp_df)
     zoning_grp_df.reset_index(inplace=True)
-
 
     fabric_name_lst = zoning_grp_df['Fabric_name'].unique().tolist()
     fabric_label_lst = zoning_grp_df['Fabric_label'].unique().tolist()
 
     # columns take into account zone members (zone devices) in cfg_type for each zone 
     # cfg_name is not taken into account since it might differ in fabrics
-    cfgtype_zone_device_columns = [*columns, 'Device_Host_Name']
+    cfgtype_zone_device_columns = [*columns, 'All_devices_multiple_fabric_label_connection', 'Device_Host_Name']
     # DataFrame contains list of zones with its pairs for each fabric and cfg_type
     zoning_pairs_df = pd.DataFrame()                           
     # list of columns with zone pairs for concatenation below
-    zone_paired_columns = []
+    zone_paired_columns = set()
 
     for fabric_name in fabric_name_lst:
         for fabric_label in fabric_label_lst:
@@ -181,7 +192,7 @@ def verify_pair_zones(zoning_aggregated_df):
                         verified_grp_df['Fabric_label'] = fabric_label
                         # column name with pair zones in verified fabric_label
                         zone_paired_column = 'zone_paired_' + str(verified_label)
-                        zone_paired_columns.append(zone_paired_column)
+                        zone_paired_columns.add(zone_paired_column)
                         verified_grp_df.rename(columns={'zone': zone_paired_column}, inplace=True)
                         # add column with pair zones in verified fabric_label to zoning configuration
                         current_df = dataframe_fillna(current_df, verified_grp_df, 
@@ -190,10 +201,27 @@ def verify_pair_zones(zoning_aggregated_df):
                 # add zoning configuration with pair zones in all fabric_labels to general zoning configuration DataFrame
                 zoning_pairs_df = pd.concat([zoning_pairs_df, current_df])
 
+    zone_paired_columns = list(zone_paired_columns)
     zoning_pairs_df = сoncatenate_columns(zoning_pairs_df, summary_column='zone_paired', 
                                             merge_columns=zone_paired_columns, sep=', ', drop_merge_columns=True)
     mask_zone_notna = zoning_pairs_df['zone_paired'].notna()
     zoning_pairs_df.loc[mask_zone_notna, 'zone_paired_tag'] = 'zone_paired_tag'
     zoning_pairs_df['zone_duplicates_free'] = zoning_pairs_df['zone']
+    # verify if zone name and it's pair zone name related
+    zoning_pairs_df = calculate_zone_names_ratio(zoning_pairs_df)
+
+    return zoning_pairs_df
+
+
+def calculate_zone_names_ratio(zoning_pairs_df):
+    """Function to verify if zone name and it's pair zone name related"""
+
+    mask_notna = zoning_pairs_df[['zone', 'zone_paired']].notna().all(axis=1)
+    zoning_pairs_df.loc[mask_notna, 'Zone_and_Pairzone_names_ratio'] = \
+        zoning_pairs_df.loc[mask_notna, ['zone', 'zone_paired']].apply(lambda x: round(SequenceMatcher(None, x[0], x[1]).ratio(), 2), axis=1)
+    mask_ratio = zoning_pairs_df['Zone_and_Pairzone_names_ratio'] >= 0.9
+    zoning_pairs_df['Zone_and_Pairzone_names_related'] = \
+        np.select([mask_notna & mask_ratio, mask_notna & ~mask_ratio], ['Yes', 'No'], default=pd.NA)
+    zoning_pairs_df.fillna(np.nan, inplace=True)
 
     return zoning_pairs_df

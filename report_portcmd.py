@@ -9,7 +9,7 @@ Module to create tables
 import pandas as pd
 
 from common_operations_dataframe_presentation import (dataframe_segmentation,
-                                                      translate_values)
+                                                      translate_values, drop_equal_columns)
 from common_operations_servicefile import dct_from_columns
 
 
@@ -105,10 +105,16 @@ def _clean_dataframe(df, mask_type,
                 df.drop(columns = [column], inplace = True)
 
     # drop column if each device connected to single fabric_name only
-    if 'Количество портов устройства в подсети' in df.columns and \
-        'Количество портов устройства в фабрике' in df.columns and \
-            df['Количество портов устройства в подсети'].equals(df['Количество портов устройства в фабрике']):
-                df.drop(columns=['Количество портов устройства в фабрике'], inplace=True)
+    possible_equal_column_pairs = [
+                                    ('Количество портов устройства в подсети фабрики', 'Количество портов устройства в фабриках подсети'),
+                                    ('Всего портов устройства', 'Количество портов устройства в подсетях фабрики')]
+    df = drop_equal_columns(df, possible_equal_column_pairs)
+
+    # TO_REMOVE
+    # if 'Количество портов устройства в подсети' in df.columns and \
+    #     'Количество портов устройства в фабрике' in df.columns and \
+    #         df['Количество портов устройства в подсети'].equals(df['Количество портов устройства в фабрике']):
+    #             df.drop(columns=['Количество портов устройства в фабрике'], inplace=True)
     return df
 
 

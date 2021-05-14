@@ -111,7 +111,8 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     # add host information
     host_columns = ['Fabric_name', 'Fabric_label', 'chassis_name', 'switchName', 'Index_slot_port', 'Connected_portId', 
                     'Device_Host_Name', 'Device_Port', 'Host_OS', 'Device_Location', 
-                    'Device_Host_Name_per_fabric_name_and_label',	'Device_Host_Name_per_fabric_label', 'Device_Host_Name_total_fabrics']
+                    'Device_Host_Name_per_fabric_name_and_label',	'Device_Host_Name_per_fabric_label', 
+                    'Device_Host_Name_per_fabric_name', 'Device_Host_Name_total_fabrics']
     storage_host_aggregated_df = \
         dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=host_columns, remove_duplicates=False)
 
@@ -239,7 +240,8 @@ def clean_storage_host(df):
 
     # drop second column in each tuple of the list if values in columns of the tuple are equal
     df = drop_equal_columns(df, columns_pairs=[('Host_Wwnp', 'Host_Wwn'), 
-                                                ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label')])
+                                                ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
+                                                ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
     # drop empty columns
     df = drop_all_na(df, ['Device_Port', 'Device_Location'])
     # drop columns where all values are equal to the item value

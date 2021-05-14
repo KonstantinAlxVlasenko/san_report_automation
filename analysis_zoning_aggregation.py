@@ -56,8 +56,8 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     zoning_aggregated_df = wwnp_instance_number_per_group(zoning_aggregated_df, 'zone')
     alias_aggregated_df = wwnp_instance_number_per_group(alias_aggregated_df, 'alias')
     # count Device_Host_Name instances for fabric_label, label and total in fabric
-    zoning_aggregated_df, alias_aggregated_df = \
-    verify_device_hostname_instances(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
+    zoning_aggregated_df = verify_device_hostname_instances(zoning_aggregated_df, portshow_aggregated_df)
+    alias_aggregated_df = verify_device_hostname_instances(alias_aggregated_df, portshow_aggregated_df)
 
     # verify if zonemember is alias, wwn or DI format
     zoning_aggregated_df = verify_zonemember_type(zoning_aggregated_df, column = 'zone_member')
