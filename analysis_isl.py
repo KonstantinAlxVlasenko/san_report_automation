@@ -65,6 +65,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
 
         # partition aggregated DataFrame to required tables
         isl_report_df, = dataframe_segmentation(isl_aggregated_df, [data_names[2]], report_columns_usage_dct, max_title)
+        isl_report_df = translate_values(isl_report_df, translate_dct={'Yes': 'Да', 'No': 'Нет'})
         # if no trunks in fabric drop trunk columns
         if trunk_df.empty:
             isl_report_df.drop(columns = ['Идентификатор транка', 'Deskew', 'Master'], inplace = True)

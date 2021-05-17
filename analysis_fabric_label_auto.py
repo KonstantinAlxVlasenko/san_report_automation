@@ -31,8 +31,14 @@ def auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, 
     # dividing fabricshow_porttype_state_df into groups. One group for each fabric
     fabricshow_grp = fabricshow_porttype_state_df.groupby(
         by=['chassis_name', 'Principal_switch_name', 'Principal_switch_wwn', 'Fabric_ID', 'FC_Route'], dropna=False)
+
     # applying faricshow_summary for each fabric to summarize fabricshow_porttype_state_df DataFrame
     fabricshow_summary_df = fabricshow_grp.apply(fabricshow_summary)
+    if fabricshow_summary_df.empty:
+        print('\n')
+        print('No PRINCIPAL switch found. Exiting ...')
+        print('\n')
+        sys.exit()
     # sorting data in such way that two rows (odd and even) are pair fabrics
     fabricshow_summary_df = fabricshow_summary_df.reset_index().sort_values(
         by=['FC_Route', 'Total_switch', 'Domain_IDs', 'Switch_names'], 
@@ -87,7 +93,9 @@ def fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow
                                          (switchshow_ports_df.switchMode == 'Native')
                                          ].copy()
     if switchshow_df.empty:
-        print("No Online switches in Fabric(s) found.")
+        print('\n')
+        print("No Online switches in Fabric(s) found. Exiting ...")
+        print('\n')
         sys.exit()
     # crosstab DataFrame contains summary for port states for switches from switchshow
 

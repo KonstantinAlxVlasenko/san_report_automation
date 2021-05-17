@@ -144,34 +144,35 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
         else:
             storage_connection_statistics_df = pd.concat([storage_connection_statistics_df, current_df])
 
-    # sort port groups levels in corresponding order
-    sort_priority = {'storage': 1, 'port_parity': 2, 'port': 3, 'controller': 4, 'controller_slot': 5, 'slot': 6}
-    storage_connection_statistics_df.sort_values(by=['deviceSubtype', 'Device_Host_Name', 'Group_type', 'Group_level'], 
-                                                key=lambda col: col.replace(sort_priority), inplace=True)
-    storage_connection_statistics_df.reset_index(drop=True, inplace=True)
+    if not storage_connection_statistics_df.empty:
+        # sort port groups levels in corresponding order
+        sort_priority = {'storage': 1, 'port_parity': 2, 'port': 3, 'controller': 4, 'controller_slot': 5, 'slot': 6}
+        storage_connection_statistics_df.sort_values(by=['deviceSubtype', 'Device_Host_Name', 'Group_type', 'Group_level'], 
+                                                    key=lambda col: col.replace(sort_priority), inplace=True)
+        storage_connection_statistics_df.reset_index(drop=True, inplace=True)
 
-    # add notes (if connections are symmetrical on each port group level, 
-    # odd and even ports are in different fabrics)
-    storage_connection_statistics_df = add_notes(storage_connection_statistics_df, storage_ports_df)
-        
-    # remove fabic_name if there is single fabric only
-    fabric_names_lst = storage_ports_df['Fabric_name'].unique()
-    if len(fabric_names_lst) == 1:
-        fabric_name = fabric_names_lst[0]
-        fabric_label_pattern = f'^{fabric_name}[ _-]+(.)'
-        existing_fabric_columns = [column for column in storage_connection_statistics_df.columns if fabric_name in column]
-        rename_dct = {fabric: re.search(fabric_label_pattern, fabric).group(1) for fabric in existing_fabric_columns}
-        # rename_dct = {fabric: fabric.lstrip(fabric_name) for fabric in existing_fabric_columns}
-        storage_connection_statistics_df.rename(columns=rename_dct, inplace=True)
+        # add notes (if connections are symmetrical on each port group level, 
+        # odd and even ports are in different fabrics)
+        storage_connection_statistics_df = add_notes(storage_connection_statistics_df, storage_ports_df)
+            
+        # remove fabic_name if there is single fabric only
+        fabric_names_lst = storage_ports_df['Fabric_name'].unique()
+        if len(fabric_names_lst) == 1:
+            fabric_name = fabric_names_lst[0]
+            fabric_label_pattern = f'^{fabric_name}[ _-]+(.)'
+            existing_fabric_columns = [column for column in storage_connection_statistics_df.columns if fabric_name in column]
+            rename_dct = {fabric: re.search(fabric_label_pattern, fabric).group(1) for fabric in existing_fabric_columns}
+            # rename_dct = {fabric: fabric.lstrip(fabric_name) for fabric in existing_fabric_columns}
+            storage_connection_statistics_df.rename(columns=rename_dct, inplace=True)
 
-    # merge Port_note and Port_parity_note columns
-    storage_connection_statistics_df['Port_note'].fillna(storage_connection_statistics_df['Port_parity_note'], inplace=True)
-    storage_connection_statistics_df.drop(columns=['Port_parity_note'], inplace=True)
+        # merge Port_note and Port_parity_note columns
+        storage_connection_statistics_df['Port_note'].fillna(storage_connection_statistics_df['Port_parity_note'], inplace=True)
+        storage_connection_statistics_df.drop(columns=['Port_parity_note'], inplace=True)
 
-    # move Group_type column
-    group_type_values = storage_connection_statistics_df['Group_type']
-    storage_connection_statistics_df.drop(columns=['Group_type'], inplace=True)
-    storage_connection_statistics_df.insert(2, 'Group_type', group_type_values)
+        # move Group_type column
+        group_type_values = storage_connection_statistics_df['Group_type']
+        storage_connection_statistics_df.drop(columns=['Group_type'], inplace=True)
+        storage_connection_statistics_df.insert(2, 'Group_type', group_type_values)
     return storage_connection_statistics_df
 
 

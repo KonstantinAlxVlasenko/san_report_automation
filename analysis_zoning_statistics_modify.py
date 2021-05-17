@@ -4,6 +4,7 @@ and find pair zones, duplicated and target driven zones"""
 import itertools
 from difflib import SequenceMatcher
 
+import re
 import numpy as np
 import pandas as pd
 
@@ -218,9 +219,7 @@ def verify_zonename_ratio(zoning_pairs_df):
     """Function to verify if zonename related with pair zone name and device names included in each zone"""
 
     # verify if zone name and it's pair zone name related
-    mask_notna = zoning_pairs_df[['zone', 'zone_paired']].notna().all(axis=1)
-    zoning_pairs_df.loc[mask_notna, 'Zone_and_Pairzone_names_ratio'] = \
-        zoning_pairs_df.loc[mask_notna, ['zone', 'zone_paired']].apply(lambda x: round(SequenceMatcher(None, x[0].upper(), x[1].upper()).ratio(), 2), axis=1)
+    zoning_pairs_df['Zone_and_Pairzone_names_ratio'] = zoning_pairs_df.apply(lambda series: calculate_zone_names_ratio(series), axis=1)    
     zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_and_Pairzone_names_ratio', 0.9, 'Zone_and_Pairzone_names_related')
     # verify if zone name related with device names included in this zone
     zoning_pairs_df['Zone_name_device_names_ratio'] = zoning_pairs_df.apply(lambda series: calculate_zonename_devicenames_ratio(series), axis=1)
@@ -228,19 +227,17 @@ def verify_zonename_ratio(zoning_pairs_df):
     return zoning_pairs_df
 
 
-# def calculate_zone_names_ratio(zoning_pairs_df):
-#     """Function to verify if zone name and it's pair zone name related"""
+def calculate_zone_names_ratio(series):
+    """Function to verify if zone name and it's pair zone name related.
+    If zone have more than one pair zones then maximum ratio returned"""
 
-#     mask_notna = zoning_pairs_df[['zone', 'zone_paired']].notna().all(axis=1)
-#     zoning_pairs_df.loc[mask_notna, 'Zone_and_Pairzone_names_ratio'] = \
-#         zoning_pairs_df.loc[mask_notna, ['zone', 'zone_paired']].apply(lambda x: round(SequenceMatcher(None, x[0].upper(), x[1].upper()).ratio(), 2), axis=1)
+    if pd.notna(series[['zone', 'zone_paired']]).all():
     
-#     # mask_ratio = zoning_pairs_df['Zone_and_Pairzone_names_ratio'] >= 0.9
-#     # zoning_pairs_df['Zone_and_Pairzone_names_related'] = \
-#     #     np.select([mask_notna & mask_ratio, mask_notna & ~mask_ratio], ['Yes', 'No'], default=pd.NA)
-#     # zoning_pairs_df.fillna(np.nan, inplace=True)
+        zone_name = series['zone'].lower()
+        pair_zone_names = series['zone_paired'].lower().split(', ')
 
-#     return zoning_pairs_df
+        ratio_lst = [round(SequenceMatcher(None, zone_name, pair_zone_name).ratio(), 2) for pair_zone_name in pair_zone_names]
+        return max(ratio_lst)
 
 
 def calculate_zonename_devicenames_ratio(series):
@@ -248,19 +245,28 @@ def calculate_zonename_devicenames_ratio(series):
     By applying device names permutations maximum ratio value is calaculated"""
     
     # use upper case for consistency
-    zone_name = series['zone'].upper()
-    device_names = series['Device_Host_Name'].upper().split(', ')
-    # device names permutations
-    device_names_permutations = itertools.permutations(device_names)
+    zone_name = series['zone'].lower().replace('-', '_')
+    device_names = series['Device_Host_Name'].lower().replace('-', '_').split(', ')
+
+    # if re.match(r'tdz3par_[0-9a-f]{16}', zone_name):
+    #     return np.nan
+
+
+    device_names = [name.split('.')[0] for name in device_names]
+
     # list containing all ration values
     ratio_lst = []
     
-    for permuation in device_names_permutations:
-        # join device names for current names permutation to string
-        device_names_str = ''.join(permuation)
+    if len(device_names) < 6:
+        for permuation in itertools.permutations(device_names):
+            # join device names for current names permutation to string
+            device_names_str = '_'.join(permuation)
+            ratio = round(SequenceMatcher(None, zone_name, device_names_str).ratio(), 2)
+            ratio_lst.append(ratio)
+    else:
+        device_names_str = '_'.join(device_names)
         ratio = round(SequenceMatcher(None, zone_name, device_names_str).ratio(), 2)
-        ratio_lst.append(ratio)
-
+        ratio_lst.append(ratio)             
     return max(ratio_lst)
 
 
