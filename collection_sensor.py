@@ -56,7 +56,7 @@ def sensor_extract(switch_params_lst, report_data_lst):
 
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):       
+        for i, switch_params_data in enumerate(switch_params_lst):
             # data unpacking from iter param
             # dictionary with parameters for the current switch
             switch_params_data_dct = dict(zip(switch_columns, switch_params_data))

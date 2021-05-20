@@ -50,7 +50,7 @@ def switchshow_labeled(switchshow_ports_df, fabricshow_ag_labels_df):
     switchshow_df = switchshow_ports_df.loc[:, ['chassis_name', 'chassis_wwn', 'switch_index', 
                                             'switchName', 'switchWwn', 'switchMode', 
                                             'portIndex', 'slot', 'port', 
-                                            'speed', 'state', 'portType']]    
+                                            'speed', 'state', 'portType', 'connection_details']]    
     fabricshow_labels_df = fabricshow_ag_labels_df.loc[:, ['Worldwide_Name', 'Fabric_name', 'Fabric_label']]
     # rename column in fabricshow_labels DataFrame
     fabricshow_labels_df.rename(columns = {'Worldwide_Name': 'switchWwn'}, inplace=True)
@@ -106,6 +106,7 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
     # add connected devices WWNs to supportshow DataFrame 
     switchshow_portshow_df = switchshow_df.merge(portshow_connected_df, how='left', 
                                                     on = ['chassis_name', 'chassis_wwn', 'slot', 'port'])
+
     # get required columns from nscamshow DataFrame 
     # contains WWNp, WWNn and device type information (Target or Initiator)
     device_type_df = nscamshow_df.loc[:, ['PortName', 'NodeName', 'Device_type']]
@@ -116,14 +117,16 @@ def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report
     # add to switchshow device type information of connected WWNs 
     switchshow_portshow_devicetype_df = switchshow_portshow_df.merge(device_type_df, 
                                                                         how='left', left_on = 'Connected_portWwn', right_on= 'PortName')
+
     # if switch in AG mode then device type must be replaced to Physical instead of NPIV
     mask_ag = switchshow_portshow_devicetype_df.switchMode == 'Access Gateway Mode'
     switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'] = \
         switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
 
-    # drop duplicated ports rows in case of NPIV 
-    switchshow_portshow_devicetype_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 
-                                                                'switchName', 'switchWwn', 'slot', 'port'], inplace = True)
+    # REMOVE to avoid drop NPIV connected ports
+    # # drop duplicated ports rows in case of NPIV 
+    # switchshow_portshow_devicetype_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 
+    #                                                             'switchName', 'switchWwn', 'slot', 'port'], inplace = True)
 
     # if no device type in cached name server (no ISLs links) use 'Unknown' label
     if switchshow_portshow_devicetype_df.Device_type.isna().all():
@@ -157,16 +160,31 @@ def port_state_statistics(switchshow_df):
                         columns=switchshow_df.state, margins = True)
     # renaming column 'All' to Total_port_number
     port_state_df.rename(columns={'All': 'Total_ports_number'}, inplace=True)
+
+
+    # count licensed vs not licences ports
+    mask_not_licensed = switchshow_df['connection_details'].str.lower().str.contains('license')
+    switchshow_df['license'] = np.where(mask_not_licensed, 'Not_licensed', 'Licensed')
+    port_license_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
+                                switchshow_df.chassis_name, switchshow_df.switch_index, 
+                                switchshow_df.switchName, switchshow_df.switchWwn], 
+                        columns=switchshow_df.license, margins = True)
+    port_license_df.drop(columns=['All'], inplace=True)
+    if not 'Not_licensed' in port_license_df.columns:
+        port_license_df['Not_licensed'] = 0
+
+    port_state_df = port_state_df.merge(port_license_df, how='left', left_index=True, right_index=True)
     # countin percantage of occupied ports for each switch
     # ratio of Online ports(occupied) number to Total ports number
-    port_state_df['%_occupied'] = round(port_state_df.Online.div(port_state_df.Total_ports_number)*100, 1)
-    
+    # port_state_df['%_occupied'] = round(port_state_df.Online.div(port_state_df.Total_ports_number)*100, 1)
+    port_state_df['%_occupied'] = round(port_state_df.Online.div(port_state_df.Licensed)*100, 1)
+
     # dividing DataFrame into summary DataFrame (Online, Total and percantage of occupied)
     # and rest of port states DataFrame
     # columns for In_Sync, No_Light, No_Module, No_SigDet, No_Sync port states 
-    portstate_type_columns = port_state_df.columns.tolist()[:-3]
+    portstate_type_columns = port_state_df.columns.tolist()[:-5]
     # columns for summary DataFrame 
-    portstate_summary_columns = port_state_df.columns.tolist()[-3:]
+    portstate_summary_columns = port_state_df.columns.tolist()[-5:]
     # create column order Total, Online, % 
     portstate_summary_columns.insert(1, portstate_summary_columns.pop(0))
     # create port_state_type and port_state_summary DataFrames
@@ -242,7 +260,7 @@ def n_e(group):
     """
 
     # e-ports definition
-    e_ports = ['E-Port', 'EX-Port', 'LS E-Port', 'LD E-Port', 'LE-Port', 'N-Port']
+    e_ports = ['E-Port', 'EX-Port', 'LS E-Port', 'LD E-Port', 'LE-Port', 'LE E-Port', 'N-Port']
     # f-ports definition (n-ports)
     f_ports = ['F-Port']
     # sum e-ports speed

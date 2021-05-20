@@ -7,6 +7,7 @@ from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import dct_from_columns
+from common_operations_dataframe_presentation import drop_all_identical, drop_equal_columns
 
 
 def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
@@ -87,7 +88,7 @@ def statistics_total(statistics_df, statistic_columns_names_dct):
     # droping columns with N:E ration data due to it pointless on fabric level
     statistics_total_df.drop(columns=['N:E_int', 'N:E_bw_int'], inplace=True)
     # re-calculate percentage of occupied ports
-    statistics_total_df['%_occupied'] = round(statistics_total_df.Online.div(statistics_total_df.Total_ports_number)*100, 1)
+    statistics_total_df['%_occupied'] = round(statistics_total_df.Online.div(statistics_total_df.Licensed)*100, 1)
     statistics_total_df = statistics_total_df.astype('int64', errors = 'ignore')
     statistics_total_report_df = statistics_total_df.rename(columns = statistic_columns_names_dct)
 
@@ -101,6 +102,11 @@ def statistics_report(statistics_df, chassis_column_usage, max_title):
     statistics_report_df = statistics_df.copy()
     # drop columns 'switch_index', 'switchWwn', 'N:E_int', 'N:E_bw_int'
     statistics_report_df.drop(columns = ['switch_index', 'switchWwn', 'N:E_int', 'N:E_bw_int'], inplace=True)
+    # drop Not Licensed ports column if there are no any
+    statistics_report_df = drop_all_identical(statistics_report_df, 
+                                            columns_values={'Not_licensed': 0}, dropna=True)
+    # drop Licensed column if all ports are licensed
+    statistics_report_df = drop_equal_columns(statistics_report_df, columns_pairs = [('Total_ports_number', 'Licensed')])
     # drop column 'chassis_name' if it is not required
     if not chassis_column_usage:
         statistics_report_df.drop(columns = ['chassis_name'], inplace=True)

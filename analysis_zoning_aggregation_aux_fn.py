@@ -318,23 +318,26 @@ def verify_device_hostname_instances(aggregated_df, portshow_aggregated_df):
     fabric_label and total_fabrics levels based on PortName (WWNp)"""
 
     fabric_wwnp_columns = ['Fabric_name', 'Fabric_label', 'PortName']
-    device_port_columns = ['Storage_Port_Type',
-                            'Device_Host_Name_per_fabric_name_and_label', 
+    storage_port_columns = ['Storage_Port_Type']
+    device_port_columns = ['Device_Host_Name_per_fabric_name_and_label', 
                             'Device_Host_Name_per_fabric_label',
                             'Device_Host_Name_per_fabric_name', 
                             'Device_Host_Name_total_fabrics']
 
+    storage_port_columns = [column for column in storage_port_columns if column in portshow_aggregated_df.columns]
     device_port_columns = [column for column in device_port_columns if column in portshow_aggregated_df.columns]
 
     # AG mode switches dropped to avoid duplicate  connection information
     mask_switch_native = portshow_aggregated_df['switchMode'] == 'Native'
-    portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, [*fabric_wwnp_columns, *device_port_columns]].copy()
+    portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, 
+                                                    [*fabric_wwnp_columns, *storage_port_columns, *device_port_columns]].copy()
     portcmd_join_df.dropna(subset=['PortName'], inplace=True)
 
     aggregated_df = aggregated_df.merge(portcmd_join_df, how='left', on=fabric_wwnp_columns)
 
     # verify if device is present in other faric_labels of the same fabric_name
-    aggregated_df[device_port_columns[1:]] = aggregated_df[device_port_columns[1:]].apply(pd.to_numeric)
+    aggregated_df[device_port_columns] = aggregated_df[device_port_columns].apply(pd.to_numeric)
+
     mask_multiple_fabric_label_connection = \
         aggregated_df['Device_Host_Name_per_fabric_name'] > aggregated_df['Device_Host_Name_per_fabric_name_and_label']
     mask_notna = aggregated_df[['Device_Host_Name_per_fabric_name', 'Device_Host_Name_per_fabric_name_and_label']].notna().all(axis=1)

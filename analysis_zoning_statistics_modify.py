@@ -223,7 +223,7 @@ def verify_zonename_ratio(zoning_pairs_df):
     zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_and_Pairzone_names_ratio', 0.9, 'Zone_and_Pairzone_names_related')
     # verify if zone name related with device names included in this zone
     zoning_pairs_df['Zone_name_device_names_ratio'] = zoning_pairs_df.apply(lambda series: calculate_zonename_devicenames_ratio(series), axis=1)
-    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_name_device_names_ratio', 0.65, 'Zone_name_device_names_related')
+    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_name_device_names_ratio', 0.7, 'Zone_name_device_names_related')
     return zoning_pairs_df
 
 
@@ -247,10 +247,6 @@ def calculate_zonename_devicenames_ratio(series):
     # use upper case for consistency
     zone_name = series['zone'].lower().replace('-', '_')
     device_names = series['Device_Host_Name'].lower().replace('-', '_').split(', ')
-
-    # if re.match(r'tdz3par_[0-9a-f]{16}', zone_name):
-    #     return np.nan
-
 
     device_names = [name.split('.')[0] for name in device_names]
 

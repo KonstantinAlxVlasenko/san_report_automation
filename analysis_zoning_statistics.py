@@ -162,6 +162,12 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
         else:
             column_statistics_df.drop(columns=['All'], inplace=True)
 
+        # add Initiator total column  (sum for all initiators) for Device_type column
+        if column == 'Device_type':
+            initiator_columns = ['Physical Initiator', 'NPIV Initiator']
+            initiator_columns = [column for column in initiator_columns if column in column_statistics_df.columns]
+            column_statistics_df['Total Initiators'] = column_statistics_df[initiator_columns].sum(axis=1)
+
         # for the first iteration (aggregated DataFrame is empty)
         if zone_aggregated_statistics_df.empty:
             # just take Fabric_device_status statistics

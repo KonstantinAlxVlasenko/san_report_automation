@@ -102,7 +102,7 @@ def target_initiator_note(series):
     zoning configuration switch) then it's not a replication zone and considered to be
     initiator's less zone
     """
-    if series['SRV'] == 0 and series['Total_zonemembers'] > series['Total_zonemembers_active']:
+    if series['SRV'] == 0 and series['Total Initiators'] == 0 and series['Total_zonemembers'] > series['Total_zonemembers_active']:
         if series['STORAGE_LIB'] > 0:
             return 'no_initiator'
     # if zone contains initiator(s) but not targets then zone considered to be target's less zone
@@ -111,7 +111,7 @@ def target_initiator_note(series):
     # if zone contains more then one initiator and no targets
     # and it's not a peerzone  then 'no_target, several_initiators' tag
     # if it's a peer zone then 'no_target' tag
-    if series['SRV'] > 1 and series['STORAGE_LIB'] == 0:
+    if (series['SRV'] > 1 or series['Total Initiators'] > 1) and series['STORAGE_LIB'] == 0:
         if 'peer' in series.index and 'property' in series.index:
             if series['peer'] == 0 and series['property'] == 0:
                 return 'no_target, several_initiators'
@@ -121,7 +121,7 @@ def target_initiator_note(series):
             return 'no_target, several_initiators'
     # if zone contains more then one initiator and it's not a peerzone 
     # then initiator number exceeds threshold
-    if series['SRV'] > 1:
+    if series['SRV'] > 1 or series['Total Initiators'] > 1:
         if 'peer' in series.index and 'property' in series.index:
             if series['peer'] == 0 and series['peer'] == 0:
                 return 'several_initiators'
