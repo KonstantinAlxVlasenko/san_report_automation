@@ -80,7 +80,7 @@ def main():
     isl_df, trunk_df, porttrunkarea_df = interswitch_connection(switch_params_lst)
     fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcrouting(switch_params_lst)
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = zoning(switch_params_lst)
-    sensor_df = sensor_readings(switch_params_lst)
+    sensor_df = sensor_readings(chassis_params_fabric_lst)
     errdump_df = logs(chassis_params_fabric_lst)
     blade_module_df, blade_servers_df, blade_vc_df = blade_system(blade_folder)
     synergy_module_df, synergy_servers_df = synergy_system_extract(synergy_folder, report_data_lst)
@@ -241,8 +241,8 @@ def zoning(switch_params_lst):
     return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df       
           
 
-def sensor_readings(switch_params_lst):
-    sensor_lst = sensor_extract(switch_params_lst, report_data_lst)
+def sensor_readings(chassis_params_fabric_lst):
+    sensor_lst = sensor_extract(chassis_params_fabric_lst, report_data_lst)
     sensor_df = list_to_dataframe(sensor_lst, report_data_lst, 'sensor', 'sensor')
 
     return sensor_df

@@ -80,13 +80,16 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     
     storage_host_aggregated_df = host_3par_df.copy()
     # add system_name
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, system_3par_df, join_lst=['configname'], filled_lst=['System_Name'])
+    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, system_3par_df, 
+                                                    join_lst=['configname'], filled_lst=['System_Name'])
     # add controller's ports Wwnp and Wwnp
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, port_3par_df, join_lst=['configname', 'Storage_Port'], filled_lst=['NodeName', 'PortName'])
+    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, port_3par_df, 
+                                                    join_lst=['configname', 'Storage_Port'], filled_lst=['NodeName', 'PortName'])
     # convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)
     storage_host_aggregated_df = convert_wwn(storage_host_aggregated_df, ['Host_Wwn', 'NodeName', 'PortName'])
     # add controllers ports Fabric_name and Fabric_label
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=['Fabric_name', 'Fabric_label'])
+    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
+                                                    join_lst=['PortName'], filled_lst=['Fabric_name', 'Fabric_label'])
     # rename controllers NodeName and PortName
     rename_columns = {'NodeName': 'Storage_Port_Wwnn', 'PortName': 'Storage_Port_Wwnp'}
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
@@ -105,7 +108,8 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
                                                 filled_lst=['Fabric_device_status'])
 
     # rename controllers Fabric_name and Fabric_label
-    rename_columns = {'Fabric_name': 'Storage_Fabric_name', 'Fabric_label': 'Storage_Fabric_label', 'Fabric_device_status': 'Fabric_host_status'}
+    rename_columns = {'Fabric_name': 'Storage_Fabric_name', 'Fabric_label': 'Storage_Fabric_label', 
+                        'Fabric_device_status': 'Fabric_host_status'}
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
 
     # add host information
@@ -113,8 +117,8 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
                     'Device_Host_Name', 'Device_Port', 'Host_OS', 'Device_Location', 
                     'Device_Host_Name_per_fabric_name_and_label',	'Device_Host_Name_per_fabric_label', 
                     'Device_Host_Name_per_fabric_name', 'Device_Host_Name_total_fabrics']
-    storage_host_aggregated_df = \
-        dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, join_lst=['PortName'], filled_lst=host_columns, remove_duplicates=False)
+    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
+                                                    join_lst=['PortName'], filled_lst=host_columns, remove_duplicates=False)
 
     # rename host columns
     rename_columns = {'Fabric_name': 'Host_Fabric_name', 'Fabric_label': 'Host_Fabric_label', 'PortName': 'Host_Wwnp'}

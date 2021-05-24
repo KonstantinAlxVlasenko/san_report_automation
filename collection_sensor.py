@@ -3,7 +3,7 @@
 
 import re
 
-import pandas as pd
+# import pandas as pd
 
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
@@ -11,7 +11,7 @@ from common_operations_miscellaneous import (
 from common_operations_servicefile import columns_import, data_extract_objects
 
 
-def sensor_extract(switch_params_lst, report_data_lst):
+def sensor_extract(chassis_params_lst, report_data_lst):
     """Function to extract sensor information"""  
 
     # report_data_lst contains information: 
@@ -41,33 +41,33 @@ def sensor_extract(switch_params_lst, report_data_lst):
     if not all(data_lst) or any(force_extract_keys_lst):    
         print('\nEXTRACTING ENVIRONMENT DATA ...\n')   
         
+        # # extract chassis parameters names from init file
+        # switch_columns = columns_import('switch', max_title, 'columns')
+
         # extract chassis parameters names from init file
-        switch_columns = columns_import('switch', max_title, 'columns')
+        chassis_columns = columns_import('chassis', max_title, 'columns')
         # number of switches to check
-        switch_num = len(switch_params_lst)   
-     
+        switch_num = len(chassis_params_lst)   
         # data imported from init file to extract values from config file
         *_, comp_keys, match_keys, comp_dct = data_extract_objects('sensor', max_title)
-
 
         # lists to store only REQUIRED infromation
         # collecting data for all switches ports during looping
         sensor_lst = []
 
-        # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
-        # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):
+        # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
+        # checking each chassis for switch level parameters
+        for i, chassis_params_data in enumerate(chassis_params_lst):   
             # data unpacking from iter param
-            # dictionary with parameters for the current switch
-            switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
-                                'SwitchName', 'switchWwn']
-            switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
-            
-            sshow_file, *_, switch_index, switch_name, _ = switch_info_lst
+            # dictionary with parameters for the current chassis
+            chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
+            chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
+            chassis_info_lst = [chassis_params_data_dct.get(key) for key in chassis_info_keys]            
+
+            sshow_file, chassis_name, _ = chassis_info_lst
                         
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} sensor readings'
+            info = f'[{i+1} of {switch_num}]: {chassis_name} sensor readings'
             print(info, end =" ")           
             # search control dictionary. continue to check sshow_file until all parameters groups are found
             collected = {'sensor': False}
@@ -88,7 +88,7 @@ def sensor_extract(switch_params_lst, report_data_lst):
                             match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                             # islshow_match
                             if match_dct[match_keys[1]]:
-                                sensor_reading = line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst)
+                                sensor_reading = line_to_list(comp_dct[comp_keys[1]], line, *chassis_info_lst)
                                 # appending list with only REQUIRED port info for the current loop iteration 
                                 # to the list with all ISL port info
                                 sensor_lst.append(sensor_reading)

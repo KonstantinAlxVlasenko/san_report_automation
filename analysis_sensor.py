@@ -8,7 +8,7 @@ from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import dct_from_columns
-from common_operations_dataframe import dataframe_segmentation
+from common_operations_dataframe_presentation import dataframe_segmentation, translate_values
 
 
 def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_usage_dct, report_data_lst):
@@ -30,7 +30,7 @@ def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_
     sensor_aggregated_df, sensor_report_df = data_lst
 
     # list of data to analyze from report_info table
-    analyzed_data_names = ['switch_params_aggregated', 'fabric_labels']
+    analyzed_data_names = ['switch_params_aggregated', 'fabric_labels', 'sensor']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
@@ -42,7 +42,7 @@ def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_
         print(info, end =" ") 
 
         # aggregated DataFrames
-        sensor_aggregated_df = sensor_aggregation(sensor_df, switch_params_aggregated_df, report_data_lst)
+        sensor_aggregated_df = sensor_aggregation(sensor_df, switch_params_aggregated_df)
 
         # after finish display status
         status_info('ok', max_title, len(info))
@@ -66,8 +66,31 @@ def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_
 
     return sensor_aggregated_df
 
+# TO_REMOVE function is changed to avoid duplication entries
+# def sensor_aggregation(sensor_df, switch_params_aggregated_df, report_data_lst):
+#     """
+#     Function to label switches in portshow_aggregated_df with Fabric names and labels.
+#     Add switchState, switchMode and Generation information
+#     """
 
-def sensor_aggregation(sensor_df, switch_params_aggregated_df, report_data_lst):
+#     # add Fabric labels from switch_params_aggregated_df Fataframe
+#     # columns labels reqiured for join operation
+#     switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
+#                         'switchName', 'switchWwn', 
+#                         'Fabric_name', 'Fabric_label', 'switchType']
+#     # create left DataFrame for join operation
+#     switchparams_aggregated_join_df = switch_params_aggregated_df.loc[:, switchparams_lst].copy()
+#     # portshow_aggregated_df and switchparams_join_df DataFrames join operation
+#     sensor_aggregated_df = sensor_df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:5])
+
+#     sort_sensor_lst = ['Fabric_label', 'Fabric_name', 'switchType', 'switchName']
+#     sensor_aggregated_df.sort_values(by=sort_sensor_lst, \
+#         ascending=[True, True, False, True], inplace=True)
+
+#     return sensor_aggregated_df
+
+
+def sensor_aggregation(sensor_df, switch_params_aggregated_df):
     """
     Function to label switches in portshow_aggregated_df with Fabric names and labels.
     Add switchState, switchMode and Generation information
@@ -77,40 +100,49 @@ def sensor_aggregation(sensor_df, switch_params_aggregated_df, report_data_lst):
     # columns labels reqiured for join operation
     switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
                         'switchName', 'switchWwn', 
-                        'Fabric_name', 'Fabric_label', 'switchType']
-    # create left DataFrame for join operation
-    switchparams_aggregated_join_df = switch_params_aggregated_df.loc[:, switchparams_lst].copy()
-    # portshow_aggregated_df and switchparams_join_df DataFrames join operation
-    sensor_aggregated_df = sensor_df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:5])
+                        'Fabric_name', 'Fabric_label', 'Generation', 'switchType']
+    
+    # dictionary of functions to use for aggregating the data.
+    agg_fn_dct = {key: lambda x: ', '.join(sorted(set(x))) for key in switchparams_lst[3:-1]}
+    agg_fn_dct['switchType'] = 'first'
+    
+    # group switch information for each chassis to avoid sensor information duplication 
+    switchparams_aggregated_join_df = switch_params_aggregated_df.groupby(by=switchparams_lst[:3]).agg(agg_fn_dct)
+    switchparams_aggregated_join_df.reset_index(inplace=True)
+    
+    # add chassis and switch information to sensor DataFrame
+    sensor_aggregated_df = sensor_df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:3])
 
-    sort_sensor_lst = ['Fabric_label', 'Fabric_name', 'switchType', 'switchName']
+    sort_sensor_lst = ['Fabric_label', 'Fabric_name', 'Generation', 'switchType', 'chassis_name']
     sensor_aggregated_df.sort_values(by=sort_sensor_lst, \
-        ascending=[True, True, False, True], inplace=True)
+        ascending=[True, True, False, False, True], inplace=True)
 
     return sensor_aggregated_df
 
 
+
 def sensor_report(sensor_aggregated_df, data_names, report_columns_usage_dct, max_title):
-    
+    """Function to create report Datafrmae from sensor_aggregated_df 
+    (slice and reorder columns, translate values in columns)"""
     
     # loading values to translate
     translate_dct = dct_from_columns('customer_report', max_title, 'Датчики_перевод_eng', 
                                         'Датчики_перевод_ru', init_file = 'san_automation_info.xlsx')
-    sensor_report_df = translate_values(sensor_aggregated_df, translate_dct, max_title)
-
+    sensor_report_df = translate_values(sensor_aggregated_df, translate_dct=translate_dct, 
+                                            translate_columns = ['Type', 'Status', 'Vlaue', 'Unit']) 
+    # translate_values(sensor_aggregated_df, translate_dct, max_title)
     sensor_report_df, = dataframe_segmentation(sensor_aggregated_df, data_names[1:], report_columns_usage_dct, max_title)
-
     return sensor_report_df
 
 
-def translate_values(translated_df, translate_dct, max_title):
-    """Function to translate values in corresponding columns"""
+# def translate_values(translated_df, translate_dct, max_title):
+#     """Function to translate values in corresponding columns"""
 
-    # columns which values need to be translated
-    translate_columns = ['Type', 'Status', 'Vlaue', 'Unit']
-    # translate values in column if column in DataFrame
-    for column in translate_columns:
-        if column in translated_df.columns:
-            translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
+#     # columns which values need to be translated
+#     translate_columns = ['Type', 'Status', 'Vlaue', 'Unit']
+#     # translate values in column if column in DataFrame
+#     for column in translate_columns:
+#         if column in translated_df.columns:
+#             translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
 
-    return translated_df
+#     return translated_df
