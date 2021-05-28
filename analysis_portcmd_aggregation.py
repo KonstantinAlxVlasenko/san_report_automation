@@ -9,14 +9,14 @@ from analysis_portcmd_aliasgroup import alias_preparation, group_name_fillna
 from analysis_portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna
 from analysis_portcmd_storage import storage_3par_fillna
 from analysis_portcmd_devicetype import oui_join, type_check
-from analysis_portcmd_gateway import verify_gateway_link
+from analysis_portcmd_gateway import verify_gateway_link, verify_trunkarea_link
 from analysis_portcmd_nameserver import nsshow_analysis_main
 from analysis_portcmd_switch import fill_isl_link, fill_switch_info, switchparams_join, switchshow_join
 from common_operations_dataframe import dataframe_fabric_labeling
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
-                        isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, switch_models_df, alias_df, oui_df, fdmi_df, 
+                        isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
                         blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df, 
                         re_pattern_lst, report_data_lst):
     """
@@ -76,6 +76,10 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = \
         verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)
+
+    # filled device information for trunkarea links
+    portshow_aggregated_df = verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df)
+
     # fill isl links information
     portshow_aggregated_df = \
         fill_isl_link(portshow_aggregated_df, isl_aggregated_df)

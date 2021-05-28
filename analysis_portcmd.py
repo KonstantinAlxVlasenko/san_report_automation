@@ -18,7 +18,8 @@ from report_portcmd import create_report_tables
 
 def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, 
                             switch_params_aggregated_df, isl_aggregated_df, nsshow_df, 
-                            nscamshow_df, ag_principal_df, alias_df, fdmi_df, blade_module_df, 
+                            nscamshow_df, ag_principal_df, porttrunkarea_df, 
+                            alias_df, fdmi_df, blade_module_df, 
                             blade_servers_df, blade_vc_df, 
                             synergy_module_df, synergy_servers_df, 
                             system_3par_df, port_3par_df, 
@@ -85,7 +86,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df = \
             portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, 
                                 switch_params_aggregated_df, isl_aggregated_df, nsshow_df, 
-                                nscamshow_df, ag_principal_df, switch_models_df, alias_df, 
+                                nscamshow_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, 
                                 oui_df, fdmi_df, blade_module_df,  blade_servers_df, blade_vc_df, 
                                 synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df,
                                 re_pattern_lst, report_data_lst)

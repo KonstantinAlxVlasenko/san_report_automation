@@ -3,10 +3,13 @@ Module to define Access Gateway and NPV switches connection in portcmd DataFrame
 """
 
 
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
-from common_operations_dataframe import dataframe_fillna, dataframe_fabric_labeling
 
+from common_operations_dataframe import (dataframe_fabric_labeling,
+                                         dataframe_fillna)
 
 portcmd_columns_lst = ['configname', 'Fabric_name', 'Fabric_label',
                         'chassis_name', 'chassis_wwn',
@@ -293,3 +296,71 @@ def _merge_ag_groups(left_group_df, right_group_df, slave_group = False):
 
     return left_group_df
 
+
+def verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df):
+    """Function to fill missing device information for  slave links of trunk area links.
+    Device information obtained from master link. And then identify NPIV link number.
+    All links inside trunk area link have same number (analogy with ISL number within the trunk)."""
+
+    # counter for switch wwn appeared in DataFrames
+    switch_npiv_link_dct = defaultdict(int)
+
+    switch_columns = ['configname', 'chassis_name', 'chassis_wwn',	'switchName', 'switchWwn']
+    master_port_columns = ['Master_slot', 'Master_port']
+    port_columns = ['slot', 'port']
+    device_columns = ['NodeName', 'Device_type', 'Device_Model', 'Device_Fw', 'Device_Name', 
+                        'IP_Address', 'Device_Host_Name', 'HBA_Manufacturer', 
+                        'deviceType',	'deviceSubtype', 'Connected_NPIV', 'NPIV_link_number']
+    
+    def npiv_link_counter(series):
+        "Aux function to identify npiv link number"
+        
+        switch_npiv_link_dct[series['switchWwn']] += 1
+        return switch_npiv_link_dct[series['switchWwn']]
+
+    if not porttrunkarea_df.empty:
+        portshow_cp_df = portshow_aggregated_df.copy()
+        porttrunkarea_cp_df = porttrunkarea_df.copy()
+        porttrunkarea_cp_df.rename(columns={'SwitchName': 'switchName'}, inplace=True)
+
+        # filter devices connected behind npiv (except AG links and links between switch and VC module)
+        # all devices with FCID xxxx00 are directly connected
+        re_zero_fcid = r'\w{4}00'
+        mask_zero_fcid = portshow_cp_df['Connected_portId'].str.contains(pat=re_zero_fcid)
+        portshow_cp_df = portshow_cp_df.loc[mask_zero_fcid]
+
+        # npiv trunk area link number defined by link number of trunk master link 
+        master_port = porttrunkarea_cp_df['State'] == 'Master'
+        porttrunkarea_master_df = porttrunkarea_cp_df.loc[master_port].copy()
+        porttrunkarea_master_df['NPIV_link_number'] = porttrunkarea_master_df.apply(lambda series: npiv_link_counter(series), axis=1)
+        porttrunkarea_cp_df = dataframe_fillna(porttrunkarea_cp_df, porttrunkarea_master_df, join_lst=[*switch_columns, *master_port_columns],
+                                            filled_lst=['NPIV_link_number'])
+
+        portshow_cp_df['Master_slot'] = portshow_cp_df['slot']
+        portshow_cp_df['Master_port'] = portshow_cp_df['port']
+        portshow_cp_df = portshow_cp_df.astype({'slot': 'str', 'port': 'str', 
+                                                    'Master_slot': 'str', 'Master_port': 'str'}, errors = 'ignore')
+        porttrunkarea_cp_df = porttrunkarea_cp_df.astype({'slot': 'str', 'port': 'str', 
+                                                    'Master_slot': 'str', 'Master_port': 'str'}, errors = 'ignore')
+        # fill device information for each link in trunk area link based on trunk master link
+        porttrunkarea_cp_df = dataframe_fillna(porttrunkarea_cp_df, portshow_cp_df, join_lst=[*switch_columns, *master_port_columns],
+                                            filled_lst=[*device_columns[:-1], 'Connected_portId'])
+        # add device information for slave trunk area links
+        portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
+        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, porttrunkarea_cp_df, 
+                                                            join_lst=[*switch_columns, 'Connected_portId', *port_columns], 
+                                                            filled_lst=device_columns)
+    else:
+        portshow_aggregated_df['NPIV_link_number'] = np.nan
+
+    # number npiv links which are not part of the trunk area link
+    # each link in that case is independent and have it's own number
+    mask_npiv = portshow_aggregated_df['Connected_NPIV'] == 'yes'
+    mask_empty_npiv_number = portshow_aggregated_df['NPIV_link_number'].isna()
+    portshow_npiv_df = portshow_aggregated_df.loc[mask_npiv & mask_empty_npiv_number].copy()
+    portshow_npiv_df['NPIV_link_number'] = portshow_npiv_df.apply(lambda series: npiv_link_counter(series), axis=1)
+    # add npiv links numbers for links out of trunk area links to portshow_aggregated_df DataFrame
+    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, portshow_npiv_df, 
+                                                join_lst=[*switch_columns, 'Connected_portId', *port_columns], 
+                                                filled_lst=['NPIV_link_number'])
+    return portshow_aggregated_df

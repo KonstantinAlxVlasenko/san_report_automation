@@ -103,7 +103,7 @@ def main():
 
     portshow_aggregated_df = \
         portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, 
-                                nsshow_df, nscamshow_df, ag_principal_df, alias_df, fdmi_df, blade_module_df, 
+                                nsshow_df, nscamshow_df, ag_principal_df, porttrunkarea_df, alias_df, fdmi_df, blade_module_df, 
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, report_columns_usage_dct, report_data_lst)
 

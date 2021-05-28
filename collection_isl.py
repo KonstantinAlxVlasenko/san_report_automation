@@ -4,6 +4,7 @@
 import re
 
 import pandas as pd
+from pandas.core import indexing
 
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
@@ -152,15 +153,14 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                                 # 'porttrunkarea_match'
                                 if match_dct[match_keys[6]]:
                                     porttrunkarea_port_lst = line_to_list(comp_dct[comp_keys[6]], line, *switch_info_lst[:6])
-                                    # due to regular expression master slot appears two times in line
-                                    porttrunkarea_port_lst.pop(9)
                                     # for No_light ports port and slot numbers are '--'
-                                    if porttrunkarea_port_lst[10] == '--':
-                                        porttrunkarea_port_lst[9] = '--'
+                                    if porttrunkarea_port_lst[11] == '--':
+                                        porttrunkarea_port_lst[10] = '--'
                                     # if switch has no slots than slot number is 0
-                                    for i in [5, 9]:                                    
-                                        if not porttrunkarea_port_lst[i]:
-                                            porttrunkarea_port_lst[i] = 0
+                                    for idx in [6, 10]:                                   
+                                        if not porttrunkarea_port_lst[idx]:
+                                            porttrunkarea_port_lst[idx] = str(0)
+
                                     porttrunkarea_lst.append(porttrunkarea_port_lst)                                                       
                                 if not line:
                                     break                        

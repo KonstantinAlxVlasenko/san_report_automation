@@ -2,3 +2,4 @@
                            ----- shownet -----
                            ----- showsys -d -----
                            ----- showport -----
+                          ----- showportdev for target ports -----
