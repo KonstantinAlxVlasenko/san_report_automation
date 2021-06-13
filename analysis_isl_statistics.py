@@ -47,7 +47,6 @@ def isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst):
         isl_statistics_df = pd.concat([isl_statistics_df, isl_statistics_total_df])
         # reset indexes in final statistics DataFrame
         isl_statistics_df.reset_index(inplace=True, drop=True)
-
     return isl_statistics_df    
 
 
@@ -268,7 +267,8 @@ def verify_isl_symmetry(isl_statistics_summary_df):
     isl_symmetry_columns = ['Switch_quantity', 'Port_quantity', 'Bandwidth_Gbps']
     # drop fabric summary rows (rows with empty Fabric_label), group values for each Fabric_name
     # and find number of unique values in isl_symmetry_columns
-    isl_symmetry_df = isl_statistics_summary_df.dropna(subset=['Fabric_label']).groupby(by='Fabric_name')[isl_symmetry_columns].agg('nunique')
+    isl_symmetry_df = \
+        isl_statistics_summary_df.dropna(subset=['Fabric_label']).groupby(by='Fabric_name')[isl_symmetry_columns].agg('nunique')
     # temporary ineqaulity_notes columns for  isl_symmetry_columns
     isl_symmetry_notes = [column + '_ineqaulity' for column in isl_symmetry_columns]
     for column, column_note in zip(isl_symmetry_columns, isl_symmetry_notes):

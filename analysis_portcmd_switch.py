@@ -96,23 +96,26 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     based on combination of connected oui and switch main board seral number (oui_board_sn)
     """
     
+    switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'], inplace=True)
+
     # generate combination of oui and switch main board seral number based on Connected port WWN
     portshow_aggregated_df['oui_board_sn'] = portshow_aggregated_df.Connected_portWwn.str.slice(start = 6)
     switch_params_aggregated_df['oui_board_sn'] = switch_params_aggregated_df.switchWwn.str.slice(start = 6)
 
     # extract required columns from switch_params_aggregated_df
     switch_params_columns_lst = ['Fabric_name', 'Fabric_label', 'oui_board_sn',
-                                'chassis_name', 'boot.ipa',
+                                'switchName', 'boot.ipa',
                                 'ssn', 'FOS_version',
                                 'Brocade_modelName', 'HPE_modelName', 'Device_Location']
     switch_params_join_df = switch_params_aggregated_df.loc[:, switch_params_columns_lst].copy()
-    switch_params_join_df['HPE_modelName'].replace('x', np.nan, inplace=True)
+    switch_params_join_df['HPE_modelName'].replace('^-$', np.nan, regex=True, inplace=True)
+    # switch_params_join_df['HPE_modelName'].replace('-', np.nan, inplace=True)
     switch_params_join_df['HPE_modelName'].fillna(switch_params_join_df['Brocade_modelName'], inplace=True)
     switch_params_join_df.drop(columns=['Brocade_modelName'], inplace=True)
 
     # rename columns to correspond columns in portshow_aggregated_df
     switch_params_columns_dct = {
-                                'chassis_name': 'Device_Host_Name', 'boot.ipa': 'IP_Address',
+                                'switchName': 'Device_Host_Name', 'boot.ipa': 'IP_Address',
                                 'ssn': 'Device_SN', 'FOS_version': 'Device_Fw',
                                 'HPE_modelName': 'Device_Model'
                                 }
@@ -120,8 +123,36 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     
     # # fill empty values in portshow_aggregated_df from switch_params_join_df
     switch_join_columns_lst = switch_params_join_df.columns.to_list()
-    portshow_aggregated_df['Device_Model'].replace('^x$', np.nan, regex=True, inplace=True)
+    portshow_aggregated_df['Device_Model'].replace('^-$', np.nan, regex=True, inplace=True)
+    # portshow_aggregated_df['Device_Model'].replace('^-$', np.nan, regex=True, inplace=True)
     portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
                                                 join_lst = switch_join_columns_lst[:3], filled_lst = switch_join_columns_lst[3:])
+    portshow_aggregated_df = switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df)
+
+    return portshow_aggregated_df
+
+
+def switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df):
+    """Function to correct names of the switches extracted from NodeSymb.
+    This name might differ from one defined in switchName. Function replaces name extracted 
+    from NodeSymb with switcName from swithc_patametes_aggregated_df."""
+
+    # 
+    switch_name_wwn_columns = ['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn']
+    switch_name_wwn_df = switch_params_aggregated_df[switch_name_wwn_columns].copy()
+    switch_name_wwn_df.dropna(subset=['switchName', 'switchWwn'], inplace=True)
+
+    rename_columns_dct = {'switchName': 'Device_Host_Name', 'switchWwn': 'NodeName'}
+    switch_name_wwn_df.rename(columns=rename_columns_dct, inplace=True)
+
+    portshow_aggregated_df['Device_Host_Name_tmp'] = portshow_aggregated_df['Device_Host_Name']
+    portshow_aggregated_df['Device_Host_Name'] = np.nan
+
+    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_name_wwn_df,
+                                                join_lst=['Fabric_name', 'Fabric_label', 'NodeName'],
+                                                filled_lst=['Device_Host_Name'])
+    
+    portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Device_Host_Name_tmp'], inplace=True)
+    portshow_aggregated_df.drop(columns=['Device_Host_Name_tmp'], inplace=True)
 
     return portshow_aggregated_df

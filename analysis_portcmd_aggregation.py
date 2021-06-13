@@ -77,8 +77,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df, expected_ag_links_df = \
         verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)
 
-    # filled device information for trunkarea links
-    portshow_aggregated_df = verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df)
+
 
     # fill isl links information
     portshow_aggregated_df = \
@@ -87,6 +86,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df = \
         fill_switch_info(portshow_aggregated_df, switch_params_df, 
                             switch_params_aggregated_df, report_data_lst)
+    # filled device information for trunkarea links
+    portshow_aggregated_df = verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df)
+
     # libraries Device_Host_Name correction to avoid hba information from FDMI DataFrame usage for library name
     portshow_aggregated_df.Device_Host_Name = \
         portshow_aggregated_df.apply(lambda series: lib_name_correction(series) \

@@ -105,7 +105,7 @@ def target_initiator_note(series):
     if series['SRV'] == 0 and series['Total Initiators'] == 0 and series['Total_zonemembers'] > series['Total_zonemembers_active']:
         if series['STORAGE_LIB'] > 0:
             return 'no_initiator'
-    # if zone contains initiator(s) but not targets then zone considered to be target's less zone
+    # if zone contains initiator(s) but not targets then zone considered to be targetless zone
     if series['SRV'] == 1 and series['STORAGE_LIB'] == 0:
             return 'no_target'
     # if zone contains more then one initiator and no targets

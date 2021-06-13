@@ -160,6 +160,8 @@ def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ',
     # create summary column if not exist
     if not summary_column in df.columns:
         df[summary_column] = np.nan
+
+    merge_columns = [column for column in merge_columns if column in df.columns]
     
     for column in merge_columns:
         # value in summary column is empty
@@ -250,7 +252,8 @@ def count_group_members(df, group_columns, count_columns: dict):
     counted and name of the column containing instances number are in ther count_columns
     dict (dictionary key is column name with values to be evaluated, dictionary value is 
     created column name with instances number).
-    After counting members in groups information added to df DataFrame"""
+    After counting members in groups information added to df DataFrame
+    """
 
     for count_column, rename_column in count_columns.items():
         if count_column in df.columns:
@@ -278,7 +281,7 @@ def translate_values(translated_df, translate_dct={'Yes': 'Да', 'No': 'Нет'
 
     return translated_df
 
-
+# RENAME TO count_summaty
 def count_total(df, group_columns: list, count_columns: list, fn: str):
     """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
     on each iteration. Count columns defines column names for which total need to be calculated.

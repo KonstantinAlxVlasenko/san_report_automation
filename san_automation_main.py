@@ -107,7 +107,8 @@ def main():
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, report_columns_usage_dct, report_data_lst)
 
-    portshow_sfp_aggregated_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
+    portshow_sfp_aggregated_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_df, 
+                                                                sfpshow_df, portcfgshow_df, report_columns_usage_dct, report_data_lst)
 
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 

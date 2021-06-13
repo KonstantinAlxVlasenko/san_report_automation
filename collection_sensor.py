@@ -3,11 +3,10 @@
 
 import re
 
-# import pandas as pd
-
 from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
+from common_operations_miscellaneous import (force_extract_check, line_to_list,
+                                             status_info, update_dct,
+                                             verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
 
 
@@ -41,9 +40,6 @@ def sensor_extract(chassis_params_lst, report_data_lst):
     if not all(data_lst) or any(force_extract_keys_lst):    
         print('\nEXTRACTING ENVIRONMENT DATA ...\n')   
         
-        # # extract chassis parameters names from init file
-        # switch_columns = columns_import('switch', max_title, 'columns')
-
         # extract chassis parameters names from init file
         chassis_columns = columns_import('chassis', max_title, 'columns')
         # number of switches to check
