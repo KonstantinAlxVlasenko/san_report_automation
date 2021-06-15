@@ -4,7 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import сoncatenate_columns
+from common_operations_dataframe import сoncatenate_columns, dataframe_fillna
 
 
 def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pattern_lst):
@@ -27,6 +27,23 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
         npiv_statistics_df.loc[mask_single_link, 'Connection_note'] = 'nonredundant_connection'
         return npiv_statistics_df
     
+    def single_vc_note(npiv_statistics_df, portshow_npiv_cp_df):
+        """Function to verify if all NPIV links are in the same virtal channel.
+        Trunks and single link are excluded"""
+        
+        # count quantity of unique VC and Links
+        vc_link_columns = ['Virtual_Channel', 'Link']
+        vc_notes_df = portshow_npiv_cp_df.groupby(by=link_group_columns)[vc_link_columns].nunique()
+        # single VC note when there are more then one link between switches
+        # but all links are in the same Virtual channel 
+        mask_vc_single = vc_notes_df['Virtual_Channel'] == 1
+        mask_multiple_links = vc_notes_df['Link'] > 1
+        vc_notes_df['Single_VC_note'] = np.where(mask_vc_single & mask_multiple_links, 'single_VC', pd.NA)
+        vc_notes_df.reset_index(inplace=True)
+        # add note to npiv_statistics_df
+        npiv_statistics_df = dataframe_fillna(npiv_statistics_df, vc_notes_df, filled_lst=['Single_VC_note'], 
+                                              join_lst=link_group_columns)
+        return npiv_statistics_df
     
     def nonuniformity_note(npiv_statistics_df, portshow_npiv_cp_df):
         """Function to verify if values in each group of link parameters are unique
@@ -115,10 +132,10 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
         for all links between pair of switches"""
 
         # regular expression patterns
-        comp_keys, _, comp_dct = re_pattern_lst
+        *_, comp_dct = re_pattern_lst
         
         # low speed note
-        low_speed_regex = comp_dct.get('low_speed')
+        low_speed_regex = comp_dct['low_speed']
         # low_speed_regex = r'^(?:Native_|AG_)?N?[124]G?$' # 1G, N1, 2G, N2, 4G, N4 # TO_REMOVE
         low_speed_columns = [column for column in npiv_statistics_df.columns if re.search(low_speed_regex, column)]
         # if low speed port present 
@@ -133,7 +150,7 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
             mask_speed_reduced = npiv_statistics_df['Speed_Reduced'].notna() & npiv_statistics_df['Speed_Reduced'] != 0
             npiv_statistics_df['Speed_reduced_note'] = np.where(mask_speed_reduced, 'reduced_speed', pd.NA)
         # auto speed note
-        auto_speed_regex = comp_dct.get('auto_speed')
+        auto_speed_regex = comp_dct['auto_speed']
         # auto_speed_regex = r'^(?:Native_|AG_)?Speed_Auto$' # TO_REMOVE
         auto_speed_columns = [column for column in npiv_statistics_df.columns if re.search(auto_speed_regex, column)]
         npiv_statistics_df['Speed_auto_note'] = pd.NA
@@ -149,6 +166,7 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
     
     # add notes to npiv_statistics_df DataFrame
     npiv_statistics_df = connection_note(npiv_statistics_df)
+    npiv_statistics_df = single_vc_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = nonuniformity_note(npiv_statistics_df, portshow_npiv_cp_df)
     # npiv_statistics_df = speed_note(npiv_statistics_df, re_pattern_lst)
     npiv_statistics_df = speed_note(npiv_statistics_df, re_pattern_lst)

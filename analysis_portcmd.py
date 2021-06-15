@@ -35,7 +35,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         'portshow_aggregated', 'storage_connection_statistics', 'device_connection_statistics', 
         'device_rename', 'report_columns_usage_upd', 
         'Серверы', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
-        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 'NPIV', 
+        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 
         'Статистика_массивов', 'Статистика_устройств'
         ]
     # service step information
@@ -52,7 +52,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
         device_rename_df, report_columns_usage_dct, \
             servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-                storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df, \
+                storage_connection_df,  library_connection_df, server_connection_df, \
                     storage_connection_statistics_report_df, device_connection_statistics_report_df = data_lst
     nsshow_unsplit_df = pd.DataFrame()
 
@@ -113,7 +113,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         status_info('ok', max_title, len(info))
 
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-            storage_connection_df,  library_connection_df, server_connection_df, npiv_report_df, \
+            storage_connection_df,  library_connection_df, server_connection_df, \
                 storage_connection_statistics_report_df, device_connection_statistics_report_df  = \
                     create_report_tables(portshow_aggregated_df, storage_connection_statistics_df, 
                                             device_connection_statistics_df, data_names[5:-2], 
@@ -123,7 +123,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
             device_rename_df, report_columns_usage_dct, 
             servers_report_df, storage_report_df, library_report_df, hba_report_df, 
-            storage_connection_df, library_connection_df, server_connection_df, npiv_report_df, 
+            storage_connection_df, library_connection_df, server_connection_df, 
             storage_connection_statistics_report_df, device_connection_statistics_report_df
             ]
 
@@ -136,14 +136,14 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
             device_rename_df, report_columns_usage_dct, \
                 servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-                    storage_connection_df, library_connection_df, server_connection_df, npiv_report_df, \
+                    storage_connection_df, library_connection_df, server_connection_df, \
                         storage_connection_statistics_report_df, device_connection_statistics_report_df \
                             = verify_data(report_data_lst, data_names, *data_lst)
         data_lst = [
             portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
             device_rename_df, report_columns_usage_dct, 
             servers_report_df, storage_report_df, library_report_df, hba_report_df, 
-            storage_connection_df, library_connection_df, server_connection_df, npiv_report_df, 
+            storage_connection_df, library_connection_df, server_connection_df, 
             storage_connection_statistics_report_df, device_connection_statistics_report_df
             ]
     # save data to service file if it's required

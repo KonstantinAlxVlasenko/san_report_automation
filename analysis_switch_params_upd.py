@@ -24,7 +24,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
 
     # names to save data obtained after current module execution
     data_names = ['report_columns_usage', 'switch_params_aggregated', 'Коммутаторы', 'Фабрика', 
-                    'Параметры_коммутаторов', 'Лицензии', 'Глобальные_параметры_фабрики']
+                    'Параметры_коммутаторов', 'MAPS', 'Лицензии', 'Глобальные_параметры_фабрики']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -33,7 +33,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     report_columns_usage_dct, switch_params_aggregated_df, switches_report_df, fabric_report_df, \
-        switches_parameters_report_df, licenses_report_df, global_fabric_parameters_report_df  = data_lst
+        switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df  = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['chassis_parameters', 'switch_parameters', 'switchshow_ports', 
@@ -75,7 +75,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
             status_info('warning', max_title, len(info))
 
         switches_report_df, fabric_report_df, switches_parameters_report_df, \
-            licenses_report_df, global_fabric_parameters_report_df = \
+            maps_report_df, licenses_report_df, global_fabric_parameters_report_df = \
                 switchs_params_report(switch_params_aggregated_df, data_names, report_columns_usage_dct, max_title)
 
         # # partition aggregated DataFrame to required tables
@@ -113,7 +113,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
         # create list with partitioned DataFrames
         data_lst = [report_columns_usage_dct, switch_params_aggregated_df, 
                     switches_report_df, fabric_report_df, 
-                    switches_parameters_report_df, licenses_report_df,
+                    switches_parameters_report_df, maps_report_df, licenses_report_df,
                     global_fabric_parameters_report_df]
 
         # saving data to json or csv file
@@ -121,10 +121,10 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         report_columns_usage_dct, switch_params_aggregated_df, switches_report_df, fabric_report_df,  \
-            switches_parameters_report_df, licenses_report_df, global_fabric_parameters_report_df = verify_data(report_data_lst, data_names, *data_lst)
+            switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df = verify_data(report_data_lst, data_names, *data_lst)
         data_lst = [report_columns_usage_dct, switch_params_aggregated_df, 
                     switches_report_df, fabric_report_df, 
-                    switches_parameters_report_df, licenses_report_df,
+                    switches_parameters_report_df, maps_report_df, licenses_report_df,
                     global_fabric_parameters_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names[1:], data_lst[1:]):
@@ -289,9 +289,11 @@ def switchs_params_report(switch_params_aggregated_df, data_names, report_column
 
     # partition aggregated DataFrame to required tables
     switches_report_df, fabric_report_df,  \
-        switches_parameters_report_df, licenses_report_df = \
+        switches_parameters_report_df, maps_report_df, licenses_report_df = \
             dataframe_segmentation(switch_params_aggregated_df, data_names[2:-1], \
                 report_columns_usage_dct, max_title)
+
+    maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
 
     # global parameters are equal for all switches in one fabric thus checking Principal switches only
     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
@@ -309,9 +311,9 @@ def switchs_params_report(switch_params_aggregated_df, data_names, report_column
         fabric_report_df.drop(columns=['Fabric ID'], inplace=True)
     # drop Fabric_Name (not Fabric_name) if column is empty
     if fabric_report_df['Название фабрики'].isna().all():
-        fabric_report_df.drop(columns=['Название фабрики'], inplace=True)         
-    
+        fabric_report_df.drop(columns=['Название фабрики'], inplace=True)
+       
     global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)  
 
     return switches_report_df, fabric_report_df, switches_parameters_report_df, \
-                licenses_report_df, global_fabric_parameters_report_df
+                maps_report_df, licenses_report_df, global_fabric_parameters_report_df

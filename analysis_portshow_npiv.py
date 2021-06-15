@@ -175,7 +175,7 @@ def npiv_statistics(portshow_npiv_df, re_pattern_lst):
     
     portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, re_pattern_lst)
     # count statistics for stat columns
-    stat_columns = ['port', 'Link', *service_columns, 'Link_speedActualMax', *cfg_columns]
+    stat_columns = ['port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
     npiv_statistics_df = count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
                                             port_qunatity_column = 'port', speed_column = 'speed')
     npiv_statistics_df.fillna(0, inplace=True)
@@ -197,8 +197,7 @@ def npiv_statistics(portshow_npiv_df, re_pattern_lst):
     return npiv_statistics_df
 
 
-    def npiv_report(portshow_npiv_df, npiv_statistics_df):
-        pass
+
 
 
 

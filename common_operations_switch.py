@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from common_operations_dataframe import dataframe_fillna, сoncatenate_columns
+from common_operations_dataframe_presentation import translate_values
 
 
 def verify_lic(df, lic_column: str, lic_name: str):
@@ -199,7 +200,7 @@ def summarize_statistics(statistics_df, count_columns, connection_symmetry_colum
     """Function to summarize statistics by adding values in fabric_name and fabric_label, fabric_name,
     all fabrics"""
 
-    count_columns = statistics_df.columns.tolist()
+    count_columns = [column for column in statistics_df.columns if statistics_df[column].notna().any()]
     # summary_statistics for fabric_name and fabric_label, fabric_name
     statistics_summary_df = \
         count_summary(statistics_df, group_columns=['Fabric_name', 'Fabric_label'], count_columns=count_columns, fn=sum)
@@ -211,6 +212,36 @@ def summarize_statistics(statistics_df, count_columns, connection_symmetry_colum
     # concatenate all statistics in certain order
     statistics_df = concat_statistics(statistics_df, statistics_summary_df, statistics_total_df, sort_columns)
     return statistics_df
+
+
+def statistics_report(statistics_df, translate_dct, report_columns_usage_dct, drop_columns=None):
+    """Function to create report table out of statistics_df DataFrame"""
+
+    statistics_report_df = pd.DataFrame()
+    if not drop_columns:
+        drop_columns = []
+    if not statistics_df.empty:
+        chassis_column_usage = report_columns_usage_dct.get('chassis_info_usage')
+
+        statistics_report_df = statistics_df.copy()
+        # identify columns to drop and drop columns
+        if not chassis_column_usage:
+            drop_columns.append('chassis_name')
+        drop_columns = [column for column in drop_columns if column in statistics_df.columns]
+        statistics_report_df.drop(columns=drop_columns, inplace=True)
+
+        # translate values in columns
+        # translate_columns = [column for column in statistics_df.columns if 'note' in column and statistics_df[column].notna().any()]
+        # translate_columns.extend(['Fabric_name', 'Trunking_lic_both_switches'])
+        # translate_columns = [column for column in translate_columns if column in statistics_df.columns]
+        # statistics_report_df = translate_values(statistics_report_df, translate_dct, translate_columns)
+        statistics_report_df = translate_values(statistics_report_df, translate_dct)
+
+        # translate column names
+        statistics_report_df.rename(columns=translate_dct, inplace=True)
+        # drop empty columns
+        statistics_report_df.dropna(axis=1, how='all', inplace=True)
+    return statistics_report_df
 
 
 def  convert_wwn(df, wwn_columns: list):
