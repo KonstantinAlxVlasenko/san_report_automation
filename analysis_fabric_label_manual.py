@@ -7,7 +7,7 @@ import pandas as pd
 from common_operations_miscellaneous import reply_request
 
 
-def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
+def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_df, info_labels):
     """Function to manual change Fabric Name and Fabric Label."""
     # copy of initial fabricshow_summary DataFrame
     # to be able to reset all changes 
@@ -15,7 +15,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
     # convert DataFrame indexes to string versions 
     fabric_indexes_str_lst = [str(i) for i in fabricshow_summary_df.index]
     # DataFrame operation options (save, reset, exit)
-    opeartion_options_lst = ['s', 'r', 'v', 'x']
+    opeartion_options_lst = ['s', 'r', 'v', 'x', 'a']
     # aggregated list of available operations
     full_options_lst = fabric_indexes_str_lst + opeartion_options_lst
     # parameters to change 
@@ -37,7 +37,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
         
         # printing menu options to choose to work with DataFrame
         # save, reset, exit or fabric index number to change
-        print('\nS/s - Save changes in labeling\nR/r - Reset to default labeling\nV/v - Veriify labeling\nX/x - Exit without saving')
+        print('\nS/s - Save changes in labeling\nA/a - Atomatic labeling\nR/r - Reset to default labeling\nV/v - Veriify labeling\nX/x - Exit without saving')
         print(f"{', '.join(fabric_indexes_str_lst)} - Choose fabric index to change labeling\n")
         # reset input_option value after each iteration to enter while loop
         input_option = reply_request("Choose option: ", reply_options = full_options_lst, show_reply = True)
@@ -141,6 +141,14 @@ def manual_fabrics_labeling(fabricshow_summary_df, info_labels):
             if reply == 'y':
                 fabricshow_summary_df = fabricshow_summary_default_df.copy()
                 print('\nFabric labeling has been reset to original version\n')
+        # user input is automatic re-labeling
+        elif input_option == 'a':
+            reply = reply_request('Do you want to perform automatic fabric labeling? (y)es/(n)o: ')
+            # for reset option actual fabricshow_summary DataFrame returns back
+            # to initial DataFrame version and while loop don't stop
+            if reply == 'y':
+                fabricshow_summary_df = fabricshow_summary_automatic_df.copy()
+                print('\nAutomatic fabric labeling has been performed\n')
         # user input is exit without saving
         elif input_option == 'x':
             reply = reply_request('Do you want to leave without saving? (y)es/(n)o: ')

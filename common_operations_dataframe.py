@@ -446,6 +446,26 @@ def extract_values_from_column(df, extracted_column: str, pattern_column_lst: li
     return df
 
 
+def explode_columns(df, *args, sep=', '):
+    """Function to split values in columns defined in args on separator and
+    and present it as rows (explode)"""
+    
+    common_exploded_df = pd.DataFrame()
+    # filter columns which are present in df and containing values
+    exploded_columns = [column for column in args if column in df and df[column].notna().any()]
+    for column in exploded_columns:
+        mask_notna = df[column].notna()
+        current_exploded_df = df.loc[mask_notna].copy()
+        current_exploded_df[column] = current_exploded_df[column].str.strip()
+        # explode values in column as separate rows to Exploded_values column
+        current_exploded_df = current_exploded_df.assign(Exploded_values=current_exploded_df[column].str.split(sep)).explode('Exploded_values')
+        # tag exploded column name
+        current_exploded_df['Exploded_column'] = column
+        # drop columns containing values to explode to avoid appearance in common exploded DataFrame
+        current_exploded_df.drop(columns=exploded_columns, inplace=True)
+        common_exploded_df = pd.concat([common_exploded_df, current_exploded_df], ignore_index=True)
+    return common_exploded_df
+
 
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null

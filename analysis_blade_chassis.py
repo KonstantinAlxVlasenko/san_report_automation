@@ -42,7 +42,7 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst):
         # current operation information string
         info = f'Generating blade modules location table'
         print(info, end =" ") 
-
+        blade_module_df.drop_duplicates(inplace=True)
         # create DataFrame with Device_Location column
         blade_module_loc_df = blademodule_location(blade_module_df, synergy_module_df)
         # add VC device name if empty

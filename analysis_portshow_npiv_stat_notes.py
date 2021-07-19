@@ -16,14 +16,15 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
         
         # connection have single link only
         mask_single_link = npiv_statistics_df['Port_quantity'] == 1
-        # mask link out of trunk
-        mask_fport_exceeds_ftrunk = npiv_statistics_df['Port_quantity'] > npiv_statistics_df['F_Trunk']
-        # trunkimg licence present on both switches
-        mask_trunk_lic =  npiv_statistics_df['Trunking_lic_both_switches'] == 'Yes'
-        # summary ftrunk absensce mask
-        mask_ftrunk_absence = ~mask_single_link & mask_fport_exceeds_ftrunk & mask_trunk_lic
-        
-        npiv_statistics_df.loc[mask_ftrunk_absence, 'Connection_note'] = 'link(s)_out_of_trunk'
+        if 'F_Trunk' in npiv_statistics_df.columns:
+            # mask link out of trunk
+            mask_fport_exceeds_ftrunk = npiv_statistics_df['Port_quantity'] > npiv_statistics_df['F_Trunk']
+            # trunkimg licence present on both switches
+            mask_trunk_lic =  npiv_statistics_df['Trunking_lic_both_switches'] == 'Yes'
+            # summary ftrunk absensce mask
+            mask_ftrunk_absence = ~mask_single_link & mask_fport_exceeds_ftrunk & mask_trunk_lic
+            
+            npiv_statistics_df.loc[mask_ftrunk_absence, 'Connection_note'] = 'link(s)_out_of_trunk'
         npiv_statistics_df.loc[mask_single_link, 'Connection_note'] = 'nonredundant_connection'
         return npiv_statistics_df
     

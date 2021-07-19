@@ -18,13 +18,13 @@ def create_report_tables(portshow_aggregated_df, storage_connection_statistics_d
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
     add_columns_lst = ['FW_Recommeneded', 'Driver_Recommeneded', 'FW_Supported', 'HW_Supported']
-    portshow_aggregated_df = portshow_aggregated_df.reindex(columns=[*portshow_aggregated_df.columns.tolist(), *add_columns_lst])
+    portshow_aggregated_df = \
+        portshow_aggregated_df.reindex(columns=[*portshow_aggregated_df.columns.tolist(), *add_columns_lst])
     # partition aggregated DataFrame to required tables
     # pylint: disable=unbalanced-tuple-unpacking
     servers_report_df, storage_report_df, library_report_df, hba_report_df, \
         storage_connection_df,  library_connection_df, server_connection_df = \
         dataframe_segmentation(portshow_aggregated_df, data_names, report_columns_usage_dct, max_title)
-    
     # clean and sort DataFrames
     # device report
     servers_report_df = _clean_dataframe(servers_report_df, 'srv')
@@ -36,7 +36,9 @@ def create_report_tables(portshow_aggregated_df, storage_connection_statistics_d
     storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean = True)
     storage_connection_df = translate_values(storage_connection_df)
     library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean = True)
+    library_connection_df = translate_values(library_connection_df)
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean = True)
+    server_connection_df = translate_values(server_connection_df)
     # TO_REMOVE
     # npiv_report_df = _clean_dataframe(npiv_report_df, 'npiv', duplicates = None, clean = True)
     # device connection statistics reports
@@ -99,10 +101,11 @@ def _clean_dataframe(df, mask_type,
         # if all values are None in the column
         for column in columns_empty:
             # if all values are None
-            if column in df.columns and pd.isnull(df[column]).all():
-                df.drop(columns = [column], inplace = True)
+            if column in df.columns and df[column].isna().all():
+                df.drop(columns=[column], inplace = True)
             # if all non None values are 'No'
-            elif column in df.columns and pd.Series(df[column] == 'No', pd.notna(df[column])).all():
+            # elif column in df.columns and pd.Series(df[column] == 'No', pd.notna(df[column])).all():
+            elif column in df.columns and (df[column].dropna() == 'No').all():
                 df.drop(columns = [column], inplace = True)
 
     # drop column if each device connected to single fabric_name only

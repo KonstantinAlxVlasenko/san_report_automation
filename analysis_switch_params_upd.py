@@ -37,7 +37,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['chassis_parameters', 'switch_parameters', 'switchshow_ports', 
-                            'maps_parameters', 'blade_interconnect', 'fabric_labels']
+                            'maps_parameters', 'blade_interconnect', 'fabric_labels', 'fabricshow_summary']
 
     # clean fabricshow DataFrame from unneccessary data
     fabric_clean_df = fabric_clean(fabricshow_ag_labels_df)
@@ -204,6 +204,8 @@ def fabric_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, map
     switch_params_aggregated_df.switch_index = switch_params_aggregated_df.switch_index.astype('float64', errors='ignore')
     # complete f_s_c DataFrame with information from maps_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(maps_params_df, how = 'left', on = ['configname', 'chassis_name', 'switch_index'])
+    # count sddq ports and verify if sddq limit has been reached
+    switch_params_aggregated_df = verify_sddq_limit(switch_params_aggregated_df)
     # maps.activePolicy is in configshow,  Active_policy is in AMS_MAPS file. 
     switch_params_aggregated_df['maps.activePolicy'].fillna(switch_params_aggregated_df['Active_policy'], inplace=True)
     # convert switchType in f_s_c_m and switch_models DataFrames to same type
@@ -266,6 +268,27 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
 
     return switch_params_aggregated_df
 
+def verify_sddq_limit(switch_params_aggregated_df):
+    """Function to count sddq ports and verify if sddq limit is reached"""
+
+    if 'Quarantined_Ports' in switch_params_aggregated_df.columns:
+        switch_params_aggregated_df['Quarantined_Ports_clean'] = switch_params_aggregated_df['Quarantined_Ports']
+        switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={'None|N/A|(No FV lic)|^ +$': np.nan} , regex=True, inplace=True)
+        if switch_params_aggregated_df['Quarantined_Ports_clean'].notna().any():
+            switch_params_aggregated_df['SDDQ_quantity'] = \
+                switch_params_aggregated_df['Quarantined_Ports_clean'].str.split(',').str.len()
+        switch_params_aggregated_df.drop(columns=['Quarantined_Ports_clean'], inplace=True)
+        switch_params_aggregated_df['SDDQ_quantity'].fillna(0, inplace=True)
+    else:
+        switch_params_aggregated_df['SDDQ_quantity'] = 0
+
+    if 'fos.sddqChassisLimit' in switch_params_aggregated_df.columns:
+        switch_params_aggregated_df['fos.sddqChassisLimit_float'] = \
+            switch_params_aggregated_df['fos.sddqChassisLimit'].astype('float64')
+        switch_params_aggregated_df['SDDQ_reserve'] = \
+            switch_params_aggregated_df['fos.sddqChassisLimit_float'] - switch_params_aggregated_df['SDDQ_quantity']
+    return switch_params_aggregated_df
+
 
 def verify_base_in_chassis(switch_params_aggregated_df):
     """Function t verify if base switch present in chassis"""
@@ -294,6 +317,7 @@ def switchs_params_report(switch_params_aggregated_df, data_names, report_column
                 report_columns_usage_dct, max_title)
 
     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
+    # maps_report_df.dropna(axis=1, how = 'all', inplace=True)
 
     # global parameters are equal for all switches in one fabric thus checking Principal switches only
     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'

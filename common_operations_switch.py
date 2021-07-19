@@ -88,7 +88,6 @@ def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_
     stat_columns = [column for column in stat_columns if df[column].notna().any()]
     # index list to groupby switches connection on to count statistics
     index_lst = [df[column] for column in connection_grp_columns]
-
     # count statistcics for each column from stat_columns in df DataFrame
     for column in stat_columns:
         # count statistics for current column
@@ -126,7 +125,6 @@ def count_summary(df, group_columns: list, count_columns: list, fn: str):
             summary_df = pd.concat([summary_df, current_df])
         # increase group size
         group_columns.pop()
-        
     return summary_df
 
 

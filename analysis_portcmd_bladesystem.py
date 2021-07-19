@@ -29,6 +29,7 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_server
     if not blade_servers_df.empty:
         # make copy to avoid changing original DataFrame
         blade_servers_join_df = blade_servers_df.copy()
+        blade_servers_join_df.drop_duplicates(inplace=True)
         # Uppercase Device_Manufacturer column
         blade_servers_join_df.Device_Manufacturer = blade_servers_join_df.Device_Manufacturer.str.upper()
         # lower case WWNp
@@ -98,6 +99,9 @@ def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synerg
         
         blade_vc_join_df = blade_vc_df.loc[:, vc_lst].copy()
         blade_module_join_df = blade_module_df.loc[:, module_lst]
+
+        blade_vc_join_df.drop_duplicates(inplace=True)
+        blade_module_join_df.drop_duplicates(inplace=True)
         # combine 'Enclosure_Name' and 'Bay' columns
         blade_vc_join_df['Device_Location'] = \
             blade_vc_join_df[['Enclosure_Name', 'Interconnect_Bay']].apply(wise_combine, axis=1, args=('Enclosure ', ' bay '))

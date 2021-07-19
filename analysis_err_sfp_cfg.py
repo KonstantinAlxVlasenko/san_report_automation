@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from analysis_portshow_npiv import npiv_link_aggregated, npiv_statistics
+from analysis_portshow_maps_ports import maps_db_ports
 from common_operations_dataframe_presentation import (dataframe_segmentation,
                                                       drop_all_identical,
                                                       drop_equal_columns,
@@ -30,8 +31,8 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
     portshow_sfp_export_flag, *_ = report_steps_dct['portshow_sfp_aggregated']
 
     # names to save data obtained after current module execution
-    data_names = ['portshow_sfp_aggregated', 'NPIV_', 'NPIV_statistics', 
-                    'Ошибки', 'Параметры_SFP', 'Параметры_портов', 
+    data_names = ['portshow_sfp_aggregated', 'MAPS_ports', 'NPIV_', 'NPIV_statistics', 
+                    'Ошибки', 'Параметры_SFP', 'Параметры_портов', 'MAPS_порты', 
                     'NPIV_порты', 'Статистика_NPIV']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
@@ -40,13 +41,13 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    portshow_sfp_aggregated_df, portshow_npiv_df, npiv_statistics_df, \
-        error_report_df, sfp_report_df, portcfg_report_df, \
+    portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, \
+        error_report_df, sfp_report_df, portcfg_report_df, maps_ports_report_df, \
             npiv_report_df, npiv_statistics_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
-                            'switchshow_ports', 'switch_params_aggregated', 'fdmi', 
+                            'switchshow_ports', 'switch_params_aggregated', 'maps_parameters', 'fdmi', 
                             'device_rename', 'report_columns_usage_upd', 'nscamshow', 
                             'nsshow', 'alias', 'blade_servers', 'fabric_labels']
 
@@ -70,6 +71,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
 
         portshow_sfp_aggregated_df = port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_df)
         portshow_npiv_df = npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df)
+        maps_ports_df = maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, re_pattern_lst)
         # after finish display status
         status_info('ok', max_title, len(info))
 
@@ -94,22 +96,23 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
                     portshow_sfp_force_flag = True
 
         # create reaport tables from port_complete_df DataFrtame
-        error_report_df, sfp_report_df, portcfg_report_df, npiv_report_df, npiv_statistics_report_df = \
-            create_report_tables(portshow_sfp_aggregated_df, portshow_npiv_df, npiv_statistics_df, 
+        error_report_df, sfp_report_df, portcfg_report_df, maps_ports_report_df, \
+            npiv_report_df, npiv_statistics_report_df = \
+            create_report_tables(portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
                                     data_names, report_columns_usage_dct, max_title)
         # saving data to json or csv file
-        data_lst = [portshow_sfp_aggregated_df, portshow_npiv_df, npiv_statistics_df, 
-                    error_report_df, sfp_report_df, portcfg_report_df, 
+        data_lst = [portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
+                    error_report_df, sfp_report_df, portcfg_report_df, maps_ports_report_df,
                     npiv_report_df, npiv_statistics_report_df]
         save_data(report_data_lst, data_names, *data_lst)
     # verify if loaded data is empty and reset DataFrame if yes
     else:
-        portshow_sfp_aggregated_df, portshow_npiv_df, npiv_statistics_df, error_report_df, \
-            sfp_report_df, portcfg_report_df, npiv_report_df, npiv_statistics_report_df \
+        portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, error_report_df, \
+            sfp_report_df, portcfg_report_df, maps_ports_report_df, npiv_report_df, npiv_statistics_report_df \
             = verify_data(report_data_lst, data_names, *data_lst)
-        data_lst = [portshow_sfp_aggregated_df, portshow_npiv_df, npiv_statistics_df, 
+        data_lst = [portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
                     error_report_df, sfp_report_df, portcfg_report_df, 
-                    npiv_report_df, npiv_statistics_report_df]
+                    maps_ports_report_df, npiv_report_df, npiv_statistics_report_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         force_flag = False
@@ -190,18 +193,26 @@ def align_dataframe(*args):
     return join_df_lst
 
 
-def create_report_tables(port_complete_df, portshow_npiv_df, npiv_statistics_df, 
+def create_report_tables(port_complete_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
                             data_names, report_columns_usage_dct, max_title):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
     # partition aggregated DataFrame to required tables
     # pylint: disable=unbalanced-tuple-unpacking
     errors_report_df, sfp_report_df, portcfg_report_df = \
-        dataframe_segmentation(port_complete_df, data_names[3:6], report_columns_usage_dct, max_title)
+        dataframe_segmentation(port_complete_df, data_names[4:7], report_columns_usage_dct, max_title)
+    
     # drop empty columns
     errors_report_df.dropna(axis=1, how = 'all', inplace=True)
     sfp_report_df.dropna(axis=1, how = 'all', inplace=True)
     portcfg_report_df.dropna(axis=1, how = 'all', inplace=True)
+
+    maps_ports_report_df = drop_all_identical(maps_ports_df, 
+                                                {'portState': 'Online', 'Connected_through_AG': 'No'},
+                                                dropna=True)                   
+    maps_ports_report_df, = dataframe_segmentation(maps_ports_report_df, data_names[7], report_columns_usage_dct, max_title)
+    maps_ports_report_df.dropna(axis=1, how = 'all', inplace=True)
+    maps_ports_report_df = translate_values(maps_ports_report_df)
 
     # remove rows with no sfp installed
     mask_sfp = ~sfp_report_df['Vendor Name'].str.contains('No SFP module', na=False)
@@ -224,7 +235,7 @@ def create_report_tables(port_complete_df, portshow_npiv_df, npiv_statistics_df,
                                 'Статистика_ISL_перевод_ru', init_file = 'san_automation_info.xlsx')
     npiv_statistics_report_df = statistics_report(npiv_statistics_df, translate_dct, report_columns_usage_dct, 
                                                     drop_columns=['switchWwn', 'NodeName'])
-    return errors_report_df, sfp_report_df, portcfg_report_df, npiv_report_df, npiv_statistics_report_df
+    return errors_report_df, sfp_report_df, portcfg_report_df, maps_ports_report_df, npiv_report_df, npiv_statistics_report_df
 
 
 # def npiv_statistics_report(npiv_statistics_df, report_columns_usage_dct, max_title):

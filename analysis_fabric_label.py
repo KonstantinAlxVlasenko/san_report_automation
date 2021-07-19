@@ -21,7 +21,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['fabric_labels']
+    data_names = ['fabric_labels', 'fabricshow_summary']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
@@ -29,7 +29,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    fabricshow_ag_labels_df, = data_lst
+    fabricshow_ag_labels_df, fabricshow_summary_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = []
@@ -40,7 +40,10 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
     if force_run:             
         print('\nSETTING UP FABRICS NAMES AND LABELS  ...\n')
 
-        fabricshow_summary_df = auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, report_data_lst)
+        fabricshow_summary_automatic_df = auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, report_data_lst)
+
+        if not isinstance(fabricshow_summary_df, pd.DataFrame):
+            fabricshow_summary_df = fabricshow_summary_automatic_df.copy()
 
         # display automatic fabric labeling
         info_labels = ['Fabric_name', 'Fabric_label', 'chassis_name', 'Principal_switch_name', 'Fabric_ID', 
@@ -48,8 +51,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
         # service file name for detailed information
         current_date = str(date.today())
         file_name = customer_name + '_' + report_steps_dct['fabricshow_summary'][2] + '_' + current_date + '.xlsx' 
-        # file_name = customer_name + '_analysis_report_' + current_date + '.xlsx'
-        print('\nAutomatic fabrics labeling\n')
+        print('\nCurrent fabrics labeling\n')
         # set option to show all columns
         with pd.option_context('display.max_columns', None, 'display.expand_frame_repr', False):
             # pd.set_option('max_columns', None)
@@ -65,7 +67,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
         if reply == 'y':
             # saving DataFrame to Excel to check during manual labeling if required
             save_xlsx_file(fabricshow_summary_df, 'fabricshow_summary', report_data_lst, force_flag=True)
-            fabricshow_summary_df = manual_fabrics_labeling(fabricshow_summary_df, info_labels)
+            fabricshow_summary_df = manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_df, info_labels)
         
         # takes all switches working in Native and AG switches
         # merge the in one DataFrame and identify which Fabrics they belong too with fabricshow_summary DataFrame
@@ -76,18 +78,18 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
         # pd.reset_option('expand_frame_repr')
         
         # create list with partitioned DataFrames
-        data_lst = [fabricshow_ag_labels_df]
+        data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-       fabricshow_ag_labels_df = verify_data(report_data_lst, data_names, *data_lst)
-       data_lst = [fabricshow_ag_labels_df]
+       fabricshow_ag_labels_df, fabricshow_summary_df = verify_data(report_data_lst, data_names, *data_lst)
+       data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         save_xlsx_file(data_frame, data_name, report_data_lst)
 
-    return fabricshow_ag_labels_df
+    return fabricshow_ag_labels_df 
 
 
 def native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df):
