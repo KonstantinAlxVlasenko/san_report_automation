@@ -54,8 +54,6 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
         print('\nCurrent fabrics labeling\n')
         # set option to show all columns
         with pd.option_context('display.max_columns', None, 'display.expand_frame_repr', False):
-            # pd.set_option('max_columns', None)
-            # pd.set_option('expand_frame_repr', False)
             print(fabricshow_summary_df.loc[:, info_labels])
         print(f"\nFor detailed switch port types and numbers statistic in each fabric check '{file_name}' file 'fabricshow_statistics' sheet in")
         print(f'{report_path} directory')
@@ -72,10 +70,8 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
         # takes all switches working in Native and AG switches
         # merge the in one DataFrame and identify which Fabrics they belong too with fabricshow_summary DataFrame
         fabricshow_ag_labels_df = native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df)
-        
-        # # disable option to show all columns
-        # pd.reset_option('max_columns')
-        # pd.reset_option('expand_frame_repr')
+        fabricshow_ag_labels_df['Fabric_name'].fillna('x', inplace=True)
+        fabricshow_ag_labels_df['Fabric_label'].fillna('x', inplace=True)
         
         # create list with partitioned DataFrames
         data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]

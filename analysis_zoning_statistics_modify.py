@@ -143,7 +143,7 @@ def verify_pair_zones(zoning_aggregated_df):
     # drop duplicated Wwnp in each zone
     zoning_cp_df.drop_duplicates(subset=[*columns, 'zone', 'PortName'], inplace=True)
 
-    # verify if all devices in each zone are connected to other faric_labels of the same fabric_name
+    # verify if all devices in each zone are connected to other fabric_labels of the same fabric_name
     grp_columns = columns + ['zone']
     mask_all_devices_multiple_fabric_label_connection = \
         zoning_cp_df.groupby(by=grp_columns)['Multiple_fabric_label_connection'].transform(lambda series: series.isin(['Yes']).all())
@@ -188,8 +188,13 @@ def verify_pair_zones(zoning_aggregated_df):
                         verified_grp_df.reset_index(inplace=True)
                         # if there are more then two fabric_labels in fabric_name then use fabric_label tag with the name of pair zone
                         if len(fabric_label_lst) > 2:
-                            mask_zone_notna = zoning_pairs_df['zone'].notna()
-                            verified_grp_df.loc[mask_zone_notna, 'zone'] = '(' + verified_label + ': ' + zoning_pairs_df.loc[mask_zone_notna, 'zone'] + ')'
+
+                            # mask_zone_notna = zoning_pairs_df['zone'].notna()
+                            # verified_grp_df.loc[mask_zone_notna, 'zone'] = '(' + verified_label + ': ' + zoning_pairs_df.loc[mask_zone_notna, 'zone'] + ')'
+                            mask_zone_notna = verified_grp_df['zone'].notna()
+                            verified_grp_df.loc[mask_zone_notna, 'zone'] = '(' + verified_label + ': ' + verified_grp_df.loc[mask_zone_notna, 'zone'] + ')'
+                            print('\n')
+                            print(verified_grp_df)
                         # to merge pair zones change fabric_label in verified fabric to fabric_label of fabric for which pair zones are searched for
                         verified_grp_df['Fabric_label'] = fabric_label
                         # column name with pair zones in verified fabric_label

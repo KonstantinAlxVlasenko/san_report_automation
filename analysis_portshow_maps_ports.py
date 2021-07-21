@@ -19,15 +19,20 @@ def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, re_pa
     """Function to verify Quarantined_Ports, Decommissioned_Ports, Fenced_Ports
     and Top_Zoned_PIDs in MAPS Dashboard"""
 
+    # regular expression patterns
+    *_, comp_dct = re_pattern_lst
+
     portshow_cp_df = portshow_sfp_aggregated_df.copy()
     switch_params_cp_df = switch_params_aggregated_df.copy()
     switch_params_cp_df['switchName'].fillna(switch_params_cp_df['SwitchName'], inplace=True)
     # remove uninfomative values from switch DataFrame
-    switch_params_cp_df.replace(to_replace={'None|N/A|(No FV lic)|^ +$': np.nan} , regex=True, inplace=True)
+    # TO REMOVE
+    # switch_params_cp_df.replace(to_replace={'None|N/A|(No FV lic)|^ +$': np.nan} , regex=True, inplace=True)
+    switch_params_cp_df.replace(to_replace={comp_dct['maps_clean']: np.nan} , regex=True, inplace=True)
     # explode ports so that each port presented as separate row
     maps_ports_df, top_zoned_ports_df = explode_maps_ports(switch_params_cp_df)
     # extract slot, port, pid and it-flows
-    maps_ports_df, top_zoned_ports_df = extract_exploded_ports(maps_ports_df, top_zoned_ports_df, re_pattern_lst)
+    maps_ports_df, top_zoned_ports_df = extract_exploded_ports(maps_ports_df, top_zoned_ports_df, comp_dct)
     # find port information in portshow_sfp_aggregated_df
     maps_ports_df, top_zoned_ports_df = fillna_port_information(portshow_cp_df, maps_ports_df, top_zoned_ports_df)
     # concatenate maps_ports_df and top_zoned_ports_df
@@ -50,11 +55,8 @@ def explode_maps_ports(switch_params_cp_df):
     return maps_ports_df, top_zoned_ports_df
 
 
-def extract_exploded_ports(maps_ports_df, top_zoned_ports_df, re_pattern_lst):
+def extract_exploded_ports(maps_ports_df, top_zoned_ports_df, comp_dct):
     """Function to extract slot, port and portid, it-flows from exploded column"""
-
-    # regular expression patterns
-    *_, comp_dct = re_pattern_lst
 
     # slot_port_pattern = '(?:(\d+)/)?(\d+)'
     slot_port_pattern = comp_dct['slot_port']

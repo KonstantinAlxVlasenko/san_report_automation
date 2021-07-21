@@ -153,7 +153,7 @@ def create_device_rename_form(portshow_aggregated_df):
     and one device can have several Group_Names thus generating duplication in tables.
     To avoid this perform gropuby based on Device_Host_Name reqiured'''
 
-    # add number of ports in each 'Device_Host_Name'
+    # add quantity of ports in each 'Device_Host_Name'
     manual_device_rename_df['Port_quantity'] = \
         manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).Connected_portWwn.transform('count')
 
