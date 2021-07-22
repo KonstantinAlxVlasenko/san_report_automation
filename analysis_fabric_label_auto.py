@@ -67,7 +67,7 @@ def verify_ls_type(switch_params_df):
     mask_non_ls_mode = switch_ls_type_df['LS_mode'] == 'OFF'
     # identify LS switch type
     switch_ls_type_df['LS_type'] = np.select([mask_base, mask_default, mask_not_base & mask_logical, mask_non_ls_mode],
-                                            ['base', 'default', 'logical', 'non_VF'], default='unknown')
+                                            ['base', 'default', 'logical', 'physical'], default='unknown')
 
     switch_ls_type_df['Allow_XISL_Use'].replace(to_replace={'ON': 'xisl_on'}, inplace=True) 
     switch_ls_type_df.drop(columns=switchtype_columns[5:], inplace=True)

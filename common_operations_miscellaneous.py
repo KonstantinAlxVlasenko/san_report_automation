@@ -6,6 +6,8 @@ and  perform operations on data
 import re
 
 import pandas as pd
+from functools import wraps
+
 
 # from common_operations_filesystem import save_xlsx_file
 # from common_operations_servicefile import columns_import
@@ -22,6 +24,19 @@ def status_info(status, max_title, len_info_string, shift=0):
     print(status.rjust(str_length - len_info_string, '.'))
 
     return status
+
+
+def display_status(info, max_title):
+    def dec(fn):
+        @wraps(fn)
+        def inner(*args, **kwargs):
+            print(info, end =" ")
+            result = fn(*args, **kwargs)
+            status_info('ok', max_title, len(info))
+            return result
+        return inner
+    return dec
+
 
 
 def line_to_list(re_object, line, *args):

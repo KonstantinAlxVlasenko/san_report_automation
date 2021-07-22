@@ -107,13 +107,15 @@ def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_
     return statistics_df
 
 # count_total from datframe_operations
-def count_summary(df, group_columns: list, count_columns: list, fn: str):
+def count_summary(df, group_columns: list, count_columns: list=None, fn: str='sum'):
     """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
     on each iteration. Count columns defines column names for which total need to be calculated.
     Function in string representation defines aggregation function to find summary values"""
 
-    if isinstance(count_columns, str):
-        count_columns = [count_columns]
+    if not count_columns:
+        count_columns = df.columns.tolist()
+    elif isinstance(count_columns, str):
+            count_columns = [count_columns]
     
     summary_df = pd.DataFrame()
     for _ in range(len(group_columns)):

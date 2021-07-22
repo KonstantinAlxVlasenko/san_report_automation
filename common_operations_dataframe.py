@@ -281,7 +281,7 @@ def translate_values(translated_df, translate_dct={'Yes': 'Да', 'No': 'Нет'
 
     return translated_df
 
-# RENAME TO count_summaty
+# RENAME TO count_summary
 def count_total(df, group_columns: list, count_columns: list, fn: str):
     """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
     on each iteration. Count columns defines column names for which total need to be calculated.
@@ -308,9 +308,14 @@ def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabr
     """Auxiliary function to count values in groups for columns in count_columns.
     Parameter margin_column_row is tuple of doubled booleans tuples ((False, True), (True, False), etc). 
     It defines if margin for column and row should be calculated for column values from count_columns list.
-    By default column All is dropped and row All is kept"""
+    By default column All is dropped and row All is kept. If margin_column_row is defined as tuple of booleans pair
+    than it's repeated for all columns from count_columns"""
 
-    # by deafult keep summary row but remove summary column
+    if margin_column_row and len(margin_column_row) == 2:
+        if all([isinstance(element, bool) for element in margin_column_row]):
+            margin_column_row =  ((False, False),) * len(count_columns)
+
+    # by default keep summary row but remove summary column
     if not margin_column_row:
         margin_column_row =  ((False, True),) * len(count_columns)
     if len(count_columns) != len(margin_column_row):

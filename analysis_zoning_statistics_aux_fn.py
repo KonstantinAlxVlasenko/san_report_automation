@@ -15,8 +15,11 @@ def active_vs_configured_ports(portshow_zoned_aggregated_df, configuration_type)
     mask_online = portshow_zoned_aggregated_df['portState'] == 'Online'
     # to avoid device port duplication Native mode switches should be taken into account
     mask_native_mode = portshow_zoned_aggregated_df['switchMode'] == 'Native'
+    # to drop unused fabrics
+    mask_valid_fabric = portshow_zoned_aggregated_df['Fabric_name'] != 'x'
     
-    portshow_zoned_aggregated_cp_df = portshow_zoned_aggregated_df.loc[mask_online & mask_device_ports & mask_native_mode].copy()
+    portshow_zoned_aggregated_cp_df = \
+        portshow_zoned_aggregated_df.loc[mask_online & mask_device_ports & mask_native_mode & mask_valid_fabric].copy()
     # mask shows devices not in effective configuration
     mask_not_effective = portshow_zoned_aggregated_cp_df['cfg_type'] != 'effective'
     # mask shows device ports without alias

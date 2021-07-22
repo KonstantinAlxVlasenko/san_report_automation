@@ -228,6 +228,7 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     storage_host_report_df = clean_storage_host(storage_host_report_df)
     storage_host_valid_df = clean_storage_host(storage_host_valid_df)
     # slice required columns and translate column names
+
     storage_host_report_df, = dataframe_segmentation(storage_host_report_df, data_names[1:2], report_columns_usage_dct, max_title)
     storage_host_valid_df, = dataframe_segmentation(storage_host_valid_df, data_names[1:2], report_columns_usage_dct, max_title)
     # translate values in columns
@@ -235,7 +236,8 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     storage_host_report_df = translate_values(storage_host_report_df, translate_dct)
     storage_host_valid_df = translate_values(storage_host_valid_df, translate_dct)
     # create comparision storage_host DataFrame based on Fabric_labels
-    storage_host_compare_report_df = dataframe_slice_concatenate(storage_host_valid_df, column='Подсеть')
+    slice_column = 'Подсеть' if 'Подсеть' in storage_host_valid_df.columns else 'Подсеть порта массива'
+    storage_host_compare_report_df = dataframe_slice_concatenate(storage_host_valid_df, column=slice_column)
     return storage_host_report_df, storage_host_compare_report_df
 
 
