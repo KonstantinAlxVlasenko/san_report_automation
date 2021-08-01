@@ -126,6 +126,7 @@ def unzoned_device_report(portshow_cfg_aggregated_df, data_names, report_columns
     unzoned_device_df.dropna(axis='columns', how='all')
 
     no_alias_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_not_switch_vc & mask_no_alias]
+
     # no_alias_devices_df.dropna(axis='columns', how='all')
     # create report DataFeame
     # pylint: disable=unbalanced-tuple-unpacking

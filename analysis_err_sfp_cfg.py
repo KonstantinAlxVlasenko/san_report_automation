@@ -197,6 +197,11 @@ def create_report_tables(port_complete_df, maps_ports_df, portshow_npiv_df, npiv
                             data_names, report_columns_usage_dct, max_title):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
+
+    data_names = ['portshow_sfp_aggregated', 'MAPS_ports', 'NPIV_', 'NPIV_statistics', 
+                    'Ошибки', 'Параметры_SFP', 'Параметры_портов', 'MAPS_порты', 
+                    'NPIV_порты', 'Статистика_NPIV']
+
     # partition aggregated DataFrame to required tables
     # pylint: disable=unbalanced-tuple-unpacking
     errors_report_df, sfp_report_df, portcfg_report_df = \
@@ -230,7 +235,7 @@ def create_report_tables(port_complete_df, maps_ports_df, portshow_npiv_df, npiv
                                                                 ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
 
     npiv_report_df = translate_values(npiv_report_df)
-    npiv_report_df, = dataframe_segmentation(npiv_report_df, data_names[6], report_columns_usage_dct, max_title)
+    npiv_report_df, = dataframe_segmentation(npiv_report_df, data_names[8], report_columns_usage_dct, max_title)
     translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_ISL_перевод_eng', 
                                 'Статистика_ISL_перевод_ru', init_file = 'san_automation_info.xlsx')
     npiv_statistics_report_df = statistics_report(npiv_statistics_df, translate_dct, report_columns_usage_dct, 

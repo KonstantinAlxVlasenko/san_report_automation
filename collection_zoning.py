@@ -103,7 +103,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
                                     if not line:
                                         break    
                             # switchcmd_end_comp
-                            while not re.search(comp_dct[comp_keys[4]], line):                                
+                            while not re.search(comp_dct[comp_keys[4]], line):                               
                                 # dictionary with match names as keys and match result of current line with all imported regular expressions as values
                                 match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # if Effective configuration line passed
@@ -121,7 +121,7 @@ def zoning_extract(switch_params_lst, report_data_lst):
                                         members_lst = cfg_line[1].strip().replace(';', '').split()
                                         for member in members_lst:
                                             cfg_lst.append([*principal_switch_lst, cfg_name, member])
-                                    # if Effectice configuration checked then 
+                                    # if Effective configuration checked then 
                                     # add Effective and Defined configuration names to the table 
                                     if effective:
                                         cfg_effective_lst.append([*principal_switch_lst, cfg_name, ', '.join(defined_configs_set)])
@@ -140,6 +140,16 @@ def zoning_extract(switch_params_lst, report_data_lst):
                                 elif match_dct[match_keys[5]]:
                                     zone_line = line_to_list(comp_dct[comp_keys[5]], line)
                                     zone_name = zone_line[0]
+                                    # if line contains zone name and zone member
+                                    if zone_line[1]:
+                                        member_lst = zone_line[1].strip().replace(';', '').split()
+                                        for member in member_lst:
+                                            # for Defined configuration add zones to zone_lst
+                                            if not effective: 
+                                                zone_lst.append([*principal_switch_lst, zone_name, member])
+                                            # for Effective configuration add zones to zone_effective_lst
+                                            elif effective:
+                                                zone_effective_lst.append([*principal_switch_lst, zone_name, member])
                                     line = file.readline()
                                     # zoning_switchcmd_end_comp separates different configs, zones and aliases
                                     while not re.search(comp_dct[comp_keys[3]], line):
@@ -258,6 +268,5 @@ def zoning_extract(switch_params_lst, report_data_lst):
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst = verify_data(report_data_lst, data_names, *data_lst)
-
     return cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst
 

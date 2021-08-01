@@ -60,7 +60,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
             = zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
                                     cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, report_data_lst)
 
-        # create comprehesive statistics DataFrame with Fabric summaries and
+        # create comprehensive statistics DataFrame with Fabric summaries and
         # zones statistics DataFrame without summaries  
         zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df, report_data_lst)
         # add zoning statistics notes, zone duplicates and zone pairs to zoning aggregated DataFrame

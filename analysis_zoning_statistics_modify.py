@@ -23,9 +23,15 @@ def modify_zoning(zoning_aggregated_df):
     zoning_modified_df.deviceType.replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV', 'SRV_BLADE': 'SRV', 'SRV_SYNERGY': 'SRV'}, inplace=True)
     # deviceType transformed to be combination if device class and device type
     zoning_modified_df.deviceSubtype = zoning_modified_df['deviceType'] + ' ' + zoning_modified_df['deviceSubtype']
-    # servers device type is not important for zonemember analysys
+    # servers device type is not important for zonemember analysis
     mask_srv = zoning_modified_df.deviceType.str.contains('SRV', na=False)
     zoning_modified_df.deviceSubtype = np.where(mask_srv, np.nan, zoning_modified_df.deviceSubtype)
+    # tag unique device in each zones by combination of deviceType and Unique tag to count unique devices in zone
+    mask_device_name_unique = ~zoning_modified_df.duplicated(subset=['Fabric_name',	'Fabric_label', 
+                                                                    'cfg', 'zone', 
+                                                                    'deviceType', 'Device_Host_Name'])
+    zoning_modified_df.loc[mask_device_name_unique, 'Unique_device_type_name'] = \
+        zoning_modified_df.loc[mask_device_name_unique, 'deviceType'] + ' Unique name'
     # tag duplicated PortWwnp in zone 
     mask_wwnp_duplicated = zoning_modified_df['wwnp_instance_number_per_zone'] > 1
     zoning_modified_df['Wwnp_duplicated'] = np.where(mask_wwnp_duplicated, 'Wwnp_duplicated', np.nan)
@@ -41,7 +47,7 @@ def modify_zoning(zoning_aggregated_df):
     'peerzone_member_type' for Peerzone property member is not changed and counted in statistics. 
     But device status for not connected ports is reflected in zonemember statistics.
     """  
-    mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'imported'])
+    mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'remote_imported'])
     mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
     # axis 1 replace values with nan along the row
     zoning_modified_df[statistics_columns_lst] = \
@@ -144,6 +150,7 @@ def verify_pair_zones(zoning_aggregated_df):
     zoning_cp_df.drop_duplicates(subset=[*columns, 'zone', 'PortName'], inplace=True)
 
     # verify if all devices in each zone are connected to other fabric_labels of the same fabric_name
+    # (if device have links both to fabric A and B)
     grp_columns = columns + ['zone']
     mask_all_devices_multiple_fabric_label_connection = \
         zoning_cp_df.groupby(by=grp_columns)['Multiple_fabric_label_connection'].transform(lambda series: series.isin(['Yes']).all())
@@ -151,9 +158,22 @@ def verify_pair_zones(zoning_aggregated_df):
 
     # group device names of each zone to sorted set thus removing duplicates and present it as comma separated list
     grp_columns.append('All_devices_multiple_fabric_label_connection')
+    
     zoning_grp_df = zoning_cp_df.groupby(by=grp_columns)['Device_Host_Name'].agg(lambda x: ', '.join(sorted(set(x))))
     zoning_grp_df = pd.DataFrame(zoning_grp_df)
     zoning_grp_df.reset_index(inplace=True)
+
+    # drop peer zone members to verify if zone name correpond to local or remote_imported Device_Host_Names included in the zone
+    # since peer zone usually contains many zonemembers it's name based on principal member Device_Host_Name
+    if 'peerzone_member_type' in zoning_cp_df.columns:
+        mask_not_peer = zoning_cp_df['peerzone_member_type'] != 'peer'
+        zoning_peer_member_free_df = zoning_cp_df.loc[mask_not_peer].copy()
+        # group device names of each zone to sorted set thus removing duplicates and present it as comma separated list
+        zoning_peer_free_grp_df = zoning_peer_member_free_df.groupby(by=grp_columns)['Device_Host_Name'].agg(lambda x: ', '.join(sorted(set(x))))
+        zoning_peer_free_grp_df = pd.DataFrame(zoning_peer_free_grp_df)
+        zoning_peer_free_grp_df.reset_index(inplace=True)
+    else:
+        zoning_peer_free_grp_df = zoning_grp_df.copy()
 
     fabric_name_lst = zoning_grp_df['Fabric_name'].unique().tolist()
     fabric_label_lst = zoning_grp_df['Fabric_label'].unique().tolist()
@@ -193,8 +213,6 @@ def verify_pair_zones(zoning_aggregated_df):
                             # verified_grp_df.loc[mask_zone_notna, 'zone'] = '(' + verified_label + ': ' + zoning_pairs_df.loc[mask_zone_notna, 'zone'] + ')'
                             mask_zone_notna = verified_grp_df['zone'].notna()
                             verified_grp_df.loc[mask_zone_notna, 'zone'] = '(' + verified_label + ': ' + verified_grp_df.loc[mask_zone_notna, 'zone'] + ')'
-                            print('\n')
-                            print(verified_grp_df)
                         # to merge pair zones change fabric_label in verified fabric to fabric_label of fabric for which pair zones are searched for
                         verified_grp_df['Fabric_label'] = fabric_label
                         # column name with pair zones in verified fabric_label
@@ -216,18 +234,24 @@ def verify_pair_zones(zoning_aggregated_df):
     zoning_pairs_df.loc[mask_zone_notna, 'zone_paired_tag'] = 'zone_paired_tag'
     zoning_pairs_df['zone_duplicates_free'] = zoning_pairs_df['zone']
     # verify if zonename related with pair zone name and device names included in each zone
-    zoning_pairs_df = verify_zonename_ratio(zoning_pairs_df)
+    zoning_pairs_df = verify_zonename_ratio(zoning_pairs_df, zoning_peer_free_grp_df)
     return zoning_pairs_df
 
 
-def verify_zonename_ratio(zoning_pairs_df):
+def verify_zonename_ratio(zoning_pairs_df, zoning_peer_free_grp_df):
     """Function to verify if zonename related with pair zone name and device names included in each zone"""
 
     # verify if zone name and it's pair zone name related
     zoning_pairs_df['Zone_and_Pairzone_names_ratio'] = zoning_pairs_df.apply(lambda series: calculate_zone_names_ratio(series), axis=1)    
-    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_and_Pairzone_names_ratio', 0.9, 'Zone_and_Pairzone_names_related')
+    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_and_Pairzone_names_ratio', 0.8, 'Zone_and_Pairzone_names_related')
     # verify if zone name related with device names included in this zone
-    zoning_pairs_df['Zone_name_device_names_ratio'] = zoning_pairs_df.apply(lambda series: calculate_zonename_devicenames_ratio(series), axis=1)
+    peer_free_columns = zoning_peer_free_grp_df.columns.tolist()
+    peer_free_columns.remove('Device_Host_Name')
+
+    zoning_peer_free_grp_df['Zone_name_device_names_ratio'] = zoning_peer_free_grp_df.apply(lambda series: calculate_zonename_devicenames_ratio(series), axis=1)
+    zoning_peer_free_grp_df.drop(columns='Device_Host_Name', inplace=True)
+    # add zone name and active device names included into zone ratio to zoning_pairs_df
+    zoning_pairs_df = zoning_pairs_df.merge(zoning_peer_free_grp_df, how='left', on=peer_free_columns)
     zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_name_device_names_ratio', 0.7, 'Zone_name_device_names_related')
     return zoning_pairs_df
 
@@ -249,10 +273,10 @@ def calculate_zonename_devicenames_ratio(series):
     """Function to count ratio in which zone name related with device names included in this zone.
     By applying device names permutations maximum ratio value is calaculated"""
     
-    # use upper case for consistency
+    # use lower case for consistency
     zone_name = series['zone'].lower().replace('-', '_')
     device_names = series['Device_Host_Name'].lower().replace('-', '_').split(', ')
-
+    # drop domain name (symbols after dot) for each device name
     device_names = [name.split('.')[0] for name in device_names]
 
     # list containing all ration values

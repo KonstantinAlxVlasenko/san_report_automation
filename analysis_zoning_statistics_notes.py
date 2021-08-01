@@ -19,7 +19,9 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     # and fill columns with zeroes
     columns_lst = zonemember_stat_notes_df.columns.to_list()
     target_initiators_lst = ['SRV', 'STORAGE', 'LIB']
-    add_columns = [column for column in target_initiators_lst if column not in columns_lst]
+    unique_names_lst = [device_type + ' Unique name' for device_type in target_initiators_lst]
+    add_columns_lst = [*target_initiators_lst, *unique_names_lst]
+    add_columns = [column for column in add_columns_lst if column not in columns_lst]
     if add_columns:
         zonemember_stat_notes_df = zonemember_stat_notes_df.reindex(columns=[*columns_lst, *add_columns])
         zonemember_stat_notes_df[add_columns] = zonemember_stat_notes_df[add_columns].fillna(0)
@@ -92,9 +94,9 @@ def target_initiator_note(series):
     # current zone is empty (neither actual initiators nor targets are present)
     if series['Total_zonemembers_active'] == 0:
         return 'no_target, no_initiator'
-    # if all zonememebrs are storages with local or imported device status 
-    # and no absent devices then zone considered to be replication zone 
-    if series['STORAGE'] == series['Total_zonemembers'] and series['STORAGE']>1:
+    # if all zonememebrs are storages with local or imported device status, 
+    # no absent devices and more then one storage system in zone then zone considered to be replication zone 
+    if series['STORAGE'] == series['Total_zonemembers'] and series['STORAGE Unique name'] > 1:
         return 'replication_zone'
     """
     If there are no actual server in the zone and number of defined zonemembers exceeds
@@ -102,7 +104,7 @@ def target_initiator_note(series):
     zoning configuration switch) then it's not a replication zone and considered to be
     initiator's less zone
     """
-    if series['SRV'] == 0 and series['Total Initiators'] == 0 and series['Total_zonemembers'] > series['Total_zonemembers_active']:
+    if series['SRV'] == 0 and series['Total Initiators'] == 0: # and series['Total_zonemembers'] > series['Total_zonemembers_active']:
         if series['STORAGE_LIB'] > 0:
             return 'no_initiator'
     # if zone contains initiator(s) but not targets then zone considered to be targetless zone

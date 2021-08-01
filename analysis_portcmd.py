@@ -237,7 +237,7 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
     # if unknown switches found
     if not portshow_switch_name_set.issubset(switch_name_set):
         unknown_count = len(portshow_switch_name_set.difference(switch_name_set))
-        info = f'{unknown_count} NEW {"switch" if unknown_count == 1 else "switches"} detected'
+        info = f'{unknown_count} NEW switch {"name" if unknown_count == 1 else "names"} detected'
         print(info, end =" ")
         status_info('warning', max_title, len(info))
         # ask if save portshow_aggregated_df

@@ -131,7 +131,7 @@ def align_dataframe(switch_params_aggregated_df, *args, drop_columns=True):
         df = df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:5])
         # drop data for Fabrics which are out of assessment scope
         df.dropna(subset = ['Fabric_name', 'Fabric_label'], inplace = True)
-        mask_valid_fabric = df['Fabric_name'] != 'x'
+        mask_valid_fabric = ~df['Fabric_name'].isin(['x', '-'])
         df = df.loc[mask_valid_fabric].copy()
         # drop columns containing switch information if df dedicated for the whole Fabric
         if drop_columns:

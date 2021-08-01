@@ -16,7 +16,6 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     """Main function to create zonemembers statistics"""
 
     zoning_modified_df, zoning_duplicated_df, zoning_pairs_df = modify_zoning(zoning_aggregated_df)
-
     # get statistics DataFrames for zone and cfgtype level statistics
     zonemember_zonelevel_stat_df = count_zonemember_statistics(zoning_modified_df)
     zonemember_cfgtypelevel_stat_df = count_zonemember_statistics(zoning_modified_df, zone=False)
@@ -75,7 +74,8 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
 
     # remove duplicated and paired zones list if current zone is non-working zone (duplication of working zones only required)
     # list of duplicated zones is removed but duplication tag remains  
-    mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
+    # mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
+    mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target'])
     columns = ['zone_duplicated', 'zone_paired', 
                 'Zone_name_device_names_ratio', 'Zone_name_device_names_related',
                 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
@@ -104,7 +104,7 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
     # column names for which statistics is counted for
     columns_lst = ['zone_tag', 'qos_tag', 'lsan_tag', 'tdz_tag', 'zone_duplicated_tag', 'zone_paired_tag', 
                     'Fabric_device_status', 'peerzone_member_type',
-                    'deviceType', 'deviceSubtype',
+                    'deviceType', 'deviceSubtype', 'Unique_device_type_name',
                     'Device_type', 'Wwn_type', 'Wwnp_duplicated', 'zone_member_type']
 
     wwnn_duplicates_columns = ['Fabric_name', 'Fabric_label', 
