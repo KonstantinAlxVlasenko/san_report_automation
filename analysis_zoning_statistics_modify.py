@@ -64,7 +64,7 @@ def modify_zoning(zoning_aggregated_df):
     # add tdz_tag
     zoning_modified_df = verify_tdz(zoning_modified_df)
     # add qos zone tag
-    mask_qos = zoning_modified_df['zone_duplicates_free'].str.contains(r'^QOS[LMH]\d')
+    mask_qos = zoning_modified_df['zone_duplicates_free'].str.contains(r'^QOS[LMH]\d?')
     zoning_modified_df.loc[~mask_zone_name & mask_qos, 'qos_tag'] = 'qos_tag'
 
     # verify duplicated zones (zones with the same set of PortWwns)
@@ -274,7 +274,12 @@ def calculate_zonename_devicenames_ratio(series):
     By applying device names permutations maximum ratio value is calaculated"""
     
     # use lower case for consistency
-    zone_name = series['zone'].lower().replace('-', '_')
+    zone_name = series['zone'].lower().replace('-', '_').replace('__', '_')
+    # remove lsan, qos tags from zonename to  increase ratio
+    lsan_qos_tag_remover_pattern = '(?:lsan|qos[hml]\d?)_(.+)'
+    if re.match(lsan_qos_tag_remover_pattern, zone_name):
+        zone_name = re.search(lsan_qos_tag_remover_pattern, zone_name).group(1)
+
     device_names = series['Device_Host_Name'].lower().replace('-', '_').split(', ')
     # drop domain name (symbols after dot) for each device name
     device_names = [name.split('.')[0] for name in device_names]

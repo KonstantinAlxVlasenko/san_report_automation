@@ -74,8 +74,7 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
 
     # remove duplicated and paired zones list if current zone is non-working zone (duplication of working zones only required)
     # list of duplicated zones is removed but duplication tag remains  
-    # mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
-    mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target'])
+    mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
     columns = ['zone_duplicated', 'zone_paired', 
                 'Zone_name_device_names_ratio', 'Zone_name_device_names_related',
                 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
