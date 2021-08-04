@@ -121,7 +121,7 @@ def statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_s
     # create DataFrame with note columns only
     zone_columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']
     note_columns = ['Zone_name_device_names_ratio', 'Zone_name_device_names_related',
-                    'zone_duplicated', 'zone_paired',
+                    'zone_duplicated', 'zone_absorber', 'zone_paired',
                     'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related',
                     'Pair_zone_note',
                     'Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note']

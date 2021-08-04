@@ -49,7 +49,7 @@ def modify_zoning(zoning_aggregated_df):
     """  
     mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'remote_imported'])
     mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
-    # axis 1 replace values with nan along the row
+    # axis 1 replace values with nan along the row (leave local, remote_imported or property members, others replace with nan)
     zoning_modified_df[statistics_columns_lst] = \
     zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan*len(statistics_columns_lst))), axis=1)
     
@@ -74,6 +74,13 @@ def modify_zoning(zoning_aggregated_df):
     zoning_modified_df = \
         dataframe_fillna(zoning_modified_df, zoning_duplicated_df, join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
 
+    # verify absorbed zones (zones which are part of other zones in effective configuration excluding duplicated zones)
+    zoning_absorbed_df = verify_absorbed_zones(zoning_aggregated_df)
+    zoning_absorbed_columns = ['Fabric_name', 'Fabric_label', 'zone_duplicates_free', 'zone_absorbed_tag']
+    # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
+    zoning_modified_df = \
+        dataframe_fillna(zoning_modified_df, zoning_absorbed_df, join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
+
     # find zone pairs (zones with the same set device names) in another fabric_labels of the same fabric_name
     zoning_pairs_df = verify_pair_zones(zoning_aggregated_df)
     zoning_pairs_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone_duplicates_free', 'zone_paired_tag']
@@ -83,7 +90,7 @@ def modify_zoning(zoning_aggregated_df):
 
     zoning_modified_df.replace(to_replace='nan', value=np.nan, inplace=True)
 
-    return zoning_modified_df, zoning_duplicated_df, zoning_pairs_df
+    return zoning_modified_df, zoning_duplicated_df, zoning_pairs_df, zoning_absorbed_df
 
 
 def verify_duplicated_zones(zoning_aggregated_df):
@@ -110,6 +117,66 @@ def verify_duplicated_zones(zoning_aggregated_df):
     zoning_duplicated_df['zone_duplicates_free'] = zoning_duplicated_df['zone']
 
     return zoning_duplicated_df
+
+
+def verify_absorbed_zones(zoning_aggregated_df):
+    """Function to find obserbed zones (zones which are part of other zones in effective configuration excluding duplicated zones)"""
+
+    # prepare zoning (slice effective zoning and local or imported ports only)
+    mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'remote_imported'])
+    mask_effective = zoning_aggregated_df['cfg_type'] == 'effective'
+    
+    group_columns = ['Fabric_name', 'Fabric_label', 'zone']
+
+    # zones to be verified (effective and defined) 
+    zoning_verified_df = zoning_aggregated_df.loc[mask_connected].copy()
+    # count active ports in each zone to take into account zones which are bigger than verified zone
+    zoning_verified_df['Portname_quantity'] = zoning_verified_df.groupby(by=group_columns)['PortName'].transform('count')
+    # zone configuration in which absorber zones are searched for (effective only)
+    zoning_valid_df = zoning_verified_df.loc[mask_effective].copy()
+    # find obsorbed and absorber zones
+    zoning_absorbed_df  = \
+        zoning_verified_df.groupby(by=group_columns).apply(lambda verified_zone_grp: find_zone_absorber(verified_zone_grp, zoning_valid_df))
+    
+    zoning_absorbed_df = pd.DataFrame(zoning_absorbed_df)
+    zoning_absorbed_df.reset_index(inplace=True)
+    # rename column with absorber zone names
+    zoning_absorbed_df.rename(columns={0: 'zone_absorber'}, inplace=True)
+    # drop rows if there is no zone absorber found
+    zoning_absorbed_df.dropna(subset=['zone_absorber'], inplace=True)
+    zoning_absorbed_df['zone_duplicates_free'] = zoning_absorbed_df['zone']
+    zoning_absorbed_df['zone_absorbed_tag'] = 'zone_absorbed_tag'
+    return zoning_absorbed_df
+
+
+
+def find_zone_absorber(verified_zone_grp, zoning_valid_df):
+    """Auxiliary function for verify_absorbed_zones fn 
+    to find zones in effective configuration which contain same active portWwns as verified zones.
+    Zones with identical set of portWwns (duplicated zones) as verified zone are not taken into account"""
+    
+
+    group_columns = ['Fabric_name', 'Fabric_label', 'zone']
+
+    # identify fabric name, label of the verified zone to filter off zones from other fabrics
+    verified_zone_fb,  = verified_zone_grp['Fabric_name'].unique()
+    verified_zone_fl,  = verified_zone_grp['Fabric_label'].unique()
+    # identify active port quantity to filter off zones of the same size or smaller
+    verified_zone_port_quntity,  = verified_zone_grp['Portname_quantity'].unique()
+    # slice zoning configuration to reduce process time
+    mask_same_fabic = (zoning_valid_df['Fabric_name'] == verified_zone_fb) & \
+                        (zoning_valid_df['Fabric_label'] == verified_zone_fl)
+    mask_bigger_zone = zoning_valid_df['Portname_quantity'] > verified_zone_port_quntity
+    zoning_valid_fabric_df = zoning_valid_df.loc[mask_same_fabic & mask_bigger_zone].copy()
+    
+    # find zones which include (absorbe) current verified zone
+    absorbed_zone_df = \
+        zoning_valid_fabric_df.groupby(by=group_columns).filter(lambda valid_zone_grp: verified_zone_grp['PortName'].isin(valid_zone_grp['PortName']).all())
+    # represent zones as comma separated string
+    if not absorbed_zone_df.empty:
+        zone_sr = absorbed_zone_df['zone'].drop_duplicates()
+        zones_str = ', '.join(zone_sr.to_list())
+        return zones_str 
 
 
 def verify_tdz(zoning_modified_df):

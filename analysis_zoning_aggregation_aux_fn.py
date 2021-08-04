@@ -335,6 +335,20 @@ def verify_device_hostname_instances(aggregated_df, portshow_aggregated_df):
 
     aggregated_df = aggregated_df.merge(portcmd_join_df, how='left', on=fabric_wwnp_columns)
 
+    # add 'Device_Host_Name_per_fabric_label' and 'Device_Host_Name_total_fabrics' for devices connected to
+    # other fabrics through backbone 
+    # 'Device_Host_Name_per_fabric_name_and_label' and 'Device_Host_Name_per_fabric_name' should stay empty
+    # since device is not connected to the current fabric name
+    portcmd_join_df.rename(columns={'Fabric_name': 'zonemember_Fabric_name', 'Fabric_label': 'zonemember_Fabric_label'}, inplace=True)
+    aggregated_df = dataframe_fillna(aggregated_df, portcmd_join_df, filled_lst=['Device_Host_Name_per_fabric_label', 'Device_Host_Name_total_fabrics'], 
+                                    join_lst=['zonemember_Fabric_name', 'zonemember_Fabric_label', 'PortName'])
+    # clean 'Device_Host_Name_per_fabric_label' if Fabric_label and 'zonemember_Fabric_label' don't match
+    # due to information in device_port_columns is shown relative to fabric name and fabric label
+    mask_fabric_label_mismatch = aggregated_df['Fabric_label'] != aggregated_df['zonemember_Fabric_label']
+    mask_notna = aggregated_df['Device_Host_Name_per_fabric_label'].notna()
+    aggregated_df.loc[mask_notna & mask_fabric_label_mismatch, 'Device_Host_Name_per_fabric_label'] = np.nan
+    
+
     # verify if device is present in other faric_labels of the same fabric_name
     aggregated_df[device_port_columns] = aggregated_df[device_port_columns].apply(pd.to_numeric)
 
@@ -342,7 +356,7 @@ def verify_device_hostname_instances(aggregated_df, portshow_aggregated_df):
         aggregated_df['Device_Host_Name_per_fabric_name'] > aggregated_df['Device_Host_Name_per_fabric_name_and_label']
     mask_notna = aggregated_df[['Device_Host_Name_per_fabric_name', 'Device_Host_Name_per_fabric_name_and_label']].notna().all(axis=1)
     aggregated_df['Multiple_fabric_label_connection'] = np.where(mask_multiple_fabric_label_connection & mask_notna, 'Yes', 'No')
-    # remove information from lines without port nember information
+    # remove information from lines without port number information
     aggregated_df['Multiple_fabric_label_connection'] = aggregated_df['Multiple_fabric_label_connection'].where(mask_notna, np.nan)
 
     return aggregated_df
