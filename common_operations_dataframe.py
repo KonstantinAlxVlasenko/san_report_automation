@@ -472,6 +472,19 @@ def explode_columns(df, *args, sep=', '):
     return common_exploded_df
 
 
+def threshold_exceed(df, value_column: str, threshold: float, result_column: str):
+    """Function to check if value in value_column exceeds threshold.
+    'Yes' or 'No' in result_column"""
+    
+    mask_value_notna = df[value_column].notna()
+    mask_threshold_exceeded = df[value_column] >= threshold
+    df[result_column] = np.select([mask_value_notna & mask_threshold_exceeded, 
+                                   mask_value_notna & ~mask_threshold_exceeded], 
+                                  ['Yes', 'No'], default=pd.NA)
+    df.fillna(np.nan, inplace=True)
+    return df
+
+
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null
 # str1 and str2 are strings before columns respectively (default is whitespace between columns)

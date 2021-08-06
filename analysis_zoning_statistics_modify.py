@@ -8,7 +8,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import dataframe_fillna, сoncatenate_columns
+from common_operations_dataframe import dataframe_fillna, сoncatenate_columns, threshold_exceed
 
 
 def modify_zoning(zoning_aggregated_df):
@@ -367,14 +367,4 @@ def calculate_zonename_devicenames_ratio(series):
     return max(ratio_lst)
 
 
-def threshold_exceed(df, value_column: str, threshold: float, result_column: str):
-    """Function to check if value in value_column exceeds threshold.
-    'Yes' or 'No' in result_column"""
-    
-    mask_value_notna = df[value_column].notna()
-    mask_threshold_exceeded = df[value_column] >= threshold
-    df[result_column] = np.select([mask_value_notna & mask_threshold_exceeded, 
-                                   mask_value_notna & ~mask_threshold_exceeded], 
-                                  ['Yes', 'No'], default=pd.NA)
-    df.fillna(np.nan, inplace=True)
-    return df
+
