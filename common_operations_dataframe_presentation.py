@@ -11,7 +11,7 @@ from common_operations_servicefile import dct_from_columns, columns_import
 def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, report_columns_usage_dct, max_title):
     """Function to split aggregated table to required DataFrames
     As parameters function get DataFrame to be partitioned and
-    list of allocated DataFrames names. Returns list of segmented DataFrames 
+    list of allocated DataFrames names. Returns list of segmented DataFrames. 
     """
 
     # sheet name with customer report columns
@@ -191,4 +191,22 @@ def dataframe_slice_concatenate(df, column: str):
     
     return pd.concat(sorted_df_lst, axis=1)
 
+
+def move_column(df, cols_to_move, ref_col: str, place='after'):
+    
+    if isinstance(cols_to_move, str):
+        cols_to_move = [cols_to_move]
+    
+    cols = df.columns.tolist()    
+    if place == 'after':
+        seg1 = cols[:list(cols).index(ref_col) + 1]
+        seg2 = cols_to_move
+    if place == 'before':
+        seg1 = cols[:list(cols).index(ref_col)]
+        seg2 = cols_to_move + [ref_col]
+    
+    seg1 = [i for i in seg1 if i not in seg2]
+    seg3 = [i for i in cols if i not in seg1 + seg2]
+    
+    return df[seg1 + seg2 + seg3]
 

@@ -54,8 +54,10 @@ def prior_preparation(portshow_aggregated_df):
     mask_devicetype = portshow_aggregated_df['deviceType'].notna()
     # drop fabrics which are not part of assessment
     mask_fabric_name_label = portshow_aggregated_df[['Fabric_name', 'Fabric_label']].notna().all(axis=1)
+    # drop fabrics which are out of assessment scope
+    mask_valid_fabric = ~portshow_aggregated_df['Fabric_name'].isin(['x', '-'])
     
-    mask_complete = mask_fabric_name_label & mask_switch_native & mask_not_switch_vc & mask_devicetype
+    mask_complete = mask_fabric_name_label & mask_switch_native & mask_not_switch_vc & mask_devicetype & mask_valid_fabric
     columns_lst = ['Fabric_name', 'deviceType',	'Device_Location', 'deviceSubtype', 'Device_Host_Name', 
                    'Fabric_label', 'speed', 'Virtual_Channel', 'switchWwn', 'switchType' , 'slot']
     portshow_aggregated_modified_df = portshow_aggregated_df.loc[mask_complete, columns_lst].copy()

@@ -116,7 +116,7 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
 
         
     def bandwidth_note(device_connection_statistics_df):
-        """Function to add note if device have equal bandwidth in Fabric_labels connected"""
+        """Function to add note if device don't have equal bandwidth in Fabric_labels connected"""
 
         # construct 'Bandwidth_' column names to check for each Fabric_label
         bandwidth_columns = [bandwidth_str + fabric_label for fabric_label in fabric_labels_lst]

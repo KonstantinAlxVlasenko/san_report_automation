@@ -18,27 +18,30 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
         # connection have single link only
         mask_single_link_connection = npiv_statistics_df['Port_quantity'] == 1
         if 'F_Trunk' in npiv_statistics_df.columns:
-            # mask link out of trunk
+            # mask link out of trunk presence
             mask_fport_exceeds_ftrunk = npiv_statistics_df['Port_quantity'] > npiv_statistics_df['F_Trunk']
             # trunking licence present on both switches
             mask_trunk_lic =  npiv_statistics_df['Trunking_lic_both_switches'] == 'Yes'
-            # summary ftrunk absensce mask
+            # summary ftrunk absensce mask (at least one link is not set as porttrunkarea when both switches are trunk capable)
             mask_ftrunk_absence = ~mask_single_link_connection & mask_fport_exceeds_ftrunk & mask_trunk_lic
             npiv_statistics_df.loc[mask_ftrunk_absence, 'Connection_note'] = 'link(s)_out_of_trunk'
 
+            # columns with port quantity for each link (Link_1, Link_2 etc)
             link_columns = [column for column in npiv_statistics_df.columns if re.match('Link_\d+', column)]
+            # mask all links are set as porttrinkarea
             mask_fport_equals_ftrunk = npiv_statistics_df['Port_quantity'] == npiv_statistics_df['F_Trunk']
+            # mask at least one link consists of single port
             mask_single_port_link = (npiv_statistics_df[link_columns] == 1).any(axis=1)
+            # mask there are more then one link in connection, all links are porttrunkarea and 
+            # at least one link is single port (single link trunk)
             mask_single_link_trunk = ~mask_single_link_connection & mask_fport_equals_ftrunk & mask_single_port_link
             npiv_statistics_df.loc[mask_single_link_trunk, 'Connection_note'] = 'single link trunk(s)'
 
-
+            # mask there are single link connection and link is porttrunkarea (nonredundat_trunk)
             mask_nonredundat_trunk = mask_single_link_connection & mask_fport_equals_ftrunk
             npiv_statistics_df.loc[mask_nonredundat_trunk, 'Connection_note'] = 'nonredundat_trunk'
-            print('\n')
-            print(npiv_statistics_df.loc[mask_nonredundat_trunk])
 
-
+        # there are single link in connection and it's not trunk (nonredundant_connection)
         mask_note_empty = npiv_statistics_df['Connection_note'].isna()
         npiv_statistics_df.loc[mask_single_link_connection & mask_note_empty, 'Connection_note'] = 'nonredundant_connection'
         return npiv_statistics_df

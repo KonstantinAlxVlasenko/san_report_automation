@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 
 from analysis_portshow_npiv_stat_notes import add_notes
-from common_operations_dataframe import dataframe_fillna, dataframe_join
+from common_operations_dataframe import dataframe_fillna, dataframe_join, remove_duplicates_from_column
+from common_operations_dataframe_presentation import drop_equal_columns
 from common_operations_switch import (count_all_row, count_statistics,
                                       count_summary, summarize_statistics,
                                       verify_lic, verify_max_link_speed)
@@ -63,6 +64,18 @@ def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df
     portshow_npiv_df['NPIV_link_number'] = portshow_npiv_df['NPIV_link_number'].astype('float64', errors='ignore')
     portshow_npiv_df['NPIV_link_number'] = portshow_npiv_df['NPIV_link_number'].astype('int64', errors='ignore')
 
+    # sort
+    sort_columns = ['Fabric_name', 'Fabric_label' , 
+                    'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn',
+                    'Device_Host_Name', 'NodeName',
+                    'NPIV_link_number', 
+                    'Device_Port', 'Connected_portWwn']
+    portshow_npiv_df.sort_values(by = sort_columns, inplace = True)
+
+    # add duplicates free device name column
+    portshow_npiv_df = remove_duplicates_from_column(portshow_npiv_df, 'Device_Host_Name', 
+                                                        duplicates_subset=['Fabric_name', 'Fabric_label', 'Device_Host_Name', 'NodeName'])
+    portshow_npiv_df = drop_equal_columns(portshow_npiv_df, [('Device_Host_Name', 'Device_Host_Name_duplicates_free')])
     return portshow_npiv_df
 
 

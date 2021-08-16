@@ -60,7 +60,7 @@ def drop_excessive_columns(df, report_columns_usage_dct):
     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
     # list of columns to check if all values in column are NA
     possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 
-                                'peerzone_member_type', 'zone_duplicated', 
+                                'peerzone_member_type', 'zone_duplicated', 'zone_absorber',
                                 'Target_Initiator_note', 'Effective_cfg_usage_note', 'Pair_zone_note',
                                 'Device_Port', 'Storage_Port_Type']
     # dictionary of items to check if all values in column (dict key) are equal to certain value (dict value)
@@ -156,7 +156,7 @@ def statistics_report(statistics_df, data_name, translate_dct, max_title):
     statistics_report_df = statistics_df.copy()
 
     if data_name == 'Статистика_зон':
-        possible_allna_columns = ['zone_duplicated', 'Target_Initiator_note', 'Effective_cfg_usage_note']
+        possible_allna_columns = ['zone_duplicated', 'zone_absorber', 'Target_Initiator_note', 'Effective_cfg_usage_note']
         statistics_report_df = drop_all_na(statistics_report_df, possible_allna_columns)
 
         # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero

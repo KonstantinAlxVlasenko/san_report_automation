@@ -10,6 +10,7 @@ import pandas as pd
 
 from common_operations_dataframe_presentation import (dataframe_segmentation,
                                                       translate_values, drop_equal_columns)
+from common_operations_dataframe import remove_duplicates_from_column
 from common_operations_servicefile import dct_from_columns
 
 
@@ -29,15 +30,19 @@ def create_report_tables(portshow_aggregated_df, storage_connection_statistics_d
     # device report
     servers_report_df = _clean_dataframe(servers_report_df, 'srv')
     hba_report_df = _clean_dataframe(hba_report_df, 'srv', duplicates = ['Идентификатор порта WWPN'])
+    hba_report_df = device_name_duplicates_free_column(hba_report_df)
     storage_report_df = _clean_dataframe(storage_report_df, 'stor')
     storage_report_df = _multi_fabric(storage_report_df, report_columns_usage_dct)
     library_report_df = _clean_dataframe(library_report_df, 'lib')
     # device connection reports
     storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean = True)
+    storage_connection_df = device_name_duplicates_free_column(storage_connection_df)
     storage_connection_df = translate_values(storage_connection_df)
     library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean = True)
+    library_connection_df = device_name_duplicates_free_column(library_connection_df)
     library_connection_df = translate_values(library_connection_df)
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean = True)
+    server_connection_df = device_name_duplicates_free_column(server_connection_df)
     server_connection_df = translate_values(server_connection_df)
     # TO_REMOVE
     # npiv_report_df = _clean_dataframe(npiv_report_df, 'npiv', duplicates = None, clean = True)
@@ -113,12 +118,6 @@ def _clean_dataframe(df, mask_type,
                                     ('Количество портов устройства в подсети фабрики', 'Количество портов устройства в фабриках подсети'),
                                     ('Всего портов устройства', 'Количество портов устройства в подсетях фабрики')]
     df = drop_equal_columns(df, possible_equal_column_pairs)
-
-    # TO_REMOVE
-    # if 'Количество портов устройства в подсети' in df.columns and \
-    #     'Количество портов устройства в фабрике' in df.columns and \
-    #         df['Количество портов устройства в подсети'].equals(df['Количество портов устройства в фабрике']):
-    #             df.drop(columns=['Количество портов устройства в фабрике'], inplace=True)
     return df
 
 
@@ -140,6 +139,16 @@ def _multi_fabric(df, report_columns_usage_dct):
         identical_values = {k: 'first' for k in df.columns[2:]}
         df = df.groupby(['Имя устройства'], as_index = False).agg({**{'Фабрика': ', '.join}, **identical_values})
         df = df.reindex(columns = df_columns)
+    return df
+
+
+def device_name_duplicates_free_column(df):
+    """Function to create column with duplicates free device names"""
+
+    duplicates_subset = ['Фабрика', 'Имя устройства', 'Тип устройства']
+    duplicates_subset = [column for column in duplicates_subset if column in df.columns]
+    df = remove_duplicates_from_column(df, 'Имя устройства', duplicates_subset, duplicates_free_column_name='Название устройства')
+    df = drop_equal_columns(df, [('Имя устройства', 'Название устройства')])
     return df
 
 

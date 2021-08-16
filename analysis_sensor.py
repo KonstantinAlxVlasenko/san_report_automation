@@ -129,7 +129,7 @@ def sensor_report(sensor_aggregated_df, data_names, report_columns_usage_dct, ma
     translate_dct = dct_from_columns('customer_report', max_title, 'Датчики_перевод_eng', 
                                         'Датчики_перевод_ru', init_file = 'san_automation_info.xlsx')
     sensor_report_df = translate_values(sensor_aggregated_df, translate_dct=translate_dct, 
-                                            translate_columns = ['Type', 'Status', 'Vlaue', 'Unit']) 
+                                            translate_columns = ['Type', 'Status', 'Value', 'Unit']) 
     # translate_values(sensor_aggregated_df, translate_dct, max_title)
     sensor_report_df, = dataframe_segmentation(sensor_aggregated_df, data_names[1:], report_columns_usage_dct, max_title)
     return sensor_report_df
