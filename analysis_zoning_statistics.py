@@ -49,9 +49,10 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
                                                         join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
     # add list of absorbed zones (zones which are part of other active zones) to each zone in statistics
-    zoning_absorbed_columns = ['Fabric_name', 'Fabric_label',  'zone', 'zone_absorber']
-    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_absorbed_df, 
-                                                        join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
+    if not zoning_absorbed_df.empty:
+        zoning_absorbed_columns = ['Fabric_name', 'Fabric_label',  'zone', 'zone_absorber']
+        zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_absorbed_df, 
+                                                            join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
 
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
     zonemember_zonelevel_stat_df = note_zonemember_statistics(zonemember_zonelevel_stat_df)
@@ -81,6 +82,7 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     columns = ['zone_duplicated', 'zone_paired', 'zone_absorber',
                 'Zone_name_device_names_ratio', 'Zone_name_device_names_related',
                 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
+    columns = [column for column in columns if column in zonemember_zonelevel_stat_df.columns]
     zonemember_zonelevel_stat_df[columns] = zonemember_zonelevel_stat_df[columns].where(mask_valid_zone)
 
     # TO_REMOVE 

@@ -166,7 +166,8 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
 
     # global parameters are equal for all switches in one fabric thus checking Principal switches only
     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
-    switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal].copy()
+    mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
+    switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
     global_fabric_parameters_report_df, = dataframe_segmentation(switch_params_principal_df, data_names[-2], \
                 report_columns_usage_dct, max_title)            
 

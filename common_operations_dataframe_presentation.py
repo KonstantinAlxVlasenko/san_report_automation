@@ -192,7 +192,33 @@ def dataframe_slice_concatenate(df, column: str):
     return pd.concat(sorted_df_lst, axis=1)
 
 
+def remove_duplicates_from_column(df, column: str, duplicates_subset: list=None, 
+                                    duplicates_free_column_name: str=None, place='after', drop_orig_column=False):
+    """Function to create column with dropped duplicates based on subset.
+    Column name with dropped duplicates is derived from original column name
+    plus duplicates_free_suffix. New column is rellocated to the position
+    next to original column"""
+
+    if duplicates_subset is None:
+        duplicates_subset = df.columns.tolist()
+    
+    if duplicates_free_column_name is None:
+        duplicates_free_column_name = column + '_duplicates_free'
+
+    # create zone_duplicates_free column with no duplicated values
+    df[duplicates_free_column_name] = np.nan
+    mask_duplicated = df.duplicated(subset=duplicates_subset, keep='first')
+    df[duplicates_free_column_name] = df[duplicates_free_column_name].where(mask_duplicated, df[column])
+
+    # rellocate duplicates free column right after original column
+    df = move_column(df, cols_to_move=duplicates_free_column_name, ref_col=column, place=place)
+
+    return df
+
+
 def move_column(df, cols_to_move, ref_col: str, place='after'):
+    """Function to move column or columns in DataFrame after or before
+    reference column"""
     
     if isinstance(cols_to_move, str):
         cols_to_move = [cols_to_move]

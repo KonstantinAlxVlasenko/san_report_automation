@@ -9,8 +9,7 @@ Module to create tables
 import pandas as pd
 
 from common_operations_dataframe_presentation import (dataframe_segmentation,
-                                                      translate_values, drop_equal_columns)
-from common_operations_dataframe import remove_duplicates_from_column
+                                                      translate_values, drop_equal_columns, remove_duplicates_from_column)
 from common_operations_servicefile import dct_from_columns
 
 

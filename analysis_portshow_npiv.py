@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 from analysis_portshow_npiv_stat_notes import add_notes
-from common_operations_dataframe import dataframe_fillna, dataframe_join, remove_duplicates_from_column
-from common_operations_dataframe_presentation import drop_equal_columns
+from common_operations_dataframe import dataframe_fillna, dataframe_join
+from common_operations_dataframe_presentation import drop_equal_columns, remove_duplicates_from_column
 from common_operations_switch import (count_all_row, count_statistics,
                                       count_summary, summarize_statistics,
                                       verify_lic, verify_max_link_speed)
@@ -58,6 +58,7 @@ def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df
     # DataFrame contaning devices (switches, VC modules) connected through NPIV
     mask_npiv = portshow_sfp_aggregated_df['Connected_NPIV'] == 'yes'
     portshow_npiv_df = portshow_sfp_cp_df.loc[mask_npiv, npiv_link_columns].copy()
+
     # add AG ports information
     portshow_npiv_df = fillna_ag_link(portshow_npiv_df, portshow_sfp_cp_df, switch_params_aggregated_df)
 
@@ -121,7 +122,8 @@ def fillna_ag_link(portshow_npiv_df, portshow_sfp_cp_df, switch_params_aggregate
 def prior_prepearation(portshow_npiv_df, re_pattern_lst):
     """Function to modify portshow_npiv_df to count statistics"""
 
-        # regular expression patterns
+
+    # regular expression patterns
     *_, comp_dct = re_pattern_lst
 
     portshow_npiv_cp_df = portshow_npiv_df.copy()
@@ -192,21 +194,24 @@ def npiv_statistics(portshow_npiv_df, re_pattern_lst):
     npiv_statistics_df = count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
                                             port_qunatity_column = 'port', speed_column = 'speed')
     npiv_statistics_df.fillna(0, inplace=True)
-    # add trunk lic for both switches column
-    npiv_statistics_df = dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
-                                          join_lst=link_group_columns, filled_lst=['Trunking_lic_both_switches'])
-    # add notes to statistics DataFrame
-    npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pattern_lst)
 
-    # insert 'Device_quantity' column to place it to correct location in final statistics DataFrame 
-    insert_index = npiv_statistics_df.columns.get_loc('Port_quantity')
-    npiv_statistics_df.insert(loc=insert_index, column='Device_quantity', value=1)
-    # summarize statistics for fabric_name and fabric_label, for fabric_name and for all fabrics in total
-    count_columns = npiv_statistics_df.columns.tolist()
-    connection_symmetry_columns = ['Device_quantity', 'Port_quantity', 'Bandwidth_Gbps']
-    sort_columns = ['Fabric_name', 'Fabric_label', 'switchName', 'Device_Host_Name']
-    npiv_statistics_df = summarize_statistics(npiv_statistics_df, count_columns, 
-                                                connection_symmetry_columns, sort_columns)
+    if not npiv_statistics_df.empty:
+
+        # add trunk lic for both switches column
+        npiv_statistics_df = dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
+                                            join_lst=link_group_columns, filled_lst=['Trunking_lic_both_switches'])
+        # add notes to statistics DataFrame
+        npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pattern_lst)
+
+        # insert 'Device_quantity' column to place it to correct location in final statistics DataFrame 
+        insert_index = npiv_statistics_df.columns.get_loc('Port_quantity')
+        npiv_statistics_df.insert(loc=insert_index, column='Device_quantity', value=1)
+        # summarize statistics for fabric_name and fabric_label, for fabric_name and for all fabrics in total
+        count_columns = npiv_statistics_df.columns.tolist()
+        connection_symmetry_columns = ['Device_quantity', 'Port_quantity', 'Bandwidth_Gbps']
+        sort_columns = ['Fabric_name', 'Fabric_label', 'switchName', 'Device_Host_Name']
+        npiv_statistics_df = summarize_statistics(npiv_statistics_df, count_columns, 
+                                                    connection_symmetry_columns, sort_columns)
     return npiv_statistics_df
 
 

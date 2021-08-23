@@ -1,4 +1,4 @@
-"""Module to extract interswitch connection information"""
+"""Module to extract interswitch connection information and Fabric Shortest Path First (FSPF) link state database"""
 
 
 import re
@@ -20,7 +20,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
     *_, max_title, report_steps_dct = report_data_lst
 
     # names to save data obtained after current module execution
-    data_names = ['isl', 'trunk', 'porttrunkarea']
+    data_names = ['isl', 'trunk', 'porttrunkarea', 'lsdb']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
@@ -28,7 +28,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
     data_lst = load_data(report_data_lst, *data_names)
     # unpacking from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
-    isl_lst, trunk_lst, porttrunkarea_lst = data_lst
+    isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst = data_lst
     
     # data force extract check 
     # list of keys for each data from data_lst representing if it is required 
@@ -49,6 +49,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
      
         # data imported from init file to extract values from config file
         *_, comp_keys, match_keys, comp_dct = data_extract_objects('isl', max_title)
+        lsdb_params = columns_import('isl', max_title, 'lsdb_params')
 
 
         # lists to store only REQUIRED infromation
@@ -56,6 +57,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
         isl_lst = []
         trunk_lst = []
         porttrunkarea_lst = []
+        lsdb_lst = []
 
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
@@ -74,7 +76,7 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
             info = f'[{i+1} of {switch_num}]: {switch_name} isl, trunk and trunk area ports. Switch mode: {switch_mode}'
             print(info, end =" ")           
             # search control dictionary. continue to check sshow_file until all parameters groups are found
-            collected = {'isl': False, 'trunk': False, 'trunkarea': False}
+            collected = {'isl': False, 'trunk': False, 'trunkarea': False, 'lsdb': False}
 
             if switch_mode == 'Native':
                 with open(sshow_file, encoding='utf-8', errors='ignore') as file:
@@ -164,15 +166,60 @@ def interswitch_connection_extract(switch_params_lst, report_data_lst):
                                     porttrunkarea_lst.append(porttrunkarea_port_lst)                                                       
                                 if not line:
                                     break                        
-                        # porttrunkarea section end                    
+                        # porttrunkarea section end
+                        # lsdb section start
+                        if re.search(comp_dct['switchcmd_lsdbshow'], line) and not collected['lsdb']:
+                            # when section is found corresponding collected dict values changed to True
+                            collected['lsdb'] = True
+                            if ls_mode_on:
+                                while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+                                    line = file.readline()
+                                    if not line:
+                                        break
+                            # switchcmd_end_comp
+                            while not re.search(comp_dct['switchcmd_end'],line):  
+                                line = file.readline()
+                                if not line:
+                                    break
+                                # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                                match_dct ={comp_key: comp_dct[comp_key].match(line) for comp_key in comp_keys}
+                                # lsdb_domain section start
+                                if match_dct['lsdb_domain']:
+                                    # dictionary to store all DISCOVERED parameters
+                                    lsdb_param_dct = {}
+                                    # Domain ID described by this LSR. 
+                                    # A (self) keyword after the domain ID indicates that LSR describes the local switch.
+                                    domain_self_tag_lst = line_to_list(comp_dct['lsdb_domain'], line)
+                                    # lsdb_link_comp
+                                    while not (re.search(comp_dct['lsdb_link'],line) or re.search(comp_dct['switchcmd_end'],line)):
+                                        line = file.readline()
+                                        if not line:
+                                            break
+                                        match_dct ={comp_key: comp_dct[comp_key].match(line) for comp_key in comp_keys}
+                                        # param extraction
+                                        if match_dct['lsdb_param']:
+                                            lsdb_name = match_dct['lsdb_param'].group(1).rstrip()
+                                            lsdb_value = match_dct['lsdb_param'].group(2).rstrip()
+                                            lsdb_param_dct[lsdb_name] = lsdb_value
+                                    # list with required params only in order
+                                    lsdb_param_lst = [lsdb_param_dct.get(param_name) for param_name in lsdb_params]
+                                # lsdb_domain section end
+                                if match_dct['lsdb_link']:
+                                    # extract link information
+                                    lsdb_link_lst = line_to_list(comp_dct['lsdb_link'], line)
+                                    # add link information to the global list with current switch and lsdb information 
+                                    lsdb_lst.append([*switch_info_lst[:6], *domain_self_tag_lst,*lsdb_param_lst, *lsdb_link_lst])
+                        # lsdb section end
                 status_info('ok', max_title, len(info))
             # if switch in Access Gateway mode then skip
             else:
                 status_info('skip', max_title, len(info))        
         # save extracted data to json file
-        save_data(report_data_lst, data_names, isl_lst, trunk_lst, porttrunkarea_lst)
+        save_data(report_data_lst, data_names, isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        isl_lst, trunk_lst, porttrunkarea_lst = verify_data(report_data_lst, data_names, *data_lst)
-    
-    return isl_lst, trunk_lst, porttrunkarea_lst
+        isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst = verify_data(report_data_lst, data_names, *data_lst)
+    return isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst
+
+
+

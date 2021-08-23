@@ -78,8 +78,9 @@ def modify_zoning(zoning_aggregated_df):
     zoning_absorbed_df = verify_absorbed_zones(zoning_aggregated_df)
     zoning_absorbed_columns = ['Fabric_name', 'Fabric_label', 'zone_duplicates_free', 'zone_absorbed_tag']
     # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
-    zoning_modified_df = \
-        dataframe_fillna(zoning_modified_df, zoning_absorbed_df, join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
+    if not zoning_absorbed_df.empty:
+        zoning_modified_df = \
+            dataframe_fillna(zoning_modified_df, zoning_absorbed_df, join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
 
     # find zone pairs (zones with the same set device names) in another fabric_labels of the same fabric_name
     zoning_pairs_df = verify_pair_zones(zoning_aggregated_df)
@@ -139,13 +140,14 @@ def verify_absorbed_zones(zoning_aggregated_df):
         zoning_verified_df.groupby(by=group_columns).apply(lambda verified_zone_grp: find_zone_absorber(verified_zone_grp, zoning_valid_df))
     
     zoning_absorbed_df = pd.DataFrame(zoning_absorbed_df)
-    zoning_absorbed_df.reset_index(inplace=True)
-    # rename column with absorber zone names
-    zoning_absorbed_df.rename(columns={0: 'zone_absorber'}, inplace=True)
-    # drop rows if there is no zone absorber found
-    zoning_absorbed_df.dropna(subset=['zone_absorber'], inplace=True)
-    zoning_absorbed_df['zone_duplicates_free'] = zoning_absorbed_df['zone']
-    zoning_absorbed_df['zone_absorbed_tag'] = 'zone_absorbed_tag'
+    if not zoning_absorbed_df.empty:
+        zoning_absorbed_df.reset_index(inplace=True)
+        # rename column with absorber zone names
+        zoning_absorbed_df.rename(columns={0: 'zone_absorber'}, inplace=True)
+        # drop rows if there is no zone absorber found
+        zoning_absorbed_df.dropna(subset=['zone_absorber'], inplace=True)
+        zoning_absorbed_df['zone_duplicates_free'] = zoning_absorbed_df['zone']
+        zoning_absorbed_df['zone_absorbed_tag'] = 'zone_absorbed_tag'
     return zoning_absorbed_df
 
 

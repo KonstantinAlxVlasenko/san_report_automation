@@ -9,7 +9,7 @@ from common_operations_dataframe import (convert_wwn, dataframe_fillna,
                                          translate_values)
 from common_operations_dataframe_presentation import (
     dataframe_segmentation, dataframe_slice_concatenate, drop_all_identical,
-    drop_all_na, drop_equal_columns, drop_equal_columns_pairs,
+    drop_all_na, drop_equal_columns, drop_equal_columns_pairs, remove_duplicates_from_column,
     translate_values)
 from common_operations_filesystem import load_data, save_data, save_xlsx_file
 from common_operations_miscellaneous import (status_info, verify_data,
@@ -136,6 +136,9 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     # sort aggregated DataFrame
     sort_columns = ['System_Name', 'Host_Id', 'Host_Name', 'Storage_Port']
     storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
+    # create storage name column free of duplicates
+    storage_host_aggregated_df = remove_duplicates_from_column(storage_host_aggregated_df, 'System_Name',
+                                                                duplicates_subset=['System_Name'], ) 
     return storage_host_aggregated_df
 
 

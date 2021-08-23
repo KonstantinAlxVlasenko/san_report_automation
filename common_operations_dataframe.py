@@ -7,7 +7,7 @@ import re
 import pandas as pd
 import numpy as np
 import warnings
-from common_operations_dataframe_presentation import move_column
+# from common_operations_dataframe_presentation import move_column
 from common_operations_filesystem import save_xlsx_file
 from common_operations_servicefile import dct_from_columns, columns_import
 from common_operations_miscellaneous import status_info
@@ -486,28 +486,28 @@ def threshold_exceed(df, value_column: str, threshold: float, result_column: str
     return df
 
 
-def remove_duplicates_from_column(df, column: str, duplicates_subset: list=None, 
-                                    duplicates_free_column_name: str=None):
-    """Function to create column with dropped duplicates based on subset.
-    Column name with dropped duplicates is derived from original column name
-    plus duplicates_free_suffix. New column is rellocated to the position
-    next to original column"""
+# def remove_duplicates_from_column(df, column: str, duplicates_subset: list=None, 
+#                                     duplicates_free_column_name: str=None):
+#     """Function to create column with dropped duplicates based on subset.
+#     Column name with dropped duplicates is derived from original column name
+#     plus duplicates_free_suffix. New column is rellocated to the position
+#     next to original column"""
 
-    if duplicates_subset is None:
-        duplicates_subset = df.columns.tolist()
+#     if duplicates_subset is None:
+#         duplicates_subset = df.columns.tolist()
     
-    if duplicates_free_column_name is None:
-        duplicates_free_column_name = column + '_duplicates_free'
+#     if duplicates_free_column_name is None:
+#         duplicates_free_column_name = column + '_duplicates_free'
 
-    # create zone_duplicates_free column with no duplicated values
-    df[duplicates_free_column_name] = np.nan
-    mask_duplicated = df.duplicated(subset=duplicates_subset, keep='first')
-    df[duplicates_free_column_name] = df[duplicates_free_column_name].where(mask_duplicated, df[column])
+#     # create zone_duplicates_free column with no duplicated values
+#     df[duplicates_free_column_name] = np.nan
+#     mask_duplicated = df.duplicated(subset=duplicates_subset, keep='first')
+#     df[duplicates_free_column_name] = df[duplicates_free_column_name].where(mask_duplicated, df[column])
 
-    # rellocate duplicates free column right after original column
-    df = move_column(df, cols_to_move=duplicates_free_column_name, ref_col=column, place='after')
+#     # rellocate duplicates free column right after original column
+#     df = move_column(df, cols_to_move=duplicates_free_column_name, ref_col=column, place='after')
 
-    return df
+#     return df
 
 
 

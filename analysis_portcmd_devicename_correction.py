@@ -19,7 +19,7 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
     # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
     *_, max_title, report_steps_dct = report_data_lst
 
-    analyzed_data_names = ['device_rename', 'portshow_aggregated', 'portcmd', 'switchshow_ports', 
+    analyzed_data_names = ['device_rename', 'device_rename_form', 'portshow_aggregated', 'portcmd', 'switchshow_ports', 
                             'switch_params_aggregated', 'switch_parameters', 'chassis_parameters', 
                             'fdmi', 'nscamshow', 'nsshow', 'alias', 'blade_servers', 'fabric_labels']
     

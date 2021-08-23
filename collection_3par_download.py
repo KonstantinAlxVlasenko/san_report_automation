@@ -13,7 +13,7 @@ from common_operations_filesystem import (create_folder, find_files,
                                           save_xlsx_file)
 from common_operations_miscellaneous import reply_request, status_info
 
-S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0087\WINDOWS'
+S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0100\WINDOWS'
 S3MFT = r's3mft.exe'
 
 

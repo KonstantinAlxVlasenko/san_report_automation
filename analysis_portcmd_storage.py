@@ -9,9 +9,8 @@ import pandas as pd
 from common_operations_dataframe import (convert_wwn, count_frequency,
                                          dataframe_fillna,
                                          extract_values_from_column,
-                                         remove_duplicates_from_column,
                                          sequential_equality_note)
-from common_operations_dataframe_presentation import move_column
+from common_operations_dataframe_presentation import move_column, remove_duplicates_from_column
 
 
 def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):
@@ -54,11 +53,9 @@ def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):
                                                             columns1=['Fabric_name', 'Fabric_label'], 
                                                             columns2=['Storage_Port_Partner_Fabric_name', 'Storage_Port_Partner_Fabric_label'], 
                                                             note_column='Storage_Port_Partner_Fabric_equal')
-
     # if 3PAR configuration was not extracted apply reserved name (3PAR model and SN combination)
     if 'Device_Name_reserved' in portshow_aggregated_df.columns:
         portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Device_Name_reserved'], inplace = True)
-
     return portshow_aggregated_df
 
 
@@ -205,7 +202,8 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
 
         # create duplicates free storage name column
         storage_connection_statistics_df = remove_duplicates_from_column(storage_connection_statistics_df, column='Device_Host_Name', 
-                                                                            duplicates_subset=['deviceSubtype', 'Device_Host_Name'])
+                                                                            duplicates_subset=['deviceSubtype', 'Device_Host_Name'],
+                                                                            )
 
         # drop physical_virtual ports for all storages except 3par (3par PortPersistent detection)
         # keep device_type row 

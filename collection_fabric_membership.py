@@ -217,8 +217,7 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
                                     line = file.readline()
                                 if not line:
                                     break
-                        # ag_principal section end
-                                                
+                        # ag_principal section end       
                 status_info('ok', max_title, len(info))
             else:
                 status_info('skip', max_title, len(info))

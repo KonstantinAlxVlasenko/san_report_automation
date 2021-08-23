@@ -20,6 +20,9 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         # DataFrame with information for each zone (zonelevel) effective and effective+defined
         zonelevel_statistics_effective_df = zonemember_statistics_df.loc[mask_zone_effective & ~mask_cfg_summary].copy()
         zonelevel_statistics_df = zonemember_statistics_df.loc[~mask_cfg_summary].copy()
+        for column in ['zone_duplicated', 'zone_paired', 'zone_absorber']:
+            if not column in zonelevel_statistics_df.columns:
+                zonelevel_statistics_effective_df[column] = np.nan
         # add zone_duplicated_tag
         mask_not_duplicated_zone = zonelevel_statistics_effective_df['zone_duplicated'].isna()
         zonelevel_statistics_effective_df['zone_duplicated'] = \

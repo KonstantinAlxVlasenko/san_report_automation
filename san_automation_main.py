@@ -77,7 +77,7 @@ def main():
     fabricshow_df, ag_principal_df = switches_in_fabric(switch_params_lst)
     portshow_df, sfpshow_df, portcfgshow_df = ports_info_group(chassis_params_fabric_lst, switch_params_lst)    
     fdmi_df, nsshow_df, nscamshow_df = connected_devices(switch_params_lst)
-    isl_df, trunk_df, porttrunkarea_df = interswitch_connection(switch_params_lst)
+    isl_df, trunk_df, porttrunkarea_df, lsdb_df = interswitch_connection(switch_params_lst)
     fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcrouting(switch_params_lst)
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = zoning(switch_params_lst)
     sensor_df = sensor_readings(chassis_params_fabric_lst)
@@ -209,12 +209,13 @@ def connected_devices(switch_params_lst):
     
     
 def interswitch_connection(switch_params_lst):
-    isl_lst, trunk_lst, porttrunkarea_lst = interswitch_connection_extract(switch_params_lst, report_data_lst)
+    isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst = interswitch_connection_extract(switch_params_lst, report_data_lst)
     isl_df = list_to_dataframe(isl_lst, report_data_lst, 'isl', 'isl')
     trunk_df = list_to_dataframe(trunk_lst, report_data_lst, 'trunk', 'isl', columns_title_import = 'trunk_columns')
     porttrunkarea_df = list_to_dataframe(porttrunkarea_lst, report_data_lst, 'porttrunkarea', 'isl', columns_title_import = 'porttrunkarea_columns')
+    lsdb_df = list_to_dataframe(lsdb_lst, report_data_lst, 'lsdb', 'isl', columns_title_import='lsdb_columns')
     
-    return isl_df, trunk_df, porttrunkarea_df
+    return isl_df, trunk_df, porttrunkarea_df, lsdb_df
     
     
 def fcrouting(switch_params_lst):    
