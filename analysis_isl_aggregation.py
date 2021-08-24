@@ -6,11 +6,11 @@ import pandas as pd
 
 from analysis_isl_aggregation_conclusions import (attenuation_calc,
                                                   verify_isl_cfg_equality)
-from common_operations_dataframe import dataframe_join
+from common_operations_dataframe import dataframe_join, dataframe_fillna
 
 
 def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, 
-    isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_df, re_pattern_lst):
+    isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_df, re_pattern_lst):
     """Function to create ISL aggregated DataFrame"""
 
     # remove unlabeled fabrics and slice DataFrame to drop unnecessary columns
@@ -21,6 +21,9 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     isl_aggregated_df = trunk_join(isl_df, trunk_df)
     # adding switchshow port information to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = porttype_join(switchshow_df, isl_aggregated_df, fcredge_df)
+    # add link cost
+    isl_aggregated_df = verify_link_cost(isl_aggregated_df, lsdb_df)
+    fcredge_df = verify_link_cost(fcredge_df, lsdb_df)
     # adding link distance information
     isl_aggregated_df = portshow_join(portshow_df, switchshow_df, isl_aggregated_df)
     # adding sfp information to isl aggregated DataFrame
@@ -271,4 +274,15 @@ def trunk_join(isl_df, trunk_df):
     isl_aggregated_df = trunk_df.merge(isl_df, how = 'outer', on = join_lst)
     return isl_aggregated_df
 
+
+def verify_link_cost(df, lsdb_df):
+    """Function to add link cost"""
+
+    if not df.empty:
+        mask_local_sw = lsdb_df['self_tag'].notna()
+        lsdb_local_sw_df = lsdb_df.loc[mask_local_sw].copy()
+
+        join_lst = ['SwitchName', 'switchWwn', 'portIndex', 'cost']
+        df = dataframe_join(df, lsdb_local_sw_df, join_lst, 3)
+    return df
 

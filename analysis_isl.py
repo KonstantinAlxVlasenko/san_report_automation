@@ -16,7 +16,7 @@ from common_operations_servicefile import (data_extract_objects,
 
 
 def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
-    isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst):
+    isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst):
     """Main function to create ISL and IFR report tables"""
     
    # report_data_lst contains information: 
@@ -35,7 +35,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = data_lst
 
     # list of data to analyze from report_info table
-    analyzed_data_names = ['isl', 'trunk', 'fcredge', 'sfpshow', 'portcfgshow', 
+    analyzed_data_names = ['isl', 'trunk', 'fcredge', 'lsdb', 'sfpshow', 'portcfgshow', 
                             'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
                             'maps_parameters', 'blade_interconnect', 'fabric_labels']
 
@@ -56,7 +56,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
         # get aggregated DataFrames
         isl_aggregated_df, fcredge_df = \
             isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
-            isl_df, trunk_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, re_pattern_lst)
+            isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, re_pattern_lst)
 
         isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst)
 

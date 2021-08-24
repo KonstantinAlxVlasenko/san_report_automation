@@ -6,6 +6,8 @@ import pandas as pd
 
 from analysis_isl_statistics_notes import add_notes
 from common_operations_dataframe import count_total, сoncatenate_columns
+from common_operations_dataframe_presentation import move_column
+from common_operations_switch import count_summary
 
 isl_group_columns = ['Fabric_name', 'Fabric_label',  
                      'chassis_name', 'SwitchName',  'switchWwn', 
@@ -38,9 +40,11 @@ def isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst):
         isl_statistics_df = add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst)
         # count row with index All containing total values of isl_statistics_summary_df for all fabrics
         isl_statistics_total_df = count_all_row(isl_statistics_summary_df)
-        # insert 'Switch_quantity' column to place it to correct location in final statistics DataFrame 
-        insert_index = isl_statistics_df.columns.get_loc('Port_quantity')
-        isl_statistics_df.insert(loc=insert_index, column='Switch_quantity', value=1)
+        # insert 'Switch_quantity' and 'Switch_connection_quantity' columns
+        isl_statistics_df['Switch_quantity'] = 1
+        isl_statistics_df['Switch_connection_quantity'] = 1
+        isl_statistics_df = move_column(isl_statistics_df, ['Switch_quantity', 'Switch_connection_quantity'],
+                                        ref_col='Port_quantity', place='before')
         # concatenate statistics dataframes
         isl_statistics_df = pd.concat([isl_statistics_df, isl_statistics_summary_df])
         isl_statistics_df.sort_values(by=['Fabric_name', 'Fabric_label', 'sort_column_1', 'sort_column_2'], inplace=True)
@@ -241,19 +245,30 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     Since for each connection details of a pair of switches sort_column_1 and sort_column_2 values are identical
     it is enough to drop duplicates by both sorting columns thus leaving unique links only""" 
     
-    unique_isl_columns = ['Fabric_name', 'Fabric_label',  'sort_column_1', 'sort_column_2']                 
+    unique_isl_columns = ['Fabric_name', 'Fabric_label',  'sort_column_1', 'sort_column_2']
     unique_isl_statistics_df = isl_statistics_df.drop_duplicates(subset=unique_isl_columns).copy()
     # count sum bandwidth statistics for each fabric
     unique_isl_statistics_df['Bandwidth_Gbps'] = \
         unique_isl_statistics_df['Bandwidth_Gbps'].astype('int64', errors='ignore')
     unique_isl_bandwidth_total_df = count_total(unique_isl_statistics_df, grp_columns.copy(), 'Bandwidth_Gbps', sum)
     
-    # switch_quantity summary
-    switch_quantity_total_df = count_total(isl_statistics_df, grp_columns.copy(), 'SwitchName', fn='nunique')
-    switch_quantity_total_df.rename(columns={'SwitchName': 'Switch_quantity'}, inplace=True)
+    # switch_connection_quantity summary (all links between two switches considered as one connection)
+    unique_isl_statistics_df = сoncatenate_columns(unique_isl_statistics_df, summary_column='Link_Wwns', merge_columns=['sort_column_1', 'sort_column_2'])
+    switch_connection_quantity_total_df = count_total(unique_isl_statistics_df, grp_columns.copy(), 'Link_Wwns', fn='nunique')
+    switch_connection_quantity_total_df.rename(columns={'Link_Wwns': 'Switch_connection_quantity'}, inplace=True)
+    
+    # switch_quantity summary (number of unique wwns in 'switchWwn' and 'Connected_switchWwn' )
+    isl_sw_wwn_df = isl_statistics_df[['Fabric_name', 'Fabric_label', 'switchWwn']].copy()
+    isl_sw_connected_wwn_df = isl_statistics_df[['Fabric_name', 'Fabric_label', 'Connected_switchWwn']].copy()
+    isl_sw_connected_wwn_df.rename(columns={'Connected_switchWwn': 'switchWwn'}, inplace=True)
+    isl_sw_total_wwn_df = pd.concat([isl_sw_wwn_df, isl_sw_connected_wwn_df])
+    switch_quantity_total_df = count_summary(isl_sw_total_wwn_df, ['Fabric_name', 'Fabric_label'], 
+                                    count_columns='switchWwn', fn='nunique')
+    switch_quantity_total_df.rename(columns={'switchWwn': 'Switch_quantity'}, inplace=True)    
     
     # merge ISL ports, switch quantity and ISL bandwidth statistics
     isl_statistics_summary_df = isl_port_total_df.merge(switch_quantity_total_df, how='left', on=grp_columns)
+    isl_statistics_summary_df = isl_statistics_summary_df.merge(switch_connection_quantity_total_df, how='left', on=grp_columns)
     isl_statistics_summary_df = isl_statistics_summary_df.merge(unique_isl_bandwidth_total_df, how='left', on=grp_columns)
     
     return isl_statistics_summary_df
