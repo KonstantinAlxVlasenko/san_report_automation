@@ -159,9 +159,10 @@ def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ',
     as comma separated values"""
     
     # create summary column if not exist
-    if not summary_column in df.columns:
+    if summary_column not in df.columns:
         df[summary_column] = np.nan
 
+    df['separator_symbol'] = sep
     merge_columns = [column for column in merge_columns if column in df.columns]
     
     for column in merge_columns:
@@ -176,12 +177,11 @@ def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ',
         df[summary_column] = np.select(
             [mask_summary_note_empty, mask_current_note_empty, mask_summary_note_empty & mask_current_note_empty],
             [df[column], df[summary_column], np.nan],
-            default=df[summary_column] + sep + df[column])
-    
+            default=df[summary_column] + df['separator_symbol'] + df[column])
     # drop merge_columns
     if drop_merge_columns:
         df.drop(columns=merge_columns, inplace=True)
-    
+    df.drop(columns='separator_symbol', inplace=True)
     return df
 
 

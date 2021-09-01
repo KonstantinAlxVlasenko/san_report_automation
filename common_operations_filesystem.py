@@ -56,9 +56,9 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, current_date=str(da
     
     customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
 
-    options = {}
-    options['strings_to_formulas'] = False
-    options['strings_to_urls'] = False
+    # options = {}
+    # options['strings_to_formulas'] = False
+    # options['strings_to_urls'] = False
     
     # report_steps_dct for each data_name contains: export_to_excel flag, 
     # force_extract flag, report_type, step_info, data_description
@@ -113,7 +113,7 @@ def save_xlsx_file(data_frame, sheet_title, report_data_lst, current_date=str(da
         # if required export DataFrame to the new sheet
         if file_mode:
             try:
-                with pd.ExcelWriter(file_path, mode=file_mode, options=options) as writer:  # pylint: disable=abstract-class-instantiated
+                with pd.ExcelWriter(file_path, mode=file_mode, if_sheet_exists='replace') as writer:  # pylint: disable=abstract-class-instantiated
                     # table of content item generation start
                     # if file is new then create table of content
                     if file_mode == 'w':

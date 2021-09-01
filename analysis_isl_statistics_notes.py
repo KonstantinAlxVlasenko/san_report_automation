@@ -21,7 +21,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         
         # trunk absence note
         # columns with ISL tag (links quantity in ISL) in isl_statistics_df
-        isl_columns = [column for column in isl_statistics_df.columns if 'ISL' in column]
+        isl_columns = [column for column in isl_statistics_df.columns if ('ISL' in column or 'IFL' in column)]
         # conditions for trunk presence
         # switches connected with more then one ISL (excluding XISL)
         mask_port_quantity = (isl_statistics_df['Port_quantity'] - isl_statistics_df['XISL']) > 1

@@ -53,6 +53,7 @@ def attenuation_calc(isl_aggregated_df):
 def verify_isl_cfg_equality(isl_aggregated_df):
     """Function to find port configuratin parameters which are not equal for both sides of ISL connection"""
 
+
     isl_cp_df = isl_aggregated_df.copy()
     # '..' means service or setting is in OFF state
     isl_cp_df.replace(to_replace='..', value='OFF', inplace=True)

@@ -163,7 +163,8 @@ def port_state_statistics(switchshow_df):
 
 
     # count licensed vs not licences ports
-    mask_not_licensed = switchshow_df['connection_details'].str.lower().str.contains('no pod license')
+    # mask_not_licensed = switchshow_df['connection_details'].str.contains('(?:no pod license)|(?:no ports on demand license)', case=False)
+    mask_not_licensed = switchshow_df['connection_details'].str.contains('no (?:pod|ports on demand) license', case=False)
     switchshow_df['license'] = np.where(mask_not_licensed, 'Not_licensed', 'Licensed')
     port_license_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
                                 switchshow_df.chassis_name, switchshow_df.switch_index, 

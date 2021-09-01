@@ -168,6 +168,7 @@ def vc_id(portshow_aggregated_df):
     VC2, VC3, VC4, VC5
     """
 
+    portshow_aggregated_df = portshow_aggregated_df.copy()
     # extract AreaID from PortID address
     portshow_aggregated_df['Virtual_Channel'] = portshow_aggregated_df.Connected_portId.str.slice(start=2, stop=4)
     # convert string AreaID to integer with base 16 (hexadicimal)

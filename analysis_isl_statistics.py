@@ -60,9 +60,10 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     # regular expression patterns
     comp_keys, _, comp_dct = re_pattern_lst
 
+
     columns_lst =  ['Fabric_name', 'Fabric_label',  'chassis_name', 'SwitchName',  'switchWwn', 
                     'Connected_SwitchName', 'Connected_switchWwn', 
-                    'port', 'ISL_number', 'portType', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
+                    'port', 'ISL_number', 'IFL_number', 'portType', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
                     'Distance', 'Transceiver_mode', 'Trunking_license',  'Connected_Trunking_license', 
                     'Trunk_Port', 'Credit_Recovery', 'Encryption', 'Compression', 'QOS_Port', 'QOS_E_Port', 'FEC', '10G/16G_FEC',
                     'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode']
@@ -89,20 +90,27 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     # port_quantity tag
     isl_aggregated_modified_df['port'] = 'Port_quantity'
     # port settings
-    isl_aggregated_modified_df.rename(columns={'ISL_number': 'ISL', 'Trunk_Port': 'TRUNK', 'QOS_Port': 'QOS'}, inplace=True)
+    isl_aggregated_modified_df.rename(columns={'ISL_number': 'ISL', 'IFL_number': 'IFL', 'Trunk_Port': 'TRUNK', 'QOS_Port': 'QOS'}, inplace=True)
     # merge QOS and QOS_E_Port port settings
     isl_aggregated_modified_df['QOS'].fillna(isl_aggregated_modified_df['QOS_E_Port'], inplace=True)
     # merge FEC and 10G/16G_FEC port settings
     isl_aggregated_modified_df['FEC'].fillna(isl_aggregated_modified_df['10G/16G_FEC'], inplace=True)
     
-    port_settings_columns = ['Distance', 'Transceiver_speed', 'Transceiver_mode', 'ISL', 'TRUNK',  'Encryption', 
+    port_settings_columns = ['Distance', 'Transceiver_speed', 'Transceiver_mode', 'ISL', 'IFL', 'TRUNK',  'Encryption', 
                              'Compression', 'QOS', 'FEC', 'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode', 'Credit_Recovery']
-    # convert ISL number value to str type for concatenation with 'ISL' tag
-    isl_aggregated_modified_df['ISL'] = isl_aggregated_modified_df['ISL'].astype('str', errors='ignore')
+    # convert ISL and IFL number value to str type for concatenation with 'ISL' tag
+    for column in ['ISL', 'IFL']:
+        mask_notna = isl_aggregated_modified_df[column].notna()
+        isl_aggregated_modified_df[column] = isl_aggregated_modified_df[column].astype('float64', errors='ignore')
+        isl_aggregated_modified_df[column] = isl_aggregated_modified_df.loc[mask_notna, column].astype('Int64', errors='ignore')
+        isl_aggregated_modified_df[column] = isl_aggregated_modified_df.loc[mask_notna, column].astype('str', errors='ignore')
+
     # add column name for each non empty value in port_settings_columns
     for column in port_settings_columns:
         mask_setting_on = isl_aggregated_modified_df[column].notna()
-        isl_aggregated_modified_df.loc[mask_setting_on, column] = column + '_' + isl_aggregated_modified_df[column]
+        isl_aggregated_modified_df['tmp_column'] = column + '_'
+        isl_aggregated_modified_df[column] = isl_aggregated_modified_df.loc[mask_setting_on, 'tmp_column'] + isl_aggregated_modified_df.loc[mask_setting_on, column]
+        isl_aggregated_modified_df.drop(columns='tmp_column', inplace=True)
 
     # mark logical isl links.
     # base switch: NO, Allow_XISL: ON, chassis contains base switch: 'Yes (for switch and connecetd switch)
@@ -133,7 +141,7 @@ def count_isl_statistics(isl_aggregated_modified_df, isl_bandwidth_df):
     applied transceivers speed and mode statistics for each pair of switches connection"""
 
     isl_statistics_df = pd.DataFrame()
-    statistics_lst =  ['port', 'ISL', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
+    statistics_lst =  ['port', 'ISL', 'IFL', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
                     'Transceiver_speed', 'Transceiver_mode', 'Distance',
                     'TRUNK', 'Encryption', 'Compression', 'QOS', 'FEC',
                     'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode', 'Credit_Recovery']
@@ -158,6 +166,8 @@ def count_isl_statistics(isl_aggregated_modified_df, isl_bandwidth_df):
             isl_statistics_df = isl_statistics_df.merge(current_statistics_df, how='left', 
                                                                                     left_index=True, right_index=True)
     isl_statistics_df.reset_index(inplace=True)
+
+    isl_statistics_df.fillna(0, inplace=True)
                 
     return isl_statistics_df
     
