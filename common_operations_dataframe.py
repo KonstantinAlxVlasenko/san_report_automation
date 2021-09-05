@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import warnings
 # from common_operations_dataframe_presentation import move_column
-from common_operations_filesystem import save_xlsx_file
+from common_operations_table_report import dataframe_to_report
 from common_operations_servicefile import dct_from_columns, columns_import
 from common_operations_miscellaneous import status_info
 
@@ -201,7 +201,7 @@ def list_to_dataframe(data_lst, report_data_lst, sheet_title_export, sheet_title
     else:
         columns_title = columns(sheet_title_import, max_title, columns_title_import)
     data_df = pd.DataFrame(data_lst, columns= columns_title)
-    save_xlsx_file(data_df, sheet_title_export, report_data_lst)
+    dataframe_to_report(data_df, sheet_title_export, report_data_lst)
     
     return data_df
 

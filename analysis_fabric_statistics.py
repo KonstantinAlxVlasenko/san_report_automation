@@ -3,11 +3,13 @@
 import pandas as pd
 
 from analysis_fabric_statistics_aggregation import statisctics_aggregated
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import dct_from_columns
 from common_operations_dataframe_presentation import drop_all_identical, drop_equal_columns
+from common_operations_table_report import dataframe_to_report
+
 
 
 def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
@@ -61,7 +63,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
         data_lst = [fabric_statistics_df, fabric_statistics_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_data_lst)
         
     return fabric_statistics_df
 

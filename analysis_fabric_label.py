@@ -6,11 +6,13 @@ from datetime import date
 import pandas as pd
 import numpy as np
 
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (reply_request, status_info,
                                              verify_data, verify_force_run)
 from analysis_fabric_label_auto import auto_fabrics_labeling
 from analysis_fabric_label_manual import manual_fabrics_labeling
+from common_operations_table_report import dataframe_to_report
+
 
 
 def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_data_lst):
@@ -83,7 +85,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
        data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_data_lst)
 
     return fabricshow_ag_labels_df 
 

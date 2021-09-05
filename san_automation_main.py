@@ -20,7 +20,6 @@ from analysis_fabric_label import fabriclabels_main
 from analysis_fabric_statistics import fabricstatistics_main
 from analysis_isl import isl_main
 from analysis_portcmd import portcmd_analysis_main
-from analysis_switch_params import fabric_main
 from analysis_storage_host import storage_host_analysis_main
 from collection_bladesystem import blade_system_extract
 from collection_chassis_params import chassis_params_extract

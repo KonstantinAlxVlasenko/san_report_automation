@@ -11,9 +11,10 @@ from common_operations_dataframe_presentation import (
     dataframe_segmentation, dataframe_slice_concatenate, drop_all_identical,
     drop_all_na, drop_equal_columns, drop_equal_columns_pairs, remove_duplicates_from_column,
     translate_values)
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
+from common_operations_table_report import dataframe_to_report
 
 
 def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df, 
@@ -68,7 +69,7 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
         data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_data_lst)
     return storage_host_aggregated_df
 
 

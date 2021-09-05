@@ -6,7 +6,7 @@ import pandas as pd
 
 from analysis_isl_statistics_notes import add_notes
 from common_operations_dataframe import count_total, сoncatenate_columns
-from common_operations_dataframe_presentation import move_column
+from common_operations_dataframe_presentation import move_column, remove_duplicates_from_column
 from common_operations_switch import count_summary
 
 isl_group_columns = ['Fabric_name', 'Fabric_label',  
@@ -43,8 +43,9 @@ def isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst):
         # insert 'Switch_quantity' and 'Switch_connection_quantity' columns
         isl_statistics_df['Switch_quantity'] = 1
         isl_statistics_df['Switch_connection_quantity'] = 1
+
         isl_statistics_df = move_column(isl_statistics_df, ['Switch_quantity', 'Switch_connection_quantity'],
-                                        ref_col='Port_quantity', place='before')
+                                        ref_col='Logical_link_quantity', place='before')
         # concatenate statistics dataframes
         isl_statistics_df = pd.concat([isl_statistics_df, isl_statistics_summary_df])
         isl_statistics_df.sort_values(by=['Fabric_name', 'Fabric_label', 'sort_column_1', 'sort_column_2'], inplace=True)
@@ -89,6 +90,8 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     isl_aggregated_modified_df['Speed_Cfg'].replace(regex={r'AN': 'Speed_Auto', r'\d+G': 'Speed_Fixed'}, inplace=True)
     # port_quantity tag
     isl_aggregated_modified_df['port'] = 'Port_quantity'
+    # physical_link quantity
+    isl_aggregated_modified_df['physical_link'] = 'Physical_link_quantity'
     # port settings
     isl_aggregated_modified_df.rename(columns={'ISL_number': 'ISL', 'IFL_number': 'IFL', 'Trunk_Port': 'TRUNK', 'QOS_Port': 'QOS'}, inplace=True)
     # merge QOS and QOS_E_Port port settings
@@ -111,6 +114,15 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
         isl_aggregated_modified_df['tmp_column'] = column + '_'
         isl_aggregated_modified_df[column] = isl_aggregated_modified_df.loc[mask_setting_on, 'tmp_column'] + isl_aggregated_modified_df.loc[mask_setting_on, column]
         isl_aggregated_modified_df.drop(columns='tmp_column', inplace=True)
+
+    # logical_link quantity tag
+    isl_aggregated_modified_df['ISL_IFL'] = isl_aggregated_modified_df['ISL']
+    isl_aggregated_modified_df['ISL_IFL'].fillna(isl_aggregated_modified_df['IFL'], inplace=True)
+    isl_aggregated_modified_df = remove_duplicates_from_column(isl_aggregated_modified_df, column='ISL_IFL', 
+                                                                duplicates_subset=['Fabric_name', 'Fabric_label', 'switchWwn', 'ISL_IFL'],
+                                                                duplicates_free_column_name='logical_link', drop_orig_column=True)
+    mask_link_notna = isl_aggregated_modified_df['logical_link'].notna()
+    isl_aggregated_modified_df.loc[mask_link_notna, 'logical_link'] = 'Logical_link_quantity'
 
     # mark logical isl links.
     # base switch: NO, Allow_XISL: ON, chassis contains base switch: 'Yes (for switch and connecetd switch)
@@ -141,7 +153,7 @@ def count_isl_statistics(isl_aggregated_modified_df, isl_bandwidth_df):
     applied transceivers speed and mode statistics for each pair of switches connection"""
 
     isl_statistics_df = pd.DataFrame()
-    statistics_lst =  ['port', 'ISL', 'IFL', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
+    statistics_lst =  ['logical_link', 'physical_link', 'port', 'ISL', 'IFL', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
                     'Transceiver_speed', 'Transceiver_mode', 'Distance',
                     'TRUNK', 'Encryption', 'Compression', 'QOS', 'FEC',
                     'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode', 'Credit_Recovery']
@@ -237,6 +249,9 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     """Function to count ISL statistics summary for fabric_label and fabric_name levels.
     Total Bandwidwidth counts for link. Others statistics for ports (for both switches of ISL link)"""
 
+
+
+
     # columns grouping is performed on to count summary statistics
     grp_columns = ['Fabric_name', 'Fabric_label']
     # columns to calculate port summary (sum function for corresponding level)
@@ -246,7 +261,9 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     thus sum of links bandwidth give wrong total ISL bandwidth result.
     It is required to use different approach to count total ISL bandwidth"""
     
-    port_summary_columns.remove('Bandwidth_Gbps')
+    for column in ['Logical_link_quantity', 'Physical_link_quantity', 'Bandwidth_Gbps']:
+        if column in port_summary_columns:
+            port_summary_columns.remove(column)
     # count sum statistics for each fabric
     isl_port_total_df = count_total(isl_statistics_df, grp_columns.copy(), port_summary_columns, sum)
     
@@ -261,6 +278,9 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     unique_isl_statistics_df['Bandwidth_Gbps'] = \
         unique_isl_statistics_df['Bandwidth_Gbps'].astype('int64', errors='ignore')
     unique_isl_bandwidth_total_df = count_total(unique_isl_statistics_df, grp_columns.copy(), 'Bandwidth_Gbps', sum)
+
+    unique_link_statistics_df = count_summary(unique_isl_statistics_df, grp_columns.copy(), 
+                                                count_columns=['Logical_link_quantity', 'Physical_link_quantity'], fn=sum)
     
     # switch_connection_quantity summary (all links between two switches considered as one connection)
     unique_isl_statistics_df = сoncatenate_columns(unique_isl_statistics_df, summary_column='Link_Wwns', merge_columns=['sort_column_1', 'sort_column_2'])
@@ -276,11 +296,13 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
                                     count_columns='switchWwn', fn='nunique')
     switch_quantity_total_df.rename(columns={'switchWwn': 'Switch_quantity'}, inplace=True)    
     
-    # merge ISL ports, switch quantity and ISL bandwidth statistics
+    # merge ISL ports, switch quantity, logical link, physiscal and ISL bandwidth statistics
     isl_statistics_summary_df = isl_port_total_df.merge(switch_quantity_total_df, how='left', on=grp_columns)
     isl_statistics_summary_df = isl_statistics_summary_df.merge(switch_connection_quantity_total_df, how='left', on=grp_columns)
+
+    isl_statistics_summary_df = isl_statistics_summary_df.merge(unique_link_statistics_df, how='left', on=grp_columns)
     isl_statistics_summary_df = isl_statistics_summary_df.merge(unique_isl_bandwidth_total_df, how='left', on=grp_columns)
-    
+
     return isl_statistics_summary_df
     
 

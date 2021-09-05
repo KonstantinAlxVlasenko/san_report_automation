@@ -8,12 +8,14 @@ from analysis_portcmd_device_connection_statistics import \
 from analysis_portcmd_devicename_correction import devicename_correction_main
 from analysis_portcmd_storage import storage_connection_statistics
 from common_operations_dataframe import count_group_members
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (reply_request, status_info,
                                              verify_data, verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
 from report_portcmd import create_report_tables
+from common_operations_table_report import dataframe_to_report
+
 
 
 def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -129,8 +131,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
 
         # saving data to json or csv file
         save_data(report_data_lst, data_names, *data_lst)
-        save_xlsx_file(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, force_flag = nsshow_unsplit_force_flag)
-        save_xlsx_file(expected_ag_links_df, 'expected_ag_links', report_data_lst, force_flag = expected_ag_links_force_flag)
+        dataframe_to_report(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, force_flag = nsshow_unsplit_force_flag)
+        dataframe_to_report(expected_ag_links_df, 'expected_ag_links', report_data_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
@@ -151,7 +153,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         force_flag = False
         if data_name == 'portshow_aggregated':
             force_flag = portshow_force_flag
-        save_xlsx_file(data_frame, data_name, report_data_lst, force_flag=force_flag)
+        dataframe_to_report(data_frame, data_name, report_data_lst, force_flag=force_flag)
     return portshow_aggregated_df
 
 

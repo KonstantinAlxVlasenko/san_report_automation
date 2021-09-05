@@ -7,9 +7,10 @@ and add Device_Location column to blade modules DataFrame
 import pandas as pd
 
 from common_operations_dataframe import dataframe_segmentation
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
+from common_operations_table_report import dataframe_to_report
 from common_operations_servicefile import dataframe_import
 
 
@@ -63,7 +64,7 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst):
         data_lst = [blade_module_loc_df, blade_module_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_data_lst)
 
     return blade_module_loc_df
 

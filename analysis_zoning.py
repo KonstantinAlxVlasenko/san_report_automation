@@ -5,12 +5,14 @@ import pandas as pd
 
 from analysis_zoning_aggregation import verify_cfg_type, zoning_aggregated
 from analysis_zoning_statistics import zonemember_statistics
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from analysis_zoning_alias_dashboard import alias_dashboard
 from analysis_zoning_cfg_dashboard import cfg_dashborad
 from report_zoning_refactoring import zoning_report_main
+from common_operations_table_report import dataframe_to_report
+
 
 
 def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
@@ -107,7 +109,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
 
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_data_lst)
 
     return zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df
 

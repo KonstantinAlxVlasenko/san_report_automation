@@ -12,12 +12,14 @@ from common_operations_dataframe_presentation import (dataframe_segmentation,
                                                       drop_all_identical,
                                                       drop_equal_columns,
                                                       translate_values)
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (reply_request, status_info,
                                              verify_data, verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import, dct_from_columns)
 from common_operations_switch import statistics_report
+from common_operations_table_report import dataframe_to_report
+
 
 
 def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_df, sfpshow_df, portcfgshow_df, 
@@ -118,7 +120,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
         force_flag = False
         if data_name == 'portshow_sfp_aggregated':
             force_flag = portshow_sfp_force_flag
-        save_xlsx_file(data_frame, data_name, report_data_lst, force_flag=force_flag)
+        dataframe_to_report(data_frame, data_name, report_data_lst, force_flag=force_flag)
 
     return portshow_sfp_aggregated_df
 
@@ -240,32 +242,8 @@ def create_report_tables(port_complete_df, maps_ports_df, portshow_npiv_df, npiv
                                 'Статистика_ISL_перевод_ru', init_file = 'san_automation_info.xlsx')
     npiv_statistics_report_df = statistics_report(npiv_statistics_df, translate_dct, report_columns_usage_dct, 
                                                     drop_columns=['switchWwn', 'NodeName'])
+    # remove zeroes to clean view
+    npiv_statistics_report_df.replace({0: np.nan}, inplace=True)
     return errors_report_df, sfp_report_df, portcfg_report_df, maps_ports_report_df, npiv_report_df, npiv_statistics_report_df
 
 
-# def npiv_statistics_report(npiv_statistics_df, report_columns_usage_dct, max_title):
-#     """Function to create report table out of npiv_statistics_df DataFrame"""
-
-#     npiv_statistics_report_df = pd.DataFrame()
-
-#     if not npiv_statistics_df.empty:
-#         chassis_column_usage = report_columns_usage_dct.get('chassis_info_usage')
-#         translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_ISL_перевод_eng', 
-#                                         'Статистика_ISL_перевод_ru', init_file = 'san_automation_info.xlsx')
-#         npiv_statistics_report_df = npiv_statistics_df.copy()
-#         # identify columns to drop and drop columns
-#         drop_columns = ['switchWwn', 'NodeName']
-#         if not chassis_column_usage:
-#             drop_columns.append('chassis_name')
-#         drop_columns = [column for column in drop_columns if column in npiv_statistics_df.columns]
-#         npiv_statistics_report_df.drop(columns=drop_columns, inplace=True)
-
-#         # translate values in columns
-#         translate_columns = [column for column in npiv_statistics_df.columns if 'note' in column and npiv_statistics_df[column].notna().any()]
-#         translate_columns.extend(['Fabric_name', 'Trunking_lic_both_switches'])
-#         npiv_statistics_report_df = translate_values(npiv_statistics_report_df, translate_dct, translate_columns)
-#         # translate column names
-#         npiv_statistics_report_df.rename(columns=translate_dct, inplace=True)
-#         # drop empty columns
-#         npiv_statistics_report_df.dropna(axis=1, how='all', inplace=True)
-#     return npiv_statistics_report_df

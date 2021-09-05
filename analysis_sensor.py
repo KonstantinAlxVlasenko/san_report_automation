@@ -4,11 +4,13 @@ import numpy as np
 import pandas as pd
 
 
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import dct_from_columns
 from common_operations_dataframe_presentation import dataframe_segmentation, translate_values
+from common_operations_table_report import dataframe_to_report
+
 
 
 def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_usage_dct, report_data_lst):
@@ -62,7 +64,7 @@ def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_columns_
         data_lst = [sensor_aggregated_df, sensor_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_data_lst)
 
     return sensor_aggregated_df
 

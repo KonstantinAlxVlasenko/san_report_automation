@@ -1,7 +1,7 @@
 """Module to extend portshow_df DataFrame with information from switch, nameserver, 
 blade and synergy enclosures DataFrames"""
 
-from common_operations_filesystem import save_xlsx_file
+
 import numpy as np
 import pandas as pd
 

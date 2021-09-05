@@ -5,7 +5,6 @@ import numpy as np
 import sys
 
 from common_operations_dataframe import dataframe_fillna
-from common_operations_filesystem import save_xlsx_file
 
 
 def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df, report_data_lst):

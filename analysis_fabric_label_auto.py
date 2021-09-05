@@ -7,7 +7,7 @@ import sys
 
 from pandas.core import series
 
-from common_operations_filesystem import save_xlsx_file
+from common_operations_table_report import dataframe_to_report
 
 # auxiliary global variables for auto_fabrics_labeling function
 # variables changed globally each time function called
@@ -25,7 +25,7 @@ def auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, 
     # counts statistics for port type (F-port, E-port) and port state (Online) for each switch in fabricshow
     fabricshow_porttype_state_df = fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow_df)
     # saving DataFrame to Excel if manual labeling required
-    save_xlsx_file(fabricshow_porttype_state_df, 'fabricshow_statistics', report_data_lst, force_flag=True)
+    dataframe_to_report(fabricshow_porttype_state_df, 'fabricshow_statistics', report_data_lst, force_flag=True)
     # removing front domain and translate domain switches from DataFrame
     fabricshow_porttype_state_df = fabricshow_porttype_state_df.loc[fabricshow_porttype_state_df.Enet_IP_Addr != '0.0.0.0']
     # dividing fabricshow_porttype_state_df into groups. One group for each fabric

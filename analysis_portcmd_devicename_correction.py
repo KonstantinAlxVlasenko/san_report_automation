@@ -6,7 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from common_operations_filesystem import save_xlsx_file
+from common_operations_table_report import dataframe_to_report
 from common_operations_miscellaneous import (reply_request, status_info,
                                              verify_data)
 from common_operations_servicefile import dataframe_import
@@ -95,7 +95,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
 
             # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
             sheet_title = 'device_rename_form'
-            file_path = save_xlsx_file(manual_device_rename_df, sheet_title, report_data_lst, force_flag = True)
+            file_path = dataframe_to_report(manual_device_rename_df, sheet_title, report_data_lst, force_flag = True)
             file_name = os.path.basename(file_path)
             file_directory = os.path.dirname(file_path)
             print(f"\nTo rename devices put new names into the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")

@@ -8,11 +8,13 @@ from analysis_isl_aggregation import isl_aggregated
 from analysis_isl_statistics import isl_statistics
 from common_operations_dataframe import (dataframe_segmentation,
                                          translate_values)
-from common_operations_filesystem import load_data, save_data, save_xlsx_file
+from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (force_extract_check, status_info,
                                              verify_data, verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dct_from_columns)
+from common_operations_table_report import dataframe_to_report
+
 
 
 def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
@@ -88,7 +90,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
         data_lst = [isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_data_lst)
 
     return isl_aggregated_df, isl_statistics_df
 
@@ -119,5 +121,6 @@ def isl_statistics_report(isl_statistics_df, report_columns_usage_dct, max_title
         isl_statistics_df_report_df.rename(columns=translate_dct, inplace=True)
         # drop empty columns
         isl_statistics_df_report_df.dropna(axis=1, how='all', inplace=True)
-
+        # remove zeroes to clean view
+        isl_statistics_df_report_df.replace({0: np.nan}, inplace=True)
     return isl_statistics_df_report_df

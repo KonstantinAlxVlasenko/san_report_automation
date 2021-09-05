@@ -8,11 +8,13 @@ import pandas as pd
 import numpy as np
 
 from common_operations_filesystem import (find_files, load_data,
-                                          save_data, save_xlsx_file)
+                                          save_data)
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data, verify_force_run)
 from common_operations_servicefile import columns_import, data_extract_objects
 from common_operations_dataframe import wise_combine
+from common_operations_table_report import dataframe_to_report
+
 
 
 def synergy_system_extract(synergy_folder, report_data_lst):
@@ -189,10 +191,8 @@ def synergy_system_extract(synergy_folder, report_data_lst):
         data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        save_xlsx_file(data_frame, data_name, report_data_lst)
-    
+        dataframe_to_report(data_frame, data_name, report_data_lst)
     return synergy_module_aggregated_df, synergy_servers_aggregated_df
-
 
 
 def synergy_module(syn_enclosure_df, syn_module_df):

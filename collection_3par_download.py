@@ -9,9 +9,10 @@ from datetime import date, timedelta
 
 import numpy as np
 
-from common_operations_filesystem import (create_folder, find_files,
-                                          save_xlsx_file)
+from common_operations_filesystem import create_folder, find_files
 from common_operations_miscellaneous import reply_request, status_info
+from common_operations_table_report import dataframe_to_report
+
 
 S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0100\WINDOWS'
 S3MFT = r's3mft.exe'
@@ -279,7 +280,7 @@ def download_summary(ns_3par_df, report_data_lst):
     query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
     reply = reply_request(query)
     if reply == 'y':
-        save_xlsx_file(ns_3par_df, 'stats_summary', report_data_lst, force_flag=True)
+        dataframe_to_report(ns_3par_df, 'stats_summary', report_data_lst, force_flag=True)
 
 
 
