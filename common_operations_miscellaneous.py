@@ -114,7 +114,7 @@ def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     return data_check
 
 
-def verify_data(report_data_list, data_names, *args,  show_status=True):
+def verify_data(report_constant_lst, data_names, *args,  show_status=True):
     """
     Function to verify if loaded json file contains 'NO DATA FOUND' information string.
     If yes then data converted to empty list [] or DataFrame otherwise remains unchanged.
@@ -122,7 +122,7 @@ def verify_data(report_data_list, data_names, *args,  show_status=True):
     for the current SAN (fcr, ag, porttrunkarea) 
     """
 
-    *_, max_title, _ = report_data_list
+    *_, max_title = report_constant_lst
     
     # list to store verified data
     verified_data_lst = []

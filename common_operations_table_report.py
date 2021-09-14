@@ -12,11 +12,12 @@ from common_operations_miscellaneous import status_info
 
 
 # saving DataFrame to excel file
-def dataframe_to_report(data_frame, sheet_title, report_data_lst, current_date=str(date.today()), force_flag = False):
+def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, current_date=str(date.today()), force_flag = False, freeze_column='A'):
     """Check if excel file exists, write DataFrame, create or update table of contents,
     change DataFrame text and presentation format."""
     
-    customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
+    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    customer_name, report_path, _, max_title = report_constant_lst
     
     # report_steps_dct for each data_name contains: export_to_excel flag, 
     # force_extract flag, report_type, step_info, data_description
@@ -50,18 +51,15 @@ def dataframe_to_report(data_frame, sheet_title, report_data_lst, current_date=s
         try:
             if_sheet_exists_param = 'replace' if file_mode == 'a' else None
             with pd.ExcelWriter(file_path, mode=file_mode, if_sheet_exists=if_sheet_exists_param) as writer:  # pylint: disable=abstract-class-instantiated
-
                 table_of_contents_generation(writer, file_mode, sheet_title, df_decription)
                 write_dataframe_to_worksheet(writer, data_frame, sheet_title)
-
                 workbook = openpyxl.load_workbook(writer)
                 writer.book = workbook
                 writer.sheets = {ws.title: ws for ws in workbook.worksheets}
                 # add DataFrame title and link to the table of contents
                 add_dataframe_title(workbook, sheet_title, df_decription)
                 # change text format in header (wraped, bold, size 10) and data rows (size 10)
-                worksheet_format(workbook, sheet_title, header_row_num=3, font_size=10)
-                
+                worksheet_format(workbook, sheet_title, freeze_column, header_row_num=3, font_size=10)
                 writer.save()
         except PermissionError:
             status_info('fail', max_title, len(info))
@@ -79,7 +77,7 @@ def dataframe_to_report(data_frame, sheet_title, report_data_lst, current_date=s
         return None
 
 
-def columns_best_fit(ws: openpyxl.worksheet.worksheet.Worksheet) -> 'NoReturn':
+def columns_best_fit(ws: openpyxl.worksheet.worksheet.Worksheet):
         """Make all columns best fit"""
 
         column_letters = tuple(openpyxl.utils.get_column_letter(col_number + 1) for col_number in range(ws.max_column))
@@ -98,7 +96,7 @@ def add_dataframe_title(workbook, sheet_title, df_decription):
     create_hyperlink(workbook[sheet_title], 'A2', 'Содержание', cell_ref='A2', display_name='К содержанию')
                 
 
-def worksheet_format(workbook, sheet_title: str, header_row_num: int, font_size: int, font_name=None):
+def worksheet_format(workbook, sheet_title: str, freeze_column: str, header_row_num: int, font_size: int, font_name=None):
     """Function to change worksheet text format.
     Header is bold and wrapText oprion is used. Header and data font_size changed.
     Cells in columns are best fit"""                
@@ -118,6 +116,9 @@ def worksheet_format(workbook, sheet_title: str, header_row_num: int, font_size:
     # for idx, col in enumerate(ws.columns, 1):
     #     ws.column_dimensions[get_column_letter(idx)].auto_size = True
 
+    # freeze header
+    freeze_cell = freeze_column + str(header_row_num + 1)
+    ws.freeze_panes = freeze_cell
 
 def write_dataframe_to_worksheet(writer, df, sheet_title):
     """Auxiliary function to write DataFrane to excel.
@@ -176,6 +177,9 @@ def table_of_contents_generation(writer, file_mode, sheet_title, df_decription):
         columns_best_fit(ws_content)
         # for idx, col in enumerate(ws_content.columns, 1):
         #     ws_content.column_dimensions[get_column_letter(idx)].auto_size = True
+        
+        # freeze header
+        ws_content.freeze_panes = 'B2'
         writer.save()
 
 

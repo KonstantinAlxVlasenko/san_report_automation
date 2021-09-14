@@ -135,9 +135,6 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
         for sublevel_suffix in component_sublevel_suffix_lst:
             storage_ports_df[level + '_' + sublevel_suffix] = storage_ports_df[level]
 
-    # storage_ports_df['Storage_Physical'] = storage_ports_df['Storage']
-    # storage_ports_df['Storage_Logical'] = storage_ports_df['Storage']
-
     # count connection statistics for each port group level 
     # (Storage, Controller, Slot, Port, Port_parity, Controller_Slot)
     storage_connection_statistics_df = pd.DataFrame()
@@ -193,18 +190,11 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
         storage_connection_statistics_df.drop(columns=['Port_parity_note'], inplace=True)
 
         # # move Group_type column
-        # group_type_values = storage_connection_statistics_df['Group_type']
-        # storage_connection_statistics_df.drop(columns=['Group_type'], inplace=True)
-        # storage_connection_statistics_df.insert(2, 'Group_type', group_type_values)
-
         storage_connection_statistics_df = move_column(storage_connection_statistics_df, cols_to_move=['Group_type', 'FLOGI'], 
                                                         place='after', ref_col='Device_Host_Name')
-
         # create duplicates free storage name column
         storage_connection_statistics_df = remove_duplicates_from_column(storage_connection_statistics_df, column='Device_Host_Name', 
-                                                                            duplicates_subset=['deviceSubtype', 'Device_Host_Name'],
-                                                                            )
-
+                                                                            duplicates_subset=['deviceSubtype', 'Device_Host_Name'])
         # drop physical_virtual ports for all storages except 3par (3par PortPersistent detection)
         # keep device_type row 
         mask_not_3par = storage_connection_statistics_df['deviceSubtype'].str.lower() != '3par'
@@ -213,6 +203,11 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
         mask_valid = ~(mask_not_3par & mask_physical_virtual & ~mask_device_type)
         storage_connection_statistics_df = storage_connection_statistics_df.loc[mask_valid]
 
+        # drop 'physical_virtual' rows for Groups where no virtual port ligin detected
+        storage_stat_columns = storage_connection_statistics_df.columns.tolist()
+        for column in ['Device_Host_Name_duplicates_free', 'FLOGI']:
+            storage_stat_columns.remove(column)
+        storage_connection_statistics_df.drop_duplicates(subset=storage_stat_columns, inplace=True)
 
     return storage_connection_statistics_df
 

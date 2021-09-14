@@ -48,7 +48,9 @@ def verify_max_link_speed(df):
     
     if pd.Series(speed_lst).isin(df.columns).all():
         # minimum of four speed columns
-        df['Link_speedMax'] = df.loc[:, speed_lst].min(axis = 1, skipna = False)
+        mask_speed_notna = df[speed_lst].notna().all(axis=1)
+        # minimum of four speed columns
+        df.loc[mask_speed_notna, 'Link_speedMax'] = df.loc[mask_speed_notna, speed_lst].min(axis = 1, numeric_only=True)
         # actual link speed
         df['Link_speedActual'] = df['speed'].str.extract(r'(\d+)').astype('float64')
         # mask to check speed in columns are not None values
@@ -97,7 +99,7 @@ def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_
         if column == port_qunatity_column:
             current_statistics_df = current_statistics_df.merge(bandwidth_df, how='left',
                                                                 left_index=True, right_index=True)
-        # add current_statistics_df DataFrame to statistics_df DataFRame
+        # add current_statistics_df DataFrame to statistics_df DataFrame
         if statistics_df.empty:
             statistics_df = current_statistics_df.copy()
         else:
@@ -278,3 +280,20 @@ def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list,
     wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True)
     wwn_df.drop(columns=[wwnn_column], inplace=True)
     return wwn_df
+
+
+def tag_value_in_column(df, column, tag, binding_char='_'):
+    """Function to tag all notna values in DataFrame column with tag"""
+
+    tmp_column = 'tag_column'
+    # change temp column name if column in DataFrame
+    while tmp_column in df.columns:
+        tmp_column += '_'
+
+    mask_value_notna = df[column].notna()
+    df[tmp_column] = tag + binding_char
+    df[column] = df[column].astype('Int64', errors='ignore').astype('str', errors='ignore')
+    df[column] = df.loc[mask_value_notna, tmp_column] + df.loc[mask_value_notna, column]
+    df.drop(columns=tmp_column, inplace=True)
+
+    return df

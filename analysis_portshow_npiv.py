@@ -8,7 +8,7 @@ from common_operations_dataframe import dataframe_fillna, dataframe_join
 from common_operations_dataframe_presentation import drop_equal_columns, remove_duplicates_from_column
 from common_operations_switch import (count_all_row, count_statistics,
                                       count_summary, summarize_statistics,
-                                      verify_lic, verify_max_link_speed)
+                                      verify_lic, verify_max_link_speed, tag_value_in_column)
 
 link_group_columns = ['Fabric_name', 'Fabric_label',  
                      'chassis_name', 'switchName',  'switchWwn', 
@@ -159,9 +159,13 @@ def prior_prepearation(portshow_npiv_df, re_pattern_lst):
     transceiver_columns = ['Transceiver_speed', 'Connected_Transceiver_speed']
     for column in transceiver_columns:
         if column in portshow_npiv_cp_df.columns:
-            mask_notna = portshow_npiv_cp_df[column].notna()
+
+            tag_value_in_column(portshow_npiv_cp_df, column, 'Transceiver_speed')
+
+            # mask_notna = portshow_npiv_cp_df[column].notna()
             # tag = re.search(r'^(?:Connected_)?(.+?)(?:_Port)?', column).group(1)
-            portshow_npiv_cp_df.loc[mask_notna, column] = 'Transceiver_speed_' + portshow_npiv_cp_df[column]
+            # portshow_npiv_cp_df.loc[mask_notna, column] = 'Transceiver_speed_' + portshow_npiv_cp_df.loc[mask_notna, column]
+
 
     # for services remove 'Inactive' status and add service name instead 'Active' status
     for column in service_columns:
@@ -171,7 +175,7 @@ def prior_prepearation(portshow_npiv_df, re_pattern_lst):
     
     # add AG or Native to tag and column name to the value
     for cfg_column in cfg_columns:
-        mask_notna = portshow_npiv_cp_df[cfg_column].notna()
+        # mask_notna = portshow_npiv_cp_df[cfg_column].notna()
         tag = ag_tag if 'Connected_' in cfg_column else native_tag
         if not 'speed' in cfg_column.lower():
             port_settings_re = comp_dct['port_settings']
@@ -180,8 +184,19 @@ def prior_prepearation(portshow_npiv_df, re_pattern_lst):
                 # cfg_name = re.match(r'^(?:Connected_)?(.+?)(?:_Port)', cfg_column).group(1).upper() TO_REMOVE
                 cfg_name = re.match(port_settings_re, cfg_column).group(1).upper()
                 tag += cfg_name + '_'
-        portshow_npiv_cp_df[cfg_column] = \
-            portshow_npiv_cp_df[cfg_column].where(~mask_notna, tag + portshow_npiv_cp_df[cfg_column])
+        tag_value_in_column(portshow_npiv_cp_df, cfg_column, tag=tag, binding_char='')
+
+        # portshow_npiv_cp_df[cfg_column] = \
+        #     portshow_npiv_cp_df[cfg_column].where(~mask_notna, tag + portshow_npiv_cp_df[cfg_column])
+
+    # logical and physical links tags
+    portshow_npiv_cp_df['physical_link'] = 'Physical_link_quantity'
+    portshow_npiv_cp_df = remove_duplicates_from_column(portshow_npiv_cp_df, column='Link', 
+                                                                duplicates_subset=['Fabric_name', 'Fabric_label', 'Connected_switchWwn', 'Link'],
+                                                                duplicates_free_column_name='logical_link')
+    mask_link_notna = portshow_npiv_cp_df['logical_link'].notna()
+    portshow_npiv_cp_df.loc[mask_link_notna, 'logical_link'] = 'Logical_link_quantity'
+
     return portshow_npiv_cp_df
 
 
@@ -190,21 +205,19 @@ def npiv_statistics(portshow_npiv_df, re_pattern_lst):
     
     portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, re_pattern_lst)
     # count statistics for stat columns
-    stat_columns = ['port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
+    stat_columns = ['logical_link', 'physical_link', 'port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
     npiv_statistics_df = count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
                                             port_qunatity_column = 'port', speed_column = 'speed')
     npiv_statistics_df.fillna(0, inplace=True)
 
     if not npiv_statistics_df.empty:
-
         # add trunk lic for both switches column
         npiv_statistics_df = dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
                                             join_lst=link_group_columns, filled_lst=['Trunking_lic_both_switches'])
         # add notes to statistics DataFrame
         npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pattern_lst)
-
         # insert 'Device_quantity' column to place it to correct location in final statistics DataFrame 
-        insert_index = npiv_statistics_df.columns.get_loc('Port_quantity')
+        insert_index = npiv_statistics_df.columns.get_loc('Logical_link_quantity')
         npiv_statistics_df.insert(loc=insert_index, column='Device_quantity', value=1)
         # summarize statistics for fabric_name and fabric_label, for fabric_name and for all fabrics in total
         count_columns = npiv_statistics_df.columns.tolist()

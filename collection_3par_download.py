@@ -14,15 +14,20 @@ from common_operations_miscellaneous import reply_request, status_info
 from common_operations_table_report import dataframe_to_report
 
 
-S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0100\WINDOWS'
+S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0110\WINDOWS'
 S3MFT = r's3mft.exe'
 
 
-def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_data_lst):
+def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_constant_lst):
     """Function to prepare 3PAR configuration files for parsing. 
     Download in from STATs and local (defined in report.xlsx file) folders"""
 
-    *_, max_title, _ = report_data_lst
+
+    # # report_steps_dct contains current step desciption and force and export tags
+    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # folder for 3par config files download is in project folder
     download_folder = os.path.join(project_folder, '3par_configs')
@@ -69,7 +74,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
                 # download configs from loacl folder
                 ns_3par_df = local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, match_keys, comp_dct, max_title)
 
-    download_summary(ns_3par_df, report_data_lst)
+    download_summary(ns_3par_df, report_constant_lst)
     # create configs list in download folder if it exist (if user reject download config files
     # from both sources download folder is not created)
     download_folder_exist = verify_download_folder(download_folder, create=False)
@@ -118,7 +123,7 @@ def stats_download(ns_3par_df, download_folder, max_title):
     """Function to download 3PAR configuration files from STATs with
     help of s3mft program"""
 
-    # verifu if download folder exist and create one if not (default behaviour)
+    # verify if download folder exist and create one if not (default behaviour)
     verify_download_folder(download_folder, max_title)
     # list of serial numbers and models
     sn_lst = ns_3par_df['Serial_Number'].tolist()
@@ -261,7 +266,7 @@ def parse_serial(config_3par, comp_keys, match_keys, comp_dct):
     return model, sn
 
 
-def download_summary(ns_3par_df, report_data_lst):
+def download_summary(ns_3par_df, report_constant_lst):
     """Function to print configurations download from STATs summary and
     save summary to file if user agreed"""
 
@@ -280,7 +285,7 @@ def download_summary(ns_3par_df, report_data_lst):
     query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
     reply = reply_request(query)
     if reply == 'y':
-        dataframe_to_report(ns_3par_df, 'stats_summary', report_data_lst, force_flag=True)
+        dataframe_to_report(ns_3par_df, 'stats_summary', report_constant_lst, force_flag=True)
 
 
 

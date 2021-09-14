@@ -9,7 +9,7 @@ from common_operations_dataframe import (convert_wwn, dataframe_fillna,
                                          translate_values)
 from common_operations_dataframe_presentation import (
     dataframe_segmentation, dataframe_slice_concatenate, drop_all_identical,
-    drop_all_na, drop_equal_columns, drop_equal_columns_pairs, remove_duplicates_from_column,
+    drop_column_if_all_na, drop_equal_columns, drop_equal_columns_pairs, remove_duplicates_from_column,
     translate_values)
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
@@ -19,12 +19,15 @@ from common_operations_table_report import dataframe_to_report
 
 def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df, 
                                 portshow_aggregated_df, zoning_aggregated_df, 
-                                report_columns_usage_dct, report_data_lst):
+                                report_creation_info_lst):
     """Main function to analyze storage port configuration"""
         
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['storage_host_aggregated', 'Презентация', 'Презентация_A&B']
@@ -33,7 +36,7 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     storage_host_aggregated_df, storage_host_report_df,  storage_host_compare_report_df = data_lst
@@ -60,16 +63,16 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
         # create list with partitioned DataFrames
         data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
         # saving data to json or csv file
-        save_data(report_data_lst, data_names, *data_lst)
+        save_data(report_constant_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        # storage_host_aggregated_df, = verify_data(report_data_lst, data_names, *data_lst)
+        # storage_host_aggregated_df, = verify_data(report_constant_lst, data_names, *data_lst)
         storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df \
-            = verify_data(report_data_lst, data_names, *data_lst)
+            = verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
     return storage_host_aggregated_df
 
 
@@ -253,7 +256,7 @@ def clean_storage_host(df):
                                                 ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
                                                 ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
     # drop empty columns
-    df = drop_all_na(df, ['Device_Port', 'Device_Location'])
+    df = drop_column_if_all_na(df, ['Device_Port', 'Device_Location'])
     # drop columns where all values are equal to the item value
     columns_values = {'Host_Storage_Fabric_equal': 'Yes', 'Persona_correct': 'Yes', 'Fabric_host_status': 'local'}
     df = drop_all_identical(df, columns_values, dropna=True)

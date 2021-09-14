@@ -8,7 +8,7 @@ import pandas as pd
 
 
 def statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df, 
-                            fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst):
+                            fabricshow_ag_labels_df, nscamshow_df, portshow_df):
     """Function to create aggregated statistics table by merging DataFrames"""
 
     # get labeled switchshow to perform pandas crosstab method
@@ -23,7 +23,7 @@ def statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df,
     # crosstab to cound device classes(SRV, STORAGE, SWITCH,VC)
     device_class_df = device_class_statistics(portshow_aggregated_df)
     # crosstab to count device type (Target, Initiator and etc) in fabric
-    target_initiator_df = target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report_data_lst)
+    target_initiator_df = target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df)
     # crosstab to count ports types (E-port, F-port, etc) in fabric
     portType_df = portType_statistics(switchshow_df)
     # calculating ratio of device ports to inter-switch links
@@ -96,7 +96,7 @@ def portType_statistics(switchshow_df):
     return portType_df
 
 
-def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df, report_data_lst):
+def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df):
     """Function to count device types (Targer, Initiator and etc) number in fabric"""
 
     # get required columns from portshow DataFrame

@@ -14,12 +14,15 @@ from common_operations_table_report import dataframe_to_report
 from common_operations_servicefile import dataframe_import
 
 
-def blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst):
+def blademodule_analysis(blade_module_df, synergy_module_df, report_creation_info_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['blade_module_loc', 'Blade_шасси']
@@ -27,7 +30,7 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     blade_module_loc_df, blade_module_report_df = data_lst
@@ -56,15 +59,15 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_data_lst):
         # create list with partitioned DataFrames
         data_lst = [blade_module_loc_df, blade_module_report_df]
         # saving data to json or csv file
-        save_data(report_data_lst, data_names, *data_lst)
+        save_data(report_constant_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         blade_module_loc_df, blade_module_report_df = \
-            verify_data(report_data_lst, data_names, *data_lst)
+            verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [blade_module_loc_df, blade_module_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
     return blade_module_loc_df
 

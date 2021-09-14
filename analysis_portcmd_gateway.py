@@ -22,10 +22,14 @@ portcmd_columns_lst = ['configname', 'Fabric_name', 'Fabric_label',
 def verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df):
     """Main function to find AG links in portshow_aggregated_df DataFrame"""
 
+
     # find AG links using information in portshow_aggregated_df DataFrame itself
-    portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
+    portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore').copy()
     portshow_aggregated_df['Index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
         portshow_aggregated_df.slot + '-' + portshow_aggregated_df.port
+
+    portshow_aggregated_df = portshow_aggregated_df.copy()
+
     portshow_aggregated_df['Connected_NPIV'] = np.where(portshow_aggregated_df.deviceType == 'VC', 'yes', pd.NA)
     master_native_df, master_native_cisco_df, master_ag_df, slave_native_df, slave_ag_df = portcmd_split(portshow_aggregated_df)
     master_native_df, master_ag_df, slave_native_df, slave_ag_df =  \
@@ -365,16 +369,17 @@ def verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df):
     # column with pair Wwnns of the npiv link
     portshow_trunkless_npiv_df['Link_Wwnns'] = portshow_trunkless_npiv_df['switchWwn'] + '_' + portshow_trunkless_npiv_df['NodeName']
 
+    if not portshow_trunkless_npiv_df.empty:
+        portshow_trunkless_npiv_df['NPIV_link_number'] = portshow_trunkless_npiv_df.apply(lambda series: npiv_link_counter(series), axis=1)
+        # add npiv links numbers for links out of trunk area links to portshow_aggregated_df DataFrame
+        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, portshow_trunkless_npiv_df, 
+                                                    join_lst=[*switch_columns, 'Connected_portId', *port_columns], 
+                                                    filled_lst=['NPIV_link_number'])
 
-    portshow_trunkless_npiv_df['NPIV_link_number'] = portshow_trunkless_npiv_df.apply(lambda series: npiv_link_counter(series), axis=1)
-    # add npiv links numbers for links out of trunk area links to portshow_aggregated_df DataFrame
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, portshow_trunkless_npiv_df, 
-                                                join_lst=[*switch_columns, 'Connected_portId', *port_columns], 
-                                                filled_lst=['NPIV_link_number'])
-
-    portshow_aggregated_df['NPIV_link_number'] = \
-        portshow_aggregated_df['NPIV_link_number'].astype('float64', errors='ignore')
-    portshow_aggregated_df['NPIV_link_number'] = \
-        portshow_aggregated_df['NPIV_link_number'].astype('int64', errors='ignore')
+    if portshow_aggregated_df['NPIV_link_number'].notna().any():
+        portshow_aggregated_df['NPIV_link_number'] = \
+            portshow_aggregated_df['NPIV_link_number'].astype('float64', errors='ignore')
+        portshow_aggregated_df['NPIV_link_number'] = \
+            portshow_aggregated_df['NPIV_link_number'].astype('int64', errors='ignore')
 
     return portshow_aggregated_df

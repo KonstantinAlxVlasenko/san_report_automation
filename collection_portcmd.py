@@ -11,12 +11,14 @@ from common_operations_miscellaneous import (
 from common_operations_servicefile import columns_import, data_extract_objects
 
 
-def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
+def portcmdshow_extract(chassis_params_fabric_lst, report_creation_info_lst):
     """Function to extract portshow, portloginshow, portstatsshow information"""
 
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # report_constant_lst contains information: 
+    # customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['portcmd']
@@ -24,7 +26,7 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     portshow_lst, = data_lst
@@ -196,10 +198,10 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_data_lst):
                     # sshow_port section end                            
             status_info('ok', max_title, len(info))
         # save extracted data to json file    
-        save_data(report_data_lst, data_names, portshow_lst)
+        save_data(report_constant_lst, data_names, portshow_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        portshow_lst = verify_data(report_data_lst, data_names, *data_lst)
+        portshow_lst = verify_data(report_constant_lst, data_names, *data_lst)
         
     return portshow_lst
 

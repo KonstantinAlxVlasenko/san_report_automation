@@ -12,16 +12,19 @@ from common_operations_miscellaneous import (reply_request, status_info,
 from common_operations_servicefile import dataframe_import
 
 
-def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_data_lst):
+def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_creation_info_lst):
     """Main function to rename devices"""
 
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     analyzed_data_names = ['device_rename', 'device_rename_form', 'portshow_aggregated', 'portcmd', 'switchshow_ports', 
                             'switch_params_aggregated', 'switch_parameters', 'chassis_parameters', 
-                            'fdmi', 'nscamshow', 'nsshow', 'alias', 'blade_servers', 'fabric_labels']
+                            'fdmi', 'nscamshow', 'nsshow', 'alias', 'blade_servers', 'synergy_servers', 'system_3par', 'fabric_labels']
     
     # check if portshow_aggregated DataFrame is changed or 'device_rename' force flag is on
     force_form_update_flag = any([report_steps_dct[data_name][1] for data_name in analyzed_data_names])
@@ -32,7 +35,7 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
     
     # create DataFrame with devices required to change names
     device_rename_df = define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title, 
-                                                    force_form_update_flag, force_change_data_lst, report_data_lst)
+                                                    force_form_update_flag, force_change_data_lst, report_creation_info_lst)
     # current operation information string
     info = f'Applying device rename schema'
     print(info, end =" ")
@@ -53,11 +56,16 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
 
 
 def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title, 
-                                force_form_update_flag, force_change_data_lst, report_data_lst):
+                                force_form_update_flag, force_change_data_lst, report_creation_info_lst):
     """
     Function to define (create new, return previously saved or return empty) 
     device_rename_df DataFrame to apply device rename schema
     """
+
+    report_constant_lst, *_ = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
+
 
     # if device_rename_df DataFrame doesn't exist (1st iteration)
     # or force flag to change device_rename_df DataFrame is on 
@@ -66,7 +74,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
         print('\n')
         if force_change_data_lst:
             print(f"Request to force change of {', '.join(force_change_data_lst)} data was received.")
-        reply = reply_request('Do you want to change auto assigned device names? (y)es/(n)o: ')
+        reply = reply_request('Do you want to CHANGE AUTO assigned device names? (y)es/(n)o: ')
         if reply == 'y':
             # if device_rename_df DataFrame doesn't exist (1st iteration)
             if device_rename_df is None:
@@ -75,13 +83,13 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
             else:
                 # if any related DataFrames was forcibly changed ask if device rename form reset required
                 if force_change_data_lst:
-                    reply = reply_request('Do you want to apply previously saved device rename schema? (y)es/(n)o: ')
+                    reply = reply_request('Do you want to APPLY SAVED device rename schema? (y)es/(n)o: ')
                     if reply == 'y':
                         print('\n')
                         return device_rename_df
                     else:
                         print('\n')
-                        reply = reply_request('Do you want to reset device rename form? (y)es/(n)o: ')
+                        reply = reply_request('Do you want to RESET device rename form? (y)es/(n)o: ')
                         if reply == 'y':
                             # create new device rename DataFrame
                             manual_device_rename_df = create_device_rename_form(portshow_aggregated_df)
@@ -95,7 +103,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
 
             # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
             sheet_title = 'device_rename_form'
-            file_path = dataframe_to_report(manual_device_rename_df, sheet_title, report_data_lst, force_flag = True)
+            file_path = dataframe_to_report(manual_device_rename_df, sheet_title, report_creation_info_lst, force_flag = True)
             file_name = os.path.basename(file_path)
             file_directory = os.path.dirname(file_path)
             print(f"\nTo rename devices put new names into the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")
@@ -113,7 +121,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
             device_rename_df = pd.DataFrame(columns=device_rename_columns)
     else:
         # check loaded device_rename_df DataFrame (if it's empty)
-        device_rename_df = verify_data(report_data_lst, ['device_rename'], device_rename_df,  show_status=False)
+        device_rename_df = verify_data(report_constant_lst, ['device_rename'], device_rename_df,  show_status=False)
             
     return device_rename_df
 

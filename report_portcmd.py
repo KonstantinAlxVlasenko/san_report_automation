@@ -8,7 +8,7 @@ Module to create tables
 
 import pandas as pd
 
-from common_operations_dataframe_presentation import (dataframe_segmentation,
+from common_operations_dataframe_presentation import (dataframe_segmentation, drop_zero,
                                                       translate_values, drop_equal_columns, remove_duplicates_from_column)
 from common_operations_servicefile import dct_from_columns
 
@@ -46,8 +46,10 @@ def create_report_tables(portshow_aggregated_df, storage_connection_statistics_d
     # TO_REMOVE
     # npiv_report_df = _clean_dataframe(npiv_report_df, 'npiv', duplicates = None, clean = True)
     # device connection statistics reports
-    storage_connection_statistics_report_df = connection_statistics_report(storage_connection_statistics_df, max_title)
-    device_connection_statistics_report_df = connection_statistics_report(device_connection_statistics_df, max_title)
+    translate_stat_dct = dct_from_columns('customer_report', max_title, 'Статистика_подключения_устройств_перевод_eng', 
+                                'Статистика_подключения_устройств_перевод_ru', init_file = 'san_automation_info.xlsx')
+    storage_connection_statistics_report_df = connection_statistics_report(storage_connection_statistics_df, translate_stat_dct)
+    device_connection_statistics_report_df = connection_statistics_report(device_connection_statistics_df, translate_stat_dct)
     
     return servers_report_df, storage_report_df, library_report_df, hba_report_df, \
             storage_connection_df,  library_connection_df, server_connection_df, \
@@ -151,19 +153,31 @@ def device_name_duplicates_free_column(df):
     return df
 
 
-def connection_statistics_report(connection_statistics_df, max_title):
+def connection_statistics_report(connection_statistics_df, translate_stat_dct):
     """Function to create report table out of connection_statistics_df DataFrame"""
 
-    translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_подключения_устройств_перевод_eng', 
-                                    'Статистика_подключения_устройств_перевод_ru', init_file = 'san_automation_info.xlsx')
+    # translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_подключения_устройств_перевод_eng', 
+    #                                 'Статистика_подключения_устройств_перевод_ru', init_file = 'san_automation_info.xlsx')
 
     connection_statistics_report_df = connection_statistics_df.copy()
+
+    # drop FLOGI column if there is no virtual (NPIV) ports login
+    if {'FLOGI', 'Group_type'}.issubset(connection_statistics_report_df.columns):
+        # device_type group is always physical_virtual
+        mask_not_device_type = connection_statistics_report_df['Group_type'] != 'device_type'
+        if (connection_statistics_report_df.loc[mask_not_device_type, 'FLOGI'] == 'physical').all():
+            connection_statistics_report_df.drop(columns='FLOGI', inplace=True)
+
     # translate notes
     columns = [column for column in connection_statistics_df.columns if 'note' in column and connection_statistics_df[column].notna().any()]
     columns.append('Fabric_name')
-    connection_statistics_report_df = translate_values(connection_statistics_report_df, translate_dct, translate_columns=columns)
+    connection_statistics_report_df = translate_values(connection_statistics_report_df, translate_stat_dct, translate_columns=columns)
     # translate column names
-    connection_statistics_report_df.rename(columns=translate_dct, inplace=True)
+    connection_statistics_report_df.rename(columns=translate_stat_dct, inplace=True)
     # drop empty columns
     connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
+
+            
+    # drop zeroes for clean view
+    connection_statistics_report_df = drop_zero(connection_statistics_report_df)
     return connection_statistics_report_df

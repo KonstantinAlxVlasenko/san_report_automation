@@ -23,12 +23,16 @@ from common_operations_table_report import dataframe_to_report
 
 
 def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_df, sfpshow_df, portcfgshow_df, 
-                                report_columns_usage_dct, report_data_lst):
+                                report_creation_info_lst):
     """Main function to add porterr, transceiver and portcfg information to portshow DataFrame"""
     
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
+    
     portshow_sfp_force_flag = False
     portshow_sfp_export_flag, *_ = report_steps_dct['portshow_sfp_aggregated']
 
@@ -40,7 +44,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, \
@@ -106,12 +110,12 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
         data_lst = [portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
                     error_report_df, sfp_report_df, portcfg_report_df, maps_ports_report_df,
                     npiv_report_df, npiv_statistics_report_df]
-        save_data(report_data_lst, data_names, *data_lst)
+        save_data(report_constant_lst, data_names, *data_lst)
     # verify if loaded data is empty and reset DataFrame if yes
     else:
         portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, error_report_df, \
             sfp_report_df, portcfg_report_df, maps_ports_report_df, npiv_report_df, npiv_statistics_report_df \
-            = verify_data(report_data_lst, data_names, *data_lst)
+            = verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
                     error_report_df, sfp_report_df, portcfg_report_df, 
                     maps_ports_report_df, npiv_report_df, npiv_statistics_report_df]
@@ -120,7 +124,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
         force_flag = False
         if data_name == 'portshow_sfp_aggregated':
             force_flag = portshow_sfp_force_flag
-        dataframe_to_report(data_frame, data_name, report_data_lst, force_flag=force_flag)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
 
     return portshow_sfp_aggregated_df
 

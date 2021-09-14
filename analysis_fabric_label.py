@@ -15,12 +15,15 @@ from common_operations_table_report import dataframe_to_report
 
 
 
-def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_data_lst):
+def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_creation_info_lst):
     """Function to set Fabric labels"""
 
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    customer_name, report_path, _, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    customer_name, report_path, *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['fabric_labels', 'fabricshow_summary']
@@ -28,7 +31,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     fabricshow_ag_labels_df, fabricshow_summary_df = data_lst
@@ -42,7 +45,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
     if force_run:             
         print('\nSETTING UP FABRICS NAMES AND LABELS  ...\n')
 
-        fabricshow_summary_automatic_df = auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, report_data_lst)
+        fabricshow_summary_automatic_df = auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, report_creation_info_lst)
 
         if not isinstance(fabricshow_summary_df, pd.DataFrame):
             fabricshow_summary_df = fabricshow_summary_automatic_df.copy()
@@ -66,7 +69,7 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
         reply = reply_request(query)
         if reply == 'y':
             # saving DataFrame to Excel to check during manual labeling if required
-            save_xlsx_file(fabricshow_summary_df, 'fabricshow_summary', report_data_lst, force_flag=True)
+            dataframe_to_report(fabricshow_summary_df, 'fabricshow_summary', report_creation_info_lst, force_flag=True)
             fabricshow_summary_df = manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_df, info_labels)
         
         # takes all switches working in Native and AG switches
@@ -78,14 +81,14 @@ def fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_p
         # create list with partitioned DataFrames
         data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
         # saving data to json or csv file
-        save_data(report_data_lst, data_names, *data_lst)
+        save_data(report_constant_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-       fabricshow_ag_labels_df, fabricshow_summary_df = verify_data(report_data_lst, data_names, *data_lst)
+       fabricshow_ag_labels_df, fabricshow_summary_df = verify_data(report_constant_lst, data_names, *data_lst)
        data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
     return fabricshow_ag_labels_df 
 

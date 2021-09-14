@@ -40,13 +40,13 @@ def check_valid_path(path):
         sys.exit()
         
 
-def save_data(report_data_list, data_names, *args):
+def save_data(report_constant_lst, data_names, *args):
     """
     Function to export extracted configuration data to JSON or CSV file
     depending on data passed 
     """
 
-    customer_name, _, json_data_dir, max_title, _ = report_data_list    
+    customer_name, _, json_data_dir, max_title = report_constant_lst    
     # data_names it's a list of names for data passed as args
 
     for data_name, data_exported in zip(data_names, args):
@@ -102,13 +102,13 @@ def save_data(report_data_list, data_names, *args):
                 status_info('empty', max_title, len(info))
                 
 
-def load_data(report_data_list, *args):
+def load_data(report_constant_lst, *args):
     """Function to load data from JSON or CSV file to data object
     Detects wich type of data required to be loaded automaticaly
     Returns list with imported data 
     """
         
-    customer_name, _, json_data_dir, max_title, _ = report_data_list
+    customer_name, _, json_data_dir, max_title = report_constant_lst
     # list to store loaded data
     data_imported = []
     

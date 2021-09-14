@@ -13,14 +13,17 @@ from common_operations_table_report import dataframe_to_report
 
 
 def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
-                            nscamshow_df, portshow_df, report_columns_usage_dct, report_data_lst):
+                            nscamshow_df, portshow_df, report_creation_info_lst):
     """Main function to count Fabrics statistics"""
 
 
 
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['fabric_statistics', 'Статистика_фабрики']
@@ -28,7 +31,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were obtained on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     fabric_statistics_df, fabric_statistics_report_df = data_lst
@@ -47,7 +50,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
         print(info, end =" ")  
 
         fabric_statistics_df = statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df, 
-                                                    fabricshow_ag_labels_df, nscamshow_df, portshow_df, report_data_lst)
+                                                    fabricshow_ag_labels_df, nscamshow_df, portshow_df)
         # after finish display status
         status_info('ok', max_title, len(info))
         # get report DataFrame
@@ -55,15 +58,15 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
         # create list with partitioned DataFrames
         data_lst = [fabric_statistics_df, fabric_statistics_report_df]
         # saving data to json or csv file
-        save_data(report_data_lst, data_names, *data_lst)     
+        save_data(report_constant_lst, data_names, *data_lst)     
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         fabric_statistics_df, fabric_statistics_report_df = \
-            verify_data(report_data_lst, data_names, *data_lst)
+            verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [fabric_statistics_df, fabric_statistics_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
         
     return fabric_statistics_df
 

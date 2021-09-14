@@ -17,13 +17,15 @@ from common_operations_table_report import dataframe_to_report
 
 
 
-def synergy_system_extract(synergy_folder, report_data_lst):
+def synergy_system_extract(synergy_folder, report_creation_info_lst):
     """Function to extract blade systems information"""
     
 
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # report_constant_lst contains information: 
+    # customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['synergy_interconnect', 'synergy_servers']
@@ -31,7 +33,7 @@ def synergy_system_extract(synergy_folder, report_data_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     
     # # unpacking from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -176,7 +178,7 @@ def synergy_system_extract(synergy_folder, report_data_lst):
 
                 data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
                 # save extracted data to json file
-                save_data(report_data_lst, data_names, *data_lst)
+                save_data(report_constant_lst, data_names, *data_lst)
         else:
             # current operation information string
             info = f'Collecting synergy details'
@@ -184,14 +186,14 @@ def synergy_system_extract(synergy_folder, report_data_lst):
             status_info('skip', max_title, len(info))
             data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
             # save empty data to json file
-            save_data(report_data_lst, data_names, *data_lst)
+            save_data(report_constant_lst, data_names, *data_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        synergy_module_aggregated_df, synergy_servers_aggregated_df = verify_data(report_data_lst, data_names, *data_lst)
+        synergy_module_aggregated_df, synergy_servers_aggregated_df = verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
     return synergy_module_aggregated_df, synergy_servers_aggregated_df
 
 

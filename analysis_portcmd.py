@@ -25,12 +25,15 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
                             blade_servers_df, blade_vc_df, 
                             synergy_module_df, synergy_servers_df, 
                             system_3par_df, port_3par_df, 
-                            report_columns_usage_dct, report_data_lst):
+                            report_creation_info_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = [
@@ -46,7 +49,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     report_columns_usage_bckp = report_columns_usage_dct
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # flag to forcible save portshow_aggregated_df if required
     portshow_force_flag = False
     # unpacking DataFrames from the loaded list with data
@@ -91,7 +94,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
                                 nscamshow_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, 
                                 oui_df, fdmi_df, blade_module_df,  blade_servers_df, blade_vc_df, 
                                 synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df,
-                                re_pattern_lst, report_data_lst)
+                                re_pattern_lst)
 
         # after finish display status
         status_info('ok', max_title, len(info))
@@ -99,11 +102,11 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         # if new switch founded
         portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag = \
             warning_notification(portshow_aggregated_df, switch_params_aggregated_df, 
-            nsshow_unsplit_df, expected_ag_links_df, report_data_lst)        
+            nsshow_unsplit_df, expected_ag_links_df, report_steps_dct, max_title)        
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, 
-                                        report_columns_usage_dct, report_data_lst)
+                                        report_columns_usage_dct, report_creation_info_lst)
         # count Device_Host_Name instances for fabric_label, label and total in fabric
         portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df)
 
@@ -130,9 +133,9 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             ]
 
         # saving data to json or csv file
-        save_data(report_data_lst, data_names, *data_lst)
-        dataframe_to_report(nsshow_unsplit_df, 'nsshow_unsplit', report_data_lst, force_flag = nsshow_unsplit_force_flag)
-        dataframe_to_report(expected_ag_links_df, 'expected_ag_links', report_data_lst, force_flag = expected_ag_links_force_flag)
+        save_data(report_constant_lst, data_names, *data_lst)
+        dataframe_to_report(nsshow_unsplit_df, 'nsshow_unsplit', report_creation_info_lst, force_flag = nsshow_unsplit_force_flag)
+        dataframe_to_report(expected_ag_links_df, 'expected_ag_links', report_creation_info_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
@@ -140,7 +143,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
                 servers_report_df, storage_report_df, library_report_df, hba_report_df, \
                     storage_connection_df, library_connection_df, server_connection_df, \
                         storage_connection_statistics_report_df, device_connection_statistics_report_df \
-                            = verify_data(report_data_lst, data_names, *data_lst)
+                            = verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [
             portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
             device_rename_df, report_columns_usage_dct, 
@@ -153,7 +156,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         force_flag = False
         if data_name == 'portshow_aggregated':
             force_flag = portshow_force_flag
-        dataframe_to_report(data_frame, data_name, report_data_lst, force_flag=force_flag)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
     return portshow_aggregated_df
 
 
@@ -192,12 +195,12 @@ def device_ports_per_group(portshow_aggregated_df):
     return portshow_aggregated_df
 
 
-def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, expected_ag_links_df, report_data_lst):
+def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, expected_ag_links_df, report_steps_dct, max_title):
     """Function to show WARNING notification if any deviceType is UNKNOWN,
     if any PortSymb or NodeSymb was not parsed or if new switch founded which was
     not previously discovered"""
 
-    *_, max_title, report_steps_dct = report_data_lst
+    # *_, max_title, report_steps_dct = report_constant_lst
     portshow_force_flag = False
     nsshow_unsplit_force_flag = False
     expected_ag_links_force_flag = False

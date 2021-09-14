@@ -24,10 +24,10 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     fcredge_df = number_ifl(fcredge_df, trunk_df)
     # add switch information to fcredge_df to concatenate it with isl_df
     fcredge_cp_df = fcredge_to_isl_compliance(fcredge_df, switch_params_aggregated_df)
-    # if not fcredge_cp_df.empty:
     # add ifl to isl
     isl_df['IFL_number'] = np.nan
-    isl_df = pd.concat([isl_df, fcredge_cp_df],join='inner', ignore_index=True)
+    fcredge_cp_df = fcredge_cp_df.reindex(columns=isl_df.columns).copy()
+    isl_df = pd.concat([isl_df, fcredge_cp_df], ignore_index=True)
     # outer join of isl + ifl with trunk DataFrames 
     isl_aggregated_df = trunk_join(isl_df, trunk_df)
     # add ISL number in case of trunk presence and remove ifl tag
@@ -225,12 +225,6 @@ def porttype_join(switchshow_df, isl_aggregated_df, fcredge_df):
     
     # if Fabric Routing is ON
     if not fcredge_df.empty:
-        
-        # # add portIndex to fcredge
-        # port_index_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'portIndex']
-        # switchshow_portindex_df = switchshow_join_df.loc[:, port_index_lst].copy()
-        # fcredge_df = fcredge_df.merge(switchshow_portindex_df, how = 'left', on= port_index_lst[:-1])
-        
         # drop slot and port columns to avoid duplicate columns after dataframe function 
         fcredge_df.drop(columns = ['slot', 'port'], inplace = True)
         # addition switchshow port information to fcredge DataFrame
@@ -268,15 +262,11 @@ def number_ifl(fcredge_df, trunk_df):
         mask_trunk_master = fcredge_df['Master'].str.contains('master', case=False, na=False)
         fcredge_master_df = fcredge_df.loc[mask_trunk_master].copy()
         # master link numbering
-
-
-
         fcredge_master_df['IFL_number'] = fcredge_master_df.groupby(by=['switchWwn'])['Master'].rank(method="first", ascending=True)
         # number all IFL links which are part of trunk group based on master link IFL number
         fcredge_df = dataframe_fillna(fcredge_df, fcredge_master_df, join_lst=['switchWwn', 'Trunking_GroupNumber'], filled_lst=['IFL_number'])
         # copy IFLs links number for links which are not part of trunk group
         fcredge_df = dataframe_fillna(fcredge_df, fcredge_master_df, join_lst=['switchWwn', 'portIndex'], filled_lst=['IFL_number'])
-
         fcredge_df['IFL_number'] = fcredge_df['IFL_number'].astype('int64', errors='ignore')
     return fcredge_df
 
@@ -344,7 +334,7 @@ def trunk_join(isl_df, trunk_df):
     """
     
     # convert numerical data in ISL and TRUNK DataFrames to float
-    isl_df = isl_df.astype(dtype = 'float64', errors = 'ignore')    
+    isl_df = isl_df.astype(dtype='float64', errors='ignore')    
     trunk_df  = trunk_df.astype(dtype = 'float64', errors = 'ignore')
     
     # List of columns DataFrames are joined on     
@@ -354,7 +344,7 @@ def trunk_join(isl_df, trunk_df):
                 'Connected_switchWwn', 'Connected_switchDID']  
 
     # merge updated ISL and TRUNK DataFrames 
-    isl_aggregated_df = trunk_df.merge(isl_df, how = 'outer', on = join_lst)
+    isl_aggregated_df = trunk_df.merge(isl_df, how='outer', on=join_lst)
     return isl_aggregated_df
 
 

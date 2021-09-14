@@ -12,18 +12,21 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_servicefile import dataframe_import, data_extract_objects, dct_from_columns
-from common_operations_dataframe_presentation import dataframe_segmentation, translate_values
+from common_operations_dataframe_presentation import dataframe_segmentation, translate_values, drop_column_if_all_na, aggregated_to_report_dataframe, translate_report
 from common_operations_table_report import dataframe_to_report
 
 
 
 def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df, 
-                                switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, report_data_lst):
+                                switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, report_creation_info_lst):
     """Main function to create aggregated switch parameters table and report tables"""
     
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['report_columns_usage', 'switch_params_aggregated', 'fabric_switch_statistics', 
@@ -33,7 +36,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df, \
@@ -66,6 +69,9 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
         switch_params_aggregated_df, report_columns_usage_dct = \
             switch_param_aggregation(fabric_clean_df, chassis_params_df, \
                 switch_params_df, maps_params_df, switch_models_df, ag_principal_df, re_pattern_lst)
+
+        report_creation_info_lst.append(report_columns_usage_dct)
+
         # add 'Device_Location for Blade chassis switches
         switch_params_aggregated_df = fill_device_location(switch_params_aggregated_df, blade_module_loc_df)
 
@@ -90,7 +96,7 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
 
         switches_report_df, fabric_report_df, switches_parameters_report_df, \
             maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = \
-                switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, data_names, report_columns_usage_dct, max_title)
+                switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, data_names, report_creation_info_lst)
 
         # create list with partitioned DataFrames
         data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
@@ -99,18 +105,18 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
                     global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
 
         # saving data to json or csv file
-        save_data(report_data_lst, data_names, *data_lst)
+        save_data(report_constant_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df,  \
-            switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = verify_data(report_data_lst, data_names, *data_lst)
+            switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
                     switches_report_df, fabric_report_df, 
                     switches_parameters_report_df, maps_report_df, licenses_report_df,
                     global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names[1:], data_lst[1:]):
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
     return report_columns_usage_dct, switch_params_aggregated_df, fabric_clean_df
 
@@ -154,14 +160,65 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
     return switch_params_aggregated_df
 
 
-def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, data_names, report_columns_usage_dct, max_title):
+# def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, data_names, report_columns_usage_dct, max_title):
+#     """Function to create switch related report tables"""
+
+#     # partition aggregated DataFrame to required tables
+#     switches_report_df, fabric_report_df,  \
+#         switches_parameters_report_df, maps_report_df, licenses_report_df = \
+#             dataframe_segmentation(switch_params_aggregated_df, data_names[3:-2], \
+#                 report_columns_usage_dct, max_title)
+
+#     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
+#     # maps_report_df.dropna(axis=1, how = 'all', inplace=True)
+
+#     # global parameters are equal for all switches in one fabric thus checking Principal switches only
+#     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
+#     mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
+#     switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
+#     global_fabric_parameters_report_df, = dataframe_segmentation(switch_params_principal_df, data_names[-2], \
+#                 report_columns_usage_dct, max_title)            
+
+#     # drop rows with empty switch names columns
+#     fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+#     switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+#     licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+
+#     switches_parameters_report_df = drop_column_if_all_na(switches_parameters_report_df, 'FC-FC Маршрутизация')
+
+#     # drop fabric_id if all have same value
+#     if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
+#         fabric_report_df.drop(columns=['Fabric ID'], inplace=True)
+#     # drop Fabric_Name (not Fabric_name) if column is empty
+#     if fabric_report_df['Название фабрики'].isna().all():
+#         fabric_report_df.drop(columns=['Название фабрики'], inplace=True)
+       
+#     global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)
+
+#     # fabric switch statistics
+#     fabric_switch_statistics_report_df = fabric_switch_statistics_df.copy()
+#     translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_коммутаторов_перевод_eng', 
+#                                 'Статистика_коммутаторов_перевод_ru', init_file = 'san_automation_info.xlsx')
+#     fabric_switch_statistics_report_df = translate_values(fabric_switch_statistics_report_df, translate_dct)
+#     # translate column names
+#     fabric_switch_statistics_report_df.rename(columns=translate_dct, inplace=True)
+#     return switches_report_df, fabric_report_df, switches_parameters_report_df, \
+#                 maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df
+
+
+
+def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, data_names, report_creation_info_lst):
     """Function to create switch related report tables"""
+
+
+    # report_headers_df contains column titles, 
+    *_, report_headers_df, _ = report_creation_info_lst
+
 
     # partition aggregated DataFrame to required tables
     switches_report_df, fabric_report_df,  \
         switches_parameters_report_df, maps_report_df, licenses_report_df = \
-            dataframe_segmentation(switch_params_aggregated_df, data_names[3:-2], \
-                report_columns_usage_dct, max_title)
+            aggregated_to_report_dataframe(switch_params_aggregated_df, data_names[3:-2], report_creation_info_lst)
 
     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
     # maps_report_df.dropna(axis=1, how = 'all', inplace=True)
@@ -170,13 +227,15 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
     mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
     switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
-    global_fabric_parameters_report_df, = dataframe_segmentation(switch_params_principal_df, data_names[-2], \
-                report_columns_usage_dct, max_title)            
+    global_fabric_parameters_report_df = aggregated_to_report_dataframe(switch_params_principal_df, data_names[-2], \
+                report_creation_info_lst)            
 
     # drop rows with empty switch names columns
     fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
     switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
     licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+
+    switches_parameters_report_df = drop_column_if_all_na(switches_parameters_report_df, 'FC-FC Маршрутизация')
 
     # drop fabric_id if all have same value
     if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
@@ -189,11 +248,19 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
 
     # fabric switch statistics
     fabric_switch_statistics_report_df = fabric_switch_statistics_df.copy()
-    translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_коммутаторов_перевод_eng', 
-                                'Статистика_коммутаторов_перевод_ru', init_file = 'san_automation_info.xlsx')
-    fabric_switch_statistics_report_df = translate_values(fabric_switch_statistics_report_df, translate_dct)
-    # translate column names
-    fabric_switch_statistics_report_df.rename(columns=translate_dct, inplace=True)
+    # translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_коммутаторов_перевод_eng', 
+    #                             'Статистика_коммутаторов_перевод_ru', init_file = 'san_automation_info.xlsx')
+    # fabric_switch_statistics_report_df = translate_values(fabric_switch_statistics_report_df, translate_dct)
+
+
+
+    # # translate column names
+    # fabric_switch_statistics_report_df.rename(columns=translate_dct, inplace=True)
+
+    fabric_switch_statistics_report_df = translate_report(fabric_switch_statistics_report_df, report_headers_df, 
+                                                            df_name='Статистика_коммутаторов_перевод',translate_values=True)
+
+
     return switches_report_df, fabric_report_df, switches_parameters_report_df, \
                 maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df
 

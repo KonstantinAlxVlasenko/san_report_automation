@@ -18,12 +18,15 @@ from common_operations_table_report import dataframe_to_report
 def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
                             cfg_df, zone_df, alias_df, cfg_effective_df, 
                             fcrfabric_df, lsan_df, peerzone_df, 
-                            report_columns_usage_dct, report_data_lst):
+                            report_creation_info_lst):
     """Main function to analyze zoning configuration"""
         
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['zoning_aggregated', 'alias_aggregated', 'zonemember_statistics', 
@@ -34,7 +37,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, \
@@ -60,11 +63,11 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
         # aggregated DataFrames
         zoning_aggregated_df, alias_aggregated_df \
             = zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
-                                    cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, report_data_lst)
+                                    cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, report_constant_lst)
 
         # create comprehensive statistics DataFrame with Fabric summaries and
         # zones statistics DataFrame without summaries  
-        zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df, report_data_lst)
+        zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df, report_constant_lst)
         # add zoning statistics notes, zone duplicates and zone pairs to zoning aggregated DataFrame
         zoning_aggregated_df = statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df)
         # check all fabric devices (Wwnp) for usage in zoning configuration
@@ -91,7 +94,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
                     no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df, 
                     alias_statistics_report_df, effective_cfg_statistics_report_df]
         # saving data to json or csv file
-        save_data(report_data_lst, data_names, *data_lst)
+        save_data(report_constant_lst, data_names, *data_lst)
 
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
@@ -99,7 +102,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
             portshow_zoned_aggregated_df, alias_statistics_df, effective_cfg_statistics_df, zoning_report_df, alias_report_df, \
                 zoning_compare_report_df, unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df, \
                     zonemember_statistics_report_df, alias_statistics_report_df, effective_cfg_statistics_report_df \
-                    = verify_data(report_data_lst, data_names, *data_lst)
+                    = verify_data(report_constant_lst, data_names, *data_lst)
 
         data_lst = [zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, 
                     portshow_zoned_aggregated_df, alias_statistics_df, effective_cfg_statistics_df, 
@@ -109,7 +112,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
 
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
     return zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df
 

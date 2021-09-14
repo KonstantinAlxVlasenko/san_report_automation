@@ -18,7 +18,7 @@ from common_operations_dataframe import dataframe_fabric_labeling
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
                         isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
                         blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df, 
-                        re_pattern_lst, report_data_lst):
+                        re_pattern_lst):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
@@ -33,7 +33,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df = dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
     # add switchMode to portshow_aggregated DataFrame
     portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_df, 
-                                                switch_params_aggregated_df, report_data_lst)
+                                                switch_params_aggregated_df)
     # prepare alias_df (label fabrics, replace WWNn with WWNp if present)
     alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df = \
         alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df)
@@ -85,7 +85,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # fill connected switch information
     portshow_aggregated_df = \
         fill_switch_info(portshow_aggregated_df, switch_params_df, 
-                            switch_params_aggregated_df, report_data_lst)
+                            switch_params_aggregated_df)
     # filled device information for trunkarea links
     portshow_aggregated_df = verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df)
 

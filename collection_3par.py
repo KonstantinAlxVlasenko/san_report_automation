@@ -15,12 +15,14 @@ from common_operations_miscellaneous import (force_extract_check, line_to_list,
 from common_operations_servicefile import data_extract_objects
 
 
-def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_data_lst):
+def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst):
     """Function to extract 3PAR storage information"""
     
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # report_constant_lst contains information: 
+    # customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['system_3par', 'port_3par', 'host_3par']
@@ -28,7 +30,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = data_lst
@@ -65,7 +67,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
             print('\n')
             # find configuration files to parse (download from STATs, local folder or use configurations
             # downloaded on previous iterations)
-            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_data_lst)
+            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_constant_lst)
 
             if configs_3par_lst:
                 print('\nEXTRACTING 3PAR STORAGE INFORMATION ...\n')   
@@ -88,17 +90,17 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
                         status_info('no data', max_title, len(info))
 
                 # save extracted data to json file
-                save_data(report_data_lst, data_names, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
+                save_data(report_constant_lst, data_names, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
         else:
             # current operation information string
             info = f'Collecting 3PAR storage systems information'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
             # save empty data to json file
-            save_data(report_data_lst, data_names, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
+            save_data(report_constant_lst, data_names, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_data_lst, data_names, *data_lst)
+        system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
     
     return system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst
 

@@ -5,7 +5,7 @@ import pandas as pd
 # from common_operations_dataframe import dataframe_segmentation
 from common_operations_dataframe_presentation import (
     dataframe_segmentation, dataframe_slice_concatenate, drop_all_identical,
-    drop_all_na, drop_equal_columns, drop_equal_columns_pairs, translate_values)
+    drop_column_if_all_na, drop_equal_columns, drop_equal_columns_pairs, translate_values)
 from common_operations_servicefile import dct_from_columns
 
 
@@ -78,7 +78,7 @@ def drop_excessive_columns(df, report_columns_usage_dct):
                                                                 ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
                                                                 ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
     # drop columns where all values are NA
-    cleaned_df = drop_all_na(cleaned_df, possible_allna_values)
+    cleaned_df = drop_column_if_all_na(cleaned_df, possible_allna_values)
     # drop columns where all values after dropping NA are equal to certian value
     possible_identical_values = {'Wwn_type': 'Wwnp', 'Member_in_cfg_Fabric': 'Да', 
                                 'Fabric_device_status': 'local', 'portType': 'F-Port', 
@@ -157,7 +157,7 @@ def statistics_report(statistics_df, data_name, translate_dct, max_title):
 
     if data_name == 'Статистика_зон':
         possible_allna_columns = ['zone_duplicated', 'zone_absorber', 'Target_Initiator_note', 'Effective_cfg_usage_note']
-        statistics_report_df = drop_all_na(statistics_report_df, possible_allna_columns)
+        statistics_report_df = drop_column_if_all_na(statistics_report_df, possible_allna_columns)
 
         # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
         statistics_report_df = drop_all_identical(statistics_report_df, 

@@ -11,15 +11,17 @@ from common_operations_miscellaneous import (
 from common_operations_servicefile import columns_import, data_extract_objects
 
 
-def fabricshow_extract(switch_params_lst, report_data_lst):
+def fabricshow_extract(switch_params_lst, report_creation_info_lst):
     """
     Function to extract from principal switch configuration 
     list of switches in fabric including AG switches
     """
 
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # report_constant_lst contains information: 
+    # customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['fabricshow', 'ag_principal']
@@ -27,7 +29,7 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     fabricshow_lst, ag_principal_lst = data_lst
@@ -222,9 +224,9 @@ def fabricshow_extract(switch_params_lst, report_data_lst):
             else:
                 status_info('skip', max_title, len(info))
         # save extracted data to json file
-        save_data(report_data_lst, data_names, fabricshow_lst, ag_principal_lst)
+        save_data(report_constant_lst, data_names, fabricshow_lst, ag_principal_lst)
     else:
-        fabricshow_lst, ag_principal_lst = verify_data(report_data_lst, data_names, *data_lst)
+        fabricshow_lst, ag_principal_lst = verify_data(report_constant_lst, data_names, *data_lst)
             
     return fabricshow_lst, ag_principal_lst
 

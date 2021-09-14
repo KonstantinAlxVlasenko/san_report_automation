@@ -7,7 +7,7 @@ import sys
 from common_operations_dataframe import dataframe_fillna
 
 
-def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df, report_data_lst):
+def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df):
     """
     Function to label switches in portshow_aggregated_df with Fabric names and labels.
     Add switchState, switchMode and Generation information
@@ -89,7 +89,7 @@ def fill_isl_link(portshow_aggregated_df, isl_aggregated_df):
     return portshow_aggregated_df
 
 
-def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df, report_data_lst):
+def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df):
     """
     Function to add connected switch information (SN, IP, Location, FOS, Model) to portcmd DataFrame 
     based on combination of connected oui and switch main board seral number (oui_board_sn)

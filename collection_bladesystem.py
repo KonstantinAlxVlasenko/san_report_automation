@@ -12,13 +12,15 @@ from common_operations_servicefile import columns_import, data_extract_objects
 """Module to extract blade system information"""
 
 
-def blade_system_extract(blade_folder, report_data_lst):
+def blade_system_extract(blade_folder, report_creation_info_lst):
     """Function to extract blade systems information"""
     
 
-    # report_data_lst contains information: 
-    # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # report_constant_lst contains information: 
+    # customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['blade_interconnect', 'blade_servers', 'blade_vc']
@@ -26,7 +28,7 @@ def blade_system_extract(blade_folder, report_data_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = data_lst
@@ -318,16 +320,16 @@ def blade_system_extract(blade_folder, report_data_lst):
                         else:
                             status_info('no data', max_title, len(info))
                 # save extracted data to json file
-                save_data(report_data_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
+                save_data(report_constant_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
         else:
             # current operation information string
             info = f'Collecting enclosure, interconnect modules, blade servers, hba'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
             # save empty data to json file
-            save_data(report_data_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
+            save_data(report_constant_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_data_lst, data_names, *data_lst)
+        module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
     
     return module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst

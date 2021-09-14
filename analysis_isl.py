@@ -14,16 +14,21 @@ from common_operations_miscellaneous import (force_extract_check, status_info,
 from common_operations_servicefile import (data_extract_objects,
                                            dct_from_columns)
 from common_operations_table_report import dataframe_to_report
+from common_operations_dataframe_presentation import drop_column_if_all_na
 
 
 
-def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_columns_usage_dct, 
-    isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_data_lst):
+def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df,  
+            isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, 
+            portcfgshow_df, switchshow_ports_df, report_creation_info_lst):
     """Main function to create ISL and IFR report tables"""
     
-   # report_data_lst contains information: 
-   # customer_name, dir_report, dir to save obtained data, max_title, report_steps_dct
-    *_, max_title, report_steps_dct = report_data_lst
+    # report_steps_dct contains current step desciption and force and export tags
+    # report_headers_df contains column titles, 
+    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
     data_names = ['isl_aggregated', 'isl_statistics', 'Межкоммутаторные_соединения', 'Межфабричные_соединения', 'Статистика_ISL']
@@ -31,7 +36,7 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # loading data if were saved on previous iterations 
-    data_lst = load_data(report_data_lst, *data_names)
+    data_lst = load_data(report_constant_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = data_lst
@@ -59,18 +64,14 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
         isl_aggregated_df, fcredge_df = \
             isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
             isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, re_pattern_lst)
-
-        isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst)
-
+        isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst, report_constant_lst)
         # after finish display status
         status_info('ok', max_title, len(info))      
 
         # partition aggregated DataFrame to required tables
         isl_report_df, = dataframe_segmentation(isl_aggregated_df, [data_names[2]], report_columns_usage_dct, max_title)
         isl_report_df = translate_values(isl_report_df, translate_dct={'Yes': 'Да', 'No': 'Нет'})
-        # if no trunks in fabric drop trunk columns
-        if trunk_df.empty:
-            isl_report_df.drop(columns = ['Идентификатор транка', 'Deskew', 'Master'], inplace = True)
+        isl_report_df = drop_column_if_all_na(isl_report_df, columns=['Идентификатор транка', 'Deskew', 'Master', 'Идентификатор IFL'])
         # check if IFL table required
         if not fcredge_df.empty:
             ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[3]], report_columns_usage_dct, max_title)
@@ -82,15 +83,15 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df, report_column
         # create list with partitioned DataFrames
         data_lst = [isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
         # saving fabric_statistics and fabric_statistics_summary DataFrames to csv file
-        save_data(report_data_lst, data_names, *data_lst)
+        save_data(report_constant_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = \
-            verify_data(report_data_lst, data_names, *data_lst)
+            verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_data_lst)
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
     return isl_aggregated_df, isl_statistics_df
 

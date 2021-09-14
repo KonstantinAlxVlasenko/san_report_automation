@@ -111,6 +111,12 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
     df_lst = [alias_quantity_summary_df, ports_status_summary_df, active_vs_noalias_ports_summary_df, wwn_type_summary, 
                 alias_wwnn_summary_df, alias_wwnn_unpacked_summary_df, alias_wwnp_duplicated_summary_df, 
                 alias_duplicated_summary_df, alias_port_statistics_df]
-    alias_statistics_df = merge_df(df_lst, fillna_index=7)    
+    alias_statistics_df = merge_df(df_lst, fillna_index=7)
+
+    # move All row to the bottom
+    mask_all = alias_statistics_df['Fabric_name'] == 'All'
+    alias_statistics_all_df = alias_statistics_df.loc[mask_all].copy()
+    alias_statistics_df = alias_statistics_df.loc[~mask_all].copy()
+    alias_statistics_df = pd.concat([alias_statistics_df, alias_statistics_all_df])       
 
     return alias_statistics_df
