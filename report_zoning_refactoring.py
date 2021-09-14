@@ -45,10 +45,10 @@ def create_report(aggregated_df, data_name, translate_dct, report_columns_usage_
 
     # pylint: disable=unbalanced-tuple-unpacking
     cleaned_df = drop_excessive_columns(aggregated_df, report_columns_usage_dct)
-    translate_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 
+    translated_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 
                             'Effective_cfg_usage_note', 'Pair_zone_note', 'Multiple_fabric_label_connection',
                             'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related']
-    cleaned_df = translate_values(cleaned_df, translate_dct, translate_columns)
+    cleaned_df = translate_values(cleaned_df, translate_dct, translated_columns)
     # take required data from aggregated DataFrame to create report
     report_df, = dataframe_segmentation(cleaned_df, data_name, report_columns_usage_dct, max_title)
     return report_df
@@ -165,15 +165,15 @@ def statistics_report(statistics_df, data_name, translate_dct, max_title):
 
     # rename values in columns
     if data_name == 'Статистика_зон':
-        translate_columns = ['Fabric_name', 'Fabric_device_status', 
+        translated_columns = ['Fabric_name', 'Fabric_device_status', 
                                 'Target_Initiator_note', 'Target_model_note', 
                                 'Effective_cfg_usage_note', 'Pair_zone_note',
                                 'All_devices_multiple_fabric_label_connection',
                                 'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related']
     else:
-        translate_columns = ['Fabric_name']
+        translated_columns = ['Fabric_name']
     statistics_report_df = \
-        translate_values(statistics_report_df, translate_dct, translate_columns)
+        translate_values(statistics_report_df, translate_dct, translated_columns)
 
     # column titles used to create dictionary to traslate column names
     statistic_columns_lst = [data_name + '_eng', data_name + '_ru']

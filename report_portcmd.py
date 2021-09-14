@@ -171,7 +171,7 @@ def connection_statistics_report(connection_statistics_df, translate_stat_dct):
     # translate notes
     columns = [column for column in connection_statistics_df.columns if 'note' in column and connection_statistics_df[column].notna().any()]
     columns.append('Fabric_name')
-    connection_statistics_report_df = translate_values(connection_statistics_report_df, translate_stat_dct, translate_columns=columns)
+    connection_statistics_report_df = translate_values(connection_statistics_report_df, translate_stat_dct, translated_columns=columns)
     # translate column names
     connection_statistics_report_df.rename(columns=translate_stat_dct, inplace=True)
     # drop empty columns

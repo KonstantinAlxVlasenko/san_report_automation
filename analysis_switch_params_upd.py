@@ -6,15 +6,17 @@ Module to generate aggregated switch parameters table and
 
 import numpy as np
 
-from analysis_switch_statistics import fabric_switch_statistics
 from analysis_switch_aggregation import switch_param_aggregation
+from analysis_switch_statistics import fabric_switch_statistics
+from common_operations_dataframe_presentation import (
+    aggregated_to_report_dataframe, dataframe_segmentation,
+    drop_column_if_all_na, translate_dataframe)
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
-from common_operations_servicefile import dataframe_import, data_extract_objects, dct_from_columns
-from common_operations_dataframe_presentation import dataframe_segmentation, translate_values, drop_column_if_all_na, aggregated_to_report_dataframe, translate_report
+from common_operations_servicefile import (data_extract_objects,
+                                           dataframe_import, dct_from_columns)
 from common_operations_table_report import dataframe_to_report
-
 
 
 def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df, 
@@ -247,18 +249,24 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
     global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)
 
     # fabric switch statistics
-    fabric_switch_statistics_report_df = fabric_switch_statistics_df.copy()
+    # fabric_switch_statistics_report_df = fabric_switch_statistics_df.copy()
     # translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_коммутаторов_перевод_eng', 
     #                             'Статистика_коммутаторов_перевод_ru', init_file = 'san_automation_info.xlsx')
     # fabric_switch_statistics_report_df = translate_values(fabric_switch_statistics_report_df, translate_dct)
 
+    # fabric_switch_statistics_report_df = translate_header(fabric_switch_statistics_df, report_headers_df, 
+    #                                                         df_name='Статистика_коммутаторов_перевод')
+    # fabric_switch_statistics_report_df = translate_values(fabric_switch_statistics_report_df, report_headers_df, 
+    #                                                         df_name='Статистика_коммутаторов_перевод')                                            
 
+    fabric_switch_statistics_report_df = translate_dataframe(fabric_switch_statistics_df, report_headers_df, 
+                                                            df_name='Статистика_коммутаторов_перевод')
 
     # # translate column names
     # fabric_switch_statistics_report_df.rename(columns=translate_dct, inplace=True)
 
-    fabric_switch_statistics_report_df = translate_report(fabric_switch_statistics_report_df, report_headers_df, 
-                                                            df_name='Статистика_коммутаторов_перевод',translate_values=True)
+    # fabric_switch_statistics_report_df = translate_report(fabric_switch_statistics_report_df, report_headers_df, 
+                                                            # df_name='Статистика_коммутаторов_перевод',translate_values=True)
 
 
     return switches_report_df, fabric_report_df, switches_parameters_report_df, \

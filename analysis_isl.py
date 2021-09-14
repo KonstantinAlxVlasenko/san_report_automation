@@ -115,9 +115,9 @@ def isl_statistics_report(isl_statistics_df, report_columns_usage_dct, max_title
         isl_statistics_df_report_df.drop(columns=drop_columns, inplace=True)
 
         # translate values in columns
-        translate_columns = [column for column in isl_statistics_df.columns if 'note' in column and isl_statistics_df[column].notna().any()]
-        translate_columns.extend(['Fabric_name', 'Trunking_lic_both_switches'])
-        isl_statistics_df_report_df = translate_values(isl_statistics_df_report_df, translate_dct, translate_columns)
+        translated_columns = [column for column in isl_statistics_df.columns if 'note' in column and isl_statistics_df[column].notna().any()]
+        translated_columns.extend(['Fabric_name', 'Trunking_lic_both_switches'])
+        isl_statistics_df_report_df = translate_values(isl_statistics_df_report_df, translate_dct, translated_columns)
         # translate column names
         isl_statistics_df_report_df.rename(columns=translate_dct, inplace=True)
         # drop empty columns
