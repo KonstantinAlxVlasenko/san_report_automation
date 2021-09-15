@@ -82,32 +82,23 @@ def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, re
 
 
 
-
-def aggregated_to_report_dataframe(aggregated_df, df_name_to_create_lst, report_creation_info_lst):
+def generate_report_table(aggregated_df, report_headers_df, report_columns_usage_dct, *args):
     """Function to split aggregated table to required DataFrames
     As parameters function get DataFrame to be partitioned and
     list of allocated DataFrames names. Returns list of segmented DataFrames. 
     """
 
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    *_, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-
-    # if single df_name in parameters
-    if isinstance(df_name_to_create_lst, str):
-        df_name_to_create_lst = [df_name_to_create_lst]
-    
     # column names in report_headers_df containg header titles for each df_name
-    header_names_eng_lst = [df_name + '_eng' for df_name in df_name_to_create_lst]
+    header_names_eng_lst = [df_name + '_eng' for df_name in args]
     
     # import header titles from report_headers_df and drop excessive titles for each df_name
     report_header_eng_dct = {}
-    for df_name, header_name_eng in zip(df_name_to_create_lst, header_names_eng_lst):
+    for df_name, header_name_eng in zip(args, header_names_eng_lst):
         report_header_eng_dct[df_name] = header_cleanup(report_headers_df, header_name_eng, report_columns_usage_dct)
 
     # list with partitioned DataFrames
     report_df_lst = []
-    for df_name in df_name_to_create_lst:
+    for df_name in args:
         # identify header titles if df_name which are in aggregated_df
         df_header_eng = [column for column in report_header_eng_dct[df_name] if column in aggregated_df.columns]
         # get required columns from aggregated DataFrame
@@ -116,6 +107,42 @@ def aggregated_to_report_dataframe(aggregated_df, df_name_to_create_lst, report_
         report_df = translate_header(report_df, report_headers_df, df_name)
         report_df_lst.append(report_df)
     return report_df if len(report_df_lst) == 1 else report_df_lst
+
+
+
+# def aggregated_to_report_dataframe(aggregated_df, df_name_to_create_lst, report_headers_df, report_columns_usage_dct):
+#     """Function to split aggregated table to required DataFrames
+#     As parameters function get DataFrame to be partitioned and
+#     list of allocated DataFrames names. Returns list of segmented DataFrames. 
+#     """
+
+#     # # report_headers_df contains column titles, 
+#     # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+#     # *_, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+
+#     # if single df_name in parameters
+#     if isinstance(df_name_to_create_lst, str):
+#         df_name_to_create_lst = [df_name_to_create_lst]
+    
+#     # column names in report_headers_df containg header titles for each df_name
+#     header_names_eng_lst = [df_name + '_eng' for df_name in df_name_to_create_lst]
+    
+#     # import header titles from report_headers_df and drop excessive titles for each df_name
+#     report_header_eng_dct = {}
+#     for df_name, header_name_eng in zip(df_name_to_create_lst, header_names_eng_lst):
+#         report_header_eng_dct[df_name] = header_cleanup(report_headers_df, header_name_eng, report_columns_usage_dct)
+
+#     # list with partitioned DataFrames
+#     report_df_lst = []
+#     for df_name in df_name_to_create_lst:
+#         # identify header titles if df_name which are in aggregated_df
+#         df_header_eng = [column for column in report_header_eng_dct[df_name] if column in aggregated_df.columns]
+#         # get required columns from aggregated DataFrame
+#         report_df = aggregated_df.reindex(columns=df_header_eng).copy()
+#         # translate header to russian
+#         report_df = translate_header(report_df, report_headers_df, df_name)
+#         report_df_lst.append(report_df)
+#     return report_df if len(report_df_lst) == 1 else report_df_lst
 
 
 
@@ -129,7 +156,7 @@ def translate_header(df, headers_df, df_name):
     return translated_df
 
 
-def translate_values(df, headers_df=None, df_name=None, translate_dct={'Yes': 'Да', 'No': 'Нет'}, translated_columns=None):
+def translate_values(df, headers_df=None, df_name=None, translated_columns=None, translate_dct={'Yes': 'Да', 'No': 'Нет'}):
     """Function to translate values in corresponding columns"""
 
     translated_df = df.copy()
@@ -152,35 +179,8 @@ def translate_dataframe(df, headers_df, df_name, translated_columns=None):
     """Function to translate DataFrame header and values in column"""
 
     translated_df = translate_header(df, headers_df, df_name)
-    translated_df = translate_values(df, headers_df, df_name, translated_columns=translated_columns)
-
+    translated_df = translate_values(translated_df, headers_df, df_name, translated_columns)
     return translated_df
-
-
-# def translate_report(df, report_headers_df=None, df_name=None, translate_header=False, 
-#                         translate_values=True, translated_columns=None):
-#     """Function to translate DataFrame header and values. By default translate values only.
-#     df_name identifies columns in report_headers_df used to create translate dictionary"""
-
-#     translated_df = df.copy()
-
-#     if isinstance(report_headers_df, pd.DataFrame) and df_name:
-#         translate_dct = dct_from_dataframe(report_headers_df, df_name + '_eng', df_name + '_ru')
-#     else:
-#         translate_dct = {'Yes': 'Да', 'No': 'Нет'}
-
-#     if translate_header:
-#         translated_df.rename(columns=translate_dct, inplace=True)
-#     if translate_values:
-#         if not translated_columns:
-#             translate_columns = translated_df.columns
-#         # columns which values need to be translated
-#         # translate values in column if column in DataFrame
-#         for column in translate_columns:
-#             if column in translated_df.columns:
-#                 translated_df[column] = translated_df[column].replace(to_replace=translate_dct) 
-#     return translated_df
-
 
 
 def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct) -> list:
@@ -192,6 +192,11 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct
         ('fabric_name_usage', ['Fabric_name']),
         ('group_name_usage', ['Group_Name'])
         ]
+
+    if header_name not in report_headers_df.columns:
+        print('\n')
+        print(f'{header_name} column is MISSING')
+        exit()
 
     header_sr = report_headers_df[header_name].dropna()
 

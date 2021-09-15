@@ -6,7 +6,7 @@ and add Device_Location column to blade modules DataFrame
 
 import pandas as pd
 
-from common_operations_dataframe import dataframe_segmentation
+from common_operations_dataframe_presentation import generate_report_table
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
@@ -54,7 +54,7 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_creation_inf
         # after finish display status
         status_info('ok', max_title, len(info))
         # create Blade chassis report table
-        blade_module_report_df = blademodule_report(blade_module_loc_df, data_names, max_title)
+        blade_module_report_df = blademodule_report(blade_module_loc_df, report_headers_df, data_names)
         # blade_module_report_df = blademodule_report(blade_module_df, data_names, max_title)
         # create list with partitioned DataFrames
         data_lst = [blade_module_loc_df, blade_module_report_df]
@@ -68,7 +68,6 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_creation_inf
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dataframe_to_report(data_frame, data_name, report_creation_info_lst)
-
     return blade_module_loc_df
 
 
@@ -98,32 +97,17 @@ def blademodule_location(blade_module_df, synergy_module_df):
             blade_module_loc_df = pd.concat([blade_module_loc_df, synergy_module_df], ignore_index=True)
         else:
             blade_module_loc_df = synergy_module_df
-
     return blade_module_loc_df
 
 
-# def blademodule_report(blade_module_df, data_names, max_title):
-#     """Function to create Blade IO modules report table"""
-
-#     report_columns_usage_dct = {'fabric_name_usage': False, 'chassis_info_usage': False}
-
-#     columns_lst = [*blade_module_df.columns.to_list(), 'FW_Supported', 'Recommended_FW'] # remove
-#     blade_modules_prep_df = blade_module_df.reindex(columns = columns_lst) # remove
-
-#     # pylint: disable=unbalanced-tuple-unpacking
-#     blade_module_report_df, = dataframe_segmentation(blade_modules_prep_df, data_names[1:], report_columns_usage_dct, max_title)
-
-#     return blade_module_report_df
-
-
-def blademodule_report(blade_module_loc_df, data_names, max_title):
+def blademodule_report(blade_module_loc_df, report_headers_df, data_names):
     """Function to create Blade IO modules report table"""
 
     report_columns_usage_dct = {'fabric_name_usage': False, 'chassis_info_usage': False}
 
     # pylint: disable=unbalanced-tuple-unpacking
-    blade_module_report_df, = dataframe_segmentation(blade_module_loc_df, data_names[1:], report_columns_usage_dct, max_title)
-
+    # blade_module_report_df, = dataframe_segmentation(blade_module_loc_df, data_names[1:], report_columns_usage_dct, max_title)
+    blade_module_report_df = generate_report_table(blade_module_loc_df, report_headers_df, report_columns_usage_dct, data_names[1])
     return blade_module_report_df
 
 
@@ -136,5 +120,4 @@ def vc_name_fillna(blade_module_loc_df):
         mask_modulename_empty = blade_module_loc_df['Interconnect_Name'].isna()
         mask_complete = mask_vc & mask_sn & mask_modulename_empty
         blade_module_loc_df.loc[mask_complete, 'Interconnect_Name'] = 'VC' + blade_module_loc_df['Interconnect_SN']
-
     return blade_module_loc_df

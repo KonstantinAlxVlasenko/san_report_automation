@@ -13,7 +13,7 @@ from common_operations_miscellaneous import (reply_request, status_info,
                                              verify_data, verify_force_run)
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
-from report_portcmd import create_report_tables
+from report_portcmd import portcmd_report_main
 from common_operations_table_report import dataframe_to_report
 
 
@@ -120,7 +120,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
             storage_connection_df,  library_connection_df, server_connection_df, \
                 storage_connection_statistics_report_df, device_connection_statistics_report_df  = \
-                    create_report_tables(portshow_aggregated_df, storage_connection_statistics_df, 
+                    portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
                                             device_connection_statistics_df, data_names[5:-2], 
                                             report_columns_usage_dct, max_title)
         # create list with partitioned DataFrames

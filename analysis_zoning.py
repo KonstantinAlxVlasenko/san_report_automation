@@ -85,7 +85,7 @@ def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df,
                 zonemember_statistics_report_df, alias_statistics_report_df, effective_cfg_statistics_report_df = \
                     zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df, 
                                         zonemember_statistics_df, alias_statistics_df, effective_cfg_statistics_df, 
-                                        data_names, report_columns_usage_dct, max_title)
+                                        data_names, report_headers_df, report_columns_usage_dct)
 
         # create list with partitioned DataFrames
         data_lst = [zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, 

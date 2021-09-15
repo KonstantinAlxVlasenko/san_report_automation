@@ -8,12 +8,13 @@ Module to create tables
 
 import pandas as pd
 
-from common_operations_dataframe_presentation import (dataframe_segmentation, drop_zero,
-                                                      translate_values, drop_equal_columns, remove_duplicates_from_column)
+from common_operations_dataframe_presentation import (
+    dataframe_segmentation, drop_equal_columns, drop_zero,
+    generate_report_table, remove_duplicates_from_column, translate_values)
 from common_operations_servicefile import dct_from_columns
 
 
-def create_report_tables(portshow_aggregated_df, storage_connection_statistics_df, 
+def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
                             device_connection_statistics_df, data_names, report_columns_usage_dct, max_title):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
@@ -176,8 +177,6 @@ def connection_statistics_report(connection_statistics_df, translate_stat_dct):
     connection_statistics_report_df.rename(columns=translate_stat_dct, inplace=True)
     # drop empty columns
     connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
-
-            
     # drop zeroes for clean view
     connection_statistics_report_df = drop_zero(connection_statistics_report_df)
     return connection_statistics_report_df

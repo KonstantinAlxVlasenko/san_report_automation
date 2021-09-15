@@ -53,7 +53,7 @@ def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_creation
         status_info('ok', max_title, len(info))
 
         # report tables
-        sensor_report_df = sensor_report(sensor_aggregated_df, data_names, report_creation_info_lst)
+        sensor_report_df = sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names)
 
         # create list with partitioned DataFrames
         data_lst = [sensor_aggregated_df, sensor_report_df]
@@ -141,34 +141,19 @@ def sensor_aggregation(sensor_df, switch_params_aggregated_df):
 
 
 
-def sensor_report(sensor_aggregated_df, data_names, report_creation_info_lst):
+def sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names):
     """Function to create report Datafrmae from sensor_aggregated_df 
     (slice and reorder columns, translate values in columns)"""
 
-    # report_headers_df contains column titles, 
-    *_, report_headers_df, _ = report_creation_info_lst
+    # # report_headers_df contains column titles, 
+    # *_, report_headers_df, _ = report_creation_info_lst
 
-    sensor_report_df = aggregated_to_report_dataframe(sensor_aggregated_df,  data_names[1], report_creation_info_lst)
+    # sensor_report_df = aggregated_to_report_dataframe(sensor_aggregated_df,  data_names[1], report_headers_df, report_columns_usage_dct)
 
-    # sensor_report_df = translate_report(sensor_report_df, report_headers_df, data_names[1], translate_header=False, 
-    #                     translate_values=True, translate_columns = ['Type', 'Status', 'Value', 'Unit'])
+    sensor_report_df = aggregated_to_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[1])
 
     sensor_report_df = translate_values(sensor_report_df, report_headers_df, data_names[1], 
                                         translated_columns = ['Type', 'Status', 'Value', 'Unit'])
 
     
     return sensor_report_df
-
-
-
-# def translate_values(translated_df, translate_dct, max_title):
-#     """Function to translate values in corresponding columns"""
-
-#     # columns which values need to be translated
-#     translate_columns = ['Type', 'Status', 'Vlaue', 'Unit']
-#     # translate values in column if column in DataFrame
-#     for column in translate_columns:
-#         if column in translated_df.columns:
-#             translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
-
-#     return translated_df
