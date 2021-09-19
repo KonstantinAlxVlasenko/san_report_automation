@@ -119,12 +119,12 @@ def fillna_ag_link(portshow_npiv_df, portshow_sfp_cp_df, switch_params_aggregate
     return portshow_npiv_df
     
     
-def prior_prepearation(portshow_npiv_df, re_pattern_lst):
+def prior_prepearation(portshow_npiv_df, comp_dct):
     """Function to modify portshow_npiv_df to count statistics"""
 
 
-    # regular expression patterns
-    *_, comp_dct = re_pattern_lst
+    # # regular expression patterns
+    # *_, comp_dct = re_pattern_lst
 
     portshow_npiv_cp_df = portshow_npiv_df.copy()
     native_tag = 'Native_'
@@ -200,10 +200,10 @@ def prior_prepearation(portshow_npiv_df, re_pattern_lst):
     return portshow_npiv_cp_df
 
 
-def npiv_statistics(portshow_npiv_df, re_pattern_lst):
+def npiv_statistics(portshow_npiv_df, comp_dct):
     """Function to count NPIV connection statistics"""
     
-    portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, re_pattern_lst)
+    portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, comp_dct)
     # count statistics for stat columns
     stat_columns = ['logical_link', 'physical_link', 'port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
     npiv_statistics_df = count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
@@ -215,7 +215,7 @@ def npiv_statistics(portshow_npiv_df, re_pattern_lst):
         npiv_statistics_df = dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
                                             join_lst=link_group_columns, filled_lst=['Trunking_lic_both_switches'])
         # add notes to statistics DataFrame
-        npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pattern_lst)
+        npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_dct)
         # insert 'Device_quantity' column to place it to correct location in final statistics DataFrame 
         insert_index = npiv_statistics_df.columns.get_loc('Logical_link_quantity')
         npiv_statistics_df.insert(loc=insert_index, column='Device_quantity', value=1)

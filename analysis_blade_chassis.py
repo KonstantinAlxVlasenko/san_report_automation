@@ -6,12 +6,11 @@ and add Device_Location column to blade modules DataFrame
 
 import pandas as pd
 
-from common_operations_dataframe_presentation import generate_report_table
+from common_operations_dataframe_presentation import generate_report_dataframe
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_table_report import dataframe_to_report
-from common_operations_servicefile import dataframe_import
 
 
 def blademodule_analysis(blade_module_df, synergy_module_df, report_creation_info_lst):
@@ -107,7 +106,7 @@ def blademodule_report(blade_module_loc_df, report_headers_df, data_names):
 
     # pylint: disable=unbalanced-tuple-unpacking
     # blade_module_report_df, = dataframe_segmentation(blade_module_loc_df, data_names[1:], report_columns_usage_dct, max_title)
-    blade_module_report_df = generate_report_table(blade_module_loc_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    blade_module_report_df = generate_report_dataframe(blade_module_loc_df, report_headers_df, report_columns_usage_dct, data_names[1])
     return blade_module_report_df
 
 

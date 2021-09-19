@@ -15,19 +15,17 @@ exploded_columns = ['Exploded_column', 'Exploded_values']
 slot_port_columns = ['slot', 'port']
 
 
-def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, re_pattern_lst):
+def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, comp_dct):
     """Function to verify Quarantined_Ports, Decommissioned_Ports, Fenced_Ports
     and Top_Zoned_PIDs in MAPS Dashboard"""
 
-    # regular expression patterns
-    *_, comp_dct = re_pattern_lst
+    # # regular expression patterns
+    # *_, comp_dct = re_pattern_lst
 
     portshow_cp_df = portshow_sfp_aggregated_df.copy()
     switch_params_cp_df = switch_params_aggregated_df.copy()
     switch_params_cp_df['switchName'].fillna(switch_params_cp_df['SwitchName'], inplace=True)
     # remove uninfomative values from switch DataFrame
-    # TO REMOVE
-    # switch_params_cp_df.replace(to_replace={'None|N/A|(No FV lic)|^ +$': np.nan} , regex=True, inplace=True)
     switch_params_cp_df.replace(to_replace={comp_dct['maps_clean']: np.nan} , regex=True, inplace=True)
     # explode ports so that each port presented as separate row
     maps_ports_df, top_zoned_ports_df = explode_maps_ports(switch_params_cp_df)
@@ -77,7 +75,7 @@ def fillna_port_information(portshow_cp_df, maps_ports_df, top_zoned_ports_df):
 
     # fillna port information
     filled_columns = ['portIndex', 'portState', 'Connected_portWwn', 
-                      'Device_Host_Name', 'Device_Port', 
+                      'Device_Host_Name', 'Device_Port', 'alias',
                       'speed',  'deviceType', 'deviceSubtype',
                       'Slow_Drain_Device', 'Connected_through_AG',  
                       'stat_ftx', 'stat_frx', 'tim_txcrd_z']

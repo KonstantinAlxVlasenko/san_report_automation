@@ -4,13 +4,12 @@ import numpy as np
 import pandas as pd
 
 from common_operations_dataframe import (convert_wwn, dataframe_fillna,
-                                         dataframe_segmentation, replace_wwnn,
-                                         sequential_equality_note,
-                                         translate_values)
+                                         replace_wwnn,
+                                         sequential_equality_note)
 from common_operations_dataframe_presentation import (
-    dataframe_segmentation, dataframe_slice_concatenate, drop_all_identical,
-    drop_column_if_all_na, drop_equal_columns, drop_equal_columns_pairs, remove_duplicates_from_column,
-    translate_values)
+    dataframe_slice_concatenate, drop_all_identical, drop_column_if_all_na,
+    drop_equal_columns, drop_equal_columns_pairs, generate_report_dataframe,
+    remove_duplicates_from_column, translate_values)
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
@@ -59,7 +58,7 @@ def storage_host_analysis_main(host_3par_df, system_3par_df, port_3par_df,
         status_info('ok', max_title, len(info))
         # report tables
         storage_host_report_df, storage_host_compare_report_df = \
-            storage_host_report(storage_host_aggregated_df, data_names, report_columns_usage_dct, max_title)
+            storage_host_report(storage_host_aggregated_df, data_names, report_headers_df, report_columns_usage_dct)
         # create list with partitioned DataFrames
         data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
         # saving data to json or csv file
@@ -142,7 +141,7 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
     # create storage name column free of duplicates
     storage_host_aggregated_df = remove_duplicates_from_column(storage_host_aggregated_df, 'System_Name',
-                                                                duplicates_subset=['System_Name'], ) 
+                                                                duplicates_subset=['configname', 'System_Name'], ) 
     return storage_host_aggregated_df
 
 
@@ -220,7 +219,7 @@ def find_zones(series, zoning_valid_df):
             return zones_str
 
 
-def storage_host_report(storage_host_aggregated_df, data_names, report_columns_usage_dct, max_title):
+def storage_host_report(storage_host_aggregated_df, data_names, report_headers_df, report_columns_usage_dct):
     """Function to create storage_host and storage_host fabric_label comparision DataFrames"""
 
     if storage_host_aggregated_df.empty:
@@ -234,14 +233,15 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_columns_u
     # drop uninformative columns 
     storage_host_report_df = clean_storage_host(storage_host_report_df)
     storage_host_valid_df = clean_storage_host(storage_host_valid_df)
-    # slice required columns and translate column names
-
-    storage_host_report_df, = dataframe_segmentation(storage_host_report_df, data_names[1:2], report_columns_usage_dct, max_title)
-    storage_host_valid_df, = dataframe_segmentation(storage_host_valid_df, data_names[1:2], report_columns_usage_dct, max_title)
+    
+    storage_host_valid_df = remove_duplicates_from_column(storage_host_valid_df, 'System_Name',
+                                                                duplicates_subset=['configname', 'System_Name'])   
+    # slice required columns and translate header
+    storage_host_report_df = generate_report_dataframe(storage_host_report_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    storage_host_valid_df = generate_report_dataframe(storage_host_valid_df, report_headers_df, report_columns_usage_dct, data_names[1])
     # translate values in columns
-    translate_dct = {'Yes': 'Да', 'No': 'Нет'}
-    storage_host_report_df = translate_values(storage_host_report_df, translate_dct)
-    storage_host_valid_df = translate_values(storage_host_valid_df, translate_dct)
+    storage_host_report_df = translate_values(storage_host_report_df)
+    storage_host_valid_df = translate_values(storage_host_valid_df)
     # create comparision storage_host DataFrame based on Fabric_labels
     slice_column = 'Подсеть' if 'Подсеть' in storage_host_valid_df.columns else 'Подсеть порта массива'
     storage_host_compare_report_df = dataframe_slice_concatenate(storage_host_valid_df, column=slice_column)

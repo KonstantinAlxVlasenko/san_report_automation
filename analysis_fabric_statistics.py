@@ -3,13 +3,14 @@
 import pandas as pd
 
 from analysis_fabric_statistics_aggregation import statisctics_aggregated
+from common_operations_dataframe_presentation import (drop_all_identical,
+                                                      drop_equal_columns,
+                                                      drop_zero,
+                                                      translate_header)
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
-from common_operations_servicefile import dct_from_columns
-from common_operations_dataframe_presentation import drop_all_identical, drop_equal_columns
 from common_operations_table_report import dataframe_to_report
-
 
 
 def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
@@ -41,7 +42,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
         'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 'nsshow', 
             'alias', 'blade_servers', 'fabric_labels']
 
-    chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
+    # chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
     force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
@@ -54,7 +55,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
         # after finish display status
         status_info('ok', max_title, len(info))
         # get report DataFrame
-        fabric_statistics_report_df = statistics_report(fabric_statistics_df, chassis_column_usage, max_title)
+        fabric_statistics_report_df = statistics_report(fabric_statistics_df, report_headers_df, report_columns_usage_dct)
         # create list with partitioned DataFrames
         data_lst = [fabric_statistics_df, fabric_statistics_report_df]
         # saving data to json or csv file
@@ -71,7 +72,7 @@ def fabricstatistics_main(portshow_aggregated_df, switchshow_ports_df, fabricsho
     return fabric_statistics_df
 
 
-def statistics_total(statistics_df, statistic_columns_names_dct):
+def statistics_total(statistics_df, report_headers_df):
     """Function to get Fabric level statistics"""
 
     # calculating statistics for each fabric
@@ -95,13 +96,17 @@ def statistics_total(statistics_df, statistic_columns_names_dct):
     # re-calculate percentage of occupied ports
     statistics_total_df['%_occupied'] = round(statistics_total_df.Online.div(statistics_total_df.Licensed)*100, 1)
     statistics_total_df = statistics_total_df.astype('int64', errors = 'ignore')
-    statistics_total_report_df = statistics_total_df.rename(columns = statistic_columns_names_dct)
+    
+    # statistics_total_report_df = statistics_total_df.rename(columns = statistic_columns_names_dct)
+    statistics_total_report_df = translate_header(statistics_total_df, report_headers_df, 'Статистика_фабрики')
 
     return statistics_total_report_df
 
 
-def statistics_report(statistics_df, chassis_column_usage, max_title):
+def statistics_report(statistics_df, report_headers_df, report_columns_usage_dct):
     """Function to create report table out of statistics_df DataFrame"""
+
+    chassis_column_usage = report_columns_usage_dct.get('chassis_info_usage')
 
     # create statitics report DataFrame
     statistics_report_df = statistics_df.copy()
@@ -115,17 +120,14 @@ def statistics_report(statistics_df, chassis_column_usage, max_title):
     # drop column 'chassis_name' if it is not required
     if not chassis_column_usage:
         statistics_report_df.drop(columns = ['chassis_name'], inplace=True)
-    # column titles used to create dictionary to traslate column names
-    statistic_columns_lst = ['Статистика_фабрики_eng', 'Статистика_фабрики_ru']
-    # dictionary used to translate column names
-    statistic_columns_names_dct = dct_from_columns('customer_report', max_title, *statistic_columns_lst, \
-        init_file = 'san_automation_info.xlsx')
-    # translate columns in fabric_statistics_report and statistics_subtotal_df DataFrames
-    statistics_report_df.rename(columns = statistic_columns_names_dct, inplace = True)
+    
+    statistics_report_df = translate_header(statistics_report_df, report_headers_df, 'Статистика_фабрики')
+
     # get summary statistics for each fabric
-    statistics_total_report_df = statistics_total(statistics_df, statistic_columns_names_dct)
+    statistics_total_report_df = statistics_total(statistics_df, report_headers_df)
     # add summary fabric level statistics to switch level statistics
     statistics_report_df = pd.concat([statistics_report_df, statistics_total_report_df], ignore_index=True)
     statistics_report_df.sort_values(by=['Фабрика', 'Подсеть', 'Имя коммутатора'], inplace=True)
-
+    # drop visual uninformative zeroes
+    drop_zero(statistics_report_df)
     return statistics_report_df

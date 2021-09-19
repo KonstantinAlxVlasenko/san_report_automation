@@ -168,8 +168,14 @@ def verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed
 
     # data force extract check 
     # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations 
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # to re-collect or re-analyze data even they were obtained on previous iterations
+    try: 
+        force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    except KeyError as keyerror:
+        print('\n')
+        print(f'Check if {keyerror} present in report_info.xlsx.')
+        print('\n')
+        exit()
     # list with True (if data loaded) and/or False (if data was not found and None returned)
     data_check = force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
 

@@ -14,7 +14,6 @@ from report_zoning_refactoring import zoning_report_main
 from common_operations_table_report import dataframe_to_report
 
 
-
 def zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 
                             cfg_df, zone_df, alias_df, cfg_effective_df, 
                             fcrfabric_df, lsan_df, peerzone_df, 

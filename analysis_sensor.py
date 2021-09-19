@@ -4,12 +4,11 @@ import numpy as np
 import pandas as pd
 
 from common_operations_dataframe_presentation import (
-    aggregated_to_report_dataframe, dataframe_segmentation,
+    generate_report_dataframe,
     translate_values, translate_dataframe)
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
-from common_operations_servicefile import dct_from_columns
 from common_operations_table_report import dataframe_to_report
 
 
@@ -150,7 +149,7 @@ def sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_
 
     # sensor_report_df = aggregated_to_report_dataframe(sensor_aggregated_df,  data_names[1], report_headers_df, report_columns_usage_dct)
 
-    sensor_report_df = aggregated_to_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    sensor_report_df = generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[1])
 
     sensor_report_df = translate_values(sensor_report_df, report_headers_df, data_names[1], 
                                         translated_columns = ['Type', 'Status', 'Value', 'Unit'])

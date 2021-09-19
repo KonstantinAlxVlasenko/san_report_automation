@@ -7,7 +7,7 @@ import pandas as pd
 from common_operations_dataframe import сoncatenate_columns, dataframe_fillna
 
 
-def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pattern_lst):
+def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_dct):
     """Function to add notes to npiv_statistics_df DataFrame"""
 
     def connection_note(npiv_statistics_df):
@@ -145,13 +145,13 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
     
     
     # def speed_note(npiv_statistics_df, re_pattern_lst):
-    def speed_note(npiv_statistics_df, re_pattern_lst):
+    def speed_note(npiv_statistics_df, comp_dct):
         """Function to verify link speed value and mode. Adds note if speed is in auto mode,
         speed is low (1-4 Gbps) or reduced (lower then port could provide), speed is not uniform
         for all links between pair of switches"""
 
-        # regular expression patterns
-        *_, comp_dct = re_pattern_lst
+        # # regular expression patterns
+        # *_, comp_dct = re_pattern_lst
         
         # low speed note
         low_speed_regex = comp_dct['low_speed']
@@ -187,7 +187,6 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, re_pa
     npiv_statistics_df = connection_note(npiv_statistics_df)
     npiv_statistics_df = single_vc_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = nonuniformity_note(npiv_statistics_df, portshow_npiv_cp_df)
-    # npiv_statistics_df = speed_note(npiv_statistics_df, re_pattern_lst)
-    npiv_statistics_df = speed_note(npiv_statistics_df, re_pattern_lst)
+    npiv_statistics_df = speed_note(npiv_statistics_df, comp_dct)
     npiv_statistics_df.fillna(np.nan, inplace=True)
     return npiv_statistics_df

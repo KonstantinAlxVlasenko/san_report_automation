@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 from analysis_errdump_aggregation import errdump_aggregated
-from common_operations_dataframe import dataframe_segmentation
+# from common_operations_dataframe import dataframe_segmentation
+from common_operations_dataframe_presentation import generate_report_dataframe
 from common_operations_filesystem import load_data, save_data
 from common_operations_table_report import dataframe_to_report
 
@@ -63,7 +64,7 @@ def errdump_main(errdump_df, switchshow_df, switch_params_aggregated_df,
         # after finish display status
         status_info('ok', max_title, len(info))      
         # partition aggregated DataFrame to required tables
-        raslog_report_df = raslog_report(raslog_frequent_df, data_names, report_columns_usage_dct, max_title)
+        raslog_report_df = raslog_report(raslog_frequent_df, data_names, report_headers_df, report_columns_usage_dct)
 
         # create list with partitioned DataFrames
         data_lst = [errdump_aggregated_df, raslog_counter_df, raslog_report_df]
@@ -99,7 +100,7 @@ def errdump_statistics(errdump_aggregated_df):
                            'Condition', 'Dashboard_category', 'obj', 'Message_status',
                            'portIndex', 'Index_slot_port', 'portType', 'portState', 'speed',
                            'tx_port', 'rx_port', 'sid', 'did', 'wwn',
-                           'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'deviceType']
+                           'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'alias', 'deviceType']
     
     # group log messages by month, device and log message
     errdump_grouper = errdump_filtered_df.groupby([pd.Grouper(freq='M', kind='period'), *errdump_grp_columns])
@@ -111,6 +112,9 @@ def errdump_statistics(errdump_aggregated_df):
     raslog_counter_df.reset_index(inplace=True)
     # replace na_cell
     raslog_counter_df.replace({'na_cell': np.nan}, inplace=True)
+    if raslog_counter_df['alias'].notna().any():
+        raslog_counter_df['alias'].replace('na_cell(?:, )?', value='', regex=True, inplace=True)
+        raslog_counter_df['alias'] = raslog_counter_df['alias'].str.rstrip(', ')
 
     # apply date format to remove day and time
     raslog_counter_df['config_collection_date'] =  pd.to_datetime(raslog_counter_df['config_collection_date']).dt.date
@@ -157,29 +161,26 @@ def errdump_filter(errdump_aggregated_df):
                            'slot', 'port', 'Condition', 'Current_value', 'Dashboard_category',
                            'obj', 'Message_status', 'portIndex', 'Index_slot_port', 'portType', 'portState',
                            'speed', 'tx_port', 'rx_port', 'sid', 'did', 'wwn',
-                           'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'deviceType']
+                           'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'alias', 'deviceType']
 
     errdump_filtered_df = errdump_filtered_df.reindex(columns=errdump_grp_columns)
     
-    # join multiple Device_Host_Name_Ports behinde one port
+    # join multiple Device_Host_Name_Ports behind one port
     # groupby drop rows with nan values
     errdump_filtered_df.fillna('na_cell', inplace=True)
-    
-    # TO_REMOVE
-    # errdump_filtered_df = errdump_filtered_df[errdump_grp_columns].copy()
-
-    errdump_filtered_df = errdump_filtered_df.groupby(by=errdump_grp_columns[:-4]).agg(', '.join)
+    errdump_filtered_df = errdump_filtered_df.groupby(by=errdump_grp_columns[:-5]).agg(', '.join)
     errdump_filtered_df.reset_index(inplace=True)
+    
     """remove duplicate values from Connected_portId and Device_Host_Name_Port cells
     thus all identical events for the device behind the single port with idenitical Message_date
     considered to be one event"""
-    for column in ['Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'deviceType']:
+    for column in ['Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'alias', 'deviceType']:
         errdump_filtered_df[column] = errdump_filtered_df[column].str.split(', ').apply(set).str.join(', ')
-    
+
     return errdump_filtered_df
 
 
-def raslog_report(raslog_frequent_df, data_names, report_columns_usage_dct, max_title):
+def raslog_report(raslog_frequent_df, data_names, report_headers_df, report_columns_usage_dct):
     """Function to check if it is required to use chassis_name columns. RASLog sometimes uses it's own
     chname not equal to switchname or chassis name thus it's better to keep default chassis names
     for visibility even if it was allowed to drop chassiss_name column before"""
@@ -187,7 +188,6 @@ def raslog_report(raslog_frequent_df, data_names, report_columns_usage_dct, max_
     # make copy of default report_columns_usage_dct in order to avoid change it
     report_columns_usage_upd_dct = report_columns_usage_dct.copy()
     chassis_column_usage = report_columns_usage_upd_dct['chassis_info_usage']
-
     # if chassis_name column to be dropped
     if not chassis_column_usage:
         # if all switchnames and chassis names are not identical
@@ -195,9 +195,6 @@ def raslog_report(raslog_frequent_df, data_names, report_columns_usage_dct, max_
             # change keep chassis_name column tag to True 
             report_columns_usage_upd_dct['chassis_info_usage'] = True
 
-    raslog_report_df, = dataframe_segmentation(raslog_frequent_df, [data_names[2]], report_columns_usage_upd_dct, max_title)
+    raslog_report_df = generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_dct, data_names[2])
     raslog_report_df.dropna(axis=1, how = 'all', inplace=True)
     return raslog_report_df
-
-        
-

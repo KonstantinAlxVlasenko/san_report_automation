@@ -4,9 +4,9 @@ import pandas as pd
 
 # from common_operations_dataframe import dataframe_segmentation
 from common_operations_dataframe_presentation import (
-    dataframe_segmentation, dataframe_slice_concatenate, drop_all_identical,
-    drop_column_if_all_na, drop_equal_columns, drop_equal_columns_pairs, translate_header, translate_values, aggregated_to_report_dataframe)
-from common_operations_servicefile import dct_from_columns
+    dataframe_slice_concatenate, drop_all_identical, drop_column_if_all_na,
+    drop_equal_columns, drop_equal_columns_pairs, drop_zero,
+    generate_report_dataframe, translate_header, translate_values)
 
 
 def zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df,
@@ -36,7 +36,8 @@ def zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned
         unzoned_device_report(portshow_zoned_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[9:11])
     zoning_absent_device_report_df = \
         absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[11])
-    zonemember_statistics_report_df = statistics_report(zonemember_statistics_df, report_headers_df, data_names[12], )
+    zonemember_statistics_report_df = statistics_report(zonemember_statistics_df, report_headers_df, data_names[12])
+    drop_zero(zonemember_statistics_report_df)
     alias_statistics_report_df = statistics_report(alias_statistics_df, report_headers_df, data_names[13])
     effective_cfg_statistics_report_df = statistics_report(effective_cfg_statistics_df, report_headers_df, data_names[14])
 
@@ -63,7 +64,7 @@ def create_report(aggregated_df, report_headers_df, report_columns_usage_dct, df
     # take required data from aggregated DataFrame to create report
     # report_df, = dataframe_segmentation(cleaned_df, data_name, report_columns_usage_dct, max_title)
 
-    report_df = aggregated_to_report_dataframe(cleaned_df, report_headers_df, report_columns_usage_dct, df_name)
+    report_df = generate_report_dataframe(cleaned_df, report_headers_df, report_columns_usage_dct, df_name)
 
     return report_df
 
@@ -148,8 +149,8 @@ def unzoned_device_report(portshow_cfg_aggregated_df, report_headers_df, report_
     # unzoned_device_report_df, = dataframe_segmentation(unzoned_device_df, data_names[0], report_columns_usage_dct, max_title)
     # no_alias_device_report_df, = dataframe_segmentation(no_alias_device_df, data_names[1], report_columns_usage_dct, max_title)
 
-    unzoned_device_report_df = aggregated_to_report_dataframe(unzoned_device_df, report_headers_df, report_columns_usage_dct, data_names[0])
-    no_alias_device_report_df = aggregated_to_report_dataframe(no_alias_device_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    unzoned_device_report_df = generate_report_dataframe(unzoned_device_df, report_headers_df, report_columns_usage_dct, data_names[0])
+    no_alias_device_report_df = generate_report_dataframe(no_alias_device_df, report_headers_df, report_columns_usage_dct, data_names[1])
 
     return unzoned_device_report_df, no_alias_device_report_df
 
@@ -165,7 +166,7 @@ def absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_
     # absent_device_df = translate_values(absent_device_df, translate_dct, ['Fabric_device_status'])
     absent_device_df = translate_values(absent_device_df, report_headers_df, 'Зонирование_перевод', translated_columns='Fabric_device_status')
     # zoning_absent_device_report_df, = dataframe_segmentation(absent_device_df, data_name, report_columns_usage_dct, max_title)
-    zoning_absent_device_report_df = aggregated_to_report_dataframe(absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
+    zoning_absent_device_report_df = generate_report_dataframe(absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
 
     return zoning_absent_device_report_df
 

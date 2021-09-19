@@ -135,13 +135,16 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
                           'slot', 'port', 'portIndex', 'Index_slot_port',
                           'portType', 'portState', 'speed',
                           'Connected_portId', 'Connected_portWwn',
-                          'Device_Host_Name', 'Device_Port', 'Device_Location',
+                          'Device_Host_Name', 'Device_Port', 'alias', 'Device_Location',
                           'deviceType', 'deviceSubtype']
     
     portshow_join_df = portshow_aggregated_df[portshow_columns].copy()
     if errdump_aggregated_df[['slot', 'port']].notna().all(axis=1).any():
         errdump_aggregated_df = errdump_aggregated_df.merge(portshow_join_df, how='left', on=portshow_columns[:5])
     
+
+
+
     # TO_REMOVE
     # errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], portshow_columns[5:], remove_duplicates=False, drop_na=False)
 
@@ -172,7 +175,7 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
     # concatenate devce name and device port columns
     errdump_aggregated_df['Device_Host_Name_Port'] = \
         errdump_aggregated_df[['Device_Host_Name', 'Device_Port']].stack().groupby(level=0).agg(' port '.join)
-    
+
     return errdump_aggregated_df
 
 

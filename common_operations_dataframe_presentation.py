@@ -9,80 +9,80 @@ import numpy as np
 from common_operations_servicefile import dct_from_columns, columns_import
 from common_operations_dataframe import dct_from_dataframe
 
-def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, report_columns_usage_dct, max_title):
-    """Function to split aggregated table to required DataFrames
-    As parameters function get DataFrame to be partitioned and
-    list of allocated DataFrames names. Returns list of segmented DataFrames. 
-    """
+# def dataframe_segmentation(dataframe_to_segment_df, dataframes_to_create_lst, report_columns_usage_dct, max_title):
+#     """Function to split aggregated table to required DataFrames
+#     As parameters function get DataFrame to be partitioned and
+#     list of allocated DataFrames names. Returns list of segmented DataFrames. 
+#     """
 
-    # sheet name with customer report columns
-    customer_report_columns_sheet = 'customer_report'
-    # construct columns titles from data_names to use in dct_from_columns function
-    if isinstance(dataframes_to_create_lst, str):
-        dataframes_to_create_lst = [dataframes_to_create_lst]
-    tables_names_lst = [
-        [data_name.rstrip('_report') + '_eng', data_name.rstrip('_report')+'_ru'] 
-        for data_name in dataframes_to_create_lst
-        ]      
+#     # sheet name with customer report columns
+#     customer_report_columns_sheet = 'customer_report'
+#     # construct columns titles from data_names to use in dct_from_columns function
+#     if isinstance(dataframes_to_create_lst, str):
+#         dataframes_to_create_lst = [dataframes_to_create_lst]
+#     tables_names_lst = [
+#         [data_name.rstrip('_report') + '_eng', data_name.rstrip('_report')+'_ru'] 
+#         for data_name in dataframes_to_create_lst
+#         ]      
 
-    chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
-    fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
-    group_name_usage = report_columns_usage_dct.get('group_name_usage')
+#     chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
+#     fabric_name_usage = report_columns_usage_dct['fabric_name_usage']
+#     group_name_usage = report_columns_usage_dct.get('group_name_usage')
 
-    # dictionary used to rename DataFrame english columns names to russian
-    data_columns_names_dct = {}
-    # for each data element from data_names list import english and russian columns title
-    # data_name is key and two lists with columns names are values for data_columns_names_dct
-    for dataframe_name, eng_ru_columns in zip(dataframes_to_create_lst, tables_names_lst):
-        data_columns_names_dct[dataframe_name]  = \
-            dct_from_columns(customer_report_columns_sheet, max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
-    # construct english columns titles from tables_names_lst to use in columns_import function
-    tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]
-    # dictionary to extract required columns from aggregated DataFrame
-    data_columns_names_eng_dct = {}
-    # for each data element from data_names list import english columns title to slice main DataFrame 
-    for dataframe_name, df_eng_column in zip(dataframes_to_create_lst, tables_names_eng_lst):
-        # dataframe_name is key and list with columns names is value for data_columns_names_eng_dct
-        data_columns_names_eng_dct[dataframe_name] = \
-            columns_import(customer_report_columns_sheet, max_title, df_eng_column, init_file = 'san_automation_info.xlsx', display_status=False)
-        # if no need to use chassis information in tables
-        if not chassis_column_usage:
-            if 'chassis_name' in data_columns_names_eng_dct[dataframe_name]:
-                data_columns_names_eng_dct[dataframe_name].remove('chassis_name')
-            if 'chassis_wwn' in data_columns_names_eng_dct[dataframe_name]:
-                data_columns_names_eng_dct[dataframe_name].remove('chassis_wwn')
-        # if there is only one Fabric no need to use Fabric name
-        if not fabric_name_usage:
-            for column in dataframe_to_segment_df.columns:
-                if 'Fabric_name' in column and column in data_columns_names_eng_dct[dataframe_name]:
-                    data_columns_names_eng_dct[dataframe_name].remove(column)
-        # if device names correction applied then no need to use alias group name column
-        if not group_name_usage:
-            if 'Group_Name' in data_columns_names_eng_dct[dataframe_name]:
-                data_columns_names_eng_dct[dataframe_name].remove('Group_Name')
+#     # dictionary used to rename DataFrame english columns names to russian
+#     data_columns_names_dct = {}
+#     # for each data element from data_names list import english and russian columns title
+#     # data_name is key and two lists with columns names are values for data_columns_names_dct
+#     for dataframe_name, eng_ru_columns in zip(dataframes_to_create_lst, tables_names_lst):
+#         data_columns_names_dct[dataframe_name]  = \
+#             dct_from_columns(customer_report_columns_sheet, max_title, *eng_ru_columns, init_file = 'san_automation_info.xlsx')
+#     # construct english columns titles from tables_names_lst to use in columns_import function
+#     tables_names_eng_lst = [table_name_lst[0] for table_name_lst in tables_names_lst]
+#     # dictionary to extract required columns from aggregated DataFrame
+#     data_columns_names_eng_dct = {}
+#     # for each data element from data_names list import english columns title to slice main DataFrame 
+#     for dataframe_name, df_eng_column in zip(dataframes_to_create_lst, tables_names_eng_lst):
+#         # dataframe_name is key and list with columns names is value for data_columns_names_eng_dct
+#         data_columns_names_eng_dct[dataframe_name] = \
+#             columns_import(customer_report_columns_sheet, max_title, df_eng_column, init_file = 'san_automation_info.xlsx', display_status=False)
+#         # if no need to use chassis information in tables
+#         if not chassis_column_usage:
+#             if 'chassis_name' in data_columns_names_eng_dct[dataframe_name]:
+#                 data_columns_names_eng_dct[dataframe_name].remove('chassis_name')
+#             if 'chassis_wwn' in data_columns_names_eng_dct[dataframe_name]:
+#                 data_columns_names_eng_dct[dataframe_name].remove('chassis_wwn')
+#         # if there is only one Fabric no need to use Fabric name
+#         if not fabric_name_usage:
+#             for column in dataframe_to_segment_df.columns:
+#                 if 'Fabric_name' in column and column in data_columns_names_eng_dct[dataframe_name]:
+#                     data_columns_names_eng_dct[dataframe_name].remove(column)
+#         # if device names correction applied then no need to use alias group name column
+#         if not group_name_usage:
+#             if 'Group_Name' in data_columns_names_eng_dct[dataframe_name]:
+#                 data_columns_names_eng_dct[dataframe_name].remove('Group_Name')
             
-    # list with partitioned DataFrames
-    segmented_dataframes_lst = []
-    for dataframe_name in dataframes_to_create_lst:
+#     # list with partitioned DataFrames
+#     segmented_dataframes_lst = []
+#     for dataframe_name in dataframes_to_create_lst:
 
-        # df_columns_names_eng_lst = data_columns_names_eng_dct[dataframe_name]
-        columns = dataframe_to_segment_df.columns.to_list()
-        df_columns_names_eng_lst = [column for column in data_columns_names_eng_dct[dataframe_name] if column in columns]
+#         # df_columns_names_eng_lst = data_columns_names_eng_dct[dataframe_name]
+#         columns = dataframe_to_segment_df.columns.to_list()
+#         df_columns_names_eng_lst = [column for column in data_columns_names_eng_dct[dataframe_name] if column in columns]
 
-        # get required columns from aggregated DataFrame
-        # sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy() # remove
-        sliced_dataframe = dataframe_to_segment_df.reindex(columns = df_columns_names_eng_lst).copy()
+#         # get required columns from aggregated DataFrame
+#         # sliced_dataframe = dataframe_to_segment_df[data_columns_names_eng_dct[dataframe_name]].copy() # remove
+#         sliced_dataframe = dataframe_to_segment_df.reindex(columns = df_columns_names_eng_lst).copy()
 
-        # translate columns to russian
-        sliced_dataframe.rename(columns = data_columns_names_dct[dataframe_name], inplace = True)
-        # add partitioned DataFrame to list
-        segmented_dataframes_lst.append(sliced_dataframe)
+#         # translate columns to russian
+#         sliced_dataframe.rename(columns = data_columns_names_dct[dataframe_name], inplace = True)
+#         # add partitioned DataFrame to list
+#         segmented_dataframes_lst.append(sliced_dataframe)
     
-    return segmented_dataframes_lst
+#     return segmented_dataframes_lst
 
 
 
-def generate_report_table(aggregated_df, report_headers_df, report_columns_usage_dct, *args):
+def generate_report_dataframe(aggregated_df, report_headers_df, report_columns_usage_dct, *args):
     """Function to split aggregated table to required DataFrames
     As parameters function get DataFrame to be partitioned and
     list of allocated DataFrames names. Returns list of segmented DataFrames. 
@@ -90,7 +90,7 @@ def generate_report_table(aggregated_df, report_headers_df, report_columns_usage
 
     # column names in report_headers_df containg header titles for each df_name
     header_names_eng_lst = [df_name + '_eng' for df_name in args]
-    
+
     # import header titles from report_headers_df and drop excessive titles for each df_name
     report_header_eng_dct = {}
     for df_name, header_name_eng in zip(args, header_names_eng_lst):
@@ -107,43 +107,6 @@ def generate_report_table(aggregated_df, report_headers_df, report_columns_usage
         report_df = translate_header(report_df, report_headers_df, df_name)
         report_df_lst.append(report_df)
     return report_df if len(report_df_lst) == 1 else report_df_lst
-
-
-
-# def aggregated_to_report_dataframe(aggregated_df, df_name_to_create_lst, report_headers_df, report_columns_usage_dct):
-#     """Function to split aggregated table to required DataFrames
-#     As parameters function get DataFrame to be partitioned and
-#     list of allocated DataFrames names. Returns list of segmented DataFrames. 
-#     """
-
-#     # # report_headers_df contains column titles, 
-#     # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-#     # *_, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-
-#     # if single df_name in parameters
-#     if isinstance(df_name_to_create_lst, str):
-#         df_name_to_create_lst = [df_name_to_create_lst]
-    
-#     # column names in report_headers_df containg header titles for each df_name
-#     header_names_eng_lst = [df_name + '_eng' for df_name in df_name_to_create_lst]
-    
-#     # import header titles from report_headers_df and drop excessive titles for each df_name
-#     report_header_eng_dct = {}
-#     for df_name, header_name_eng in zip(df_name_to_create_lst, header_names_eng_lst):
-#         report_header_eng_dct[df_name] = header_cleanup(report_headers_df, header_name_eng, report_columns_usage_dct)
-
-#     # list with partitioned DataFrames
-#     report_df_lst = []
-#     for df_name in df_name_to_create_lst:
-#         # identify header titles if df_name which are in aggregated_df
-#         df_header_eng = [column for column in report_header_eng_dct[df_name] if column in aggregated_df.columns]
-#         # get required columns from aggregated DataFrame
-#         report_df = aggregated_df.reindex(columns=df_header_eng).copy()
-#         # translate header to russian
-#         report_df = translate_header(report_df, report_headers_df, df_name)
-#         report_df_lst.append(report_df)
-#     return report_df if len(report_df_lst) == 1 else report_df_lst
-
 
 
 def translate_header(df, headers_df, df_name):
@@ -163,6 +126,7 @@ def translate_values(df, headers_df=None, df_name=None, translated_columns=None,
 
     if isinstance(headers_df, pd.DataFrame) and df_name:
         translate_dct = dct_from_dataframe(headers_df, df_name + '_eng', df_name + '_ru')
+
     if isinstance(translated_columns, str):
        translated_columns = [translated_columns] 
     if not translated_columns:
@@ -177,9 +141,9 @@ def translate_values(df, headers_df=None, df_name=None, translated_columns=None,
 
 def translate_dataframe(df, headers_df, df_name, translated_columns=None):
     """Function to translate DataFrame header and values in column"""
-
-    translated_df = translate_header(df, headers_df, df_name)
-    translated_df = translate_values(translated_df, headers_df, df_name, translated_columns)
+    
+    translated_df = translate_values(df, headers_df, df_name, translated_columns)
+    translated_df = translate_header(translated_df, headers_df, df_name)
     return translated_df
 
 
@@ -203,27 +167,12 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct
     # verify if any header titles need to be dropped
     dropped_columns = []
     for usage_flag, column in column_usage_flags:
-        if report_columns_usage_dct.get(usage_flag):
+        if not report_columns_usage_dct.get(usage_flag):
             dropped_columns.extend(column)
     if dropped_columns:
         mask_dropped_columns = ~header_sr.isin(dropped_columns)
         header_sr = header_sr.loc[mask_dropped_columns]
     return header_sr.tolist()    
-
-
-# def translate_values(translated_df, translate_dct={'Yes': 'Да', 'No': 'Нет'}, translate_columns = None):
-#     """Function to translate values in corresponding columns"""
-
-#     if not translate_columns:
-#         translate_columns = translated_df.columns
-
-#     # columns which values need to be translated
-#     # translate values in column if column in DataFrame
-#     for column in translate_columns:
-#         if column in translated_df.columns:
-#             translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
-
-#     return translated_df
 
 
 def drop_column_if_all_na(df, columns: list):
@@ -322,7 +271,6 @@ def dataframe_slice_concatenate(df, column: str):
         tmp_df = df.loc[mask_value].copy()
         tmp_df.reset_index(inplace=True, drop=True)
         sorted_df_lst.append(tmp_df.copy())
-    
     return pd.concat(sorted_df_lst, axis=1)
 
 
@@ -335,7 +283,6 @@ def remove_duplicates_from_column(df, column: str, duplicates_subset: list=None,
 
     if duplicates_subset is None:
         duplicates_subset = df.columns.tolist()
-    
     if duplicates_free_column_name is None:
         duplicates_free_column_name = column + '_duplicates_free'
 
@@ -349,7 +296,6 @@ def remove_duplicates_from_column(df, column: str, duplicates_subset: list=None,
 
     if drop_orig_column:
         df.drop(columns=[column], inplace=True)
-
     return df
 
 
@@ -357,6 +303,14 @@ def drop_zero(df):
     """Function to remove zeroes from DataFrame for clean view"""
 
     df.replace({0: np.nan}, inplace=True)
+    return df
+
+
+def move_all_down(df):
+    """Function to move total row All to the bottom of the DataFrame"""
+    
+    mask_all = df['Fabric_name'] == 'All'
+    df = df[~mask_all].append(df[mask_all]).reset_index(drop=True)
     return df
 
 
@@ -377,6 +331,5 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     
     seg1 = [i for i in seg1 if i not in seg2]
     seg3 = [i for i in cols if i not in seg1 + seg2]
-    
     return df[seg1 + seg2 + seg3]
 

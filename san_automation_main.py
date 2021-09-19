@@ -21,6 +21,7 @@ from analysis_fabric_statistics import fabricstatistics_main
 from analysis_isl import isl_main
 from analysis_portcmd import portcmd_analysis_main
 from analysis_storage_host import storage_host_analysis_main
+from analysis_maps_npiv_ports import maps_npiv_ports_main
 from collection_bladesystem import blade_system_extract
 from collection_chassis_params import chassis_params_extract
 from collection_fabric_membership import fabricshow_extract
@@ -115,7 +116,9 @@ def main():
                                 system_3par_df, port_3par_df, report_creation_info_lst)
 
     portshow_sfp_aggregated_df =  err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_df, 
-                                                                sfpshow_df, portcfgshow_df, report_creation_info_lst)
+                                                                sfpshow_df, portcfgshow_df, isl_statistics_df, report_creation_info_lst)
+
+    portshow_npiv_df = maps_npiv_ports_main(portshow_sfp_aggregated_df, switch_params_aggregated_df, isl_statistics_df, report_creation_info_lst)
 
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis_main(switch_params_aggregated_df, portshow_aggregated_df, 

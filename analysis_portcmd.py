@@ -122,7 +122,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
                 storage_connection_statistics_report_df, device_connection_statistics_report_df  = \
                     portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
                                             device_connection_statistics_df, data_names[5:-2], 
-                                            report_columns_usage_dct, max_title)
+                                            report_headers_df, report_columns_usage_dct)
         # create list with partitioned DataFrames
         data_lst = [
             portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
