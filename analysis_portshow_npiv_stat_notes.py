@@ -144,7 +144,6 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
         return npiv_statistics_df
     
     
-    # def speed_note(npiv_statistics_df, re_pattern_lst):
     def speed_note(npiv_statistics_df, comp_dct):
         """Function to verify link speed value and mode. Adds note if speed is in auto mode,
         speed is low (1-4 Gbps) or reduced (lower then port could provide), speed is not uniform

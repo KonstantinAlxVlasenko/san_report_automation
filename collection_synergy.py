@@ -15,6 +15,8 @@ from common_operations_servicefile import columns_import, data_extract_objects
 from common_operations_dataframe import wise_combine
 from common_operations_table_report import dataframe_to_report
 
+from openpyxl import load_workbook
+
 
 
 def synergy_system_extract(synergy_folder, report_creation_info_lst):
@@ -104,14 +106,22 @@ def synergy_system_extract(synergy_folder, report_creation_info_lst):
                     # current operation information string
                     info = f'[{i+1} of {configs_num}]: {configname} system.'
                     print(info, end =" ")
+
+
+                    wb = load_workbook(synergy_config)
+
                     
                     syn_enclosure_df = pd.read_excel(synergy_config, sheet_name='enclosures')
                     syn_module_df = pd.read_excel(synergy_config, sheet_name='interconnectbays')
                     
                     syn_server_hw_df = pd.read_excel(synergy_config, sheet_name='server-hardware')
                     syn_server_fw_sw_df = pd.read_excel(synergy_config, sheet_name='server-fw-sw')
-                    syn_server_profile_connection_df = pd.read_excel(synergy_config, sheet_name='server-prof-conn-details')
                     
+                    if 'server-prof-conn-details' in wb.sheetnames:
+                        syn_server_profile_connection_df = pd.read_excel(synergy_config, sheet_name='server-prof-conn-details')
+                    else:
+                        syn_server_profile_connection_df = pd.DataFrame()
+
                     synergy_module_df = synergy_module(syn_enclosure_df, syn_module_df)
                     
                     if synergy_module_aggregated_df.empty:
@@ -121,7 +131,11 @@ def synergy_system_extract(synergy_folder, report_creation_info_lst):
                         
                         
                     synergy_server_wwn_df = synergy_server_wwn(syn_server_hw_df)
-                    synergy_profile_wwn_df = synergy_profile_wwn(syn_server_profile_connection_df, synergy_server_wwn_df)
+                    
+                    if not syn_server_profile_connection_df.empty:
+                        synergy_profile_wwn_df = synergy_profile_wwn(syn_server_profile_connection_df, synergy_server_wwn_df)
+                    else:
+                        synergy_profile_wwn_df = pd.DataFrame()
                     
                     # conctenate connection profile and server hardware
                     synergy_servers_df = pd.concat([synergy_server_wwn_df, synergy_profile_wwn_df], ignore_index=True)

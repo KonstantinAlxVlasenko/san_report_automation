@@ -320,6 +320,9 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     
     if isinstance(cols_to_move, str):
         cols_to_move = [cols_to_move]
+
+    # verify if relocated columns are in df
+    cols_to_move = [column for column in cols_to_move if column in df.columns]
     
     cols = df.columns.tolist()    
     if place == 'after':
@@ -331,5 +334,5 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     
     seg1 = [i for i in seg1 if i not in seg2]
     seg3 = [i for i in cols if i not in seg1 + seg2]
-    return df[seg1 + seg2 + seg3]
+    return df[seg1 + seg2 + seg3].copy()
 

@@ -4,8 +4,9 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe_presentation import move_all_down
+from common_operations_dataframe_presentation import move_all_down, move_column
 from common_operations_dataframe import dataframe_fillna
+from common_operations_switch import verify_connection_symmetry
 
 sw_columns = ['Fabric_name', 'Fabric_label', 
                'chassis_name', 'SwitchName', 'switchWwn']
@@ -26,6 +27,11 @@ def switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_sta
         sw_connection_statistics_df = dataframe_fillna(sw_connection_statistics_df, core_sw_df, join_lst=sw_columns, filled_lst=['Core_switch_note'])
         # add notes if principal not in core or if principal fos version is not recent in the fabric
         sw_connection_statistics_df = add_notes(sw_connection_statistics_df)
+
+        # asymmetry_note_columns = ['Native_Asymmetry_note', 'AG_Asymmetry_note']
+        # sw_connection_statistics_df = move_column(sw_connection_statistics_df, asymmetry_note_columns, ref_col='')    
+
+
     return sw_connection_statistics_df
 
 
@@ -47,17 +53,19 @@ def connection_statistics(df, connected_dev_columns, tag):
     summary_columns = [*sw_columns, *connected_dev_columns[2:]]
     switch_conn_fabric_summary_df = df.loc[mask_fabric_summary, summary_columns].copy()
     switch_conn_fabric_summary_df[connected_dev_columns[2:]] = switch_conn_fabric_summary_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
+    # verify if fabric A and B are symmetrical from Native ang AG connection poin of view
+    switch_conn_fabric_summary_df = verify_connection_symmetry(switch_conn_fabric_summary_df, connected_dev_columns[2:])
     # sum up connections, links, ports and bandwidth for each switch
     switch_conn_total_df = switch_conn_df.groupby(sw_columns).agg('sum').reset_index()
 
     # switch quantity are not summed up and each row represents single switch
     if 'Switch_quantity' in switch_conn_total_df.columns:
         switch_conn_total_df['Switch_quantity'] = 1
-
+    
     # add unchanged summary to connection statistics DataFrame
     switch_conn_df = pd.concat([switch_conn_total_df, switch_conn_fabric_summary_df])
     # rename columns with the Native or AG tag
-    connected_dev_rename_dct = {k: tag + '_' + k for k in connected_dev_columns if k != 'Switch_quantity'}
+    connected_dev_rename_dct = {k: tag + '_' + k for k in [*connected_dev_columns, 'Asymmetry_note'] if k != 'Switch_quantity'}
     switch_conn_df.rename(columns=connected_dev_rename_dct, inplace=True)
     return switch_conn_df
     
@@ -119,14 +127,14 @@ def find_core_switch(sw_connection_statistics_df):
     'Native_Switch_connection_quantity', 
     'Native_Logical_link_quantity', 'Native_Physical_link_quantity', 
     'Native_Port_quantity', 'Native_Bandwidth_Gbps,
-    'AG_Device_connection_quantity', 
+    'AG_AG_Device_connection_quantity', 
     'AG_Logical_link_quantity', 'AG_Physical_link_quantity', 
     'AG_Port_quantity', 'AG_Bandwidth_Gbps'
     """
     
     # the maximum value is determined sequentially for the following columns
     connection_columns = ['Native_Switch_connection_quantity', 'Native_Port_quantity', 'Native_Bandwidth_Gbps',
-                    'AG_Device_connection_quantity', 'AG_Port_quantity', 'AG_Bandwidth_Gbps']
+                    'AG_AG_Device_connection_quantity', 'AG_Port_quantity', 'AG_Bandwidth_Gbps']
     connection_columns = [column for column in connection_columns if column in core_sw_df.columns]
     
     for column in connection_columns:

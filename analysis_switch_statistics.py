@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from common_operations_dataframe import count_frequency
-from common_operations_switch import count_all_row, count_summary
+from common_operations_switch import count_all_row, count_summary, verify_connection_symmetry
 
 def fabric_switch_statistics(switch_params_aggregated_df, re_pattern_lst):
     """Function to count switch statistics"""
@@ -18,8 +18,26 @@ def fabric_switch_statistics(switch_params_aggregated_df, re_pattern_lst):
     san_chassis_statistics_df = count_chassis_statistics(switch_params_cp_df)
     # concatenate switch and chassis statistics
     fabric_switch_statistics_df = pd.concat([fabric_switch_statistics_df, san_chassis_statistics_df], ignore_index=True)
+
+    fabric_switch_statistics_df = asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df)
+
     return fabric_switch_statistics_df
     
+
+def asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df):
+
+    sw_models = switch_params_cp_df['ModelName'].unique().tolist()
+    sw_gen = switch_params_cp_df['Generation'].unique().tolist()
+    sw_role = switch_params_cp_df['SwitchMode'].unique().tolist()
+
+
+    fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_models, summary_column='Model_Asymmetry_note')
+    fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_gen, summary_column='Generation_Asymmetry_note')
+    fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_role, summary_column='Mode_Asymmetry_note')
+
+    return fabric_switch_statistics_df
+
+
 
 def prior_prepearation(switch_params_aggregated_df, re_pattern_lst):
     """Function to modify switch_params_aggregated_df to count statistics"""

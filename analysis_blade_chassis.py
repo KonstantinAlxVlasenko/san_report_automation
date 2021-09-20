@@ -35,7 +35,7 @@ def blademodule_analysis(blade_module_df, synergy_module_df, report_creation_inf
     blade_module_loc_df, blade_module_report_df = data_lst
 
     # list of data to analyze from report_info table
-    analyzed_data_names = ['blade_interconnect']
+    analyzed_data_names = ['blade_interconnect', 'synergy_interconnect']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
