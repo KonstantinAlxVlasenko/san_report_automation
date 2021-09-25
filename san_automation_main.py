@@ -44,6 +44,7 @@ from common_operations_servicefile import (columns_import, dataframe_import,
 from common_operations_table_report import dataframe_to_report
 from parser_san_toolbox import (
     create_files_list_to_parse, create_parsed_dirs, santoolbox_process, find_max_title)
+from common_operations_table_report import report_format_completion
 
 
 # global list with constants for report operations 
@@ -71,6 +72,10 @@ print('\n')
 report_steps_dct = dct_from_columns('service_tables', max_title, \
     'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', 'description', \
         init_file = 'report_info.xlsx', display_status=False)
+
+project_steps_df = dataframe_import('service_tables', max_title, init_file = 'report_info.xlsx', display_status=False)
+numeric_columns = ['export_to_excel', 'force_extract', 'sort_weight']
+project_steps_df[numeric_columns] = project_steps_df[numeric_columns].apply(pd.to_numeric, errors='ignore')
 
 # Data_frame with report columns
 report_headers_df = dataframe_import('customer_report', max_title, display_status=False)
@@ -139,6 +144,8 @@ def main():
 
     errdump_aggregated_df, raslog_counter_df = \
         errdump_main(errdump_df, switchshow_ports_df, switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)
+
+    report_format_completion(project_steps_df, report_creation_info_lst)
       
 
 def config_preparation(customer_name, project_folder, ssave_folder, max_title):

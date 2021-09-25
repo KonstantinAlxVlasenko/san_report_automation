@@ -25,11 +25,11 @@ def fabric_switch_statistics(switch_params_aggregated_df, re_pattern_lst):
     
 
 def asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df):
+    """Function to verify fabric symmetry from switch model, generation and mode point of view"""
 
     sw_models = switch_params_cp_df['ModelName'].unique().tolist()
     sw_gen = switch_params_cp_df['Generation'].unique().tolist()
     sw_role = switch_params_cp_df['SwitchMode'].unique().tolist()
-
 
     fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_models, summary_column='Model_Asymmetry_note')
     fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_gen, summary_column='Generation_Asymmetry_note')
@@ -60,6 +60,8 @@ def prior_prepearation(switch_params_aggregated_df, re_pattern_lst):
 
     switch_params_cp_df.loc[mask_fv_lic, 'Fabric_Vision_lic'] = 'Fabric_Vision_lic'
     switch_params_cp_df.loc[mask_trunking_lic, 'Trunking_lic'] = 'Trunking_lic'
+
+    switch_params_cp_df['ModelName'].fillna('Unknown_model', inplace=True)
 
     switch_params_cp_df['Total'] = 'Total'
     return switch_params_cp_df

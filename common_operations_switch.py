@@ -203,7 +203,8 @@ def verify_connection_symmetry(statistics_summary_df, connection_symmetry_column
     # add Asymmetry_note column to statistics_summary_df
     statistics_summary_df = statistics_summary_df.merge(connection_symmetry_df, how='left', on=['Fabric_name'])
     # clean notes for dropped fabrics
-    statistics_summary_df.loc[mask_not_valid, summary_column] = np.nan
+    if mask_not_valid.any():
+        statistics_summary_df.loc[mask_not_valid, summary_column] = np.nan
 
     return statistics_summary_df
 

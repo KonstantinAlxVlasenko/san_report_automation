@@ -5,10 +5,15 @@ from datetime import date
 
 import pandas as pd
 import openpyxl
+from datetime import date
 from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
+from pandas.tseries.offsets import CBMonthBegin
+
+from common_operations_dataframe import dct_from_dataframe
 
 from common_operations_miscellaneous import status_info
+
 
 
 # saving DataFrame to excel file
@@ -18,6 +23,8 @@ def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, curre
     
     report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
     customer_name, report_path, _, max_title = report_constant_lst
+
+    data_frame = data_frame.apply(pd.to_numeric, errors='ignore')
     
     # report_steps_dct for each data_name contains: export_to_excel flag, 
     # force_extract flag, report_type, step_info, data_description
@@ -50,7 +57,7 @@ def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, curre
         file_mode = 'a' if os.path.isfile(file_path) else 'w'
         try:
             if_sheet_exists_param = 'replace' if file_mode == 'a' else None
-            with pd.ExcelWriter(file_path, mode=file_mode, if_sheet_exists=if_sheet_exists_param) as writer:  # pylint: disable=abstract-class-instantiated
+            with pd.ExcelWriter(file_path, mode=file_mode, if_sheet_exists=if_sheet_exists_param) as writer:
                 table_of_contents_generation(writer, file_mode, sheet_title, df_decription)
                 write_dataframe_to_worksheet(writer, data_frame, sheet_title)
                 workbook = openpyxl.load_workbook(writer)
@@ -60,7 +67,6 @@ def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, curre
                 add_dataframe_title(workbook, sheet_title, df_decription)
                 # change text format in header (wraped, bold, size 10) and data rows (size 10)
                 worksheet_format(workbook, sheet_title, freeze_column, header_row_num=3, font_size=10)
-                writer.save()
         except PermissionError:
             status_info('fail', max_title, len(info))
             print('\nPermission denied. Close the file.\n')
@@ -158,29 +164,33 @@ def table_of_contents_generation(writer, file_mode, sheet_title, df_decription):
         # write content to excel file
         content_df.to_excel(writer, sheet_name='Содержание', index = False)
         writer.save()
-         
+        # create hyperlinks for items in table of contents 
         workbook = openpyxl.load_workbook(writer)
         writer.book = workbook
         writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets) 
+        hyperlink_content(workbook)
 
-        ws_content = workbook['Содержание']
-        # create hyperlinks for all items except header
-        row_number = 1
-        for row in ws_content.values:
-            # skip header
-            if row_number > 1:
-                bookmark_title = row[0]
-                bookmark_addr = 'A' + str(row_number)
-                create_hyperlink(ws_content, bookmark_addr, sheet_name=bookmark_title, cell_ref='A1', display_name=None)
-            row_number += 1
-        # change cell size for best fit
-        columns_best_fit(ws_content)
-        # for idx, col in enumerate(ws_content.columns, 1):
-        #     ws_content.column_dimensions[get_column_letter(idx)].auto_size = True
-        
-        # freeze header
-        ws_content.freeze_panes = 'B2'
-        writer.save()
+
+def hyperlink_content(workbook):
+    """Function to create hyperlinks for all items of table of contents"""
+
+    ws_content = workbook['Содержание']
+    # create hyperlinks for all items except header
+    row_number = 1
+    for row in ws_content.values:
+        # skip header
+        if row_number > 1:
+            bookmark_title = row[0]
+            bookmark_addr = 'A' + str(row_number)
+            create_hyperlink(ws_content, bookmark_addr, sheet_name=bookmark_title, cell_ref='A1', display_name=None)
+        row_number += 1
+    # change cell size for best fit
+    columns_best_fit(ws_content)
+    # for idx, col in enumerate(ws_content.columns, 1):
+    #     ws_content.column_dimensions[get_column_letter(idx)].auto_size = True
+    
+    # freeze header
+    ws_content.freeze_panes = 'B2'
 
 
 def create_hyperlink(ws, at_cell, sheet_name, cell_ref='A1', display_name=None):
@@ -191,4 +201,50 @@ def create_hyperlink(ws, at_cell, sheet_name, cell_ref='A1', display_name=None):
     to_location = "'{0}'!{1}".format(sheet_name, cell_ref)
     ws[at_cell].hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(display=display_name, ref=at_cell, location=to_location)
     ws[at_cell].value = display_name
-    ws[at_cell].font =  openpyxl.styles.fonts.Font(u='single', color=openpyxl.styles.colors.BLUE)    
+    ws[at_cell].font =  openpyxl.styles.fonts.Font(u='single', color=openpyxl.styles.colors.BLUE)
+
+
+def report_format_completion(project_steps_df, report_creation_info_lst, current_date=str(date.today())):
+    """Function to reorder sheets and items in table of contents"""
+
+
+    report_constant_lst, *_ = report_creation_info_lst
+    customer_name, report_path, _, max_title = report_constant_lst
+    report_mark = 'SAN_Assessment_Tables'
+    
+    # verify if any report DataFrame need to be saved
+    mask_report = project_steps_df['report_type'] == 'report'
+    mask_save = project_steps_df['export_to_excel'] == 1
+
+    if not project_steps_df.loc[mask_report & mask_save].empty:
+
+        print('\n')
+        info = f'Completing the report'.upper()
+        print(info, end =" ")
+
+        # weights for sorting sheets and contents
+        weight_dct = dct_from_dataframe(project_steps_df, 'keys', 'sort_weight')
+        # construct excel filename
+        file_name = customer_name + '_' + report_mark + '_' + current_date + '.xlsx'
+        file_path = os.path.join(report_path, file_name)
+        try:
+            with pd.ExcelWriter(file_path, mode='a', if_sheet_exists= 'replace') as writer: 
+                # open report
+                workbook = openpyxl.load_workbook(writer)
+                writer.book = workbook
+                writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets)
+                # sort sheets
+                workbook._sheets.sort(key=lambda ws: weight_dct[ws.title])
+                # sort content items
+                content_df = pd.read_excel(writer, sheet_name='Содержание')
+                content_df.sort_values(by=['Закладка'], key=lambda menu_sr: menu_sr.replace(weight_dct), inplace=True)
+                # write content to report file
+                content_df.to_excel(writer, sheet_name='Содержание', index = False)
+                # create hyperlinks for contetnts
+                hyperlink_content(workbook)
+        except PermissionError:
+            status_info('fail', max_title, len(info))
+            print('\nPermission denied. Close the file.\n')
+            exit()
+        else:
+            status_info('ok', max_title, len(info)) 

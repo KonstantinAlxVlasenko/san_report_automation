@@ -156,7 +156,8 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
         force_flag = False
         if data_name == 'portshow_aggregated':
             force_flag = portshow_force_flag
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
+        if data_name != 'report_columns_usage_upd':
+            dataframe_to_report(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
     return portshow_aggregated_df
 
 

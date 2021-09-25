@@ -153,7 +153,7 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct
 
     column_usage_flags = [
         ('chassis_info_usage', ['chassis_name', 'chassis_wwn']),
-        ('fabric_name_usage', ['Fabric_name']),
+        ('fabric_name_usage', ['Fabric_name', 'Storage_Port_Partner_Fabric_name']),
         ('group_name_usage', ['Group_Name'])
         ]
 
@@ -170,8 +170,8 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct
         if not report_columns_usage_dct.get(usage_flag):
             dropped_columns.extend(column)
     if dropped_columns:
-        mask_dropped_columns = ~header_sr.isin(dropped_columns)
-        header_sr = header_sr.loc[mask_dropped_columns]
+        mask_dropped_columns = header_sr.isin(dropped_columns)
+        header_sr = header_sr.loc[~mask_dropped_columns]
     return header_sr.tolist()    
 
 

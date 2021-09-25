@@ -6,14 +6,14 @@ import numpy as np
 import pandas as pd
 
 from analysis_errdump_aggregation import errdump_aggregated
-# from common_operations_dataframe import dataframe_segmentation
+from common_operations_dataframe import dataframe_fillna
 from common_operations_dataframe_presentation import generate_report_dataframe
 from common_operations_filesystem import load_data, save_data
 from common_operations_table_report import dataframe_to_report
 
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
-from common_operations_servicefile import data_extract_objects
+from common_operations_servicefile import data_extract_objects, dataframe_import
 
 
 
@@ -51,6 +51,7 @@ def errdump_main(errdump_df, switchshow_df, switch_params_aggregated_df,
         # data imported from init file (regular expression patterns) to extract values from data columns
         # re_pattern list contains comp_keys, match_keys, comp_dct    
         _, _, *re_pattern_lst = data_extract_objects('raslog', max_title)
+        raslog_message_details_df = dataframe_import('raslog_details', max_title)
 
         # current operation information string
         info = f'Counting RASLog messages'
@@ -60,7 +61,7 @@ def errdump_main(errdump_df, switchshow_df, switch_params_aggregated_df,
         errdump_aggregated_df = errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, 
                                                     portshow_aggregated_df, re_pattern_lst)
         # count how many times event appears during one month for the last six months 
-        raslog_counter_df, raslog_frequent_df = errdump_statistics(errdump_aggregated_df)
+        raslog_counter_df, raslog_frequent_df = errdump_statistics(errdump_aggregated_df, raslog_message_details_df)
         # after finish display status
         status_info('ok', max_title, len(info))      
         # partition aggregated DataFrame to required tables
@@ -81,7 +82,7 @@ def errdump_main(errdump_df, switchshow_df, switch_params_aggregated_df,
     return errdump_aggregated_df, raslog_counter_df
 
 
-def errdump_statistics(errdump_aggregated_df):
+def errdump_statistics(errdump_aggregated_df, raslog_message_details_df):
     """Function to count how many times log message appears during one month for the last six months.
     Log messages that appear less than 3 times a month are droppped"""
     
@@ -125,6 +126,9 @@ def errdump_statistics(errdump_aggregated_df):
     raslog_counter_df.reset_index(drop=True, inplace=True)    
     # drop columns with all empty empty cells
     raslog_counter_df.dropna(axis=1, how='all', inplace=True)
+
+    raslog_counter_df = dataframe_fillna(raslog_counter_df, raslog_message_details_df, join_lst=['Condition'], 
+                                            filled_lst=['Details',  'Recommended_action']) 
     
     # find log messages which appear more then three times a month
     mask_frequent = raslog_counter_df['Quantity'] > 3

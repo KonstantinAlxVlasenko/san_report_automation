@@ -98,8 +98,7 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
 
         # create report tables from port_complete_df DataFrtame
         error_report_df, sfp_report_df, portcfg_report_df = \
-            portshow_report_main(portshow_sfp_aggregated_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
-                                    data_names, report_headers_df, report_columns_usage_dct)
+            portshow_report_main(portshow_sfp_aggregated_df, data_names, report_headers_df, report_columns_usage_dct)
         # saving data to json or csv file
         data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df]
         save_data(report_constant_lst, data_names, *data_lst)
@@ -188,8 +187,7 @@ def align_dataframe(*args):
     return join_df_lst
 
 
-def portshow_report_main(port_complete_df, maps_ports_df, portshow_npiv_df, npiv_statistics_df, 
-                            data_names, report_headers_df, report_columns_usage_dct):
+def portshow_report_main(port_complete_df, data_names, report_headers_df, report_columns_usage_dct):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
 

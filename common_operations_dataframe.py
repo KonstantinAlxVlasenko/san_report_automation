@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import warnings
 # from common_operations_dataframe_presentation import move_column
-from common_operations_table_report import dataframe_to_report
+# from common_operations_table_report import dataframe_to_report
 from common_operations_servicefile import dct_from_columns, columns_import
 from common_operations_miscellaneous import status_info
 
@@ -204,24 +204,24 @@ def list_to_dataframe(data_lst, max_title, sheet_title_import=None,
     return data_df
 
 
-def list_to_dataframe_(data_lst, report_data_lst, sheet_title_export, sheet_title_import = None, 
-                        columns = columns_import, columns_title_import = 'columns'):
-    """Function to export list to DataFrame and then save it to excel report file
-    returns DataFrame
-    """
+# def list_to_dataframe_(data_lst, report_data_lst, sheet_title_export, sheet_title_import = None, 
+#                         columns = columns_import, columns_title_import = 'columns'):
+#     """Function to export list to DataFrame and then save it to excel report file
+#     returns DataFrame
+#     """
 
-    *_, max_title, _ = report_data_lst 
+#     *_, max_title, _ = report_data_lst 
     
-    # checks if columns were passed to function as a list
-    if isinstance(columns, list):
-        columns_title = columns
-    # if not (default) then import columns from excel file
-    else:
-        columns_title = columns(sheet_title_import, max_title, columns_title_import)
-    data_df = pd.DataFrame(data_lst, columns= columns_title)
-    dataframe_to_report(data_df, sheet_title_export, report_data_lst)
+#     # checks if columns were passed to function as a list
+#     if isinstance(columns, list):
+#         columns_title = columns
+#     # if not (default) then import columns from excel file
+#     else:
+#         columns_title = columns(sheet_title_import, max_title, columns_title_import)
+#     data_df = pd.DataFrame(data_lst, columns= columns_title)
+#     dataframe_to_report(data_df, sheet_title_export, report_data_lst)
     
-    return data_df
+#     return data_df
 
 
 
