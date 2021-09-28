@@ -52,6 +52,7 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     data_lst = load_data(report_constant_lst, *data_names)
     # flag to forcible save portshow_aggregated_df if required
     portshow_force_flag = False
+    
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
     portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
@@ -59,9 +60,18 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             servers_report_df, storage_report_df, library_report_df, hba_report_df, \
                 storage_connection_df,  library_connection_df, server_connection_df, \
                     storage_connection_statistics_report_df, device_connection_statistics_report_df = data_lst
+    
+    
+    
     nsshow_unsplit_df = pd.DataFrame()
 
-    if not report_columns_usage_dct:
+    # on the first iteration report_columns_usage_upd is None 
+    # so use report_columns_usage backup from report_creation_info_lst
+    
+    # if not report_columns_usage_dct.empty:
+    #     report_columns_usage_dct = report_columns_usage_bckp
+
+    if report_columns_usage_dct.empty:
         report_columns_usage_dct = report_columns_usage_bckp
 
     # list of data to analyze from report_info table

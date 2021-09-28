@@ -136,7 +136,7 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     # add Unknown(initiator/target) tag for all F-port and N-port for which Device_type is not found 
     mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
     mask_device_type_empty = portshow_aggregated_df['Device_type'].isna()
-    mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk port')
+    mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk port', na=False)
     portshow_aggregated_df.loc[mask_nport_fport & mask_device_type_empty & mask_not_trunk, 'Device_type'] = 'Unknown(initiator/target)'
 
     return portshow_aggregated_df

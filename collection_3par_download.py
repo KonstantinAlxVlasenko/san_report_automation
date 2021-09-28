@@ -40,8 +40,8 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
         configs_downloaded_lst = find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
         if configs_downloaded_lst:
             print(f'{len(configs_downloaded_lst)} 3PAR configuration files found in download folder.')
-            print('Do you want to USE EXISTING FILES to extract port and host information?')
-            print("If you want to update configuarion files and reply 'no' then existing files are removed.")
+            print("Do you want to USE EXISTING configuarion files? (reply 'yes')")
+            print("If you want to REMOVE EXISTING AND UPDATE configuarion files then reply 'no'.")
             query = "Please select '(y)es' (use existing) or '(n)o' (update): "
             reply = reply_request(query)
             if reply == 'n':

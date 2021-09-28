@@ -9,6 +9,9 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (force_extract_check, status_info,
                                              verify_data)
 from common_operations_servicefile import data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
 def maps_params_extract(all_config_data, report_creation_info_lst):
@@ -28,20 +31,29 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    maps_params_fabric_lst, = data_lst
     
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files
-    if not all(data_lst) or any(force_extract_keys_lst):    
+    
+    # # unpacking from the loaded list with data
+    # # pylint: disable=unbalanced-tuple-unpacking
+    # maps_params_fabric_lst, = data_lst
+    
+    # # data force extract check 
+    # # list of keys for each data from data_lst representing if it is required 
+    # # to re-collect or re-analyze data even they were obtained on previous iterations
+    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
+    # # print data which were loaded but for which force extract flag is on
+    # force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+
+    # # when any of data_lst was not saved or 
+    # # force extract flag is on then re-extract data  from configueation files
+    # if not all(data_lst) or any(force_extract_keys_lst):
+
+    if force_run:
         print('\nEXTRACTING MAPS DATA FROM AMS_MAPS_LOG CONFIGURATION FILES ...\n')
         
         # number of switches to check
@@ -129,10 +141,25 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
                 info = ' '*16+'No AMS_MAPS configuration found.'
                 print(info, end =" ")
                 status_info('skip', max_title, len(info))
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, maps_params_fabric_lst)
+        
+        # # save extracted data to json file
+        # save_data(report_constant_lst, data_names, maps_params_fabric_lst)
+
+        # convert list to DataFrame
+        maps_params_fabric_df = list_to_dataframe(maps_params_fabric_lst, max_title, 'maps')
+        # saving data to csv file
+        data_lst = [maps_params_fabric_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        maps_params_fabric_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        # maps_params_fabric_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        maps_params_fabric_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [maps_params_fabric_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
         
-    return maps_params_fabric_lst
+    # return maps_params_fabric_lst
+
+    return maps_params_fabric_df

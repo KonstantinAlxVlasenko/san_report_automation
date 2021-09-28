@@ -8,6 +8,9 @@ from common_operations_filesystem import (find_files, load_data,
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 """Module to extract blade system information"""
 
@@ -29,21 +32,12 @@ def blade_system_extract(blade_folder, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = data_lst
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files
-    if not all(data_lst) or any(force_extract_keys_lst):
-
+    if force_run: 
         # lists to store only REQUIRED infromation
         # collecting data for all blades during looping
         # list containing enclosure, blade and hba information for all blade systems
@@ -318,18 +312,25 @@ def blade_system_extract(blade_folder, report_creation_info_lst):
                         if blade_lst or enclosure_vc_lst:
                             status_info('ok', max_title, len(info))
                         else:
-                            status_info('no data', max_title, len(info))
-                # save extracted data to json file
-                save_data(report_constant_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
+                            status_info('no data', max_title, len(info))    
         else:
             # current operation information string
             info = f'Collecting enclosure, interconnect modules, blade servers, hba'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
-            # save empty data to json file
-            save_data(report_constant_lst, data_names, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
+
+        # convert list to DataFrame
+        blade_module_df = list_to_dataframe(module_comprehensive_lst, max_title, sheet_title_import='blades')
+        blade_servers_df = list_to_dataframe(blades_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_columns')
+        blade_vc_df = list_to_dataframe(blade_vc_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_vc_columns')
+        # saving data to csv file
+        data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
+        save_data(report_constant_lst, data_names, *data_lst) 
+
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
-    
-    return module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst
+        # module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        blade_module_df, blade_servers_df, blade_vc_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
+
+    return blade_module_df, blade_servers_df, blade_vc_df

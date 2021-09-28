@@ -3,21 +3,18 @@ import os
 import sys
 from datetime import date
 
-import pandas as pd
 import openpyxl
-from datetime import date
+import pandas as pd
 from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
-from pandas.tseries.offsets import CBMonthBegin
 
 from common_operations_dataframe import dct_from_dataframe
-
 from common_operations_miscellaneous import status_info
 
 
-
 # saving DataFrame to excel file
-def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, current_date=str(date.today()), force_flag = False, freeze_column='A'):
+def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, 
+                        current_date=str(date.today()), force_flag = False, freeze_column='A'):
     """Check if excel file exists, write DataFrame, create or update table of contents,
     change DataFrame text and presentation format."""
     
@@ -66,7 +63,11 @@ def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, curre
                 # add DataFrame title and link to the table of contents
                 add_dataframe_title(workbook, sheet_title, df_decription)
                 # change text format in header (wraped, bold, size 10) and data rows (size 10)
-                worksheet_format(workbook, sheet_title, freeze_column, header_row_num=3, font_size=10)
+                worksheet_format(workbook, sheet_title, font_size=10)
+                # freeze header
+                freeze_header(workbook, sheet_title, freeze_column)
+                # add header filter
+                add_header_filter(workbook, sheet_title)
         except PermissionError:
             status_info('fail', max_title, len(info))
             print('\nPermission denied. Close the file.\n')
@@ -91,6 +92,13 @@ def columns_best_fit(ws: openpyxl.worksheet.worksheet.Worksheet):
             ws.column_dimensions[column_letter].bestFit = True
 
 
+def columns_best_fit_alt(ws: openpyxl.worksheet.worksheet.Worksheet):
+    """Make all columns best fit. Alternative method"""
+    
+    for idx, col in enumerate(ws.columns, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].auto_size = True
+
+
 def add_dataframe_title(workbook, sheet_title, df_decription):
     """Function to add DataFrame description and link to the table of contents
     to the first two rows of the worksheet"""
@@ -100,11 +108,27 @@ def add_dataframe_title(workbook, sheet_title, df_decription):
     workbook[sheet_title]['A1'].font =  Font(bold=True)
     # add hyperlink to the Table of contents
     create_hyperlink(workbook[sheet_title], 'A2', 'Содержание', cell_ref='A2', display_name='К содержанию')
-                
 
-def worksheet_format(workbook, sheet_title: str, freeze_column: str, header_row_num: int, font_size: int, font_name=None):
+
+def add_header_filter(workbook, sheet_title, header_row_num: int=3):
+    """Function to add filter to header row"""
+
+    worksheet = workbook[sheet_title]
+    FullRange = "A" + str(header_row_num) + ":" + get_column_letter(worksheet.max_column) + str(worksheet.max_row)
+    worksheet.auto_filter.ref = FullRange
+
+
+def freeze_header(workbook, sheet_title: str, freeze_column: str, header_row_num: int=3):
+    """Function to freeze header row"""
+
+    worksheet = workbook[sheet_title]
+    freeze_cell = freeze_column + str(header_row_num + 1)
+    worksheet.freeze_panes = freeze_cell
+
+
+def worksheet_format(workbook, sheet_title: str, font_size: int, font_name=None, header_row_num: int=3):
     """Function to change worksheet text format.
-    Header is bold and wrapText oprion is used. Header and data font_size changed.
+    Header is bold and wrapText option is used (to avoid truncation). Header and data font_size changed.
     Cells in columns are best fit"""                
     
     # change font, wrap_text header and fit text cell size
@@ -119,12 +143,7 @@ def worksheet_format(workbook, sheet_title: str, freeze_column: str, header_row_
                 cell.font = Font(size=font_size)
         row_number += 1 
     columns_best_fit(ws)
-    # for idx, col in enumerate(ws.columns, 1):
-    #     ws.column_dimensions[get_column_letter(idx)].auto_size = True
 
-    # freeze header
-    freeze_cell = freeze_column + str(header_row_num + 1)
-    ws.freeze_panes = freeze_cell
 
 def write_dataframe_to_worksheet(writer, df, sheet_title):
     """Auxiliary function to write DataFrane to excel.
@@ -145,7 +164,6 @@ def table_of_contents_generation(writer, file_mode, sheet_title, df_decription):
     """"Function to create or recreate table of contents if file is newly created or new sheet added"""
 
     item_exist = True 
-
     # if file exists and there is no sheet_title in contents add new item to the existing content
     if  file_mode == 'a':
         existing_content_df = pd.read_excel(writer, sheet_name='Содержание')
@@ -185,10 +203,7 @@ def hyperlink_content(workbook):
             create_hyperlink(ws_content, bookmark_addr, sheet_name=bookmark_title, cell_ref='A1', display_name=None)
         row_number += 1
     # change cell size for best fit
-    columns_best_fit(ws_content)
-    # for idx, col in enumerate(ws_content.columns, 1):
-    #     ws_content.column_dimensions[get_column_letter(idx)].auto_size = True
-    
+    columns_best_fit(ws_content)    
     # freeze header
     ws_content.freeze_panes = 'B2'
 
@@ -206,7 +221,6 @@ def create_hyperlink(ws, at_cell, sheet_name, cell_ref='A1', display_name=None):
 
 def report_format_completion(project_steps_df, report_creation_info_lst, current_date=str(date.today())):
     """Function to reorder sheets and items in table of contents"""
-
 
     report_constant_lst, *_ = report_creation_info_lst
     customer_name, report_path, _, max_title = report_constant_lst

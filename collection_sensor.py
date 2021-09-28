@@ -8,9 +8,12 @@ from common_operations_miscellaneous import (force_extract_check, line_to_list,
                                              status_info, update_dct,
                                              verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
-def sensor_extract(chassis_params_lst, report_creation_info_lst):
+def sensor_extract(chassis_params_df, report_creation_info_lst):
     """Function to extract sensor information"""  
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -26,26 +29,19 @@ def sensor_extract(chassis_params_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration    
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    sensor_lst, = data_lst
     
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files  
-    if not all(data_lst) or any(force_extract_keys_lst):    
+    if force_run:    
         print('\nEXTRACTING ENVIRONMENT DATA ...\n')   
         
-        # extract chassis parameters names from init file
-        chassis_columns = columns_import('chassis', max_title, 'columns')
+        # # extract chassis parameters names from init file
+        # chassis_columns = columns_import('chassis', max_title, 'columns')
+        
         # number of switches to check
-        switch_num = len(chassis_params_lst)   
+        switch_num = len(chassis_params_df.index)   
         # data imported from init file to extract values from config file
         *_, comp_keys, match_keys, comp_dct = data_extract_objects('sensor', max_title)
 
@@ -53,15 +49,17 @@ def sensor_extract(chassis_params_lst, report_creation_info_lst):
         # collecting data for all switches ports during looping
         sensor_lst = []
 
-        # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
         # checking each chassis for switch level parameters
-        for i, chassis_params_data in enumerate(chassis_params_lst):   
-            # data unpacking from iter param
-            # dictionary with parameters for the current chassis
-            chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
-            chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
-            chassis_info_lst = [chassis_params_data_dct.get(key) for key in chassis_info_keys]            
+        for i, chassis_params_sr in chassis_params_df.iterrows():   
+            
+            # # data unpacking from iter param
+            # # dictionary with parameters for the current chassis
+            # chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
+            # chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
+            # chassis_info_lst = [chassis_params_data_dct.get(key) for key in chassis_info_keys]            
 
+            chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
+            chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
             sshow_file, chassis_name, _ = chassis_info_lst
                         
             # current operation information string
@@ -94,10 +92,20 @@ def sensor_extract(chassis_params_lst, report_creation_info_lst):
                                 break                                
                     # sensor section end
             status_info('ok', max_title, len(info))      
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, sensor_lst)
+    
+        # convert list to DataFrame
+        sensor_df = list_to_dataframe(sensor_lst, max_title, sheet_title_import='sensor')
+        # saving data to csv file
+        data_lst = [sensor_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
+
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        sensor_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        sensor_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [sensor_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)    
     
-    return sensor_lst
+    return sensor_df

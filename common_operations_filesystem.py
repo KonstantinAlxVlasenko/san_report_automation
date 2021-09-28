@@ -54,7 +54,7 @@ def save_data(report_constant_lst, data_names, *args):
         file_name = customer_name + '_' + data_name
         # adding file extenson depending from type of data saved
         # csv for DataFrame
-        if isinstance(data_exported, pd.DataFrame):
+        if isinstance(data_exported, (pd.DataFrame, pd.Series)):
             file_name += '.csv'
         # for all other types is json
         else:
@@ -67,7 +67,7 @@ def save_data(report_constant_lst, data_names, *args):
             print(info, end =" ")
             with open(file_path, 'w', encoding="utf-8") as file:
                 # savng data for DataFrame
-                if isinstance(data_exported, pd.DataFrame):
+                if isinstance(data_exported, (pd.DataFrame, pd.Series)):
                     # check if DataFrame have MultiIndex
                     # reset index if True due to MultiIndex is not saved                    
                     if isinstance(data_exported.index, pd.MultiIndex):
@@ -83,7 +83,10 @@ def save_data(report_constant_lst, data_names, *args):
                             data_exported_flat['EMPTY'] = np.nan
                         data_exported_flat.loc[0] = 'NO DATA FOUND'
                     # save single level Index DataFrame to csv
-                    data_exported_flat.to_csv(file, index=False)
+                    if isinstance(data_exported_flat, pd.DataFrame):
+                        data_exported_flat.to_csv(file, index=False)
+                    elif isinstance(data_exported_flat, pd.Series):
+                        data_exported_flat.to_csv(file)
 
                 # for all other types
                 else:

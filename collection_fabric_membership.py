@@ -9,9 +9,11 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
-
-def fabricshow_extract(switch_params_lst, report_creation_info_lst):
+def fabricshow_extract(switch_params_df, report_creation_info_lst):
     """
     Function to extract from principal switch configuration 
     list of switches in fabric including AG switches
@@ -30,26 +32,16 @@ def fabricshow_extract(switch_params_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    fabricshow_lst, ag_principal_lst = data_lst
-
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files 
-    if not all(data_lst) or any(force_extract_keys_lst):             
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    
+    if force_run:                 
         print('\nEXTRACTING FABRICS INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         
-        # extract switch parameters names from init file
-        switch_columns = columns_import('switch', max_title, 'columns')
         # number of switches to check
-        switch_num = len(switch_params_lst)   
+        switch_num = len(switch_params_df.index)
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping
         fabricshow_lst = []
@@ -58,16 +50,14 @@ def fabricshow_extract(switch_params_lst, report_creation_info_lst):
         *_, comp_keys, match_keys, comp_dct = data_extract_objects('fabricshow', max_title)
         ag_params = columns_import('fabricshow', max_title, 'ag_params')  
         
-        # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):       
-            # data unpacking from iter param
-            # dictionary with parameters for the current switch
-            switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
-                                'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
-            switch_info_lst = [switch_params_data_dct[key] for key in switch_info_keys]
-            ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+        for i, switch_params_sr in switch_params_df.iterrows():        
+
+            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 
+                                'switch_index', 'SwitchName', 'switchWwn', 'switchRole', 
+                                'Fabric_ID', 'FC_Router', 'switchMode']
+            switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
+            ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False 
             
             sshow_file, _, _, switch_index, switch_name, _, switch_role = switch_info_lst[:7]
 
@@ -76,9 +66,6 @@ def fabricshow_extract(switch_params_lst, report_creation_info_lst):
             print(info, end =" ")
             
             collected = {'fabricshow': False, 'ag_principal': False}
-            
-            # switch_params_data_dct.get('FC_Router') == 'ON'    
-            # print('collected', collected)
             
             # check config of Principal switch only 
             if switch_role == 'Principal':
@@ -223,10 +210,20 @@ def fabricshow_extract(switch_params_lst, report_creation_info_lst):
                 status_info('ok', max_title, len(info))
             else:
                 status_info('skip', max_title, len(info))
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, fabricshow_lst, ag_principal_lst)
+
+        # convert list to DataFrame
+        fabricshow_df = list_to_dataframe(fabricshow_lst, max_title, sheet_title_import='fabricshow')
+        ag_principal_df = list_to_dataframe(ag_principal_lst, max_title, sheet_title_import='fabricshow', columns_title_import = 'ag_columns')
+        # saving data to csv file
+        data_lst = [fabricshow_df, ag_principal_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
     else:
-        fabricshow_lst, ag_principal_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        fabricshow_df, ag_principal_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [fabricshow_df, ag_principal_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
             
-    return fabricshow_lst, ag_principal_lst
+    return fabricshow_df, ag_principal_df
 

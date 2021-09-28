@@ -9,9 +9,13 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
+from common_operations_miscellaneous import verify_force_run
+from common_operations_database import read_db, write_db
 
 
-def switch_params_configshow_extract(chassis_params_fabric_lst, report_creation_info_lst):
+def switch_params_configshow_extract(chassis_params_df, report_creation_info_lst):
     """Function to extract switch parameters"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -26,27 +30,21 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_creation_
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    switch_params_lst, switchshow_ports_lst = data_lst
+    # data_lst = load_data(report_constant_lst, *data_names)
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+
+    # when any data from data_lst was not saved (file not found) or
+    # force extract flag is on then re-extract data from configuration files
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-    
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files  
-    if not all(data_lst) or any(force_extract_keys_lst):    
+    if force_run:    
         print('\nEXTRACTING SWITCH PARAMETERS FROM SUPPORTSHOW CONFIGURATION FILES ...\n')   
         
-        # extract chassis parameters names from init file
-        chassis_columns = columns_import('chassis', max_title, 'columns')
+        # # extract chassis parameters names from init file
+        # chassis_columns = columns_import('chassis', max_title, 'columns')
+        
         # number of switches to check
-        switch_num = len(chassis_params_fabric_lst)   
+        switch_num = len(chassis_params_df.index)   
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping
         switch_params_lst = []
@@ -57,22 +55,20 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_creation_
         
         # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
         # checking each chassis for switch level parameters
-        for i, chassis_params_data in enumerate(chassis_params_fabric_lst):       
-            # data unpacking from iter param
-            # dictionary with parameters for the current chassis
-            chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
-            sshow_file = chassis_params_data_dct['configname']
-            chassis_name = chassis_params_data_dct['chassis_name']
-            chassis_wwn = chassis_params_data_dct['chassis_wwn']
-            # num_ls = int(chassis_params_data_dct["Number_of_LS"]) if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 1
+        for i, chassis_params_sr in chassis_params_df.iterrows():       
+                
+            chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
+            chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
+            sshow_file, chassis_name, chassis_wwn = chassis_info_lst
+
             # when num of logical switches is 0 or None than mode is Non-VF otherwise VF
-            ls_mode_on = (True if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else False)
-            ls_mode = ('ON' if not chassis_params_data_dct["Number_of_LS"] in ['0', None] else 'OFF')
+            ls_mode_on = (True if not chassis_params_sr["Number_of_LS"] in ['0', None] else False)
+            ls_mode = ('ON' if not chassis_params_sr["Number_of_LS"] in ['0', None] else 'OFF')
             # logical switches indexes. if switch is in Non-VF mode then ls_id is 0
-            ls_ids = chassis_params_data_dct['LS_IDs'].split(', ') if chassis_params_data_dct['LS_IDs'] else ['0']      
+            ls_ids = chassis_params_sr['LS_IDs'].split(', ') if chassis_params_sr['LS_IDs'] else ['0']               
             
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch parameters. Number of LS: {chassis_params_data_dct["Number_of_LS"]}'
+            info = f'[{i+1} of {switch_num}]: {chassis_name} switch parameters. Number of LS: {chassis_params_sr["Number_of_LS"]}'
             print(info, end =" ")
 
             # check each logical switch in chassis
@@ -155,11 +151,21 @@ def switch_params_configshow_extract(chassis_params_fabric_lst, report_creation_
                     switch_params_lst.append([switch_params_dct.get(switch_param, None) for switch_param in switch_params])
                                 
             status_info('ok', max_title, len(info))
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, switch_params_lst, switchshow_ports_lst)
+
+        # convert list to DataFrame
+        switch_params_df = list_to_dataframe(switch_params_lst, max_title, sheet_title_import='switch')
+        switchshow_ports_df = list_to_dataframe(switchshow_ports_lst, max_title, sheet_title_import='switch', columns_title_import = 'switchshow_portinfo_columns')
+        # saving data to csv file
+        data_lst = [switch_params_df, switchshow_ports_df]
+        # save_data(report_constant_lst, data_names, *data_lst)
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        switch_params_lst, switchshow_ports_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        switch_params_df, switchshow_ports_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [switch_params_df, switchshow_ports_df]
 
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
         
-    return switch_params_lst, switchshow_ports_lst
+    return switch_params_df, switchshow_ports_df

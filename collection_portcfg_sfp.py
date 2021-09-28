@@ -7,13 +7,16 @@ import pandas as pd
 
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data, verify_force_run)
+    force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import (columns_import,
                                            data_extract_objects,
                                            dct_from_columns)
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
-def portinfo_extract(switch_params_lst, report_creation_info_lst):
+def portinfo_extract(switch_params_df, report_creation_info_lst):
     """Function to extract switch port information"""
     
     # report_steps_dct contains current step desciption and force and export tags
@@ -29,31 +32,22 @@ def portinfo_extract(switch_params_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration    
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    sfpshow_lst, portcfgshow_lst = data_lst
-
+    
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
     force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
 
-    # # data force extract check 
-    # # list of keys for each data from data_lst representing if it is required 
-    # # to re-collect or re-analyze data even they were obtained on previous iterations
-    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # # print data which were loaded but for which force extract flag is on
-    # force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-    
-    # # when any of data_lst was not saved or 
-    # # force extract flag is on then re-extract data  from configueation files  
-    # if not all(data_lst) or any(force_extract_keys_lst):
     if force_run:    
         print('\nEXTRACTING SWITCH PORTS SFP, PORTCFG INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')   
         
-        # extract chassis parameters names from init file
-        switch_columns = columns_import('switch', max_title, 'columns')
+        # # extract chassis parameters names from init file
+        # switch_columns = columns_import('switch', max_title, 'columns')
+        
         # number of switches to check
-        switch_num = len(switch_params_lst)   
+        # switch_num = len(switch_params_lst)
+        switch_num = len(switch_params_df.index)
+
+
      
         # data imported from init file to extract values from config file
         params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('portinfo', max_title)
@@ -66,19 +60,26 @@ def portinfo_extract(switch_params_lst, report_creation_info_lst):
         # list to save portcfg information for all ports in fabric
         portcfgshow_lst = []
 
-        
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):       
+        
+        # for i, switch_params_data in enumerate(switch_params_lst):
+        for i, switch_params_sr in switch_params_df.iterrows():       
 
-            # data unpacking from iter param
-            # dictionary with parameters for the current switch
-            switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+            # # data unpacking from iter param
+            # # dictionary with parameters for the current switch
+            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
+            #                     'SwitchName', 'switchWwn']
+            # switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
+            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+            
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn']
-            switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
-            ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
-            
+            switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
+            ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False
+
+
             sshow_file, _, _, switch_index, switch_name, *_ = switch_info_lst
             
             # current operation information string
@@ -195,11 +196,21 @@ def portinfo_extract(switch_params_lst, report_creation_info_lst):
             portcfgshow_lst.append(portcfgshow_dct.get(portcfg_param))            
         portcfgshow_lst = list(zip(*portcfgshow_lst))
         
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, sfpshow_lst, portcfgshow_lst)
+        # convert list to DataFrame
+        sfpshow_df = list_to_dataframe(sfpshow_lst, max_title, sheet_title_import='portinfo')
+        portcfgshow_df = list_to_dataframe(portcfgshow_lst, max_title, sheet_title_import='portinfo', columns_title_import = 'portcfg_columns')
+        # saving data to csv file
+        data_lst = [sfpshow_df, portcfgshow_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
+
+
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        sfpshow_lst, portcfgshow_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        sfpshow_df, portcfgshow_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [sfpshow_df, portcfgshow_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
         
-    
-    return sfpshow_lst, portcfgshow_lst
+    return sfpshow_df, portcfgshow_df

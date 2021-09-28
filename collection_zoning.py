@@ -8,9 +8,12 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
-def zoning_extract(switch_params_lst, report_creation_info_lst):
+def zoning_extract(switch_params_df, report_creation_info_lst):
     """Function to extract zoning information"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -26,27 +29,23 @@ def zoning_extract(switch_params_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    cfg_lst, zone_lst, alias_lst, cfg_effective_lst, \
-        zone_effective_lst, peerzone_lst, peerzone_effective_lst = data_lst
-
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on    
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files   
-    if not all(data_lst) or any(force_extract_keys_lst):             
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+
+    if force_run:              
         print('\nEXTRACTING ZONING INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         
-        # extract switch parameters names from init file
-        switch_columns = columns_import('switch', max_title, 'columns')
+        # # extract switch parameters names from init file
+        # switch_columns = columns_import('switch', max_title, 'columns')
+        
         # number of switches to check
-        switch_num = len(switch_params_lst)   
+        switch_num = len(switch_params_df.index)   
+         
+        # data imported from init file to extract values from config file
+        *_, comp_keys, match_keys, comp_dct = data_extract_objects('zoning', max_title)  
+        
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping
         cfg_lst = []
@@ -56,22 +55,23 @@ def zoning_extract(switch_params_lst, report_creation_info_lst):
         zone_effective_lst = []
         peerzone_effective_lst = []
         peerzone_lst = []
-         
-        # data imported from init file to extract values from config file
-        *_, comp_keys, match_keys, comp_dct = data_extract_objects('zoning', max_title)
-        # ag_params = columns_import('fabricshow', max_title, 'ag_params')  
-        
-        # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
+
         # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):       
-            # data unpacking from iter param
-            # dictionary with parameters for the current switch
-            switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+        for i, switch_params_sr in switch_params_df.iterrows():       
+            
+            # # data unpacking from iter param
+            # # dictionary with parameters for the current switch
+            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
+            #                     'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
+            # switch_info_lst = [switch_params_data_dct[key] for key in switch_info_keys]
+            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+            
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
-            switch_info_lst = [switch_params_data_dct[key] for key in switch_info_keys]
-            ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
-            
+            switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
+            ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False
+
             sshow_file, *_, switch_index, switch_name, _, switch_role = switch_info_lst[:7]
 
             # current operation information string
@@ -265,10 +265,27 @@ def zoning_extract(switch_params_lst, report_creation_info_lst):
                 status_info('ok', max_title, len(info))
             else:
                 status_info('skip', max_title, len(info))
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst)
+
+        # convert list to DataFrame
+        cfg_df = list_to_dataframe(cfg_lst, max_title, sheet_title_import='zoning')
+        zone_df = list_to_dataframe(zone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_columns')
+        alias_df = list_to_dataframe(alias_lst, max_title, sheet_title_import='zoning', columns_title_import = 'alias_columns')
+        cfg_effective_df = list_to_dataframe(cfg_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'cfg_effective_columns')
+        zone_effective_df = list_to_dataframe(zone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_effective_columns')
+        peerzone_df = list_to_dataframe(peerzone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_columns')
+        peerzone_effective_df = list_to_dataframe(peerzone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_effective_columns')
+        # saving data to csv file
+        data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
+
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst = verify_data(report_constant_lst, data_names, *data_lst)
-    return cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, peerzone_lst, peerzone_effective_lst
+        cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+
+    return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df
 

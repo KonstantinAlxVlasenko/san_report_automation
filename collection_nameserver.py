@@ -9,12 +9,14 @@ from common_operations_miscellaneous import (
 from common_operations_servicefile import (columns_import,
                                            data_extract_objects,
                                            dct_from_columns)
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
-def connected_devices_extract(switch_params_lst, report_creation_info_lst):
+def connected_devices_extract(switch_params_df, report_creation_info_lst):
     """Function to extract connected devices information
-    (fdmi, nsshow, nscamshow)
-    """
+    (fdmi, nsshow, nscamshow)"""
            
     # report_steps_dct contains current step desciption and force and export tags
     report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
@@ -29,26 +31,19 @@ def connected_devices_extract(switch_params_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    fdmi_lst, nsshow_lst, nscamshow_lst = data_lst
-
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files 
-    if not all(data_lst) or any(force_extract_keys_lst):    
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    
+    if force_run:      
         print('\nEXTRACTING INFORMATION ABOUT CONNECTED DEVICES (FDMI, NSSHOW, NSCAMSHOW) ...\n')   
         
-        # extract chassis parameters names from init file
-        switch_columns = columns_import('switch', max_title, 'columns')
+        # # extract chassis parameters names from init file
+        # switch_columns = columns_import('switch', max_title, 'columns')
+        
         # number of switches to check
-        switch_num = len(switch_params_lst)   
+        switch_num = len(switch_params_df.index)   
      
         # data imported from init file to extract values from config file
         params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('connected_dev', max_title)
@@ -67,14 +62,21 @@ def connected_devices_extract(switch_params_lst, report_creation_info_lst):
         
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):       
-            # data unpacking from iter param
-            # dictionary with parameters for the current chassis
-            switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+        for i, switch_params_sr in switch_params_df.iterrows():       
+            # # data unpacking from iter param
+            # # dictionary with parameters for the current chassis
+            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
+            #                     'SwitchName', 'switchWwn', 'switchMode']
+            # switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
+            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+
+
+
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchMode']
-            switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
-            ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+            switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
+            ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False           
             
             sshow_file, *_, switch_index, switch_name, _, switch_mode = switch_info_lst            
                         
@@ -85,7 +87,7 @@ def connected_devices_extract(switch_params_lst, report_creation_info_lst):
             # search control dictionary. continue to check sshow_file until all parameters groups are found
             # Name Server service started only in Native mode
             collected = {'fdmi': False, 'nsshow': False, 'nscamshow': False} \
-                if switch_params_data_dct.get('switchMode') == 'Native' else {'fdmi': False}
+                if switch_mode == 'Native' else {'fdmi': False}
     
             with open(sshow_file, encoding='utf-8', errors='ignore') as file:
                 # check file until all groups of parameters extracted
@@ -180,10 +182,22 @@ def connected_devices_extract(switch_params_lst, report_creation_info_lst):
                                         break                                
                         # nsshow section end                     
             status_info('ok', max_title, len(info))        
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, fdmi_lst, nsshow_lst, nscamshow_lst)
+        
+        # convert list to DataFrame
+        fdmi_df = list_to_dataframe(fdmi_lst, max_title, sheet_title_import='connected_dev')
+        nsshow_df = list_to_dataframe(nsshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        nscamshow_df = list_to_dataframe(nscamshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        # saving data to csv file
+        data_lst = [fdmi_df, nsshow_df, nscamshow_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
+
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        fdmi_lst, nsshow_lst, nscamshow_lst = verify_data(report_constant_lst, data_names, *data_lst)
-    
-    return fdmi_lst, nsshow_lst, nscamshow_lst
+        fdmi_df, nsshow_df, nscamshow_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [fdmi_df, nsshow_df, nscamshow_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+
+    return fdmi_df, nsshow_df, nscamshow_df

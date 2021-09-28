@@ -8,6 +8,10 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (force_extract_check, status_info,
                                              verify_data)
 from common_operations_servicefile import data_extract_objects
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
+from common_operations_miscellaneous import verify_force_run
+from common_operations_database import read_db, write_db
 
 """Module to extract chassis parameters"""
 
@@ -27,21 +31,15 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    chassis_params_fabric_lst, = data_lst
+    # data_lst = load_data(report_constant_lst, *data_names)
+
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
     
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-    
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files 
-    if not all(data_lst) or any(force_extract_keys_lst):
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+
+    if force_run:
         print('\nEXTRACTING CHASSIS PARAMETERS FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         # number of switches to check
         switch_num = len(all_config_data)    
@@ -206,10 +204,21 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
             chassis_params_fabric_lst.append([chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params])
                             
             status_info('ok', max_title, len(info))
-        # save extracted data to json file   
-        save_data(report_constant_lst, data_names, chassis_params_fabric_lst)
+
+        # convert list to DataFrame
+        chassis_params_fabric_df = list_to_dataframe(chassis_params_fabric_lst, max_title, sheet_title_import='chassis')
+        # saving data to csv file
+        data_lst = [chassis_params_fabric_df]
+        # save_data(report_constant_lst, data_names, *data_lst)
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)     
+
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        chassis_params_fabric_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        chassis_params_fabric_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [chassis_params_fabric_df]
 
-    return chassis_params_fabric_lst
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+
+    return chassis_params_fabric_df

@@ -10,9 +10,12 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
-def fcr_extract(switch_params_lst, report_creation_info_lst):
+def fcr_extract(switch_params_df, report_creation_info_lst):
     """Function to extract fabrics routing information"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -28,27 +31,19 @@ def fcr_extract(switch_params_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, \
-        fcredge_lst, fcrresource_lst = data_lst
     
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files  
-    if not all(data_lst) or any(force_extract_keys_lst):             
+    if force_run:              
         print('\nEXTRACTING FABRICS ROUTING INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         
-        # extract switch parameters names from init file
-        switch_columns = columns_import('switch', max_title, 'columns')
+        # # extract switch parameters names from init file
+        # switch_columns = columns_import('switch', max_title, 'columns')
+        
         # number of switches to check
-        switch_num = len(switch_params_lst)
+        switch_num = len(switch_params_df.index)
            
         # lists to store only REQUIRED switch parameters
         # collecting data for all switches during looping
@@ -69,14 +64,21 @@ def fcr_extract(switch_params_lst, report_creation_info_lst):
         
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):       
-            # dictionary with parameters for the current switch
-            switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+        for i, switch_params_sr in switch_params_df.iterrows():       
+            
+            # # dictionary with parameters for the current switch
+            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
+            #                     'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router']
+            # switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
+            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+            
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router']
-            switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
-            ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
-            
+            switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
+            ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False
+
+
             # data unpacking from iter param
             sshow_file, *_, switch_name, _, switch_role, fid, fc_router = switch_info_lst
 
@@ -244,11 +246,26 @@ def fcr_extract(switch_params_lst, report_creation_info_lst):
                 status_info('ok', max_title, len(info))
             else:
                 status_info('skip', max_title, len(info))
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst)
+
+        # convert list to DataFrame
+        fcrfabric_df = list_to_dataframe(fcrfabric_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrfabric_columns')
+        fcrproxydev_df = list_to_dataframe(fcrproxydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrproxydev_columns')
+        fcrphydev_df = list_to_dataframe(fcrphydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrphydev_columns')
+        lsan_df = list_to_dataframe(lsan_lst, max_title, sheet_title_import='fcr', columns_title_import = 'lsan_columns')
+        fcredge_df = list_to_dataframe(fcredge_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcredge_columns')
+        fcrresource_df = list_to_dataframe(fcrresource_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrresource_columns')
+        # saving data to csv file
+        data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
+
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
             
-    return fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst
+    return fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df
 

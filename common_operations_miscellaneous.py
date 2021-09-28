@@ -38,7 +38,6 @@ def display_status(info, max_title):
     return dec
 
 
-
 def line_to_list(re_object, line, *args):
     """
     Function to extract values from line with regex object 

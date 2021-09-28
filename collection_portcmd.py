@@ -9,9 +9,12 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
+from common_operations_miscellaneous import verify_force_run
 
 
-def portcmdshow_extract(chassis_params_fabric_lst, report_creation_info_lst):
+def portcmdshow_extract(chassis_params_df, report_creation_info_lst):
     """Function to extract portshow, portloginshow, portstatsshow information"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -27,26 +30,21 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    portshow_lst, = data_lst
 
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # when any data from data_lst was not saved (file not found) or
+    # force extract flag is on then re-extract data from configuration files
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files  
-    if not all(data_lst) or any(force_extract_keys_lst):             
+    if force_run:             
         print('\nEXTRACTING PORTSHOW, PORTLOGINSHOW, PORTSTATSSHOW INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         
-        # extract chassis parameters names from init file
-        chassis_columns = columns_import('chassis', max_title, 'columns')
+        # # extract chassis parameters names from init file
+        # chassis_columns = columns_import('chassis', max_title, 'columns')
         # number of switches to check
-        switch_num = len(chassis_params_fabric_lst)     
+        
+        # switch_num = len(chassis_params_fabric_lst)
+        switch_num = len(chassis_params_df.index)
+
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping       
         portshow_lst = []  
@@ -55,15 +53,28 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_creation_info_lst):
         
         # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
         # checking each chassis for switch level parameters
-        for i, chassis_params_data in enumerate(chassis_params_fabric_lst):       
+        
+        # for i, chassis_params_data in enumerate(chassis_params_fabric_lst):
+        for i, chassis_params_sr in chassis_params_df.iterrows():           
             # data unpacking from iter param
             # dictionary with parameters for the current chassis
-            chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
-            sshow_file = chassis_params_data_dct['configname']
-            chassis_name = chassis_params_data_dct['chassis_name']
-            chassis_wwn = chassis_params_data_dct['chassis_wwn']            
+            
+            # chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
+            # sshow_file = chassis_params_data_dct['configname']
+            # chassis_name = chassis_params_data_dct['chassis_name']
+            # chassis_wwn = chassis_params_data_dct['chassis_wwn']
+
+            # sshow_file = chassis_params_sr['configname']
+            # chassis_name = chassis_params_sr['chassis_name']
+            # chassis_wwn = chassis_params_sr['chassis_wwn']
+
+            chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
+            chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
+
+            sshow_file, chassis_name, _ = chassis_info_lst            
+
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {chassis_params_data_dct["chassis_name"]} switch portshow, portloginshow and statsshow'
+            info = f'[{i+1} of {switch_num}]: {chassis_name} switch portshow, portloginshow and statsshow'
             print(info, end =" ")
             
             # search control dictionary. continue to check sshow_file until all parameters groups are found
@@ -187,21 +198,28 @@ def portcmdshow_extract(chassis_params_fabric_lst, report_creation_info_lst):
                                 # chassis_slot_port_values order (configname, chassis_name, port_index, slot_num, port_num, port_ids and wwns of connected devices)
                                 # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
                                 for port_id, connected_wwn in portid_wwn_lst:
-                                    chassis_slot_port_values = [sshow_file, chassis_name, chassis_wwn, port_index, *slot_port_lst, port_id, connected_wwn]
-                                    # print('chassis_slot_port_values', chassis_slot_port_values)
+                                    # chassis_slot_port_values = [sshow_file, chassis_name, chassis_wwn, port_index, *slot_port_lst, port_id, connected_wwn]
+                                    chassis_slot_port_values = [*chassis_info_lst, port_index, *slot_port_lst, port_id, connected_wwn]
                                     # adding or changing data from chassis_slot_port_values to the DISCOVERED dictionary
                                     update_dct(params_add, chassis_slot_port_values, portcmd_dct)
                                     # adding data to the REQUIRED list for each device connected to the port 
                                     portshow_lst.append([portcmd_dct.get(portcmd_param, None) for portcmd_param in portcmd_params])
-                                    # print('portshow_lst', portshow_lst)
 
                     # sshow_port section end                            
             status_info('ok', max_title, len(info))
-        # save extracted data to json file    
-        save_data(report_constant_lst, data_names, portshow_lst)
+        # convert list to DataFrame
+        portshow_df = list_to_dataframe(portshow_lst, max_title, sheet_title_import='portcmd')
+        # saving data to csv file
+        data_lst = [portshow_df]
+        save_data(report_constant_lst, data_names, *data_lst)    
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        portshow_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        portshow_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [portshow_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
         
-    return portshow_lst
+    return portshow_df
 

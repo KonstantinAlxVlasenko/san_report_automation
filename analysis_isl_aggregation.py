@@ -13,7 +13,6 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_df, re_pattern_lst):
     """Function to create ISL aggregated DataFrame"""
 
-
     # remove unlabeled fabrics and slice DataFrame to drop unnecessary columns
     fabric_clean_df = fabric_clean(fabric_labels_df)
     # add switchnames to trunk and fcredge DataFrames
@@ -201,7 +200,6 @@ def sfp_join(sfpshow_df, isl_aggregated_df, re_pattern_lst):
     # extract tranceivers speed and take max value
     for sfp, sfp_sp_max in sfp_speed_dct.items():
             # extract speed values
-            # isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(r'^([\d,]+)_(?:Gbps|MB)') # TO_REMOVE
             sfp_speed_values_re = comp_dct.get('transceiver_speed_values')
             isl_aggregated_df[sfp_sp_max] = isl_aggregated_df[sfp].str.extract(sfp_speed_values_re)
             # split string to create list of available speeds

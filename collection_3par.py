@@ -13,6 +13,9 @@ from common_operations_miscellaneous import (force_extract_check, line_to_list,
                                              status_info, update_dct,
                                              verify_data)
 from common_operations_servicefile import data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
 def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst):
@@ -31,20 +34,11 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
 
     # load data if they were saved on previos program execution iteration
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = data_lst
-
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
+    # when any data from data_lst was not saved (file not found) or
+    # force extract flag is on then re-extract data from configuration files
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files
-    if not all(data_lst) or any(force_extract_keys_lst):
+    if force_run:    
 
         # lists to store only REQUIRED infromation
         # collecting data for all systems during looping
@@ -88,21 +82,31 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
                         status_info('ok', max_title, len(info))
                     else:
                         status_info('no data', max_title, len(info))
-
-                # save extracted data to json file
-                save_data(report_constant_lst, data_names, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
         else:
             # current operation information string
             info = f'Collecting 3PAR storage systems information'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
-            # save empty data to json file
-            save_data(report_constant_lst, data_names, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
+            
+        # convert list to DataFrame
+        system_3par_df = list_to_dataframe(system_3par_comprehensive_lst, max_title, sheet_title_import='3par')
+        port_3par_df = list_to_dataframe(port_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='port_columns')
+        host_3par_df = list_to_dataframe(host_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='host_columns')
+        # saving data to csv file
+        data_lst = [system_3par_df, port_3par_df, host_3par_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        # system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        system_3par_df, port_3par_df, host_3par_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [system_3par_df, port_3par_df, host_3par_df]
     
-    return system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+
+    # return system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst
+    return system_3par_df, port_3par_df, host_3par_df
 
 
 def verify_ns_3par(nsshow_df, nscamshow_df, comp_dct):

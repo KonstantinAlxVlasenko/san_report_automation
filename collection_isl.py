@@ -10,9 +10,12 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
 from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_miscellaneous import verify_force_run
+from common_operations_dataframe import list_to_dataframe
+from common_operations_table_report import dataframe_to_report
 
 
-def interswitch_connection_extract(switch_params_lst, report_creation_info_lst):
+def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
     """Function to extract interswitch connection information"""  
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -28,26 +31,19 @@ def interswitch_connection_extract(switch_params_lst, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration    
     data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst = data_lst
     
-    # data force extract check 
-    # list of keys for each data from data_lst representing if it is required 
-    # to re-collect or re-analyze data even they were obtained on previous iterations
-    force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # print data which were loaded but for which force extract flag is on
-    force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
-    
-    # when any of data_lst was not saved or 
-    # force extract flag is on then re-extract data  from configueation files  
-    if not all(data_lst) or any(force_extract_keys_lst):    
+    # when any data from data_lst was not saved (file not found) or 
+    # force extract flag is on then re-extract data from configuration files  
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+
+    if force_run:    
         print('\nEXTRACTING INTERSWITCH CONNECTION INFORMATION (ISL, TRUNK, TRUNKAREA) ...\n')   
         
-        # extract chassis parameters names from init file
-        switch_columns = columns_import('switch', max_title, 'columns')
+        # # extract chassis parameters names from init file
+        # switch_columns = columns_import('switch', max_title, 'columns')
+        
         # number of switches to check
-        switch_num = len(switch_params_lst)   
+        switch_num = len(switch_params_df.index)   
      
         # data imported from init file to extract values from config file
         *_, comp_keys, match_keys, comp_dct = data_extract_objects('isl', max_title)
@@ -63,14 +59,19 @@ def interswitch_connection_extract(switch_params_lst, report_creation_info_lst):
 
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
-        for i, switch_params_data in enumerate(switch_params_lst):       
-            # data unpacking from iter param
-            # dictionary with parameters for the current switch
-            switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+        for i, switch_params_sr in switch_params_df.iterrows():       
+            # # data unpacking from iter param
+            # # dictionary with parameters for the current switch
+            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
+            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
+            #                     'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
+            # switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
+            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
-            switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
-            ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
+            switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
+            ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False
             
             sshow_file, _, _, switch_index, switch_name, *_, switch_mode = switch_info_lst
                         
@@ -216,12 +217,24 @@ def interswitch_connection_extract(switch_params_lst, report_creation_info_lst):
             # if switch in Access Gateway mode then skip
             else:
                 status_info('skip', max_title, len(info))        
-        # save extracted data to json file
-        save_data(report_constant_lst, data_names, isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst)
+
+        # convert list to DataFrame
+        isl_df = list_to_dataframe(isl_lst, max_title,  sheet_title_import='isl')
+        trunk_df = list_to_dataframe(trunk_lst, max_title,  sheet_title_import='isl', columns_title_import = 'trunk_columns')
+        porttrunkarea_df = list_to_dataframe(porttrunkarea_lst, max_title,  sheet_title_import='isl', columns_title_import = 'porttrunkarea_columns')
+        lsdb_df = list_to_dataframe(lsdb_lst, max_title,  sheet_title_import='isl', columns_title_import = 'lsdb_columns')
+        # saving data to csv file
+        data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
+        save_data(report_constant_lst, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst = verify_data(report_constant_lst, data_names, *data_lst)
-    return isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst
+        isl_df, trunk_df, porttrunkarea_df, lsdb_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+    
+    return isl_df, trunk_df, porttrunkarea_df, lsdb_df
 
 
 
