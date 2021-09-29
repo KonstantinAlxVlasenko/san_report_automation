@@ -10,6 +10,7 @@ from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
 from common_operations_table_report import dataframe_to_report
+from common_operations_database import read_db, write_db
 
 
 def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_creation_info_lst):
@@ -28,10 +29,13 @@ def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_creation
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking DataFrames from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    sensor_aggregated_df, sensor_report_df = data_lst
+    # data_lst = load_data(report_constant_lst, *data_names)
+    # reade data from database if they were saved on previos program execution iteration
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    
+    # # unpacking DataFrames from the loaded list with data
+    # # pylint: disable=unbalanced-tuple-unpacking
+    # sensor_aggregated_df, sensor_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['switch_params_aggregated', 'fabric_labels', 'sensor']
@@ -57,7 +61,9 @@ def sensor_analysis_main(sensor_df, switch_params_aggregated_df, report_creation
         # create list with partitioned DataFrames
         data_lst = [sensor_aggregated_df, sensor_report_df]
         # saving data to json or csv file
-        save_data(report_constant_lst, data_names, *data_lst)
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # writing data to sql
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst) 
 
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:

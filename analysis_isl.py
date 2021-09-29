@@ -16,6 +16,7 @@ from common_operations_miscellaneous import (force_extract_check, status_info,
 from common_operations_servicefile import (data_extract_objects,
                                            dct_from_columns)
 from common_operations_table_report import dataframe_to_report
+from common_operations_database import read_db, write_db
 
 
 def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df,  
@@ -35,11 +36,14 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df,
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
-    # loading data if were saved on previous iterations 
-    data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking DataFrames from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = data_lst
+    # load data if they were saved on previos program execution iteration
+    # data_lst = load_data(report_constant_lst, *data_names)
+    # reade data from database if they were saved on previos program execution iteration
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    
+    # # unpacking DataFrames from the loaded list with data
+    # # pylint: disable=unbalanced-tuple-unpacking
+    # isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['isl', 'trunk', 'fcredge', 'lsdb', 'sfpshow', 'portcfgshow', 
@@ -86,8 +90,10 @@ def isl_main(fabricshow_ag_labels_df, switch_params_aggregated_df,
 
         # create list with partitioned DataFrames
         data_lst = [isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
-        # saving fabric_statistics and fabric_statistics_summary DataFrames to csv file
-        save_data(report_constant_lst, data_names, *data_lst)
+        # saving data to json or csv file
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # writing data to sql
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = \

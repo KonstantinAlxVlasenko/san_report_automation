@@ -11,6 +11,7 @@ from common_operations_servicefile import columns_import, data_extract_objects
 from common_operations_miscellaneous import verify_force_run
 from common_operations_dataframe import list_to_dataframe
 from common_operations_table_report import dataframe_to_report
+from common_operations_database import read_db, write_db
 
 
 def sensor_extract(chassis_params_df, report_creation_info_lst):
@@ -28,7 +29,8 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration    
-    data_lst = load_data(report_constant_lst, *data_names)
+    # data_lst = load_data(report_constant_lst, *data_names)
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
@@ -97,7 +99,9 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
         sensor_df = list_to_dataframe(sensor_lst, max_title, sheet_title_import='sensor')
         # saving data to csv file
         data_lst = [sensor_df]
-        save_data(report_constant_lst, data_names, *data_lst)  
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # write data to sql db
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)    
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:

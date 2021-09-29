@@ -15,7 +15,7 @@ from common_operations_miscellaneous import verify_force_run
 from common_operations_database import read_db, write_db
 
 
-def switch_params_configshow_extract(chassis_params_df, report_creation_info_lst):
+def switch_params_extract(chassis_params_df, report_creation_info_lst):
     """Function to extract switch parameters"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -158,6 +158,7 @@ def switch_params_configshow_extract(chassis_params_df, report_creation_info_lst
         # saving data to csv file
         data_lst = [switch_params_df, switchshow_ports_df]
         # save_data(report_constant_lst, data_names, *data_lst)
+        # write data to sql db
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:

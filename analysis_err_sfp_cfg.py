@@ -19,6 +19,7 @@ from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import, dct_from_columns)
 # from common_operations_switch import statistics_report
 from common_operations_table_report import dataframe_to_report
+from common_operations_database import read_db, write_db
 
 
 def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_df, sfpshow_df, portcfgshow_df, isl_statistics_df,
@@ -41,10 +42,14 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking DataFrames from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df = data_lst
+    # data_lst = load_data(report_constant_lst, *data_names)
+    # reade data from database if they were saved on previos program execution iteration
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    
+    
+    # # unpacking DataFrames from the loaded list with data
+    # # pylint: disable=unbalanced-tuple-unpacking
+    # portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
@@ -101,7 +106,10 @@ def err_sfp_cfg_analysis_main(portshow_aggregated_df, switch_params_aggregated_d
             portshow_report_main(portshow_sfp_aggregated_df, data_names, report_headers_df, report_columns_usage_dct)
         # saving data to json or csv file
         data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df]
-        save_data(report_constant_lst, data_names, *data_lst)
+        # saving data to json or csv file
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # writing data to sql
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and reset DataFrame if yes
     else:
         portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df \
@@ -193,6 +201,8 @@ def portshow_report_main(port_complete_df, data_names, report_headers_df, report
 
     data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов']
     
+    # add speed value column for fillword verification in errors_report_df
+    port_complete_df['speed_fillword'] = port_complete_df['speed']
 
     errors_report_df, sfp_report_df, portcfg_report_df = \
         generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_dct, *data_names[1:])

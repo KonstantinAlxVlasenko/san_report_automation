@@ -6,9 +6,10 @@ Define customer name
 File report_info_xlsx
 """
 
-import os
+
 
 import pandas as pd
+import san_parser as sp
 
 from analysis_errdump import errdump_main
 from analysis_sensor import sensor_analysis_main
@@ -22,21 +23,6 @@ from analysis_isl import isl_main
 from analysis_portcmd import portcmd_analysis_main
 from analysis_storage_host import storage_host_analysis_main
 from analysis_maps_npiv_ports import maps_npiv_ports_main
-from collection_bladesystem import blade_system_extract
-from collection_chassis_params import chassis_params_extract
-from collection_fabric_membership import fabricshow_extract
-from collection_fcrfabric_membership import fcr_extract
-from collection_isl import interswitch_connection_extract
-from collection_maps import maps_params_extract
-from collection_nameserver import connected_devices_extract
-from collection_logs import logs_extract
-from collection_portcfg_sfp import portinfo_extract
-from collection_portcmd import portcmdshow_extract
-from collection_switch_params import switch_params_configshow_extract
-from collection_zoning import zoning_extract
-from collection_sensor import sensor_extract
-from collection_synergy import synergy_system_extract
-from collection_3par import storage_3par_extract
 from common_operations_dataframe import list_to_dataframe
 from common_operations_servicefile import (columns_import, dataframe_import,
                                            dct_from_columns,
@@ -86,23 +72,42 @@ def main():
 
     parsed_lst = config_preparation(customer_name, project_folder, ssave_folder, max_title)
     
-    chassis_params_df, maps_params_df = chassis_maps_params(parsed_lst)
-    switch_params_df, switchshow_ports_df = switches_params(chassis_params_df)
+    # collection
+    # chassis parameters parsing
+    chassis_params_df = sp.chassis_params_extract(parsed_lst, report_creation_info_lst)
+    # maps parameters parsing
+    maps_params_df = sp.maps_params_extract(parsed_lst, report_creation_info_lst)
+    # switch parameters parsing
+    switch_params_df, switchshow_ports_df = sp.switch_params_extract(chassis_params_df, report_creation_info_lst)
+    # fabric membership pasing (AG swithe information extracted from Principal switches)
+    fabricshow_df, ag_principal_df = sp.fabric_membership_extract(switch_params_df, report_creation_info_lst)
+    # portshow statistics parsing
+    portshow_df = sp.portcmd_extract(chassis_params_df, report_creation_info_lst)
+    # port sfp and cfg parsing
+    sfpshow_df, portcfgshow_df = sp.portcfg_sfp_extract(switch_params_df, report_creation_info_lst)
+    # nameserver parsing
+    fdmi_df, nsshow_df, nscamshow_df = sp.connected_devices_extract(switch_params_df, report_creation_info_lst)
+    # inter switch connection parsing
+    isl_df, trunk_df, porttrunkarea_df, lsdb_df = sp.interswitch_connection_extract(switch_params_df, report_creation_info_lst)
+    # fabric routing parsing
+    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = sp.fcr_membership_extract(switch_params_df, report_creation_info_lst)
+    # zoning configuration parsing
+    cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = \
+        sp.zoning_extract(switch_params_df, report_creation_info_lst)
+    # switch sensors parsing
+    sensor_df = sp.sensor_extract(chassis_params_df, report_creation_info_lst)
+    # error log parsing
+    errdump_df = sp.log_extract(chassis_params_df, report_creation_info_lst)
+    # blade system configuration parsing
+    blade_module_df, blade_servers_df, blade_vc_df = sp.blade_system_extract(blade_folder, report_creation_info_lst)
+    # synergy system configuration parsing
+    synergy_module_df, synergy_servers_df = sp.synergy_system_extract(synergy_folder, report_creation_info_lst)
+    # 3PAR storage system configuration download and parsing
+    system_3par_df, port_3par_df, host_3par_df = \
+            sp.storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst)
+
     
-    fabricshow_df, ag_principal_df = switches_in_fabric(switch_params_df)
-    portshow_df, sfpshow_df, portcfgshow_df = ports_info_group(chassis_params_df, switch_params_df)    
-    fdmi_df, nsshow_df, nscamshow_df = connected_devices(switch_params_df)
-    isl_df, trunk_df, porttrunkarea_df, lsdb_df = interswitch_connection(switch_params_df)
-    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcrouting(switch_params_df)
-    cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = zoning(switch_params_df)
-    sensor_df = sensor_readings(chassis_params_df)
-    
-    errdump_df = logs(chassis_params_df)
-    
-    blade_module_df, blade_servers_df, blade_vc_df = blade_system(blade_folder)
-    synergy_module_df, synergy_servers_df = synergy_system_extract(synergy_folder, report_creation_info_lst)
-    system_3par_df, port_3par_df, host_3par_df = storage_3par(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst)
-    
+    # analysis
     # set fabric names and labels
     fabricshow_ag_labels_df = fabriclabels_main(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_creation_info_lst)
 
@@ -179,257 +184,6 @@ def config_preparation(customer_name, project_folder, ssave_folder, max_title):
     dataframe_to_report(parsed_ssave_df, 'parsed_files', report_creation_info_lst)
     return parsed_lst
 
-
-def chassis_maps_params(parsed_lst):
-
-    # # check configuration files to extract chassis parameters and save it to the list of lists
-    # chassis_params_fabric_lst = chassis_params_extract(parsed_lst, report_creation_info_lst)
-    # # export chassis parameters list to DataFrame and saves it to excel file
-    # chassis_params_fabric_df = list_to_dataframe(chassis_params_fabric_lst, max_title, 'chassis')
-    # dataframe_to_report(chassis_params_fabric_df, 'chassis_parameters', report_creation_info_lst)
-
-    # maps_params_fabric_lst = maps_params_extract(parsed_lst, report_creation_info_lst)
-    # # export maps parameters list to DataFrame and saves it to excel file
-    # maps_params_fabric_df = list_to_dataframe(maps_params_fabric_lst, max_title, 'maps')
-    # dataframe_to_report(maps_params_fabric_df, 'maps_parameters', report_creation_info_lst)
-
-    chassis_params_fabric_df = chassis_params_extract(parsed_lst, report_creation_info_lst)
-    maps_params_fabric_df = maps_params_extract(parsed_lst, report_creation_info_lst)
-
-    return chassis_params_fabric_df, maps_params_fabric_df
-
-
-def switches_params(chassis_params_df):
-     
-    # switch_params_lst, switchshow_ports_lst = switch_params_configshow_extract(chassis_params_fabric_lst, report_creation_info_lst)
-    # switch_params_df = list_to_dataframe(switch_params_lst, max_title, 'switch')
-    # dataframe_to_report(switch_params_df, 'switch_parameters', report_creation_info_lst)
-
-    # switchshow_ports_df = list_to_dataframe(switchshow_ports_lst, max_title, 'switch', columns_title_import = 'switchshow_portinfo_columns')
-    # dataframe_to_report(switchshow_ports_df, 'switchshow_ports', report_creation_info_lst)
-
-    switch_params_df, switchshow_ports_df = switch_params_configshow_extract(chassis_params_df, report_creation_info_lst)
-
-    return switch_params_df, switchshow_ports_df
-        
-
-def switches_in_fabric(switch_params_df):
-    # fabricshow_lst, ag_principal_lst = fabricshow_extract(switch_params_lst, report_creation_info_lst)
-    # # export fabrichow and fcrfabricshow lists to DataFrame and saves it to excel file
-    
-    # fabricshow_df = list_to_dataframe(fabricshow_lst, max_title, 'fabricshow')
-    # dataframe_to_report(fabricshow_df, 'fabricshow', report_creation_info_lst)
-    
-    
-
-    # ag_principal_df = list_to_dataframe(ag_principal_lst, max_title, 'fabricshow', columns_title_import = 'ag_columns')
-    # dataframe_to_report(ag_principal_df, 'ag_principal', report_creation_info_lst)
-
-    # # ag_principal_df = list_to_dataframe(ag_principal_lst, report_creation_info_lst, 'ag_principal', 'fabricshow', columns_title_import = 'ag_columns')
-    
-    fabricshow_df, ag_principal_df = fabricshow_extract(switch_params_df, report_creation_info_lst)
-    
-    return fabricshow_df, ag_principal_df
-
-
-def ports_info_group(chassis_params_df, switch_params_df):        
-    # portshow_lst = portcmdshow_extract(chassis_params_fabric_lst, report_creation_info_lst)
-    # # portshow_df = list_to_dataframe(portshow_lst, report_creation_info_lst, 'portcmd', 'portcmd')
-    # portshow_df = list_to_dataframe(portshow_lst, max_title, 'portcmd')
-    # dataframe_to_report(portshow_df, 'portcmd', report_creation_info_lst)
-
-    portshow_df = portcmdshow_extract(chassis_params_df, report_creation_info_lst)
-
-    # sfpshow_lst, portcfgshow_lst = portinfo_extract(switch_params_lst, report_creation_info_lst)
-    # sfpshow_df = list_to_dataframe(sfpshow_lst, max_title, 'portinfo')
-    # dataframe_to_report(sfpshow_df, 'sfpshow', report_creation_info_lst)
-
-    # # portcfgshow_df = list_to_dataframe(portcfgshow_lst, report_creation_info_lst, 'portcfgshow', 'portinfo', columns_title_import = 'portcfg_columns')
-    # portcfgshow_df = list_to_dataframe(portcfgshow_lst, max_title, 'portinfo', columns_title_import = 'portcfg_columns')
-    # dataframe_to_report(portcfgshow_df, 'portcfgshow', report_creation_info_lst)
-
-    sfpshow_df, portcfgshow_df = portinfo_extract(switch_params_df, report_creation_info_lst)
-
-    return portshow_df, sfpshow_df, portcfgshow_df
-    
-    
-def connected_devices(switch_params_df):
-    # fdmi_lst, nsshow_lst, nscamshow_lst = connected_devices_extract(switch_params_lst, report_creation_info_lst)
-    # # fdmi_df = list_to_dataframe(fdmi_lst, report_creation_info_lst, 'fdmi', 'connected_dev')
-    # fdmi_df = list_to_dataframe(fdmi_lst, max_title, 'connected_dev')
-    # dataframe_to_report(fdmi_df, 'fdmi', report_creation_info_lst)
-
-    # # nsshow_df = list_to_dataframe(nsshow_lst, report_creation_info_lst, 'nsshow', 'connected_dev', columns_title_import = 'nsshow_columns')
-    # nsshow_df = list_to_dataframe(nsshow_lst, max_title, 'connected_dev', columns_title_import = 'nsshow_columns')
-    # dataframe_to_report(nsshow_df, 'nsshow', report_creation_info_lst)    
-
-    # # nscamshow_df = list_to_dataframe(nscamshow_lst, report_creation_info_lst, 'nscamshow', 'connected_dev', columns_title_import = 'nsshow_columns')
-    # nscamshow_df = list_to_dataframe(nsshow_lst, max_title, 'connected_dev', columns_title_import = 'nsshow_columns')
-    # dataframe_to_report(nscamshow_df, 'nscamshow', report_creation_info_lst)
-    
-    fdmi_df, nsshow_df, nscamshow_df = connected_devices_extract(switch_params_df, report_creation_info_lst)
-    
-    return fdmi_df, nsshow_df, nscamshow_df
-    
-    
-def interswitch_connection(switch_params_df):
-    # isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst = interswitch_connection_extract(switch_params_lst, report_creation_info_lst)
-    
-    # # isl_df = list_to_dataframe(isl_lst, report_creation_info_lst, 'isl', 'isl')
-    # isl_df = list_to_dataframe(isl_lst, max_title, 'isl')
-    # dataframe_to_report(isl_df, 'isl', report_creation_info_lst)
-
-    # # trunk_df = list_to_dataframe(trunk_lst, report_creation_info_lst, 'trunk', 'isl', columns_title_import = 'trunk_columns')
-    # trunk_df = list_to_dataframe(trunk_lst, max_title, 'isl', columns_title_import = 'trunk_columns')
-    # dataframe_to_report(trunk_df, 'trunk', report_creation_info_lst)
-
-    # # porttrunkarea_df = list_to_dataframe(porttrunkarea_lst, report_creation_info_lst, 'porttrunkarea', 'isl', columns_title_import = 'porttrunkarea_columns')
-    # porttrunkarea_df = list_to_dataframe(porttrunkarea_lst, max_title, 'isl', columns_title_import = 'porttrunkarea_columns')
-    # dataframe_to_report(porttrunkarea_df, 'porttrunkarea', report_creation_info_lst)
-
-    # # lsdb_df = list_to_dataframe(lsdb_lst, report_creation_info_lst, 'lsdb', 'isl', columns_title_import='lsdb_columns')
-    # lsdb_df = list_to_dataframe(lsdb_lst, max_title, 'isl', columns_title_import = 'lsdb_columns')
-    # dataframe_to_report(lsdb_df, 'lsdb', report_creation_info_lst)
-
-    isl_df, trunk_df, porttrunkarea_df, lsdb_df = interswitch_connection_extract(switch_params_df, report_creation_info_lst)
-
-    return isl_df, trunk_df, porttrunkarea_df, lsdb_df
-    
-    
-def fcrouting(switch_params_df):    
-    # fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst, lsan_lst, fcredge_lst, fcrresource_lst = fcr_extract(switch_params_lst, report_creation_info_lst)
- 
-    # # fcrfabric_df = list_to_dataframe(fcrfabric_lst, report_creation_info_lst, 'fcrfabric', 'fcr', columns_title_import = 'fcrfabric_columns')
-    # fcrfabric_df = list_to_dataframe(fcrfabric_lst, max_title, 'fcr', columns_title_import = 'fcrfabric_columns')
-    # dataframe_to_report(fcrfabric_df, 'fcrfabric', report_creation_info_lst)
-
-    # # fcrproxydev_df = list_to_dataframe(fcrproxydev_lst, report_creation_info_lst, 'fcrproxydev', 'fcr', columns_title_import = 'fcrproxydev_columns')
-    # fcrproxydev_df = list_to_dataframe(fcrproxydev_lst, max_title, 'fcr', columns_title_import = 'fcrproxydev_columns')
-    # dataframe_to_report(fcrproxydev_df, 'fcrproxydev', report_creation_info_lst)
-    
-    # # fcrphydev_df =list_to_dataframe(fcrphydev_lst, report_creation_info_lst, 'fcrphydev', 'fcr', columns_title_import = 'fcrphydev_columns')
-    # fcrphydev_df = list_to_dataframe(fcrphydev_lst, max_title, 'fcr', columns_title_import = 'fcrphydev_columns')
-    # dataframe_to_report(fcrphydev_df, 'fcrphydev', report_creation_info_lst)
-
-    # # lsan_df = list_to_dataframe(lsan_lst, report_creation_info_lst, 'lsan', 'fcr', columns_title_import = 'lsan_columns')
-    # lsan_df = list_to_dataframe(lsan_lst, max_title, 'fcr', columns_title_import = 'lsan_columns')
-    # dataframe_to_report(lsan_df, 'lsan', report_creation_info_lst)
-
-    # # fcredge_df = list_to_dataframe(fcredge_lst, report_creation_info_lst, 'fcredge', 'fcr', columns_title_import = 'fcredge_columns')
-    # fcredge_df = list_to_dataframe(fcredge_lst, max_title, 'fcr', columns_title_import = 'fcredge_columns')
-    # dataframe_to_report(fcredge_df, 'fcredge', report_creation_info_lst)    
-
-    # # fcrresource_df = list_to_dataframe(fcrresource_lst, report_creation_info_lst, 'fcrresource', 'fcr', columns_title_import = 'fcrresource_columns')
-    # fcrresource_df = list_to_dataframe(fcrresource_lst, max_title, 'fcr', columns_title_import = 'fcrresource_columns')
-    # dataframe_to_report(fcrresource_df, 'fcrresource', report_creation_info_lst)
-
-    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcr_extract(switch_params_df, report_creation_info_lst)
-
-    return fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df
-    
-def zoning(switch_params_df):
-    # cfg_lst, zone_lst, alias_lst, cfg_effective_lst, zone_effective_lst, \
-    #     peerzone_lst, peerzone_effective_lst = zoning_extract(switch_params_lst, report_creation_info_lst)
-
-    # # cfg_df = list_to_dataframe(cfg_lst, report_creation_info_lst, 'cfg', 'zoning')
-    # cfg_df = list_to_dataframe(cfg_lst, max_title, 'zoning')
-    # dataframe_to_report(cfg_df, 'cfg', report_creation_info_lst)
-
-    # # zone_df = list_to_dataframe(zone_lst, report_creation_info_lst, 'zone', 'zoning', columns_title_import = 'zone_columns')
-    # zone_df = list_to_dataframe(zone_lst, max_title, 'zoning', columns_title_import = 'zone_columns')
-    # dataframe_to_report(zone_df, 'zone', report_creation_info_lst)
-
-    # # alias_df = list_to_dataframe(alias_lst, report_creation_info_lst, 'alias', 'zoning', columns_title_import = 'alias_columns')
-    # alias_df = list_to_dataframe(alias_lst, max_title, 'zoning', columns_title_import = 'alias_columns')
-    # dataframe_to_report(alias_df, 'alias', report_creation_info_lst)
-
-    # # cfg_effective_df = list_to_dataframe(cfg_effective_lst, report_creation_info_lst, 'cfg_effective', 'zoning', columns_title_import = 'cfg_effective_columns')
-    # cfg_effective_df = list_to_dataframe(cfg_effective_lst, max_title, 'zoning', columns_title_import = 'cfg_effective_columns')
-    # dataframe_to_report(cfg_effective_df, 'cfg_effective', report_creation_info_lst)
-
-
-    # # zone_effective_df = list_to_dataframe(zone_effective_lst, report_creation_info_lst, 'zone_effective', 'zoning', columns_title_import = 'zone_effective_columns')
-    # zone_effective_df = list_to_dataframe(zone_effective_lst, max_title, 'zoning', columns_title_import = 'zone_effective_columns')
-    # dataframe_to_report(zone_effective_df, 'zone_effective', report_creation_info_lst)
-
-
-    # # peerzone_df = list_to_dataframe(peerzone_lst, report_creation_info_lst, 'peerzone', 'zoning', columns_title_import = 'peerzone_columns')
-    # peerzone_df = list_to_dataframe(peerzone_lst, max_title, 'zoning', columns_title_import = 'peerzone_columns')
-    # dataframe_to_report(peerzone_df, 'peerzone', report_creation_info_lst)
-
-    # # peerzone_effective_df = list_to_dataframe(peerzone_effective_lst, report_creation_info_lst, 'peerzone_effective', 'zoning', columns_title_import = 'peerzone_effective_columns')
-    # peerzone_effective_df = list_to_dataframe(peerzone_effective_lst, max_title, 'zoning', columns_title_import = 'peerzone_effective_columns')
-    # dataframe_to_report(peerzone_effective_df, 'peerzone_effective', report_creation_info_lst)
-
-
-    cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = \
-        zoning_extract(switch_params_df, report_creation_info_lst)
-
-    return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df       
-          
-
-def sensor_readings(chassis_params_df):
-    # sensor_lst = sensor_extract(chassis_params_fabric_lst, report_creation_info_lst)
-    # # sensor_df = list_to_dataframe(sensor_lst, report_creation_info_lst, 'sensor', 'sensor')
-    # sensor_df = list_to_dataframe(sensor_lst, max_title, 'sensor')
-    # dataframe_to_report(sensor_df, 'sensor', report_creation_info_lst)
-
-    sensor_df = sensor_extract(chassis_params_df, report_creation_info_lst)
-
-    return sensor_df
-
-
-def logs(chassis_params_df):
-    # errdump_lst = logs_extract(chassis_params_fabric_lst, report_creation_info_lst)
-    # # errdump_df = list_to_dataframe(errdump_lst, report_creation_info_lst, 'errdump', 'log')
-    # errdump_df = list_to_dataframe(errdump_lst, max_title, 'log')
-    # dataframe_to_report(errdump_df, 'errdump', report_creation_info_lst)
-
-    errdump_df = logs_extract(chassis_params_df, report_creation_info_lst)
-
-    return errdump_df
-
-
-def blade_system(blade_folder):
-    # module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = blade_system_extract(blade_folder, report_creation_info_lst)
-
-    # # blade_module_df = list_to_dataframe(module_comprehensive_lst, report_creation_info_lst, 'blade_interconnect', 'blades')
-    # blade_module_df = list_to_dataframe(module_comprehensive_lst, max_title, 'blades')
-    # dataframe_to_report(blade_module_df, 'blade_interconnect', report_creation_info_lst)
-
-    # # blade_servers_df = list_to_dataframe(blades_comprehensive_lst, report_creation_info_lst, 'blade_servers', 'blades', columns_title_import = 'blade_columns')
-    # blade_servers_df = list_to_dataframe(blades_comprehensive_lst, max_title, 'blades', columns_title_import='blade_columns')
-    # dataframe_to_report(blade_servers_df, 'blade_servers', report_creation_info_lst)
-
-    # # blade_vc_df = list_to_dataframe(blade_vc_comprehensive_lst, report_creation_info_lst, 'blade_vc', 'blades', columns_title_import = 'blade_vc_columns')
-    # blade_vc_df = list_to_dataframe(blade_vc_comprehensive_lst, max_title, 'blades', columns_title_import='blade_vc_columns')
-    # dataframe_to_report(blade_vc_df, 'blade_vc', report_creation_info_lst)
-
-    blade_module_df, blade_servers_df, blade_vc_df = blade_system_extract(blade_folder, report_creation_info_lst)
-
-    return blade_module_df, blade_servers_df, blade_vc_df
-
-
-def storage_3par(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst):
-    # system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst \
-    #     = storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst)
-
-    # # system_3par_df = list_to_dataframe(system_3par_comprehensive_lst, report_generation_info_lst, 'system_3par', '3par')
-    # system_3par_df = list_to_dataframe(system_3par_comprehensive_lst, max_title, '3par')
-    # dataframe_to_report(system_3par_df, 'system_3par', report_creation_info_lst)
-
-    # # port_3par_df = list_to_dataframe(port_3par_comprehensive_lst, report_generation_info_lst, 'port_3par', '3par', columns_title_import = 'port_columns')
-    # port_3par_df = list_to_dataframe(port_3par_comprehensive_lst, max_title, '3par', columns_title_import='port_columns')
-    # dataframe_to_report(port_3par_df, 'port_3par', report_creation_info_lst)
-
-    # # host_3par_df = list_to_dataframe(host_3par_comprehensive_lst, report_generation_info_lst, 'host_3par', '3par', columns_title_import = 'host_columns')
-    # host_3par_df = list_to_dataframe(host_3par_comprehensive_lst, max_title, '3par', columns_title_import='host_columns')
-    # dataframe_to_report(host_3par_df, 'host_3par', report_creation_info_lst)
-
-    system_3par_df, port_3par_df, host_3par_df = \
-        storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst)
-
-    return system_3par_df, port_3par_df, host_3par_df
 
 
 if __name__ == "__main__":

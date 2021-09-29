@@ -1,3 +1,5 @@
+"""Module to extract blade system information"""
+
 import os
 import re
 
@@ -11,8 +13,9 @@ from common_operations_servicefile import columns_import, data_extract_objects
 from common_operations_miscellaneous import verify_force_run
 from common_operations_dataframe import list_to_dataframe
 from common_operations_table_report import dataframe_to_report
+from common_operations_database import read_db, write_db
 
-"""Module to extract blade system information"""
+
 
 
 def blade_system_extract(blade_folder, report_creation_info_lst):
@@ -31,7 +34,8 @@ def blade_system_extract(blade_folder, report_creation_info_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
+    # data_lst = load_data(report_constant_lst, *data_names)
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
 
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
@@ -325,12 +329,17 @@ def blade_system_extract(blade_folder, report_creation_info_lst):
         blade_vc_df = list_to_dataframe(blade_vc_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_vc_columns')
         # saving data to csv file
         data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
-        save_data(report_constant_lst, data_names, *data_lst) 
+        # save_data(report_constant_lst, data_names, *data_lst)
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         # module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
         blade_module_df, blade_servers_df, blade_vc_df = verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
+
+    # save data to excel file if it's required
+    for data_name, data_frame in zip(data_names, data_lst):
+        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
     return blade_module_df, blade_servers_df, blade_vc_df

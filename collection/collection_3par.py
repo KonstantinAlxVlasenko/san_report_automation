@@ -16,7 +16,7 @@ from common_operations_servicefile import data_extract_objects
 from common_operations_miscellaneous import verify_force_run
 from common_operations_dataframe import list_to_dataframe
 from common_operations_table_report import dataframe_to_report
-
+from common_operations_database import read_db, write_db
 
 def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst):
     """Function to extract 3PAR storage information"""
@@ -33,7 +33,9 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
+    # data_lst = load_data(report_constant_lst, *data_names)
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    
     # when any data from data_lst was not saved (file not found) or
     # force extract flag is on then re-extract data from configuration files
     force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
@@ -94,7 +96,8 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
         host_3par_df = list_to_dataframe(host_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='host_columns')
         # saving data to csv file
         data_lst = [system_3par_df, port_3par_df, host_3par_df]
-        save_data(report_constant_lst, data_names, *data_lst)  
+        # save_data(report_constant_lst, data_names, *data_lst)
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         # system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
@@ -105,7 +108,6 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
     for data_name, data_frame in zip(data_names, data_lst):
         dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
-    # return system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst
     return system_3par_df, port_3par_df, host_3par_df
 
 

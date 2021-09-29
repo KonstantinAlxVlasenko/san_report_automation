@@ -21,6 +21,7 @@ from common_operations_switch import statistics_report
 from common_operations_table_report import dataframe_to_report
 
 from analysis_switch_connection_statistics import switch_connection_statistics_aggregated
+from common_operations_database import read_db, write_db
 
 
 def maps_npiv_ports_main(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
@@ -42,12 +43,15 @@ def maps_npiv_ports_main(portshow_sfp_aggregated_df, switch_params_aggregated_df
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
+    # data_lst = load_data(report_constant_lst, *data_names)
+    # reade data from database if they were saved on previos program execution iteration
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
 
-    # unpacking DataFrames from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_connection_statistics_df, \
-        maps_ports_report_df, npiv_report_df, npiv_statistics_report_df, sw_connection_statistics_report_df = data_lst
+
+    # # unpacking DataFrames from the loaded list with data
+    # # pylint: disable=unbalanced-tuple-unpacking
+    # maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_connection_statistics_df, \
+    #     maps_ports_report_df, npiv_report_df, npiv_statistics_report_df, sw_connection_statistics_report_df = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'portshow_sfp_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
@@ -94,7 +98,10 @@ def maps_npiv_ports_main(portshow_sfp_aggregated_df, switch_params_aggregated_df
         # saving data to json or csv file
         data_lst = [maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_connection_statistics_df, 
                     maps_ports_report_df, npiv_report_df, npiv_statistics_report_df, sw_connection_statistics_report_df]
-        save_data(report_constant_lst, data_names, *data_lst)
+        # saving data to json or csv file
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # writing data to sql
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and reset DataFrame if yes
     else:
         maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_connection_statistics_df, \

@@ -80,7 +80,8 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
         
     # report_columns_usage_dct = {'fabric_name_usage': fabric_name_usage, 'chassis_info_usage': chassis_column_usage}
 
-    report_columns_usage_dct = pd.Series([fabric_name_usage, chassis_column_usage], index=['fabric_name_usage', 'chassis_info_usage'])
+    report_columns_usage_dct = pd.Series([fabric_name_usage, chassis_column_usage], 
+                                            index=['fabric_name_usage', 'chassis_info_usage'], name='usage')
     
     return switch_params_aggregated_df, report_columns_usage_dct
 

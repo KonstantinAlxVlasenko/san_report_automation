@@ -24,11 +24,11 @@ def write_db(report_constant_lst, report_steps_dct, data_names, *args):
 
     for data_name, data_exported in zip(data_names, args):
 
-        report_type = report_steps_dct[data_name][2]
-        db_name = customer_name + '_' + report_type + '_database.db'
+        db_type = report_steps_dct[data_name][2]
+        db_name = customer_name + '_' + db_type + '_database.db'
         db_path = os.path.join(db_dir, db_name)
 
-        info = f'Writing {data_name} to database'
+        info = f'Writing {data_name} to {db_type} database'
         print(info, end=" ")
         # saving data for DataFrame
         if isinstance(data_exported, (pd.DataFrame, pd.Series)):
@@ -71,22 +71,39 @@ def dataframe_flatten(df):
 
 
 def substitute_names(df, operation):
+    """Function to avoid column names duplication in sql.
+    Capital and lower case letters don't differ iin sql.
+    Function adds tag to duplicated column name when writes to the database
+    and removes tag when read from the database."""
 
     if isinstance(df, pd.DataFrame):
-        substitution_names = [('SwitchName', 'SwitchName_sql')]
+        
+        masking_tag = '_sql'
+        # substitution_names = [
+        #     ('SwitchName', 'SwitchName_sql'), ('Fabric_Name', 'Fabric_Name_sql'),
+        #     ('SwitchMode', 'SwitchMode_sql'), 'Memory_Usage'	'Flash_Usage']
+
+        duplicated_names = ['SwitchName', 'Fabric_Name', 'SwitchMode', 'Memory_Usage', 'Flash_Usage', 'Speed']
+
+                                
         if operation == 'write':
-            replace_dct = {orig_name: mask_name for orig_name, mask_name in substitution_names}
+            # replace_dct = {orig_name: mask_name for orig_name, mask_name in substitution_names}
+            replace_dct = {orig_name: orig_name + masking_tag for orig_name in duplicated_names}
+
             df.rename(columns=replace_dct, inplace=True)
         elif operation == 'read':
-            replace_dct = {mask_name: orig_name for orig_name, mask_name in substitution_names}
+            # replace_dct = {mask_name: orig_name for orig_name, mask_name in substitution_names}
+            replace_dct = {orig_name + masking_tag: orig_name for orig_name in duplicated_names}
             df.rename(columns=replace_dct, inplace=True)
 
 
 def write_sql(db_path, data_name, df):
     """Function to write DataFrame to SQL DB"""
 
+
+    keep_index = True if isinstance(df, pd.Series) else False
     conn = sqlite3.connect(db_path)
-    df.to_sql(name=data_name, con=conn, index=False, if_exists='replace')
+    df.to_sql(name=data_name, con=conn, index=keep_index, if_exists='replace')
     conn.close()
 
 
@@ -110,12 +127,12 @@ def read_db(report_constant_lst, report_steps_dct, *args):
 
     for data_name in args:
 
-        report_type = report_steps_dct[data_name][2]
-        db_name = customer_name + '_' + report_type + '_database.db'
+        db_type = report_steps_dct[data_name][2]
+        db_name = customer_name + '_' + db_type + '_database.db'
         db_path = os.path.join(db_dir, db_name)
         conn = sqlite3.connect(db_path)
 
-        info = f'Reading {data_name} from database'
+        info = f'Reading {data_name} from {db_type} database'
         print(info, end=" ")
         data_name_in_db = conn.execute(
             f"""SELECT name FROM sqlite_master WHERE type='table' 
@@ -123,11 +140,15 @@ def read_db(report_constant_lst, report_steps_dct, *args):
         if data_name_in_db:
             df = pd.read_sql(f"select * from {data_name}", con=conn)
             substitute_names(df, 'read')
+            # revert single column DataFrame to Series
+            if 'index' in df.columns:
+                df.set_index('index', inplace=True)
+                df = df.squeeze()
             data_imported.append(df)
             status_info('ok', max_title, len(info))
         else:
             data_imported.append(None)
             status_info('no data', max_title, len(info))
-    conn.close()
+        conn.close()
 
     return data_imported

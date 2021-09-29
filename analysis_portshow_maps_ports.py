@@ -43,7 +43,7 @@ def explode_maps_ports(switch_params_cp_df):
 
     maps_ports_df = explode_columns(switch_params_cp_df, 
                                     'Quarantined_Ports', 'Decommissioned_Ports', 
-                                    'Fenced_Ports', 'Fenced circuits', sep=',')
+                                    'Fenced_Ports', 'Fenced_circuits', sep=',')
     top_zoned_ports_df = explode_columns(switch_params_cp_df, 'Top_Zoned_PIDs', sep=' ')
     # drop excessive columns
     if not maps_ports_df.empty:

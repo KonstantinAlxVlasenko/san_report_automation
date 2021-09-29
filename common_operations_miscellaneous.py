@@ -6,6 +6,7 @@ and  perform operations on data
 import re
 
 import pandas as pd
+import numpy as np
 from functools import wraps
 
 
@@ -129,13 +130,27 @@ def verify_data(report_constant_lst, data_names, *args,  show_status=True):
         if show_status:
             info = f'Verifying {data_name}'
             print(info, end =" ")
-        # if data is DataFrame
-        if isinstance(data_verified, pd.DataFrame):
-            if data_verified.iloc[0, 0] == 'NO DATA FOUND':
-                # reset DataFrame (leaves columns title only)
-                data_verified = data_verified.iloc[0:0]
+        if isinstance(data_verified, (pd.DataFrame, pd.Series)): # if DataFrame or Series
+            if (len(data_verified.index) == 1 and # have single row
+                np.unique(data_verified.values).size == 1 and # have single unique value
+                'NO DATA FOUND' in data_verified.values): # and this value is 'NO DATA FOUND'
+                if isinstance(data_verified, pd.DataFrame):
+                    columns = data_verified.columns
+                    data_verified = pd.DataFrame(columns=columns) # for DataFrame use empty DataFrame with column names only
+                    # data_verified = data_verified.iloc[0:0] # for DataFrame use empty DataFrame with column names only
+                else:
+                    name = data_verified.name
+                    data_verified = pd.Series(name=name) # for Series use empty Series
                 if show_status:
                     status_info('empty', max_title, len(info))
+
+            # if data_verified.iloc[0, 0] == 'NO DATA FOUND':
+            #     # reset DataFrame (leaves columns title only)
+            #     data_verified = data_verified.iloc[0:0]
+            #     data_verified = 'NO DATA FOUND'                
+
+            #     if show_status:
+            #         status_info('empty', max_title, len(info))
             else:
                 if show_status:
                     status_info('ok', max_title, len(info))

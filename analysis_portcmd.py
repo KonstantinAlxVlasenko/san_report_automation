@@ -15,7 +15,7 @@ from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import)
 from report_portcmd import portcmd_report_main
 from common_operations_table_report import dataframe_to_report
-
+from common_operations_database import read_db, write_db
 
 
 def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -49,18 +49,22 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     report_columns_usage_bckp = report_columns_usage_dct
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
+    # data_lst = load_data(report_constant_lst, *data_names)
+    # reade data from database if they were saved on previos program execution iteration
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    
     # flag to forcible save portshow_aggregated_df if required
     portshow_force_flag = False
     
-    # unpacking DataFrames from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
-        device_rename_df, report_columns_usage_dct, \
-            servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-                storage_connection_df,  library_connection_df, server_connection_df, \
-                    storage_connection_statistics_report_df, device_connection_statistics_report_df = data_lst
+    # # unpacking DataFrames from the loaded list with data
+    # # pylint: disable=unbalanced-tuple-unpacking
+    # portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
+    #     device_rename_df, report_columns_usage_dct, \
+    #         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
+    #             storage_connection_df,  library_connection_df, server_connection_df, \
+    #                 storage_connection_statistics_report_df, device_connection_statistics_report_df = data_lst
     
+    device_rename_df, report_columns_usage_dct = data_lst[3:5]
     
     
     nsshow_unsplit_df = pd.DataFrame()
@@ -71,8 +75,11 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
     # if not report_columns_usage_dct.empty:
     #     report_columns_usage_dct = report_columns_usage_bckp
 
-    if report_columns_usage_dct.empty:
+    if report_columns_usage_dct is None:
         report_columns_usage_dct = report_columns_usage_bckp
+
+    # if report_columns_usage_dct.empty:
+    #     report_columns_usage_dct = report_columns_usage_bckp
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
@@ -143,7 +150,10 @@ def portcmd_analysis_main(portshow_df, switchshow_ports_df, switch_params_df,
             ]
 
         # saving data to json or csv file
-        save_data(report_constant_lst, data_names, *data_lst)
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # writing data to sql
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)
+
         dataframe_to_report(nsshow_unsplit_df, 'nsshow_unsplit', report_creation_info_lst, force_flag = nsshow_unsplit_force_flag)
         dataframe_to_report(expected_ag_links_df, 'expected_ag_links', report_creation_info_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame

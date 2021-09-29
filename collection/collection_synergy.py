@@ -4,19 +4,18 @@
 import os
 import re
 
-import pandas as pd
 import numpy as np
-
-from common_operations_filesystem import (find_files, load_data,
-                                          save_data)
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data, verify_force_run)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_dataframe import wise_combine
-from common_operations_table_report import dataframe_to_report
-
+import pandas as pd
 from openpyxl import load_workbook
 
+from common_operations_database import read_db, write_db
+from common_operations_dataframe import wise_combine
+from common_operations_filesystem import find_files, load_data, save_data
+from common_operations_miscellaneous import (force_extract_check, line_to_list,
+                                             status_info, update_dct,
+                                             verify_data, verify_force_run)
+from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_table_report import dataframe_to_report
 
 
 def synergy_system_extract(synergy_folder, report_creation_info_lst):
@@ -35,7 +34,8 @@ def synergy_system_extract(synergy_folder, report_creation_info_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
+    # data_lst = load_data(report_constant_lst, *data_names)
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
     
     # # unpacking from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -190,17 +190,19 @@ def synergy_system_extract(synergy_folder, report_creation_info_lst):
                 synergy_servers_aggregated_df.rename(columns=server_columns_dct, inplace=True)
                 synergy_servers_aggregated_df.replace(r'^None$|^none$|^ *$', value=np.nan, regex=True, inplace=True)
 
-                data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
-                # save extracted data to json file
-                save_data(report_constant_lst, data_names, *data_lst)
+                # data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
+                # # save extracted data to json file
+                # save_data(report_constant_lst, data_names, *data_lst)
         else:
             # current operation information string
             info = f'Collecting synergy details'
             print(info, end =" ")
             status_info('skip', max_title, len(info))
-            data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
-            # save empty data to json file
-            save_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
+        # save empty data to json file
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # write data to sql db
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         synergy_module_aggregated_df, synergy_servers_aggregated_df = verify_data(report_constant_lst, data_names, *data_lst)

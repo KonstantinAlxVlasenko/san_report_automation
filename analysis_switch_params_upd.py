@@ -17,6 +17,7 @@ from common_operations_miscellaneous import (status_info, verify_data,
 from common_operations_servicefile import (data_extract_objects,
                                            dataframe_import, dct_from_columns)
 from common_operations_table_report import dataframe_to_report
+from common_operations_database import read_db, write_db
 
 
 def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df, 
@@ -38,11 +39,14 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
-    # unpacking DataFrames from the loaded list with data
-    # pylint: disable=unbalanced-tuple-unpacking
-    report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df, \
-        switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df  = data_lst
+    # data_lst = load_data(report_constant_lst, *data_names)
+    # reade data from database if they were saved on previos program execution iteration
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+
+    # # unpacking DataFrames from the loaded list with data
+    # # pylint: disable=unbalanced-tuple-unpacking
+    # report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df, \
+    #     switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df  = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['chassis_parameters', 'switch_parameters', 'switchshow_ports', 
@@ -107,7 +111,9 @@ def switch_params_analysis_main(fabricshow_ag_labels_df, chassis_params_df,
                     global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
 
         # saving data to json or csv file
-        save_data(report_constant_lst, data_names, *data_lst)
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # writing data to sql
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df,  \

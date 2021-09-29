@@ -12,6 +12,7 @@ from common_operations_servicefile import columns_import, data_extract_objects
 from common_operations_dataframe import list_to_dataframe
 from common_operations_table_report import dataframe_to_report
 from common_operations_miscellaneous import verify_force_run
+from common_operations_database import read_db, write_db
 
 
 def portcmdshow_extract(chassis_params_df, report_creation_info_lst):
@@ -29,7 +30,8 @@ def portcmdshow_extract(chassis_params_df, report_creation_info_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration
-    data_lst = load_data(report_constant_lst, *data_names)
+    # data_lst = load_data(report_constant_lst, *data_names)
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
 
     # when any data from data_lst was not saved (file not found) or
     # force extract flag is on then re-extract data from configuration files
@@ -198,7 +200,9 @@ def portcmdshow_extract(chassis_params_df, report_creation_info_lst):
                                 # chassis_slot_port_values order (configname, chassis_name, port_index, slot_num, port_num, port_ids and wwns of connected devices)
                                 # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
                                 for port_id, connected_wwn in portid_wwn_lst:
+                                    
                                     # chassis_slot_port_values = [sshow_file, chassis_name, chassis_wwn, port_index, *slot_port_lst, port_id, connected_wwn]
+                                    
                                     chassis_slot_port_values = [*chassis_info_lst, port_index, *slot_port_lst, port_id, connected_wwn]
                                     # adding or changing data from chassis_slot_port_values to the DISCOVERED dictionary
                                     update_dct(params_add, chassis_slot_port_values, portcmd_dct)
@@ -211,7 +215,9 @@ def portcmdshow_extract(chassis_params_df, report_creation_info_lst):
         portshow_df = list_to_dataframe(portshow_lst, max_title, sheet_title_import='portcmd')
         # saving data to csv file
         data_lst = [portshow_df]
-        save_data(report_constant_lst, data_names, *data_lst)    
+        # save_data(report_constant_lst, data_names, *data_lst)
+        # write data to sql db
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)      
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         portshow_df = verify_data(report_constant_lst, data_names, *data_lst)
