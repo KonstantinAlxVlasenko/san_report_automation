@@ -101,6 +101,9 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
     storage_ports_df = portshow_aggregated_df.loc[mask_storage_type & mask_storage_port, storage_columns ].copy()
     storage_ports_df.drop_duplicates(inplace=True)
 
+    if storage_ports_df.empty:
+        return pd.DataFrame()
+
     # extract controller, slot, port indexes
     pattern_columns_lst = [(comp_dct['3par_ctrl_slot_port'], ['Controller', 'Slot', 'Port']),
                             (comp_dct['emc_ctrl_slot_port'], ['Controller', 'Slot', 'Port']), 

@@ -17,16 +17,19 @@ from common_operations_database import read_db, write_db
 
 
 
-
-def blade_system_extract(blade_folder, report_creation_info_lst):
+def blade_system_extract(report_entry_sr, report_creation_info_lst):
     """Function to extract blade systems information"""
-    
 
     # report_steps_dct contains current step desciption and force and export tags
     report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
     # report_constant_lst contains information: 
     # customer_name, project directory, database directory, max_title
     *_, max_title = report_constant_lst
+
+    if pd.notna(report_entry_sr['blade_showall_folder']):
+        blade_folder = os.path.normath(report_entry_sr['blade_showall_folder'])
+    else:
+        blade_folder = None
 
     # names to save data obtained after current module execution
     data_names = ['blade_interconnect', 'blade_servers', 'blade_vc']

@@ -1,0 +1,3 @@
+# fabric_port_statistics analysis package
+
+from .fabric_port_statistics import fabric_port_statistics_analysis

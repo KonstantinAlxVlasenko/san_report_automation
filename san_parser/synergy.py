@@ -3,6 +3,7 @@
 
 import os
 import re
+import os
 
 import numpy as np
 import pandas as pd
@@ -18,7 +19,7 @@ from common_operations_servicefile import columns_import, data_extract_objects
 from common_operations_table_report import dataframe_to_report
 
 
-def synergy_system_extract(synergy_folder, report_creation_info_lst):
+def synergy_system_extract(report_entry_sr, report_creation_info_lst):
     """Function to extract blade systems information"""
     
 
@@ -27,6 +28,11 @@ def synergy_system_extract(synergy_folder, report_creation_info_lst):
     # report_constant_lst contains information: 
     # customer_name, project directory, database directory, max_title
     *_, max_title = report_constant_lst
+
+    if pd.notna(report_entry_sr['synergy_meddler_folder']):
+        synergy_folder = os.path.normath(report_entry_sr['synergy_meddler_folder'])
+    else:
+        synergy_folder = None
 
     # names to save data obtained after current module execution
     data_names = ['synergy_interconnect', 'synergy_servers']

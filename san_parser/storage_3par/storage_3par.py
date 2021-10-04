@@ -7,7 +7,7 @@ import re
 
 import pandas as pd
 
-from collection_3par_download import configs_download
+from .storage_3par_download import configs_download
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (force_extract_check, line_to_list,
                                              status_info, update_dct,
@@ -18,7 +18,8 @@ from common_operations_dataframe import list_to_dataframe
 from common_operations_table_report import dataframe_to_report
 from common_operations_database import read_db, write_db
 
-def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_folder, report_creation_info_lst):
+
+def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creation_info_lst):
     """Function to extract 3PAR storage information"""
     
     # report_steps_dct contains current step desciption and force and export tags
@@ -26,6 +27,12 @@ def storage_3par_extract(nsshow_df, nscamshow_df, local_3par_folder, project_fol
     # report_constant_lst contains information: 
     # customer_name, project directory, database directory, max_title
     *_, max_title = report_constant_lst
+
+    if pd.notna(report_entry_sr['3par_inserv_folder']):
+        local_3par_folder = os.path.normath(report_entry_sr['3par_inserv_folder'])
+    else:
+        local_3par_folder = None
+    project_folder = os.path.normpath(report_entry_sr['project_folder'])
 
     # names to save data obtained after current module execution
     data_names = ['system_3par', 'port_3par', 'host_3par']
