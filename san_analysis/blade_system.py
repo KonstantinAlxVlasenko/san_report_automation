@@ -25,7 +25,8 @@ def blade_system_analysis(blade_module_df, synergy_module_df, report_creation_in
     *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
-    data_names = ['blade_module_loc', 'Blade_шасси']
+    # data_names = ['blade_module_loc', 'Blade_шасси']
+    data_names = ['blade_module_loc']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -56,20 +57,29 @@ def blade_system_analysis(blade_module_df, synergy_module_df, report_creation_in
         blade_module_loc_df = vc_name_fillna(blade_module_loc_df)
         # after finish display status
         status_info('ok', max_title, len(info))
-        # create Blade chassis report table
-        blade_module_report_df = blademodule_report(blade_module_loc_df, report_headers_df, data_names)
+        # # create Blade chassis report table
+        # blade_module_report_df = blademodule_report(blade_module_loc_df, report_headers_df, data_names)
         # blade_module_report_df = blademodule_report(blade_module_df, data_names, max_title)
         # create list with partitioned DataFrames
-        data_lst = [blade_module_loc_df, blade_module_report_df]
+        # data_lst = [blade_module_loc_df, blade_module_report_df]
+
+        data_lst = [blade_module_loc_df]
+
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        blade_module_loc_df, blade_module_report_df = \
+        # blade_module_loc_df, blade_module_report_df = \
+        #     verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [blade_module_loc_df, blade_module_report_df]
+
+
+        blade_module_loc_df = \
             verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [blade_module_loc_df, blade_module_report_df]
+        data_lst = [blade_module_loc_df]
+
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dataframe_to_report(data_frame, data_name, report_creation_info_lst)
@@ -105,15 +115,15 @@ def blademodule_location(blade_module_df, synergy_module_df):
     return blade_module_loc_df
 
 
-def blademodule_report(blade_module_loc_df, report_headers_df, data_names):
-    """Function to create Blade IO modules report table"""
+# def blademodule_report(blade_module_loc_df, report_headers_df, data_names):
+#     """Function to create Blade IO modules report table"""
 
-    report_columns_usage_dct = {'fabric_name_usage': False, 'chassis_info_usage': False}
+#     report_columns_usage_dct = {'fabric_name_usage': False, 'chassis_info_usage': False}
 
-    # pylint: disable=unbalanced-tuple-unpacking
-    # blade_module_report_df, = dataframe_segmentation(blade_module_loc_df, data_names[1:], report_columns_usage_dct, max_title)
-    blade_module_report_df = generate_report_dataframe(blade_module_loc_df, report_headers_df, report_columns_usage_dct, data_names[1])
-    return blade_module_report_df
+#     # pylint: disable=unbalanced-tuple-unpacking
+#     # blade_module_report_df, = dataframe_segmentation(blade_module_loc_df, data_names[1:], report_columns_usage_dct, max_title)
+#     blade_module_report_df = generate_report_dataframe(blade_module_loc_df, report_headers_df, report_columns_usage_dct, data_names[1])
+#     return blade_module_report_df
 
 
 def vc_name_fillna(blade_module_loc_df):

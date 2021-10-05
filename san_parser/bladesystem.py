@@ -3,6 +3,8 @@
 import os
 import re
 
+import os
+
 import pandas as pd
 
 from common_operations_filesystem import (find_files, load_data,
@@ -27,7 +29,7 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
     *_, max_title = report_constant_lst
 
     if pd.notna(report_entry_sr['blade_showall_folder']):
-        blade_folder = os.path.normath(report_entry_sr['blade_showall_folder'])
+        blade_folder = os.path.normpath(report_entry_sr['blade_showall_folder'])
     else:
         blade_folder = None
 

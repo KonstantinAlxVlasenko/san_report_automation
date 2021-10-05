@@ -58,7 +58,8 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
                                                                 sfpshow_df, portcfgshow_df, isl_statistics_df, report_creation_info_lst)
 
 
-    portshow_npiv_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, isl_statistics_df, report_creation_info_lst)
+    portshow_npiv_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
+                                                isl_statistics_df, blade_module_loc_df, report_creation_info_lst)
 
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 

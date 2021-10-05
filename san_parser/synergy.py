@@ -30,7 +30,7 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
     *_, max_title = report_constant_lst
 
     if pd.notna(report_entry_sr['synergy_meddler_folder']):
-        synergy_folder = os.path.normath(report_entry_sr['synergy_meddler_folder'])
+        synergy_folder = os.path.normpath(report_entry_sr['synergy_meddler_folder'])
     else:
         synergy_folder = None
 
@@ -49,8 +49,7 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
-                                            max_title)
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     if force_run:
 
         # lists to store only REQUIRED infromation

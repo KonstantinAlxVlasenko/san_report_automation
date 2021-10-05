@@ -162,7 +162,6 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
                     storage_connection_statistics_df = pd.concat([storage_connection_statistics_df, current_df])
 
     if not storage_connection_statistics_df.empty:
-
         # extract group type (storage, controller, slot etc) and connection type (physical only or physiscal + virtual)
         storage_connection_statistics_df[['Group_type', 'FLOGI']] = \
             storage_connection_statistics_df['Group_type'].str.extract(f'^(.+)_({component_sublevel_suffix_lst[0]}|{component_sublevel_suffix_lst[1]})$').values
