@@ -3,6 +3,8 @@
 
 import os
 import sqlite3
+import warnings
+
 
 import pandas as pd
 import numpy as np
@@ -35,7 +37,15 @@ def write_db(report_constant_lst, report_steps_dct, data_names, *args):
             data_exported_flat, empty_data = dataframe_flatten(data_exported)
             substitute_names(data_exported_flat, 'write')
             # save single level Index DataFrame to database
-            write_sql(db_path, data_name, data_exported_flat)
+            write_sql(db_path, data_name, data_exported_flat, max_title, info)
+            # except pd.io.sql.DatabaseError as e:
+            #     if 'database is locked' in e.args[0]:
+            #         status_info('fail', max_title, len(info))
+            #         print(f"\nCan't write {data_name} to {os.path.basename(db_path)}. DB is locked. Close it to proceed.")
+            #     else:
+            #         status_info('fail', max_title, len(info))
+            #         print(e)
+            #     exit() 
             if not empty_data:
                 status_info('ok', max_title, len(info))
             else:
@@ -97,15 +107,30 @@ def substitute_names(df, operation):
             df.rename(columns=replace_dct, inplace=True)
 
 
-def write_sql(db_path, data_name, df):
+def write_sql(db_path, data_name, df, max_title, info):
     """Function to write DataFrame to SQL DB"""
 
-
-    keep_index = True if isinstance(df, pd.Series) else False
-    conn = sqlite3.connect(db_path)
-    df.to_sql(name=data_name, con=conn, index=keep_index, if_exists='replace')
-    conn.close()
-
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", 
+                                message="The spaces in these column names will not be changed. In pandas versions < 0.14, spaces were converted to underscores.")
+        keep_index = True if isinstance(df, pd.Series) else False
+        conn = None
+        status = None
+        try:
+            conn = sqlite3.connect(db_path)
+            df.to_sql(name=data_name, con=conn, index=keep_index, if_exists='replace')
+        except pd.io.sql.DatabaseError as e:
+            status = status_info('fail', max_title, len(info))
+            if 'database is locked' in e.args[0]:
+                print(f"\nCan't write {data_name} to {os.path.basename(db_path)}. DB is locked. Close it to proceed.\n")
+            else:
+                print('\n', e)
+        finally:
+            if conn is not None:
+                conn.close()
+            if status=='FAIL':
+                exit()
+            
 
 def read_db(report_constant_lst, report_steps_dct, *args):
     """Function to read data from SQL.

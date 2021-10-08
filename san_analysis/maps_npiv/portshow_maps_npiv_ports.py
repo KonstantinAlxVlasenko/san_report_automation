@@ -151,7 +151,8 @@ def verify_interconnect_slot_fabric(blade_module_loc_df, switch_params_aggregate
     blade_module_loc_df['Bay_parity'] = np.select([mask_notna & mask_even, mask_notna & ~mask_even], ['even', 'odd'], default=np.nan)
     # verify if all switches and vc-fc of the same bay parity group are in the same fabric_label
     mask_mixed_bays_in_fabric = blade_module_loc_df.groupby(by=['Fabric_name', 'Bay_parity'])['Fabric_label'].transform('nunique') > 1
-    blade_module_loc_df.loc[mask_mixed_bays_in_fabric, 'Mixed_bay_parity_note'] = 'mixed_bay_parity_in_fabric_label'
+    blade_module_loc_df.loc[mask_mixed_bays_in_fabric, 'Mixed_bay_parity_note'] = 'mixed_io_bay_parity_in_fabric_label'
+
     return blade_module_loc_df
 
 

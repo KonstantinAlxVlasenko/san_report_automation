@@ -1,13 +1,14 @@
 """Module to identify Fabric devices in portshow DataFrame"""
 
 import pandas as pd
+import numpy as np
 
 from .portcmd_aggregation import portshow_aggregated
 from .portcmd_device_connection_statistics import \
     device_connection_statistics
 from .portcmd_devicename_correction import devicename_correction_main
 from .portcmd_storage import storage_connection_statistics
-from common_operations_dataframe import count_group_members
+from common_operations_dataframe import count_group_members, merge_columns
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (reply_request, status_info,
                                              verify_data, verify_force_run)
@@ -124,9 +125,12 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, 
                                         report_columns_usage_dct, report_creation_info_lst)
+        # merge 'Device_Host_Name' and 'Device_port', create column with all Device_Host_Name for port each port
+        portshow_aggregated_df = device_names_per_port(portshow_aggregated_df)
         # count Device_Host_Name instances for fabric_label, label and total in fabric
         portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df)
-
+        # sort rows
+        portshow_aggregated_df = sort_portshow(portshow_aggregated_df)
         # count device connection statistics
         info = f'Counting device connection statistics'
         print(info, end =" ")
@@ -283,4 +287,36 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
             if reply == 'y':
                 expected_ag_links_force_flag = True
     return portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag
+
+
+def device_names_per_port(portshow_aggregated_df):
+    """Function to create column with merged device name and port,
+    column with list of all devices connected to the port (more then 1 if connected through the NPIV)"""
+
+    # merge device name and port number
+    portshow_aggregated_df = merge_columns(portshow_aggregated_df, summary_column='Device_Host_Name_Port',
+                                        merge_columns=['Device_Host_Name', 'Device_Port'],
+                                        sep=' port ', drop_merge_columns=False)
+
+    # create column with list containing all devices connected to the port
+    switch_port_columns = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn','portIndex', 'slot', 'port']
+    portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device', inplace=True)
+    portshow_aggregated_df['Device_Host_Name_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['Device_Host_Name_Port'].transform(', '.join)
+    # remove temporary 'nan_device value
+    portshow_aggregated_df['Device_Host_Name_Port'].replace({'nan_device': np.nan}, inplace=True)
+    portshow_aggregated_df['Device_Host_Name_Port_group'].replace({'nan_device': np.nan}, inplace=True)
+    return portshow_aggregated_df
+
+
+def sort_portshow(portshow_aggregated_df):
+    """Function to sort portshow_aggregated_df"""
+
+    portshow_aggregated_df['portIndex_int'] = pd.to_numeric(portshow_aggregated_df['portIndex'], errors='ignore')
+    # sorting DataFrame
+    sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
+                    'switchWwn', 'switchName', 'portIndex_int', 'Connected_portId']
+    sort_order = [True, True, False, True, False, True, True, True]
+    portshow_aggregated_df.sort_values(by=sort_columns, ascending=sort_order, inplace=True)
+    portshow_aggregated_df.drop(columns=['portIndex_int'], inplace=True)
+    return portshow_aggregated_df
 

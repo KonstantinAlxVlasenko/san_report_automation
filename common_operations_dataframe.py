@@ -185,6 +185,16 @@ def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ',
     return df
 
 
+def merge_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
+    """Function to concatenate values in several columns (merge_columns) into summary_column 
+    as comma separated values"""
+    
+    df[summary_column] = df[merge_columns].stack().groupby(level=0).agg(sep.join)
+    # drop merge_columns
+    if drop_merge_columns:
+        df.drop(columns=merge_columns, inplace=True)
+    return df
+
 
 def list_to_dataframe(data_lst, max_title, sheet_title_import=None, 
                         columns=columns_import, columns_title_import='columns'):

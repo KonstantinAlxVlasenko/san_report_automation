@@ -72,13 +72,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df.Device_Port = \
         portshow_aggregated_df.apply(lambda series: find_msa_port(series) \
         if (pd.notna(series['PortName']) and  series['deviceSubtype'] == 'MSA') else series['Device_Port'], axis=1)   
-
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = \
         verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)
-
-
-
     # fill isl links information
     portshow_aggregated_df = \
         fill_isl_link(portshow_aggregated_df, isl_aggregated_df)
@@ -105,11 +101,12 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # with combination of device class and it's wwnp
     portshow_aggregated_df.Device_Host_Name = \
         portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
-    # sorting DataFrame
-    sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
-                    'switchWwn', 'switchName']
-    sort_order = [True, True, False, True, False, True]
-    portshow_aggregated_df.sort_values(by=sort_columns, ascending=sort_order, inplace=True)
+    
+    # # sorting DataFrame TO_REMOVE sorting performed in the main portcmf fn
+    # sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
+    #                 'switchWwn', 'switchName']
+    # sort_order = [True, True, False, True, False, True]
+    # portshow_aggregated_df.sort_values(by=sort_columns, ascending=sort_order, inplace=True)
 
     return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df
 

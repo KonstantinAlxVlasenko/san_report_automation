@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from common_operations_dataframe import (dataframe_fabric_labeling,
-                                         dataframe_fillna)
+                                         dataframe_fillna, merge_columns)
 
 portcmd_columns_lst = ['configname', 'Fabric_name', 'Fabric_label',
                         'chassis_name', 'chassis_wwn',
@@ -27,6 +27,9 @@ def verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_
     portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore').copy()
     portshow_aggregated_df['Index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
         portshow_aggregated_df.slot + '-' + portshow_aggregated_df.port
+
+    portshow_aggregated_df['switchName_Index_slot_port'] = \
+        portshow_aggregated_df['switchName'] + ' port ' + portshow_aggregated_df['Index_slot_port']
 
     portshow_aggregated_df = portshow_aggregated_df.copy()
 

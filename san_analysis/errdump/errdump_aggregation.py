@@ -72,9 +72,8 @@ def message_extract(errdump_aggregated_df, re_pattern_lst):
         [comp_dct['severe_bottleneck'], ['Condition', 'Message_portType', 'slot', 'port']],
         [comp_dct['maps_current_value'],  ['Condition', 'Current_value', 'Dashboard_category']],
         [comp_dct['maps_object'], ['Condition', 'obj']],
-        [comp_dct['c2_message_1'], ['slot', 'port', 'Message_portIndex', 'Message_portId', 'Condition']],
-        [comp_dct['slow_drain_device'], ['slot', 'port', 'Message_portIndex', 'Condition']],
-        [comp_dct['sddq_limit_reached'], ['Condition', 'slot', 'port', 'Dashboard_category']],
+        [comp_dct['c2_message_1'], ['Condition', 'slot', 'port', 'Message_portIndex', 'Message_portId']],
+        [comp_dct['slow_drain_device'], ['Condition','slot', 'port', 'Message_portIndex']],
         [comp_dct['frame_detected'], ['Condition', 'tx_port', 'rx_port', 'sid', 'did']],
         [comp_dct['els_unzoned_device'], ['Condition', 'Message_portIndex', 'did', 'sid', 'wwn']],
         ]        

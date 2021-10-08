@@ -29,7 +29,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
     *_, max_title = report_constant_lst
 
     if pd.notna(report_entry_sr['3par_inserv_folder']):
-        local_3par_folder = os.path.normath(report_entry_sr['3par_inserv_folder'])
+        local_3par_folder = os.path.normpath(report_entry_sr['3par_inserv_folder'])
     else:
         local_3par_folder = None
     project_folder = os.path.normpath(report_entry_sr['project_folder'])

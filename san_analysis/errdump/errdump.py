@@ -56,6 +56,7 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
         # re_pattern list contains comp_keys, match_keys, comp_dct    
         _, _, *re_pattern_lst = data_extract_objects('raslog', max_title)
         raslog_message_details_df = dataframe_import('raslog_details', max_title)
+        raslog_message_id_details_df = dataframe_import('raslog_id_details', max_title, columns=['Message_ID', 'Details', 'Recommended_action'])
 
         # current operation information string
         info = f'Counting RASLog messages'
@@ -65,7 +66,7 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
         errdump_aggregated_df = errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, 
                                                     portshow_aggregated_df, re_pattern_lst)
         # count how many times event appears during one month for the last six months 
-        raslog_counter_df, raslog_frequent_df = errdump_statistics(errdump_aggregated_df, raslog_message_details_df)
+        raslog_counter_df, raslog_frequent_df = errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_message_id_details_df)
         # after finish display status
         status_info('ok', max_title, len(info))      
         # partition aggregated DataFrame to required tables
@@ -88,7 +89,7 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
     return errdump_aggregated_df, raslog_counter_df
 
 
-def errdump_statistics(errdump_aggregated_df, raslog_message_details_df):
+def errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_message_id_details_df):
     """Function to count how many times log message appears during one month for the last six months.
     Log messages that appear less than 3 times a month are droppped"""
     
@@ -134,6 +135,9 @@ def errdump_statistics(errdump_aggregated_df, raslog_message_details_df):
     raslog_counter_df.dropna(axis=1, how='all', inplace=True)
 
     raslog_counter_df = dataframe_fillna(raslog_counter_df, raslog_message_details_df, join_lst=['Condition'], 
+                                            filled_lst=['Details',  'Recommended_action']) 
+
+    raslog_counter_df =  dataframe_fillna(raslog_counter_df, raslog_message_id_details_df, join_lst=['Message_ID'], 
                                             filled_lst=['Details',  'Recommended_action']) 
     
     # find log messages which appear more then three times a month

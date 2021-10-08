@@ -26,7 +26,7 @@ def fabric_port_statistics_analysis(portshow_aggregated_df, switchshow_ports_df,
     *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
-    data_names = ['fabric_statistics', 'Статистика_фабрики']
+    data_names = ['fabric_ports_statistics', 'Статистика_портов']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     

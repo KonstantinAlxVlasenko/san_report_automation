@@ -40,7 +40,7 @@ def blade_system_analysis(blade_module_df, synergy_module_df, report_creation_in
     # blade_module_loc_df, blade_module_report_df = data_lst
 
     # list of data to analyze from report_info table
-    analyzed_data_names = ['blade_interconnect', 'synergy_interconnect']
+    analyzed_data_names = ['blade_interconnect', 'synergy_interconnect', 'Blade_шасси']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
@@ -53,6 +53,9 @@ def blade_system_analysis(blade_module_df, synergy_module_df, report_creation_in
         blade_module_df.drop_duplicates(inplace=True)
         # create DataFrame with Device_Location column
         blade_module_loc_df = blademodule_location(blade_module_df, synergy_module_df)
+
+
+
         # add VC device name if empty
         blade_module_loc_df = vc_name_fillna(blade_module_loc_df)
         # after finish display status
@@ -98,8 +101,8 @@ def blademodule_location(blade_module_df, synergy_module_df):
     """Function to add Device_Location column to Blade chassis DataFrame"""
 
     # add Device_Location column to DataFrame
-    columns_lst = [*blade_module_df.columns.to_list(), 'Device_Location']
-    blade_module_loc_df = blade_module_df.reindex(columns = columns_lst)
+    columns_lst = [*blade_module_df.columns.to_list(), 'Device_Location', 'FW_Supported', 'Recommended_FW']
+    blade_module_loc_df = blade_module_df.reindex(columns=columns_lst)
 
     if not blade_module_df.empty:
         # combine 'Enclosure_Name' and 'Bay' columns
@@ -107,11 +110,12 @@ def blademodule_location(blade_module_df, synergy_module_df):
             blade_module_loc_df[['Enclosure_Name', 'Interconnect_Bay']].apply(wise_combine, axis=1, args=('Enclosure ', ' bay '))
 
     if not synergy_module_df.empty:
-        synergy_module_df = synergy_module_df.reindex(columns = columns_lst)
+        synergy_module_df = synergy_module_df.reindex(columns=columns_lst)
         if not blade_module_df.empty:
             blade_module_loc_df = pd.concat([blade_module_loc_df, synergy_module_df], ignore_index=True)
         else:
             blade_module_loc_df = synergy_module_df
+
     return blade_module_loc_df
 
 
