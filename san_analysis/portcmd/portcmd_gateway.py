@@ -25,9 +25,9 @@ def verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_
 
     # find AG links using information in portshow_aggregated_df DataFrame itself
     portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore').copy()
+    # create column with index slot port and column with switchname index slot port
     portshow_aggregated_df['Index_slot_port'] = portshow_aggregated_df.portIndex + '-' + \
         portshow_aggregated_df.slot + '-' + portshow_aggregated_df.port
-
     portshow_aggregated_df['switchName_Index_slot_port'] = \
         portshow_aggregated_df['switchName'] + ' port ' + portshow_aggregated_df['Index_slot_port']
 

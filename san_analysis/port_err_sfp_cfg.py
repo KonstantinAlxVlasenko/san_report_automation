@@ -37,20 +37,14 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
     portshow_sfp_export_flag, *_ = report_steps_dct['portshow_sfp_aggregated']
 
     # names to save data obtained after current module execution
-    data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов']
+    data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов',
+                    'porterr_link_reset', 'porterr_crc_good_eof', 'porterr_fec', 'porterr_pcs_blk', 
+                    'porterr_link_failure', 'porterr_discard', 'porterr_enc_crc', 'porterr_bad_eof', 'porterr_bad_os']
+
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
-    
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
     data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
-    
-    
-    # # unpacking DataFrames from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df = data_lst
-
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
                             'switchshow_ports', 'switch_params_aggregated', 'fdmi', 
@@ -63,9 +57,9 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
 
     if force_run:
 
-        # data imported from init file (regular expression patterns) to extract values from data columns
-        # re_pattern list contains comp_keys, match_keys, comp_dct    
-        _, _, *re_pattern_lst = data_extract_objects('common_regex', max_title)
+        # # data imported from init file (regular expression patterns) to extract values from data columns
+        # # re_pattern list contains comp_keys, match_keys, comp_dct    
+        # _, _, *re_pattern_lst = data_extract_objects('common_regex', max_title)
 
         # import transeivers information from file
         sfp_model_df = dataframe_import('sfp_models', max_title)        
@@ -74,18 +68,16 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
         print(info, end =" ") 
         # add sfpshow, transceiver information and portcfg to aggregated portcmd DataFrame
 
-
         portshow_sfp_aggregated_df = port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_df)
         # portshow_npiv_df = npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df)
         # maps_ports_df = maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, re_pattern_lst)
+
+        # link_reset_df, crc_good_eof_df, fec_df, pcs_blk_df, link_failure_df, discard_df, enc_crc_df, bad_eof_df, bad_os_df = port_error_filter(portshow_sfp_aggregated_df)
+        filtered_error_lst = port_error_filter(portshow_sfp_aggregated_df)
+
+
         # after finish display status
         status_info('ok', max_title, len(info))
-
-        # info = f'Counting NPIV link statistics'
-        # print(info, end =" ") 
-        # npiv_statistics_df = npiv_statistics(portshow_npiv_df, re_pattern_lst)
-        # # after finish display status
-        # status_info('ok', max_title, len(info))
 
         # warning if UKNOWN SFP present
         if (portshow_sfp_aggregated_df['Transceiver_Supported'] == 'Unknown SFP').any():
@@ -102,19 +94,23 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
                     portshow_sfp_force_flag = True
 
         # create report tables from port_complete_df DataFrtame
-        error_report_df, sfp_report_df, portcfg_report_df = \
-            portshow_report_main(portshow_sfp_aggregated_df, data_names, report_headers_df, report_columns_usage_dct)
+        report_lst = portshow_report_main(portshow_sfp_aggregated_df, data_names, report_headers_df, report_columns_usage_dct)
         # saving data to json or csv file
-        data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df]
+        # data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df, link_reset_df, crc_good_eof_df, fec_df, pcs_blk_df, link_failure_df, discard_df, enc_crc_df, bad_eof_df, bad_os_df]
+        data_lst = [portshow_sfp_aggregated_df, *report_lst, *filtered_error_lst]
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and reset DataFrame if yes
     else:
-        portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df \
-            = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df]
+        # portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df, link_reset_df, crc_good_eof_df, fec_df, pcs_blk_df, link_failure_df, discard_df, enc_crc_df, bad_eof_df, bad_os_df \
+        #     = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df, link_reset_df, crc_good_eof_df, fec_df, pcs_blk_df, link_failure_df, discard_df, enc_crc_df, bad_eof_df, bad_os_df]
+    
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        portshow_sfp_aggregated_df, *_ = data_lst
+    
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         force_flag = False
@@ -140,10 +136,6 @@ def port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_
     # change column names and switch_index data type to correspond portshow_aggregated_df
     # pylint: disable=unbalanced-tuple-unpacking
     sfp_join_df, portcfg_join_df = align_dataframe(sfpshow_df, portcfgshow_df)
-
-    # # in case of portshow_aggregated_df is loaded from saved file
-    # # switch_index data type change from object to int required
-    # portshow_aggregated_df.switch_index = portshow_aggregated_df.switch_index.astype('int64')
 
     # add sfpshow and transceiver model information to port_complete_df
     port_complete_df = portshow_aggregated_df.merge(sfp_join_df, how='left', on=join_columns_lst)
@@ -198,54 +190,91 @@ def align_dataframe(*args):
 def portshow_report_main(port_complete_df, data_names, report_headers_df, report_columns_usage_dct):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
-
     data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов']
-    
     # add speed value column for fillword verification in errors_report_df
     port_complete_df['speed_fillword'] = port_complete_df['speed']
-
     errors_report_df, sfp_report_df, portcfg_report_df = \
         generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_dct, *data_names[1:])
-
     # drop empty columns
     errors_report_df.dropna(axis=1, how = 'all', inplace=True)
     sfp_report_df.dropna(axis=1, how = 'all', inplace=True)
     portcfg_report_df.dropna(axis=1, how = 'all', inplace=True)
 
+    report_lst = [errors_report_df, sfp_report_df, portcfg_report_df]
 
-    # maps_ports_report_df = drop_all_identical(maps_ports_df, 
-    #                                             {'portState': 'Online', 'Connected_through_AG': 'No'},
-    #                                             dropna=True)                   
-
-    # maps_ports_report_df = generate_report_dataframe(maps_ports_report_df, report_headers_df, report_columns_usage_dct, data_names[7])    
+    return report_lst
 
 
-    # maps_ports_report_df.dropna(axis=1, how = 'all', inplace=True)
-    # maps_ports_report_df = translate_values(maps_ports_report_df)
-
-    # # remove rows with no sfp installed
-    # mask_sfp = ~sfp_report_df['Vendor Name'].str.contains('No SFP module', na=False)
-    # sfp_report_df = sfp_report_df.loc[mask_sfp]
-
-    # npiv_report_df = portshow_npiv_df.copy()
-    # # drop allna columns
-    # npiv_report_df.dropna(axis=1, how='all', inplace=True)
-    # # drop columns where all values after dropping NA are equal to certian value
-    # possible_identical_values = {'Slow_Drain_Device': 'No'}
-    # npiv_report_df = drop_all_identical(npiv_report_df, possible_identical_values, dropna=True)
-    # # if all devices connected to one fabric_label only
-    # npiv_report_df = drop_equal_columns(npiv_report_df, columns_pairs=[
-    #                                                             ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
-    #                                                             ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
-
-    # npiv_report_df = translate_values(npiv_report_df)
-    # # npiv_report_df, = dataframe_segmentation(npiv_report_df, data_names[8], report_columns_usage_dct, max_title)
-    # npiv_report_df = generate_report_dataframe(npiv_report_df, report_headers_df, report_columns_usage_dct, data_names[8])
-
-    # npiv_statistics_report_df = statistics_report(npiv_statistics_df, report_headers_df, 'Статистика_ISL_перевод', 
-    #                                                 report_columns_usage_dct, drop_columns=['switchWwn', 'NodeName'])
-    # # remove zeroes to clean view
-    # npiv_statistics_report_df.replace({0: np.nan}, inplace=True)
-    return errors_report_df, sfp_report_df, portcfg_report_df
+def port_error_filter(portshow_sfp_aggregated_df, error_threshhold_num: int=100, error_threshold_percenatge: int=3):
 
 
+    filtered_error_lst = []
+
+    stat_frx = 'stat_frx'
+
+    medium_errors = [
+        ['Link_failure', 'Loss_of_sync', 'Loss_of_sig'],
+        ['er_rx_c3_timeout', 'er_tx_c3_timeout', 'er_unroutable', 'er_unreachable', 'er_other_discard'],
+        ['er_enc_in', 'er_enc_out', 'er_crc'], 
+        ['er_bad_eof'], 
+        ['er_bad_os']
+        ]
+
+    critical_errors = [
+        ['Lr_in', 'Lr_out', 'Ols_in',	'Ols_out'], 
+        ['er_crc_good_eof'], 
+        ['fec_uncor_detected'], 
+        ['er_pcs_blk']
+        ]
+
+    
+
+    # error_columns = [column for column in [stat_frx, *critical_errors, *medium_errors] if column in portshow_sfp_aggregated_df.columns]
+    errors_flat = [error for error_grp in [*critical_errors, *medium_errors] for error in error_grp]
+
+    portshow_sfp_aggregated_df[[stat_frx, *errors_flat]] = portshow_sfp_aggregated_df[[stat_frx, *errors_flat]].apply(pd.to_numeric, errors='ignore')
+
+    # medium_errors = [column for column in medium_errors if column in portshow_sfp_aggregated_df.columns]
+
+    # create column with error percentage
+    medium_errors_flat = [error for error_grp in medium_errors for error in error_grp]
+    for err_column in medium_errors_flat:
+        err_percentage_column = err_column + '_percentage'
+        portshow_sfp_aggregated_df[err_percentage_column] = (portshow_sfp_aggregated_df[err_column] / portshow_sfp_aggregated_df[stat_frx]) * 100
+        portshow_sfp_aggregated_df[err_percentage_column] = portshow_sfp_aggregated_df[err_percentage_column].round(2)
+
+
+    switch_columns = ['Fabric_name', 'Fabric_label', 
+                        'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn',
+                        'portIndex', 'slot', 'port', 'switchName_Index_slot_port', 'portState', 'portType',
+                        'Device_Host_Name_Port_group', 'alias_Port_group', 'stat_frx']
+
+    # # link_reset
+    # mask_link_reset = (portshow_sfp_aggregated_df[['Lr_in', 'Lr_out']] > error_threshhold_num).any(axis=1)
+    # link_reset_df = portshow_sfp_aggregated_df.loc[mask_link_reset, [*switch_columns, *critical_errors[:4]]]
+    # link_reset_df.drop_duplicates(inplace=True)
+    # filtered_error_lst.append(link_reset_df)
+    # # critical error filter Dataframes
+    # for error in critical_errors[4:]:
+    #     mask_errors_num = portshow_sfp_aggregated_df[error] > error_threshhold_num
+    #     filtered_error_df = portshow_sfp_aggregated_df.loc[mask_errors_num, [*switch_columns, error]]
+    #     filtered_error_df.drop_duplicates(inplace=True)
+    #     filtered_error_lst.append(filtered_error_df)
+
+    # critical errors
+    for error_grp in critical_errors:
+        mask_errors_num = (portshow_sfp_aggregated_df[error_grp] > error_threshhold_num).any(axis=1)
+        filtered_error_df = portshow_sfp_aggregated_df.loc[mask_errors_num, [*switch_columns, *error_grp]]
+        filtered_error_df.drop_duplicates(inplace=True)
+        filtered_error_lst.append(filtered_error_df)
+
+    # medium errors
+    for error_grp in medium_errors:
+        mask_errors_num = (portshow_sfp_aggregated_df[error_grp] > error_threshhold_num).any(axis=1)
+        error_grp_percantage = [error + '_percentage' for error in error_grp]
+        mask_errors_percentage = (portshow_sfp_aggregated_df[error_grp_percantage] > error_threshold_percenatge).any(axis=1)
+        filtered_error_df = portshow_sfp_aggregated_df.loc[mask_errors_num & mask_errors_percentage, [*switch_columns, *error_grp, *error_grp_percantage]]
+        filtered_error_df.drop_duplicates(inplace=True)
+        filtered_error_lst.append(filtered_error_df)
+
+    return filtered_error_lst

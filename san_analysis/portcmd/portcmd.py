@@ -301,10 +301,19 @@ def device_names_per_port(portshow_aggregated_df):
     # create column with list containing all devices connected to the port
     switch_port_columns = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn','portIndex', 'slot', 'port']
     portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device', inplace=True)
+    
     portshow_aggregated_df['Device_Host_Name_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['Device_Host_Name_Port'].transform(', '.join)
+
+
+    portshow_aggregated_df['alias'].fillna('nan_device', inplace=True)
+    portshow_aggregated_df['alias_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['alias'].transform(', '.join)
     # remove temporary 'nan_device value
-    portshow_aggregated_df['Device_Host_Name_Port'].replace({'nan_device': np.nan}, inplace=True)
-    portshow_aggregated_df['Device_Host_Name_Port_group'].replace({'nan_device': np.nan}, inplace=True)
+    portshow_aggregated_df.replace({'nan_device': np.nan}, inplace=True)
+
+    # portshow_aggregated_df['Device_Host_Name_Port'].replace({'nan_device': np.nan}, inplace=True)
+    # portshow_aggregated_df['Device_Host_Name_Port_group'].replace({'nan_device': np.nan}, inplace=True)
+    # portshow_aggregated_df['alias'].replace({'nan_device': np.nan}, inplace=True)
+    # portshow_aggregated_df['alias_Port_group'].replace({'nan_device': np.nan}, inplace=True)
     return portshow_aggregated_df
 
 
