@@ -99,8 +99,8 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                             line = file.readline()
                             if not line:
                                 break
-                            # enclosure section start
-                            if re.search(r'>SHOW ENCLOSURE INFO|^ +ENCLOSURE INFORMATION$', line):
+                            # blade enclosure section start
+                            if re.search(r'>SHOW ENCLOSURE INFO', line):
                                 enclosure_dct = {}
                                 collected['enclosure'] = True
                                 # while not reach empty line
@@ -114,12 +114,36 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                         enclosure_dct[result.group(1).strip()] = result.group(2).strip()      
                                     if not line:
                                         break
-                                # rename Description key to Enclosure Type key for VC
-                                if enclosure_dct.get('Description'):
-                                    enclosure_dct['Enclosure Type'] = enclosure_dct.pop('Description')
                                 # creating list with REQUIRED enclosure information only
                                 enclosure_lst = [enclosure_dct.get(param) for param in enclosure_params]
-                            # enclosure section end
+                            # blade enclosure section end
+                            # vc enclosure section start
+                            elif re.search(r'^ +ENCLOSURE INFORMATION$', line):
+                                line = file.readline()
+                                enclosure_total_dct = {}
+                                collected['enclosure'] = True
+                                while not re.search(r'^ +.+?INFORMATION', line):
+                                    line = file.readline()
+                                    if re.match(r'ID +: +enc\d+', line):
+                                        enclosure_current_dct = {}
+                                        while not re.search(r'Part Number',line):
+                                            # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                            # name_value_pair_match
+                                            if match_dct[match_keys[0]]:
+                                                result = match_dct[match_keys[0]]
+                                                enclosure_current_dct[result.group(1).strip()] = result.group(2).strip()
+                                            line = file.readline()      
+                                            if not line:
+                                                break
+                                        # rename Description key to Enclosure Type key for VC
+                                        if enclosure_current_dct.get('Description'):
+                                            enclosure_current_dct['Enclosure Type'] = enclosure_current_dct.pop('Description')
+                                        # creating list with REQUIRED enclosure information only
+                                        enclosure_current_lst = [enclosure_current_dct.get(param) for param in enclosure_params]
+                                        enslosure_id = enclosure_current_dct['ID']
+                                        enclosure_total_dct[enslosure_id] = enclosure_current_lst
+                            # vc enslosure section end
                             # vc fabric connection section start
                             elif re.search(r'FABRIC INFORMATION', line):
                                 info_type = 'Type VC'
@@ -133,7 +157,13 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                     match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                     # vc_port_match
                                     if match_dct[match_keys[14]]:
-                                        vc_port = line_to_list(comp_dct[comp_keys[14]], line, *enclosure_lst)
+
+                                        # vc_port = line_to_list(comp_dct[comp_keys[14]], line, *enclosure_lst)
+                                        vc_port = line_to_list(comp_dct[comp_keys[14]], line)
+                                        enslosure_id = vc_port[0]
+                                        enclosure_lst = enclosure_total_dct[enslosure_id]
+                                        vc_port = [*enclosure_lst, *vc_port]
+
                                         enclosure_vc_lst.append(vc_port)
                                         blade_vc_comprehensive_lst.append(vc_port)
                                         line = file.readline()
@@ -340,9 +370,12 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         # module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
-        blade_module_df, blade_servers_df, blade_vc_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
+        # blade_module_df, blade_servers_df, blade_vc_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
 
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        blade_module_df, blade_servers_df, blade_vc_df = data_lst
+        
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dataframe_to_report(data_frame, data_name, report_creation_info_lst)

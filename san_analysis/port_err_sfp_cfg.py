@@ -39,7 +39,7 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
     # names to save data obtained after current module execution
     data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов',
                     'porterr_link_reset', 'porterr_crc_good_eof', 'porterr_fec', 'porterr_pcs_blk', 
-                    'porterr_link_failure', 'porterr_discard', 'porterr_enc_crc', 'porterr_bad_eof', 'porterr_bad_os']
+                    'porterr_link_failure', 'porterr_discard', 'porterr_enc_crc_bad_os', 'porterr_bad_eof']
 
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
@@ -206,7 +206,9 @@ def portshow_report_main(port_complete_df, data_names, report_headers_df, report
 
 
 def port_error_filter(portshow_sfp_aggregated_df, error_threshhold_num: int=100, error_threshold_percenatge: int=3):
-
+    """Function to create Dataframes with port errors group if any error in the group exceeds the threshold
+    (for critical error group threshold is 100 errors for medium error group percentage from the number of
+    received frames added"""
 
     filtered_error_lst = []
 
@@ -215,9 +217,8 @@ def port_error_filter(portshow_sfp_aggregated_df, error_threshhold_num: int=100,
     medium_errors = [
         ['Link_failure', 'Loss_of_sync', 'Loss_of_sig'],
         ['er_rx_c3_timeout', 'er_tx_c3_timeout', 'er_unroutable', 'er_unreachable', 'er_other_discard'],
-        ['er_enc_in', 'er_enc_out', 'er_crc'], 
-        ['er_bad_eof'], 
-        ['er_bad_os']
+        ['er_enc_in', 'er_enc_out', 'er_crc', 'er_bad_os'], 
+        ['er_bad_eof']
         ]
 
     critical_errors = [
@@ -227,16 +228,11 @@ def port_error_filter(portshow_sfp_aggregated_df, error_threshhold_num: int=100,
         ['er_pcs_blk']
         ]
 
-    
-
-    # error_columns = [column for column in [stat_frx, *critical_errors, *medium_errors] if column in portshow_sfp_aggregated_df.columns]
+    # convert error and received frames columns to numeric type
     errors_flat = [error for error_grp in [*critical_errors, *medium_errors] for error in error_grp]
-
     portshow_sfp_aggregated_df[[stat_frx, *errors_flat]] = portshow_sfp_aggregated_df[[stat_frx, *errors_flat]].apply(pd.to_numeric, errors='ignore')
 
-    # medium_errors = [column for column in medium_errors if column in portshow_sfp_aggregated_df.columns]
-
-    # create column with error percentage
+    # create column with medium error percentage from number of received frames
     medium_errors_flat = [error for error_grp in medium_errors for error in error_grp]
     for err_column in medium_errors_flat:
         err_percentage_column = err_column + '_percentage'
@@ -249,26 +245,14 @@ def port_error_filter(portshow_sfp_aggregated_df, error_threshhold_num: int=100,
                         'portIndex', 'slot', 'port', 'switchName_Index_slot_port', 'portState', 'portType',
                         'Device_Host_Name_Port_group', 'alias_Port_group', 'stat_frx']
 
-    # # link_reset
-    # mask_link_reset = (portshow_sfp_aggregated_df[['Lr_in', 'Lr_out']] > error_threshhold_num).any(axis=1)
-    # link_reset_df = portshow_sfp_aggregated_df.loc[mask_link_reset, [*switch_columns, *critical_errors[:4]]]
-    # link_reset_df.drop_duplicates(inplace=True)
-    # filtered_error_lst.append(link_reset_df)
-    # # critical error filter Dataframes
-    # for error in critical_errors[4:]:
-    #     mask_errors_num = portshow_sfp_aggregated_df[error] > error_threshhold_num
-    #     filtered_error_df = portshow_sfp_aggregated_df.loc[mask_errors_num, [*switch_columns, error]]
-    #     filtered_error_df.drop_duplicates(inplace=True)
-    #     filtered_error_lst.append(filtered_error_df)
-
-    # critical errors
+    # verify critical errors which exceeds threshold
     for error_grp in critical_errors:
         mask_errors_num = (portshow_sfp_aggregated_df[error_grp] > error_threshhold_num).any(axis=1)
         filtered_error_df = portshow_sfp_aggregated_df.loc[mask_errors_num, [*switch_columns, *error_grp]]
         filtered_error_df.drop_duplicates(inplace=True)
         filtered_error_lst.append(filtered_error_df)
 
-    # medium errors
+    # verify medium errors which exceeds thresholds
     for error_grp in medium_errors:
         mask_errors_num = (portshow_sfp_aggregated_df[error_grp] > error_threshhold_num).any(axis=1)
         error_grp_percantage = [error + '_percentage' for error in error_grp]

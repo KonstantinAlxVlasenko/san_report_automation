@@ -123,8 +123,9 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     
     # if switch in AG mode then device type must be replaced to Physical instead of NPIV
     mask_ag = portshow_aggregated_df.switchMode == 'Access Gateway Mode'
-    portshow_aggregated_df.loc[mask_ag, 'Device_type'] = \
-        portshow_aggregated_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
+    if portshow_aggregated_df['Device_type'].notna().any():
+        portshow_aggregated_df.loc[mask_ag, 'Device_type'] = \
+            portshow_aggregated_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
 
     # add aliases to portshow_aggregated_df
     portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 

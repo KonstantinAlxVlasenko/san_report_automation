@@ -95,7 +95,7 @@ def native_ag_connection_statistics(isl_statistics_df, npiv_statistics_df):
         ag_dev_conn_df = connection_statistics(npiv_statistics_cp_df, connected_ag_dev_columns, 'AG')
 
     # merge native and ag switches
-    if not (isl_statistics_df.empty and npiv_statistics_df.empty):
+    if not isl_statistics_df.empty and not npiv_statistics_df.empty:
         sw_connection_statistics_df = native_switch_conn_df.merge(ag_dev_conn_df, how='left', on=sw_columns)
     elif not isl_statistics_df.empty and npiv_statistics_df.empty:
         sw_connection_statistics_df = native_switch_conn_df.copy()

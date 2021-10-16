@@ -31,8 +31,9 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     isl_aggregated_df = trunk_join(isl_df, trunk_df)
     # add ISL number in case of trunk presence and remove ifl tag
     isl_aggregated_df['ISL_number'].fillna(method='ffill', inplace=True)
-    mask_ifl = isl_aggregated_df['ISL_number'].str.contains('ifl', case=False, na=False)
-    isl_aggregated_df.loc[mask_ifl, 'ISL_number'] = np.nan
+    if isl_aggregated_df['ISL_number'].notna().any():
+        mask_ifl = isl_aggregated_df['ISL_number'].str.contains('ifl', case=False, na=False)
+        isl_aggregated_df.loc[mask_ifl, 'ISL_number'] = np.nan
     # adding switchshow port information to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = porttype_join(switchshow_df, isl_aggregated_df, fcredge_df)
     # add link cost
