@@ -10,14 +10,15 @@ import numpy as np
 import pandas as pd
 
 from .portcmd_nameserver_split import nsshow_symb_split
+from common_operations_dataframe import dataframe_fillna
 
 
-def nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst):
+def nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, re_pattern_lst):
 
     # label DataFrames
     nsshow_labeled_df, nscamshow_labeled_df, fdmi_labeled_df = fabric_labels(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df)
     # local Name Server (NS) Device_type (Initiatir, Target) information fillna 
-    nsshow_labeled_df = device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df)
+    nsshow_labeled_df = device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df, nsshow_dedicated_df)
     # remove unnecessary symbols in  PortSymb and NodeSymb columns in NameServer DataFrame
     nsshow_join_df = nsshow_clean(nsshow_labeled_df, re_pattern_lst)
     # split up PortSymb and NodeSymb columns in NameServer DataFrame
@@ -53,7 +54,7 @@ def fabric_labels(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df):
     return df_lst
 
 
-def device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df):
+def device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df, nsshow_dedicated_df):
     """Function to fillna local Name Server (NS) Device_type (Initiatir, Target) information"""
 
     # drop duplcate WWNs in labeled nscamshow DataFrame with remote devices in the Name Server (NS) cache
@@ -70,6 +71,9 @@ def device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df):
     # reset index
     nsshow_labeled_df.reset_index(inplace = True)
 
+    if not nsshow_dedicated_df.empty:
+        nsshow_labeled_df = dataframe_fillna(nsshow_labeled_df, nsshow_dedicated_df, 
+                                                join_lst=['Pid', 'PortName'], filled_lst=['Device_type'])
     return nsshow_labeled_df
 
 

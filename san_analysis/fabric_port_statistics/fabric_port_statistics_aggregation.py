@@ -5,10 +5,13 @@ out of portshow_aggregated_df and switchshow_ports_df DataFrame
 
 import numpy as np
 import pandas as pd
+from pandas.core.dtypes.missing import notna
+
+from common_operations_dataframe import dataframe_fillna
 
 
 def fabric_port_statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df, 
-                            fabricshow_ag_labels_df, nscamshow_df, portshow_df):
+                            fabricshow_ag_labels_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, portshow_df):
     """Function to create aggregated statistics table by merging DataFrames"""
 
     # get labeled switchshow to perform pandas crosstab method
@@ -23,7 +26,8 @@ def fabric_port_statisctics_aggregated(portshow_aggregated_df, switchshow_ports_
     # crosstab to cound device classes(SRV, STORAGE, SWITCH,VC)
     device_class_df = device_class_statistics(portshow_aggregated_df)
     # crosstab to count device type (Target, Initiator and etc) in fabric
-    target_initiator_df = target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df)
+    target_initiator_df = target_initiator_statistics(portshow_aggregated_df)
+    # target_initiator_df = target_initiator_statistics(switchshow_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, portshow_df)
     # crosstab to count ports types (E-port, F-port, etc) in fabric
     portType_df = portType_statistics(switchshow_df)
     # calculating ratio of device ports to inter-switch links
@@ -96,55 +100,97 @@ def portType_statistics(switchshow_df):
     return portType_df
 
 
-def target_initiator_statistics(switchshow_df, nscamshow_df, portshow_df):
-    """Function to count device types (Targer, Initiator and etc) number in fabric"""
-
-    # get required columns from portshow DataFrame
-    # contains set of connected to the ports WWNs  
-    portshow_connected_df = portshow_df.loc[:, ['chassis_name', 'chassis_wwn', 'slot', 'port', 
-                                        'Connected_portId', 'Connected_portWwn']]
-    # add connected devices WWNs to supportshow DataFrame 
-    switchshow_portshow_df = switchshow_df.merge(portshow_connected_df, how='left', 
-                                                    on = ['chassis_name', 'chassis_wwn', 'slot', 'port'])
-
-    # get required columns from nscamshow DataFrame 
-    # contains WWNp, WWNn and device type information (Target or Initiator)
-    device_type_df = nscamshow_df.loc[:, ['PortName', 'NodeName', 'Device_type']]
-    # drop rows with empty values
-    device_type_df.dropna(inplace=True)
-    # remove rows with duplicate WWNs
-    device_type_df.drop_duplicates(subset=['PortName'], inplace=True)
-    # add to switchshow device type information of connected WWNs 
-    switchshow_portshow_devicetype_df = switchshow_portshow_df.merge(device_type_df, 
-                                                                        how='left', left_on = 'Connected_portWwn', right_on= 'PortName')
-
-    # if switch in AG mode then device type must be replaced to Physical instead of NPIV
-    mask_ag = switchshow_portshow_devicetype_df.switchMode == 'Access Gateway Mode'
-    switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'] = \
-        switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
-
-    # REMOVE to avoid drop NPIV connected ports
-    # # drop duplicated ports rows in case of NPIV 
-    # switchshow_portshow_devicetype_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 
-    #                                                             'switchName', 'switchWwn', 'slot', 'port'], inplace = True)
-
-    # if no device type in cached name server (no ISLs links) use 'Unknown' label
-    if switchshow_portshow_devicetype_df.Device_type.isna().all():
-        mask_nport_fport = switchshow_portshow_devicetype_df['portType'].isin(['F-Port', 'N-Port'])
-        switchshow_portshow_devicetype_df.loc[mask_nport_fport, 'Device_type'] = 'Unknown(initiator/target)'
-
-    # crosstab DataFrame to count device types number in fabric
-    target_initiator_df = pd.crosstab(index = [switchshow_portshow_devicetype_df.Fabric_name, 
-                                                switchshow_portshow_devicetype_df.Fabric_label, 
-                                                switchshow_portshow_devicetype_df.chassis_name, 
-                                                switchshow_portshow_devicetype_df.switch_index, 
-                                                switchshow_portshow_devicetype_df.switchName, 
-                                                switchshow_portshow_devicetype_df.switchWwn], 
-                                        columns=switchshow_portshow_devicetype_df.Device_type, margins = True)
-    # drop All columns
-    target_initiator_df.drop(columns = 'All', inplace = True)
+def target_initiator_statistics(portshow_aggregated_df):
+    """Function to count devce classes (SRV_BLADE, SRV, STORAGE, LIB, SWITCH, VC"""
     
+    # filter ports without switch_index number
+    mask_index = pd.notna(portshow_aggregated_df.switch_index)
+    portshow_aggregated_idx_df = portshow_aggregated_df.loc[mask_index].copy()
+    # convert switch_index to integer
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('float64')
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('int64')
+
+    # # if no device type in cached name server (no ISLs links) use 'Unknown' label
+    # # mask_connection portshow_aggregated_idx_df['connection_details'].isna()
+    # mask_npiv = portshow_aggregated_idx_df['connection_details'].notna() & portshow_aggregated_idx_df['connection_details'].str.contains('NPIV')
+    # mask_fport = portshow_aggregated_idx_df['portType'] == 'F-Port'
+    # mask_device_type_na = portshow_aggregated_idx_df['Device_type'].isna()
+    # mask_nport_fport = portshow_aggregated_idx_df['portType'].isin(['F-Port', 'N-Port'])
+
+    # portshow_aggregated_idx_df['Device_type'] = np.select(condlist=[mask_npiv & mask_fport & mask_device_type_na, ~mask_npiv & mask_nport_fport & mask_nport_fport], 
+    #                                                         choicelist=['NPIV Unknown(initiator/target)', 'Physical Unknown(initiator/target)'], 
+    #                                                         default=portshow_aggregated_idx_df['Device_type'])
+
+    # crosstab from portshowaggregated_df
+    target_initiator_df = pd.crosstab(index= [portshow_aggregated_idx_df.Fabric_name, portshow_aggregated_idx_df.Fabric_label, 
+                                            portshow_aggregated_idx_df.chassis_name, portshow_aggregated_idx_df.switch_index,
+                                            portshow_aggregated_idx_df.switchName, portshow_aggregated_idx_df.switchWwn], 
+                                    columns = portshow_aggregated_idx_df.Device_type, margins = True)
+    
+    # droping 'All' columns
+    target_initiator_df.drop(columns = 'All', inplace=True)
+
     return target_initiator_df
+
+
+# def target_initiator_statistics(switchshow_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, portshow_df):
+#     """Function to count device types (Targer, Initiator and etc) number in fabric"""
+
+#     # get required columns from portshow DataFrame
+#     # contains set of connected to the ports WWNs  
+#     portshow_connected_df = portshow_df.loc[:, ['chassis_name', 'chassis_wwn', 'slot', 'port', 
+#                                         'Connected_portId', 'Connected_portWwn']]
+#     # add connected devices WWNs to supportshow DataFrame 
+#     switchshow_portshow_df = switchshow_df.merge(portshow_connected_df, how='left', 
+#                                                     on = ['chassis_name', 'chassis_wwn', 'slot', 'port'])
+
+#     # get required columns from nscamshow DataFrame 
+#     # contains WWNp, WWNn and device type information (Target or Initiator)
+    
+#     # device_type_df = nscamshow_df.loc[:, ['PortName', 'NodeName', 'Device_type']]
+#     # # drop rows with empty values
+#     # device_type_df.dropna(inplace=True)
+#     # # remove rows with duplicate WWNs
+#     # device_type_df.drop_duplicates(subset=['PortName'], inplace=True)
+    
+
+#     device_type_df = nsshow_df[['PortName', 'NodeName', 'Device_type']].copy()
+#     device_type_df = dataframe_fillna(device_type_df, nscamshow_df, join_lst=['PortName'], filled_lst=['Device_type'])
+#     device_type_df = dataframe_fillna(device_type_df, nsshow_dedicated_df, join_lst=['PortName'], filled_lst=['Device_type'])
+#     # remove rows with duplicate WWNs
+#     device_type_df.drop_duplicates(subset=['PortName'], inplace=True)
+    
+#     # add to switchshow device type information of connected WWNs 
+#     switchshow_portshow_devicetype_df = switchshow_portshow_df.merge(device_type_df, 
+#                                                                         how='left', left_on = 'Connected_portWwn', right_on= 'PortName')
+
+#     # if switch in AG mode then device type must be replaced to Physical instead of NPIV
+#     mask_ag = switchshow_portshow_devicetype_df.switchMode == 'Access Gateway Mode'
+#     switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'] = \
+#         switchshow_portshow_devicetype_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
+
+#     # REMOVE to avoid drop NPIV connected ports
+#     # # drop duplicated ports rows in case of NPIV 
+#     # switchshow_portshow_devicetype_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 
+#     #                                                             'switchName', 'switchWwn', 'slot', 'port'], inplace = True)
+
+#     # if no device type in cached name server (no ISLs links) use 'Unknown' label
+#     if switchshow_portshow_devicetype_df.Device_type.isna().all():
+#         mask_nport_fport = switchshow_portshow_devicetype_df['portType'].isin(['F-Port', 'N-Port'])
+#         switchshow_portshow_devicetype_df.loc[mask_nport_fport, 'Device_type'] = 'Unknown(initiator/target)'
+
+#     # crosstab DataFrame to count device types number in fabric
+#     target_initiator_df = pd.crosstab(index = [switchshow_portshow_devicetype_df.Fabric_name, 
+#                                                 switchshow_portshow_devicetype_df.Fabric_label, 
+#                                                 switchshow_portshow_devicetype_df.chassis_name, 
+#                                                 switchshow_portshow_devicetype_df.switch_index, 
+#                                                 switchshow_portshow_devicetype_df.switchName, 
+#                                                 switchshow_portshow_devicetype_df.switchWwn], 
+#                                         columns=switchshow_portshow_devicetype_df.Device_type, margins = True)
+#     # drop All columns
+#     target_initiator_df.drop(columns = 'All', inplace = True)
+    
+#     return target_initiator_df
 
 
 def port_state_statistics(switchshow_df):

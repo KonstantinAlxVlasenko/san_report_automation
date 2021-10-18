@@ -15,7 +15,7 @@ from common_operations_database import read_db, write_db
 
 
 def fabric_port_statistics_analysis(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
-                            nscamshow_df, portshow_df, report_creation_info_lst):
+                            nsshow_df, nscamshow_df, nsshow_dedicated_df, portshow_df, report_creation_info_lst):
     """Main function to count Fabrics statistics"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -53,7 +53,7 @@ def fabric_port_statistics_analysis(portshow_aggregated_df, switchshow_ports_df,
         print(info, end =" ")  
 
         fabric_statistics_df = fabric_port_statisctics_aggregated(portshow_aggregated_df, switchshow_ports_df, 
-                                                    fabricshow_ag_labels_df, nscamshow_df, portshow_df)
+                                                    fabricshow_ag_labels_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, portshow_df)
         # after finish display status
         status_info('ok', max_title, len(info))
         # get report DataFrame

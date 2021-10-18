@@ -33,7 +33,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, report_entry_sr, report_
     # port sfp and cfg parsing
     sfpshow_df, portcfgshow_df = portcfg_sfp_extract(switch_params_df, report_creation_info_lst)
     # nameserver parsing
-    fdmi_df, nsshow_df, nscamshow_df = connected_devices_extract(switch_params_df, report_creation_info_lst)
+    fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = connected_devices_extract(switch_params_df, report_entry_sr, report_creation_info_lst)
     # inter switch connection parsing
     isl_df, trunk_df, porttrunkarea_df, lsdb_df = interswitch_connection_extract(switch_params_df, report_creation_info_lst)
     # fabric routing parsing
@@ -57,7 +57,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, report_entry_sr, report_
                                     switch_params_df, switchshow_ports_df,
                                     fabricshow_df, ag_principal_df, 
                                     portshow_df, sfpshow_df, portcfgshow_df,
-                                    fdmi_df, nsshow_df, nscamshow_df,
+                                    fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df,
                                     isl_df, trunk_df, porttrunkarea_df, lsdb_df,
                                     fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df,
                                     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df,

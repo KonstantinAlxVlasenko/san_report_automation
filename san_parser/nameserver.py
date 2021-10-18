@@ -1,21 +1,22 @@
 """Module to extract connected devices information"""
 
+import os
 import re
 
 import pandas as pd
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
+from common_operations_database import read_db, write_db
+from common_operations_dataframe import list_to_dataframe
+from common_operations_filesystem import find_files
+from common_operations_miscellaneous import (line_to_list, status_info,
+                                             update_dct, verify_data,
+                                             verify_force_run)
 from common_operations_servicefile import (columns_import,
                                            data_extract_objects,
                                            dct_from_columns)
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
 from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
 
 
-def connected_devices_extract(switch_params_df, report_creation_info_lst):
+def connected_devices_extract(switch_params_df, report_entry_sr, report_creation_info_lst):
     """Function to extract connected devices information
     (fdmi, nsshow, nscamshow)"""
            
@@ -24,9 +25,14 @@ def connected_devices_extract(switch_params_df, report_creation_info_lst):
     # report_constant_lst contains information: 
     # customer_name, project directory, database directory, max_title
     *_, max_title = report_constant_lst
+
+    if pd.notna(report_entry_sr['nsshow_dedicated_folder']):
+        nsshow_folder = os.path.normpath(report_entry_sr['nsshow_dedicated_folder'])
+    else:
+        nsshow_folder = None
     
     # names to save data obtained after current module execution
-    data_names = ['fdmi', 'nsshow', 'nscamshow']
+    data_names = ['fdmi', 'nsshow', 'nscamshow', 'nsshow_dedicated']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
@@ -57,6 +63,7 @@ def connected_devices_extract(switch_params_df, report_creation_info_lst):
         # lists with local Name Server (NS) information 
         nsshow_lst = []
         nscamshow_lst = []
+        nsshow_dedicated_lst = []
         
         # dictionary with required to collect nsshow data
         # first element of list is regular expression pattern number, second - list to collect data
@@ -72,7 +79,6 @@ def connected_devices_extract(switch_params_df, report_creation_info_lst):
             #                     'SwitchName', 'switchWwn', 'switchMode']
             # switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
             # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
-
 
 
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
@@ -183,25 +189,84 @@ def connected_devices_extract(switch_params_df, report_creation_info_lst):
                                     if not line:
                                         break                                
                         # nsshow section end                     
-            status_info('ok', max_title, len(info))        
+            status_info('ok', max_title, len(info))
+        
+        # check files in dedicated nsshow folder
+        if nsshow_folder:
+            print('\nEXTRACTING NAMESERVER INFORMATION FROM DEDICATED FILES ...\n')
+            # collects files in folder with txt extension
+            txt_files = find_files(nsshow_folder, max_title, filename_extension='txt')
+            log_files = find_files(nsshow_folder, max_title, filename_extension='log')
+            nsshow_files_lst = txt_files + log_files
+            # number of files to check
+            configs_num = len(nsshow_files_lst)  
+            if configs_num:
+                for i, nsshow_file in enumerate(nsshow_files_lst):       
+                    # file name with extension
+                    filename_wext = os.path.basename(nsshow_file)
+                    # remove extension from filename
+                    filename, _ = os.path.splitext(filename_wext)
+                    # current operation information string
+                    info = f'[{i+1} of {configs_num}]: {filename} dedicated nsshow config.'
+                    print(info, end =" ")
+                    prev_nsshow_dedicated_lst = nsshow_dedicated_lst.copy()
+                    # parse nsshow information from current file
+                    parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_keys, nsshow_params, nsshow_params_add)
+                    if prev_nsshow_dedicated_lst != nsshow_dedicated_lst:
+                        status_info('ok', max_title, len(info))
+                    else:
+                        status_info('empty', max_title, len(info))
         
         # convert list to DataFrame
         fdmi_df = list_to_dataframe(fdmi_lst, max_title, sheet_title_import='connected_dev')
         nsshow_df = list_to_dataframe(nsshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
         nscamshow_df = list_to_dataframe(nscamshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        nsshow_dedicated_df = list_to_dataframe(nsshow_dedicated_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
         # saving data to csv file
-        data_lst = [fdmi_df, nsshow_df, nscamshow_df]
+        data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        fdmi_df, nsshow_df, nscamshow_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [fdmi_df, nsshow_df, nscamshow_df]
+        fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dataframe_to_report(data_frame, data_name, report_creation_info_lst)
 
-    return fdmi_df, nsshow_df, nscamshow_df
+    return fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df
+
+
+def parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_keys, nsshow_params, nsshow_params_add):
+    """Function to extract NameSerevr information from dedicated file"""               
+    
+    with open(nsshow_file, encoding='utf-8', errors='ignore') as file:
+        line = file.readline()
+        while line:
+            match_dct = {comp_key: comp_dct[comp_key].match(line) for comp_key in comp_keys}
+            # port_pid_match
+            if match_dct['port_pid']:
+                # dictionary to store all DISCOVERED switch ports information
+                nsshow_port_dct = {}
+                # current connected device wwnp
+                pid = line_to_list(comp_dct['port_pid'], line)
+                # move cursor to one line down to get inside while loop
+                line = file.readline()                                
+                # pid_switchcmd_end_comp
+                while not re.search(comp_dct['port_pid'], line):
+                    match_dct = {comp_key: comp_dct[comp_key].match(line) for comp_key in comp_keys}
+                    # nsshow_port_match
+                    if match_dct['fdmi_port']:
+                        nsshow_port_dct[match_dct['fdmi_port'].group(1).rstrip()] = match_dct['fdmi_port'].group(2).rstrip()
+                    line = file.readline()
+                    if not line:
+                        break
+                # adding additional parameters and values to the fdmi_dct
+                update_dct(nsshow_params_add[6:], pid, nsshow_port_dct)               
+                # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
+                nsshow_dedicated_lst.append([nsshow_port_dct.get(nsshow_param) for nsshow_param in nsshow_params])
+            else:
+                line = file.readline()

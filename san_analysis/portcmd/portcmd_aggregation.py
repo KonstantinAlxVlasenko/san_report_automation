@@ -16,7 +16,7 @@ from common_operations_dataframe import dataframe_fabric_labeling
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
-                        isl_aggregated_df, nsshow_df, nscamshow_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
+                        isl_aggregated_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
                         blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df, 
                         re_pattern_lst):
     """
@@ -39,7 +39,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
         alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df)
     # retrieve storage, host, HBA information from Name Server service and FDMI data
     nsshow_join_df, nsshow_unsplit_df = \
-        nsshow_analysis_main(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df, re_pattern_lst)
+        nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, re_pattern_lst)
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = \
         alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
@@ -131,11 +131,39 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 
                                                           on = ['Fabric_name', 'Fabric_label', 'PortName'])
 
-    # add Unknown(initiator/target) tag for all F-port and N-port for which Device_type is not found 
+    # add Unknown(initiator/target) tag for all F-port and N-port for which Device_type is not found
+    mask_device_type_na = portshow_aggregated_df['Device_type'].isna()
+    mask_port_contains_npiv = portshow_aggregated_df['connection_details'].notna() & portshow_aggregated_df['connection_details'].str.contains('NPIV')
+    mask_pid_physical = portshow_aggregated_df['Connected_portId'].str.contains('[a-f\d]{4}00') 
+    mask_pid_npiv = portshow_aggregated_df['Connected_portId'].str.contains('^[a-f\d]{4}(?!00)')
     mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
-    mask_device_type_empty = portshow_aggregated_df['Device_type'].isna()
-    mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk port', na=False)
-    portshow_aggregated_df.loc[mask_nport_fport & mask_device_type_empty & mask_not_trunk, 'Device_type'] = 'Unknown(initiator/target)'
+    # empty device type ports with npiv tag
+    # if pid ends with 00 then ports is Physiscal
+    # if pid ends with anything but 00 then port is NPIV
+    portshow_aggregated_df['Device_type'] = np.select(condlist=[mask_device_type_na & mask_port_contains_npiv & mask_pid_physical, 
+                                                                mask_device_type_na & mask_port_contains_npiv & mask_pid_npiv], 
+                                                        choicelist=['Physical Unknown(initiator/target)', 'NPIV Unknown(initiator/target)'], 
+                                                        default=portshow_aggregated_df['Device_type'])
+    # the rest of empty F and N device type ports without npiv tags marked as Physical ports
+    portshow_aggregated_df.loc[mask_device_type_na &  mask_nport_fport, 'Device_type'] = 'Physical Unknown(initiator/target)'
+                                            
+    
+    
+    # mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk', na=False)
+    # mask_fport = portshow_aggregated_df['portType'] == 'F-Port'
+    # mask_device_type_na = portshow_aggregated_df['Device_type'].isna()
+    # mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
+
+    # portshow_aggregated_df['Device_type'] = np.select(condlist=[mask_npiv & mask_fport & mask_device_type_na & mask_not_trunk, 
+    #                                                             ~mask_npiv & mask_nport_fport & mask_nport_fport & mask_not_trunk], 
+    #                                                     choicelist=['NPIV Unknown(initiator/target)', 'Physical Unknown(initiator/target)'], 
+    #                                                     default=portshow_aggregated_df['Device_type'])
+
+
+    # mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
+    # mask_device_type_empty = portshow_aggregated_df['Device_type'].isna()
+    # mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk port', na=False)
+    # portshow_aggregated_df.loc[mask_nport_fport & mask_device_type_empty & mask_not_trunk, 'Device_type'] = 'Unknown(initiator/target)'
 
     return portshow_aggregated_df
 
