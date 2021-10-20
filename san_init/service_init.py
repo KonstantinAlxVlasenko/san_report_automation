@@ -93,11 +93,9 @@ def create_service_folders(report_entry_sr, max_title):
     
     customer_title = report_entry_sr['customer_name']
     project_path = os.path.normpath(report_entry_sr['project_folder'])
-    
 
     # check if project folders exist
     check_valid_path(project_path)
-    
     # current date
     current_date = str(date.today())   
     
@@ -120,13 +118,12 @@ def create_service_folders(report_entry_sr, max_title):
     report_entry_sr['current_report_folder'] = san_assessment_report_path
     
     # define folder to save obects extracted from configuration files
-    data_objects_dir = f'data_objects_{customer_title}'
-    data_objects_path = os.path.join(os.path.normpath(project_path), data_objects_dir)
-    create_folder(data_objects_path, max_title)
-    report_entry_sr['database_folder'] = data_objects_path
+    database_dir = f'database_{customer_title}'
+    database_path = os.path.join(os.path.normpath(project_path), database_dir)
+    create_folder(database_path, max_title)
+    report_entry_sr['database_folder'] = database_path
 
     return report_entry_sr
-
 
 
 def find_max_title(ssave_path):

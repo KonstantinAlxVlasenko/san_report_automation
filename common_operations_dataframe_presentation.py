@@ -343,3 +343,20 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     seg3 = [i for i in cols if i not in seg1 + seg2]
     return df[seg1 + seg2 + seg3].copy()
 
+
+def remove_duplicates_from_string(df, *args, sep=', '):
+    """Function to remove duplicates from strings in column"""
+    
+    for column in args:
+        df[column] = df[column].str.split(sep).apply(set).str.join(', ')
+    return df
+
+
+def remove_value_from_string(df, removed_value, *args, sep=', '):
+    """Function to remove removed_value from strings in column"""
+
+    for column in args:
+        if df[column].notna().any():
+            df[column].replace(f'{removed_value}(?:{sep})?', value='', regex=True, inplace=True)
+            df[column] = df[column].str.rstrip(sep)
+    return df

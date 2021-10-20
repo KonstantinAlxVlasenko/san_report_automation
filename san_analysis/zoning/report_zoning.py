@@ -116,6 +116,9 @@ def valid_zoning(zoning_aggregated_df):
     mask_valid_zone = ~zoning_aggregated_df['Target_Initiator_note'].isin(invalid_zone_tags)
 
     zoning_valid_df = zoning_aggregated_df.loc[mask_effective & mask_valid_zone].copy()
+
+    zoning_valid_df.drop(columns=['Zone_name_device_names_ratio', 'Zone_name_device_names_related'], inplace=True)
+
     return zoning_valid_df
 
 

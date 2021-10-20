@@ -17,6 +17,7 @@ from common_operations_servicefile import (data_extract_objects,
 from .report_portcmd import portcmd_report_main
 from common_operations_table_report import dataframe_to_report
 from common_operations_database import read_db, write_db
+from common_operations_dataframe_presentation import remove_duplicates_from_string, remove_value_from_string
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -304,12 +305,14 @@ def device_names_per_port(portshow_aggregated_df):
     portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device', inplace=True)
     
     portshow_aggregated_df['Device_Host_Name_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['Device_Host_Name_Port'].transform(', '.join)
+    remove_duplicates_from_string(portshow_aggregated_df, 'Device_Host_Name_Port_group')
 
 
     portshow_aggregated_df['alias'].fillna('nan_device', inplace=True)
     portshow_aggregated_df['alias_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['alias'].transform(', '.join)
     # remove temporary 'nan_device value
     portshow_aggregated_df.replace({'nan_device': np.nan}, inplace=True)
+    remove_value_from_string(portshow_aggregated_df, 'nan_device', alias_Port_group)
 
     # portshow_aggregated_df['Device_Host_Name_Port'].replace({'nan_device': np.nan}, inplace=True)
     # portshow_aggregated_df['Device_Host_Name_Port_group'].replace({'nan_device': np.nan}, inplace=True)

@@ -22,14 +22,16 @@ def fabric_port_statisctics_aggregated(portshow_aggregated_df, switchshow_ports_
     # and state summary (Online, Total ports and percentage of occupied)
     port_state_type_df, port_state_summary_df = port_state_statistics(switchshow_df)
     # crosstab to count ports speed (8G, N16, etc) in fabric
-    port_speed_df = port_speed_statistics(switchshow_df)
+    # port_speed_df = port_speed_statistics(switchshow_df) TO_REMOVE
+    port_speed_df = port_speed_statistics(portshow_aggregated_df)
     # crosstab to cound device classes(SRV, STORAGE, SWITCH,VC)
     device_class_df = device_class_statistics(portshow_aggregated_df)
     # crosstab to count device type (Target, Initiator and etc) in fabric
     target_initiator_df = target_initiator_statistics(portshow_aggregated_df)
     # target_initiator_df = target_initiator_statistics(switchshow_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, portshow_df)
     # crosstab to count ports types (E-port, F-port, etc) in fabric
-    portType_df = portType_statistics(switchshow_df)
+    # portType_df = portType_statistics(switchshow_df) TO_REMOVE
+    portType_df = portType_statistics(portshow_aggregated_df)
     # calculating ratio of device ports to inter-switch links
     # number and bandwidth
     port_ne_df = n_e_statistics(switchshow_df)
@@ -86,14 +88,38 @@ def device_class_statistics(portshow_aggregated_df):
     return device_class_df
 
 
-def portType_statistics(switchshow_df):
+# def portType_statistics(switchshow_df):
+#     """Function to count ports types (E-port, F-port, etc) number in fabric"""
+
+#     # crosstab from labeled switchshow
+#     portType_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
+#                                         switchshow_df.chassis_name, switchshow_df.switch_index, 
+#                                         switchshow_df.switchName, switchshow_df.switchWwn], 
+#                             columns=switchshow_df.portType, margins = True)
+#     # droping 'All' columns
+#     portType_df.drop(columns = 'All', inplace=True)
+    
+#     return portType_df
+
+
+def portType_statistics(portshow_aggregated_df):
     """Function to count ports types (E-port, F-port, etc) number in fabric"""
 
+    # filter ports without switch_index number
+    mask_index = pd.notna(portshow_aggregated_df.switch_index)
+    portshow_aggregated_idx_df = portshow_aggregated_df.loc[mask_index].copy()
+    # convert switch_index to integer
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('float64')
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('int64')
+
+    portshow_aggregated_idx_df.drop_duplicates(subset=['configname', 'chassis_name', 'chassis_wwn', 
+                                                        'switchName', 'switchWwn', 'slot', 'port'], inplace=True)
+
     # crosstab from labeled switchshow
-    portType_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
-                                        switchshow_df.chassis_name, switchshow_df.switch_index, 
-                                        switchshow_df.switchName, switchshow_df.switchWwn], 
-                            columns=switchshow_df.portType, margins = True)
+    portType_df = pd.crosstab(index = [portshow_aggregated_idx_df.Fabric_name, portshow_aggregated_idx_df.Fabric_label, 
+                                        portshow_aggregated_idx_df.chassis_name, portshow_aggregated_idx_df.switch_index, 
+                                        portshow_aggregated_idx_df.switchName, portshow_aggregated_idx_df.switchWwn], 
+                            columns=portshow_aggregated_idx_df.portType, margins = True)
     # droping 'All' columns
     portType_df.drop(columns = 'All', inplace=True)
     
@@ -109,27 +135,13 @@ def target_initiator_statistics(portshow_aggregated_df):
     # convert switch_index to integer
     portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('float64')
     portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('int64')
-
-    # # if no device type in cached name server (no ISLs links) use 'Unknown' label
-    # # mask_connection portshow_aggregated_idx_df['connection_details'].isna()
-    # mask_npiv = portshow_aggregated_idx_df['connection_details'].notna() & portshow_aggregated_idx_df['connection_details'].str.contains('NPIV')
-    # mask_fport = portshow_aggregated_idx_df['portType'] == 'F-Port'
-    # mask_device_type_na = portshow_aggregated_idx_df['Device_type'].isna()
-    # mask_nport_fport = portshow_aggregated_idx_df['portType'].isin(['F-Port', 'N-Port'])
-
-    # portshow_aggregated_idx_df['Device_type'] = np.select(condlist=[mask_npiv & mask_fport & mask_device_type_na, ~mask_npiv & mask_nport_fport & mask_nport_fport], 
-    #                                                         choicelist=['NPIV Unknown(initiator/target)', 'Physical Unknown(initiator/target)'], 
-    #                                                         default=portshow_aggregated_idx_df['Device_type'])
-
     # crosstab from portshowaggregated_df
     target_initiator_df = pd.crosstab(index= [portshow_aggregated_idx_df.Fabric_name, portshow_aggregated_idx_df.Fabric_label, 
                                             portshow_aggregated_idx_df.chassis_name, portshow_aggregated_idx_df.switch_index,
                                             portshow_aggregated_idx_df.switchName, portshow_aggregated_idx_df.switchWwn], 
                                     columns = portshow_aggregated_idx_df.Device_type, margins = True)
-    
     # droping 'All' columns
     target_initiator_df.drop(columns = 'All', inplace=True)
-
     return target_initiator_df
 
 
@@ -238,11 +250,37 @@ def port_state_statistics(switchshow_df):
     # from port_state DataFrame applying columns names
     port_state_summary_df = port_state_df.loc[:, portstate_summary_columns]
     port_state_type_df = port_state_df.loc[:, portstate_type_columns]
-    
     return port_state_type_df, port_state_summary_df
 
 
-def port_speed_statistics(switchshow_df):
+# def port_speed_statistics(switchshow_df):
+#     """Function to count ports speed (8G, N16, etc) values number in fabric"""
+
+#     # speed columns dictionary to rename DataFrame columns for correct sorting order
+#     speed_columns = {'2G': 'A', 'N2': 'B', '4G': 'C', 'N4': 'D', '8G': 'E', 
+#                      'N8': 'F', '16G': 'G', 'N16': 'H', '32G': 'I', 'N32': 'J' }
+#     # invert speed columns dictionary to rename back DataFrame columns after sorting 
+#     speed_columns_invert = {value: key for key, value in speed_columns.items()}
+#     # crosstab switchshow DataFrame to count port speed values number in fabric
+#     # check only Online state ports
+#     port_speed_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
+#                                     switchshow_df.chassis_name, switchshow_df.switch_index, 
+#                                     switchshow_df.switchName, switchshow_df.switchWwn], 
+#                            columns=switchshow_df[switchshow_df.state == 'Online'].speed, margins=True)
+#     # drop column with unknown port speed if they exist
+#     port_speed_df = port_speed_df.loc[:, port_speed_df.columns != '--']
+#     # rename speed columns in accordance to speed_columns dictionary
+#     # sort DataFrame by columns names
+#     # rename columns in accordance to speed_columns_invert dictionary
+#     port_speed_df = port_speed_df.rename(columns=speed_columns).sort_index(axis=1).rename(columns=speed_columns_invert)
+#     # drop column 'All'
+#     port_speed_df.drop(columns = 'All', inplace = True)
+    
+#     return port_speed_df
+
+
+
+def port_speed_statistics(portshow_aggregated_df):
     """Function to count ports speed (8G, N16, etc) values number in fabric"""
 
     # speed columns dictionary to rename DataFrame columns for correct sorting order
@@ -250,12 +288,15 @@ def port_speed_statistics(switchshow_df):
                      'N8': 'F', '16G': 'G', 'N16': 'H', '32G': 'I', 'N32': 'J' }
     # invert speed columns dictionary to rename back DataFrame columns after sorting 
     speed_columns_invert = {value: key for key, value in speed_columns.items()}
+
+    portshow_aggregated_idx_df = portshow_preparation(portshow_aggregated_df, drop_duplicate_ports=True)
+
     # crosstab switchshow DataFrame to count port speed values number in fabric
     # check only Online state ports
-    port_speed_df = pd.crosstab(index = [switchshow_df.Fabric_name, switchshow_df.Fabric_label, 
-                                    switchshow_df.chassis_name, switchshow_df.switch_index, 
-                                    switchshow_df.switchName, switchshow_df.switchWwn], 
-                           columns=switchshow_df[switchshow_df.state == 'Online'].speed, margins=True)
+    port_speed_df = pd.crosstab(index = [portshow_aggregated_idx_df.Fabric_name, portshow_aggregated_idx_df.Fabric_label, 
+                                    portshow_aggregated_idx_df.chassis_name, portshow_aggregated_idx_df.switch_index, 
+                                    portshow_aggregated_idx_df.switchName, portshow_aggregated_idx_df.switchWwn], 
+                           columns=portshow_aggregated_idx_df[portshow_aggregated_idx_df.portState == 'Online'].speed, margins=True)
     # drop column with unknown port speed if they exist
     port_speed_df = port_speed_df.loc[:, port_speed_df.columns != '--']
     # rename speed columns in accordance to speed_columns dictionary
@@ -265,7 +306,7 @@ def port_speed_statistics(switchshow_df):
     # drop column 'All'
     port_speed_df.drop(columns = 'All', inplace = True)
     
-    return port_speed_df
+    return port_speed_df    
 
 
 def n_e_statistics(switchshow_df):
@@ -359,3 +400,19 @@ def n_e(group):
     columns_names = ['N:E_int', 'N:E_num', 'N:E_bw_int', 'N:E_bw']
         
     return pd.Series([ne_num, ne_num_str, ne_bw, ne_bw_str], index= columns_names)
+
+
+def portshow_preparation(portshow_aggregated_df, drop_duplicate_ports=False):
+    """"Function to prepare portshow_aggregated_df to count port stat"""
+
+    # filter ports without switch_index number
+    mask_index = pd.notna(portshow_aggregated_df.switch_index)
+    portshow_aggregated_idx_df = portshow_aggregated_df.loc[mask_index].copy()
+    # convert switch_index to integer
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('float64')
+    portshow_aggregated_idx_df.switch_index = portshow_aggregated_idx_df.switch_index.astype('int64')
+
+    if drop_duplicate_ports:
+        portshow_aggregated_idx_df.drop_duplicates(subset=['configname', 'chassis_name', 'chassis_wwn', 
+                                                        'switchName', 'switchWwn', 'slot', 'port'], inplace=True)
+    return portshow_aggregated_idx_df

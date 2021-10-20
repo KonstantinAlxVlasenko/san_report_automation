@@ -47,6 +47,10 @@ def auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, 
     fabricshow_summary_df[['Fabric_name', 'Fabric_label']] = \
         fabricshow_summary_df.apply(lambda row: pd.Series(_auto_fabrics_labeling(row)), axis=1)
 
+    # if single fabric with two fabric labels then fabric name is san
+    if len(fabricshow_summary_df.index) == 2:
+        fabricshow_summary_df['Fabric_name'] = 'san'
+
     fabricshow_summary_df.sort_values(by=['Fabric_name', 'Fabric_label', 'Principal_switch_name', 'Domain_IDs'],
                                             inplace=True, ignore_index=True)
     return fabricshow_summary_df
@@ -193,54 +197,96 @@ def _auto_fabrics_labeling(row):
     global fabric_bb # Flag if fabric is Backbone fabric 
     global fabric_num # Number of current Edge Fabric 
     global fabric_label # if True then label A has been already assigned and current fabric should get B label
-    # apply method calls function on first row two times
-    # flag to check if function has been already called 
-    global called
-    # bug was fixed so no need in call variable no more. left temporary. should be removed after checking
-    called = True
     
-    # called function flag is on
-    if called:
-        # Online ports present in the fabric
-        if row.loc['Online_ports'] != 0:
-            # Backbone fabric
-            if row.loc['FC_Route'] == 'ON':
-                fabric_num_current = 'Fabric_BB'
-                # first BB fabric row
-                if not fabric_bb:
-                    # label A assigned
-                    fabric_label_current = 'A'
-                    fabric_bb = True
-                # second BB fabric row
-                else:
-                    # label B assigned
-                    fabric_label_current = 'B'
-            # Edge fabrics
+    # TO_REMOVE call variable is not required anymore
+    # # apply method calls function on first row two times
+    # # flag to check if function has been already called 
+    # global called
+    # # bug was fixed so no need in call variable no more. left temporary. should be removed after checking
+    # called = True
+    
+    # # called function flag is on
+    # if called:
+    #     # Online ports present in the fabric
+    #     if row.loc['Online_ports'] != 0:
+    #         # Backbone fabric
+    #         if row.loc['FC_Route'] == 'ON':
+    #             fabric_num_current = 'BB'
+    #             # first BB fabric row
+    #             if not fabric_bb:
+    #                 # label A assigned
+    #                 fabric_label_current = 'A'
+    #                 fabric_bb = True
+    #             # second BB fabric row
+    #             else:
+    #                 # label B assigned
+    #                 fabric_label_current = 'B'
+    #         # Edge fabrics
+    #         else:
+    #             # second and more Edge fabric row
+    #             if fabric_num:
+    #                 fabric_num_current = 'san' + str(fabric_num)
+    #                 # if before 'A' label has been assigned
+    #                 if fabric_label:
+    #                     fabric_label = False
+    #                     fabric_label_current = 'B'
+    #                     fabric_num += 1
+    #                 # if before 'B' label has been assigned
+    #                 else:
+    #                     fabric_label_current = 'A'
+    #                     fabric_label = True
+    #             # first Edge fabric row
+    #             else:
+    #                 fabric_num += 1
+    #                 fabric_label_current = 'A'
+    #                 fabric_label = True
+    #                 fabric_num_current = 'san' + str(fabric_num)
+    #     # if there are no Online ports in Fabric labels are not assigned
+    #     else:
+    #         fabric_num_current = None
+    #         fabric_label_current = None
+    #     return [fabric_num_current, fabric_label_current]
+    # # called function flag is off
+    # # first time function is called do nothing
+    # else:
+    #     called = True  
+
+    # Online ports present in the fabric
+    if row.loc['Online_ports'] != 0:
+        # Backbone fabric
+        if row.loc['FC_Route'] == 'ON':
+            fabric_num_current = 'BB'
+            # first BB fabric row
+            if not fabric_bb:
+                # label A assigned
+                fabric_label_current = 'A'
+                fabric_bb = True
+            # second BB fabric row
             else:
-                # second and more Edge fabric row
-                if fabric_num:
-                    fabric_num_current = 'Fabric_' + str(fabric_num)
-                    # if before 'A' label has been assigned
-                    if fabric_label:
-                        fabric_label = False
-                        fabric_label_current = 'B'
-                        fabric_num += 1
-                    # if before 'B' label has been assigned
-                    else:
-                        fabric_label_current = 'A'
-                        fabric_label = True
-                # first Edge fabric row
-                else:
+                # label B assigned
+                fabric_label_current = 'B'
+        # Edge fabrics
+        else:
+            # second and more Edge fabric row
+            if fabric_num:
+                fabric_num_current = 'san' + str(fabric_num)
+                # if before 'A' label has been assigned
+                if fabric_label:
+                    fabric_label = False
+                    fabric_label_current = 'B'
                     fabric_num += 1
+                # if before 'B' label has been assigned
+                else:
                     fabric_label_current = 'A'
                     fabric_label = True
-                    fabric_num_current = 'Fabric_' + str(fabric_num)
-        # if there are no Online ports in Fabric labels are not assigned
-        else:
-            fabric_num_current = None
-            fabric_label_current = None
-        return [fabric_num_current, fabric_label_current]
-    # called function flag is off
-    # first time function is called do nothing
+            # first Edge fabric row
+            else:
+                fabric_num += 1
+                fabric_label_current = 'A'
+                fabric_label = True
+                fabric_num_current = 'san' + str(fabric_num)
+    # if there are no Online ports in Fabric labels are not assigned
     else:
-        called = True  
+        fabric_num_current = None
+        fabric_label_current = None
+    return [fabric_num_current, fabric_label_current]
