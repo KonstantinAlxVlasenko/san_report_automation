@@ -164,19 +164,23 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         dataframe_to_report(expected_ag_links_df, 'expected_ag_links', report_creation_info_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
-            device_rename_df, report_columns_usage_dct, \
-                servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-                    storage_connection_df, library_connection_df, server_connection_df, \
-                        storage_connection_statistics_report_df, device_connection_statistics_report_df \
-                            = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [
-            portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
-            device_rename_df, report_columns_usage_dct, 
-            servers_report_df, storage_report_df, library_report_df, hba_report_df, 
-            storage_connection_df, library_connection_df, server_connection_df, 
-            storage_connection_statistics_report_df, device_connection_statistics_report_df
-            ]
+        # portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
+        #     device_rename_df, report_columns_usage_dct, \
+        #         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
+        #             storage_connection_df, library_connection_df, server_connection_df, \
+        #                 storage_connection_statistics_report_df, device_connection_statistics_report_df \
+        #                     = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [
+        #     portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
+        #     device_rename_df, report_columns_usage_dct, 
+        #     servers_report_df, storage_report_df, library_report_df, hba_report_df, 
+        #     storage_connection_df, library_connection_df, server_connection_df, 
+        #     storage_connection_statistics_report_df, device_connection_statistics_report_df
+        #     ]
+
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        portshow_aggregated_df, *_ = data_lst
+
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         force_flag = False
@@ -312,7 +316,7 @@ def device_names_per_port(portshow_aggregated_df):
     portshow_aggregated_df['alias_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['alias'].transform(', '.join)
     # remove temporary 'nan_device value
     portshow_aggregated_df.replace({'nan_device': np.nan}, inplace=True)
-    remove_value_from_string(portshow_aggregated_df, 'nan_device', alias_Port_group)
+    remove_value_from_string(portshow_aggregated_df, 'nan_device', 'alias_Port_group')
 
     # portshow_aggregated_df['Device_Host_Name_Port'].replace({'nan_device': np.nan}, inplace=True)
     # portshow_aggregated_df['Device_Host_Name_Port_group'].replace({'nan_device': np.nan}, inplace=True)

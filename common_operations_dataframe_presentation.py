@@ -119,7 +119,7 @@ def translate_header(df, headers_df, df_name):
     return translated_df
 
 
-def translate_values(df, headers_df=None, df_name=None, translated_columns=None, translate_dct={'Yes': 'Да', 'No': 'Нет'}):
+def translate_values(df, headers_df=None, df_name=None, translated_columns=None, translate_dct={'Yes': 'Да', 'No': 'Нет', 'All': 'Итого:'}):
     """Function to translate values in corresponding columns"""
 
     translated_df = df.copy()
@@ -352,7 +352,7 @@ def remove_duplicates_from_string(df, *args, sep=', '):
     return df
 
 
-def remove_value_from_string(df, removed_value, *args, sep=', '):
+def remove_value_from_string(df, removed_value: str, *args, sep=', '):
     """Function to remove removed_value from strings in column"""
 
     for column in args:

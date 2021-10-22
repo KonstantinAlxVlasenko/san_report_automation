@@ -10,7 +10,7 @@ from .maps_npiv import maps_npiv_ports_analysis
 from .zoning import zoning_analysis
 from .storage_host import storage_host_analysis
 from .sensor import sensor_analysis
-from .fabric_port_statistics import fabric_port_statistics_analysis
+from .port_statistics import port_statistics_analysis
 from .errdump import errdump_analysis
 
 
@@ -71,8 +71,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
 
     sensor_aggregated_df = sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info_lst)
 
-    fabric_port_statistics_df = fabric_port_statistics_analysis(portshow_aggregated_df, switchshow_ports_df, fabricshow_ag_labels_df, 
-                                                                nsshow_df, nscamshow_df, nsshow_dedicated_df, portshow_df, report_creation_info_lst)
+    fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst)
 
 
     errdump_aggregated_df, raslog_counter_df = \
