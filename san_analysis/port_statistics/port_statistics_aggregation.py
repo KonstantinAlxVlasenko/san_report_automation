@@ -80,7 +80,6 @@ def count_column_statistics(portshow_aggregated_df, column: str):
         # invert speed columns dictionary to rename back DataFrame columns after sorting 
         speed_columns_invert = {value: key for key, value in speed_columns.items()}
         column_statistics_df = column_statistics_df.rename(columns=speed_columns).sort_index(axis=1).rename(columns=speed_columns_invert)
-
     return column_statistics_df
 
 

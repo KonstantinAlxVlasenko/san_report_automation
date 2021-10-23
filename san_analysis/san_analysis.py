@@ -53,7 +53,6 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, report_creation_info_lst)
 
-
     portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_df, 
                                                                 sfpshow_df, portcfgshow_df, isl_statistics_df, report_creation_info_lst)
 
@@ -65,14 +64,12 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 
                             cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, report_creation_info_lst)
 
-
     storage_host_aggregated_df = storage_host_analysis(host_3par_df, system_3par_df, port_3par_df, 
                                                             portshow_aggregated_df, zoning_aggregated_df, report_creation_info_lst)
 
     sensor_aggregated_df = sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info_lst)
 
     fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst)
-
 
     errdump_aggregated_df, raslog_counter_df = \
         errdump_analysis(errdump_df, switchshow_ports_df, switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)

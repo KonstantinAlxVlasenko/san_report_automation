@@ -5,14 +5,13 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from common_operations_table_report import dataframe_to_report
 from common_operations_miscellaneous import (reply_request, status_info,
                                              verify_data)
 from common_operations_servicefile import dataframe_import
+from common_operations_table_report import dataframe_to_report
 
 
-def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_columns_usage_dct, report_creation_info_lst):
+def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_creation_info_lst):
     """Main function to rename devices"""
 
     # report_steps_dct contains current step desciption and force and export tags

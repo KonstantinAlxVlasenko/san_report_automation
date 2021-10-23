@@ -49,7 +49,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    report_columns_usage_bckp = report_columns_usage_dct
+    # report_columns_usage_bckp = report_columns_usage_dct
     
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
@@ -67,9 +67,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     #             storage_connection_df,  library_connection_df, server_connection_df, \
     #                 storage_connection_statistics_report_df, device_connection_statistics_report_df = data_lst
     
-    device_rename_df, report_columns_usage_dct = data_lst[3:5]
-    
-    
+    device_rename_df = data_lst[3]
+
     nsshow_unsplit_df = pd.DataFrame()
 
     # on the first iteration report_columns_usage_upd is None 
@@ -78,8 +77,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     # if not report_columns_usage_dct.empty:
     #     report_columns_usage_dct = report_columns_usage_bckp
 
-    if report_columns_usage_dct is None:
-        report_columns_usage_dct = report_columns_usage_bckp
+    # if report_columns_usage_dct is None:
+    #     report_columns_usage_dct = report_columns_usage_bckp
 
     # if report_columns_usage_dct.empty:
     #     report_columns_usage_dct = report_columns_usage_bckp
@@ -125,8 +124,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
             nsshow_unsplit_df, expected_ag_links_df, report_steps_dct, max_title)        
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
-            devicename_correction_main(portshow_aggregated_df, device_rename_df, 
-                                        report_columns_usage_dct, report_creation_info_lst)
+            devicename_correction_main(portshow_aggregated_df, device_rename_df, report_creation_info_lst)
         # merge 'Device_Host_Name' and 'Device_port', create column with all Device_Host_Name for port each port
         portshow_aggregated_df = device_names_per_port(portshow_aggregated_df)
         # count Device_Host_Name instances for fabric_label, label and total in fabric
@@ -155,8 +153,6 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
             storage_connection_statistics_report_df, device_connection_statistics_report_df
             ]
 
-        # saving data to json or csv file
-        # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)
 
@@ -179,7 +175,9 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         #     ]
 
         data_lst = verify_data(report_constant_lst, data_names, *data_lst)
-        portshow_aggregated_df, *_ = data_lst
+        portshow_aggregated_df = data_lst[0]
+        # add report_columns_usage_sr to report_creation_info_lst
+        report_creation_info_lst[3] = data_lst[4]
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
