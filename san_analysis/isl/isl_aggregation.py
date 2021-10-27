@@ -331,10 +331,11 @@ def trunk_join(isl_df, trunk_df):
     Join Trunk and ISL DataFrames
     Add switcNames to Trunk and FCREdge DataFrames
     """
-    
+
     # convert numerical data in ISL and TRUNK DataFrames to float
     isl_df = isl_df.astype(dtype='float64', errors='ignore')    
-    trunk_df  = trunk_df.astype(dtype = 'float64', errors = 'ignore')
+    trunk_df = trunk_df.astype(dtype='float64', errors='ignore')
+    trunk_df['FabricID'] = trunk_df['FabricID'].astype(dtype='float64', errors='ignore')
     
     # List of columns DataFrames are joined on     
     join_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 'SwitchName',
@@ -342,7 +343,8 @@ def trunk_join(isl_df, trunk_df):
                 'Connected_portIndex', 'Connected_SwitchName',
                 'Connected_switchWwn', 'Connected_switchDID']  
 
-    # merge updated ISL and TRUNK DataFrames 
+    # merge updated ISL and TRUNK DataFrames
+
     isl_aggregated_df = trunk_df.merge(isl_df, how='outer', on=join_lst)
     return isl_aggregated_df
 

@@ -23,6 +23,7 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
             isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, 
             portcfgshow_df, switchshow_ports_df, report_creation_info_lst):
     """Main function to create ISL and IFR report tables"""
+
     
     # report_steps_dct contains current step desciption and force and export tags
     # report_headers_df contains column titles, 

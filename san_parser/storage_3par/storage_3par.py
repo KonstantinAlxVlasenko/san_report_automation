@@ -70,7 +70,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
             print('\n')
             # find configuration files to parse (download from STATs, local folder or use configurations
             # downloaded on previous iterations)
-            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_constant_lst)
+            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_creation_info_lst)
 
             if configs_3par_lst:
                 print('\nEXTRACTING 3PAR STORAGE INFORMATION ...\n')   

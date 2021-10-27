@@ -14,11 +14,11 @@ from common_operations_miscellaneous import reply_request, status_info
 from common_operations_table_report import dataframe_to_report
 
 
-S3MFT_DIR = r'C:\Users\vlasenko\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0110\WINDOWS'
+S3MFT_DIR = r'C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0120\WINDOWS'
 S3MFT = r's3mft.exe'
 
 
-def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_constant_lst):
+def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_creation_info_lst):
     """Function to prepare 3PAR configuration files for parsing. 
     Download in from STATs and local (defined in report.xlsx file) folders"""
 
@@ -26,7 +26,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
     # # report_steps_dct contains current step desciption and force and export tags
     # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
 
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    report_constant_lst, *_ = report_creation_info_lst
     *_, max_title = report_constant_lst
 
     # folder for 3par config files download is in project folder
@@ -46,6 +46,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
             reply = reply_request(query)
             if reply == 'n':
                 # delete 3par config files
+                print('\n')
                 remove_files(configs_downloaded_lst, max_title)
             else:
                 return configs_downloaded_lst
@@ -74,7 +75,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
                 # download configs from loacl folder
                 ns_3par_df = local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, match_keys, comp_dct, max_title)
 
-    download_summary(ns_3par_df, report_constant_lst)
+    download_summary(ns_3par_df, report_creation_info_lst)
     # create configs list in download folder if it exist (if user reject download config files
     # from both sources download folder is not created)
     download_folder_exist = verify_download_folder(download_folder, create=False)
@@ -140,39 +141,40 @@ def stats_download(ns_3par_df, download_folder, max_title):
     for i, (model, sn) in enumerate(zip(model_lst, sn_lst)):
         info = ' '*16 + f'[{i+1} of {len(sn_lst)}]: Downloading config for {model} {sn}'
         print(info, end=" ")
-        try:
-            # request for latest 3par config file
-            config_str = subprocess.check_output(f'"{s3mft_path}" -n {sn} -p config -stlatest', shell=True, text=True)
-            config_str = config_str.strip('\n')
-            *_, config = config_str.split('\n')
-            if config and ' ' not in config:
-                # download configs within one day only
-                if today in config or yesterday in config:
-                    # download config if it's exist
-                    run =  subprocess.run(fr'"{s3mft_path}" -filename "{config}" -fnp -fo -outdir "{download_folder}" -quiet', shell=True)
-                    # verify if file exist (downloaded) and return corresponnding status
-                    config_filename = os.path.basename(config)
-                    config_filename = 'array_' + sn + '_' + config_filename
-                    config_file = os.path.join(download_folder, config_filename)        
-                    if not run.returncode and os.path.isfile(config_file):
-                        status = status_info('ok', max_title, len(info))
-                    else:
-                        status = status_info('fail', max_title, len(info))
-                else:
-                    status = status_info('skip', max_title, len(info))
-            else:
-                config = None
-                status = status_info('skip', max_title, len(info))
+
+        # request for latest 3par config file
+        # config_str = subprocess.check_output(f'"{s3mft_path}" -n {sn} -p config -stlatest', shell=True, text=True)
+        output = subprocess.run(f'"{s3mft_path}" -n {sn} -stlatest -filetype config -quiet', text=True, capture_output=True)
+
         # if s3mft was not able to retreive config filename
-        except subprocess.CalledProcessError as e:
-            status_info('fail', max_title, len(info))
-            print('\n')
-            print('WARNING!!! Check HPE network connection.')
-            print(e)
-            sys.exit()
+        if output.returncode:
+            if 'no data found' in output.stderr:
+                config = None
+                status = status_info('no data', max_title, len(info))
+            else:
+                status_info('fail', max_title, len(info))
+                print(output.stderr)
+                exit()
+        else:
+            output_str = output.stdout.strip('\n')
+            *_, config = output_str.split('\n')
+
+            # download configs within one day only
+            if today in config or yesterday in config:
+                # download config if it's exist
+                download =  subprocess.run(fr'"{s3mft_path}" -filename "{config}" -fnp -fo -outdir "{download_folder}" -quiet', shell=True, capture_output=True)
+                # verify if file exist (downloaded) and return corresponnding status
+                config_filename = os.path.basename(config)
+                config_filename = 'array_' + sn + '_' + config_filename
+                config_file = os.path.join(download_folder, config_filename)        
+                if not download.returncode and os.path.isfile(config_file):
+                    status = status_info('ok', max_title, len(info))
+                else:
+                    status = status_info('fail', max_title, len(info))
+            else:
+                status = status_info('skip', max_title, len(info))
         
         ns_3par_df.loc[i, ['configname', 'STATs_status']] = [config, status.lower()]
-
     return ns_3par_df
 
 
@@ -266,7 +268,7 @@ def parse_serial(config_3par, comp_keys, match_keys, comp_dct):
     return model, sn
 
 
-def download_summary(ns_3par_df, report_constant_lst):
+def download_summary(ns_3par_df, report_creation_info_lst):
     """Function to print configurations download from STATs summary and
     save summary to file if user agreed"""
 
@@ -275,17 +277,14 @@ def download_summary(ns_3par_df, report_constant_lst):
         ns_3par_df['Status'] = 'skip'
 
     print('\n')
-    print('3PAR Storage Systems configuaration download summary')
+    print('3PAR Storage Systems configuaration download summary\n')
     print(ns_3par_df)
     print('\n')
 
-    # if 'STATs_status' in ns_3par_df.columns and \
-    #     ns_3par_df['STATs_status'].isin(['skip', 'fail']).any():
-        # print('Some configurations are missing.')
     query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
     reply = reply_request(query)
     if reply == 'y':
-        dataframe_to_report(ns_3par_df, 'stats_summary', report_constant_lst, force_flag=True)
+        dataframe_to_report(ns_3par_df, 'stats_summary', report_creation_info_lst, force_flag=True)
 
 
 

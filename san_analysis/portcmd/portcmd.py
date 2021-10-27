@@ -59,16 +59,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     # flag to forcible save portshow_aggregated_df if required
     portshow_force_flag = False
     
-    # # unpacking DataFrames from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
-    #     device_rename_df, report_columns_usage_dct, \
-    #         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-    #             storage_connection_df,  library_connection_df, server_connection_df, \
-    #                 storage_connection_statistics_report_df, device_connection_statistics_report_df = data_lst
-    
     device_rename_df = data_lst[3]
-
     nsshow_unsplit_df = pd.DataFrame()
 
     # on the first iteration report_columns_usage_upd is None 
@@ -308,7 +299,6 @@ def device_names_per_port(portshow_aggregated_df):
     
     portshow_aggregated_df['Device_Host_Name_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['Device_Host_Name_Port'].transform(', '.join)
     remove_duplicates_from_string(portshow_aggregated_df, 'Device_Host_Name_Port_group')
-
 
     portshow_aggregated_df['alias'].fillna('nan_device', inplace=True)
     portshow_aggregated_df['alias_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['alias'].transform(', '.join)
