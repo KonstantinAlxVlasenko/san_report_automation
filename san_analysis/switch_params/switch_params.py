@@ -10,7 +10,7 @@ from .switch_aggregation import switch_param_aggregation
 from .switch_statistics import fabric_switch_statistics
 from common_operations_dataframe_presentation import (drop_column_if_all_na,
                                                       generate_report_dataframe,
-                                                      translate_dataframe)
+                                                      translate_dataframe, drop_zero)
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (status_info, verify_data,
                                              verify_force_run)
@@ -116,12 +116,16 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df,  \
-            switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
-                    switches_report_df, fabric_report_df, 
-                    switches_parameters_report_df, maps_report_df, licenses_report_df,
-                    global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
+        # report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df,  \
+        #     switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
+        #             switches_report_df, fabric_report_df, 
+        #             switches_parameters_report_df, maps_report_df, licenses_report_df,
+        #             global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
+
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        report_columns_usage_dct, switch_params_aggregated_df, *_ = data_lst
+
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names[1:], data_lst[1:]):
         dataframe_to_report(data_frame, data_name, report_creation_info_lst)
@@ -204,6 +208,7 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
                                                             df_name='Статистика_коммутаторов_перевод')
     # drop allna columns
     fabric_switch_statistics_report_df.dropna(axis=1, how='all', inplace=True)
+    drop_zero(fabric_switch_statistics_report_df)
 
     return switches_report_df, fabric_report_df, switches_parameters_report_df, \
                 maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df

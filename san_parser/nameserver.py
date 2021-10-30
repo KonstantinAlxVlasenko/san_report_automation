@@ -2,7 +2,7 @@
 
 import os
 import re
-
+import dataframe_operations as dfop
 import pandas as pd
 from common_operations_database import read_db, write_db
 from common_operations_dataframe import list_to_dataframe
@@ -218,10 +218,10 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                         status_info('empty', max_title, len(info))
         
         # convert list to DataFrame
-        fdmi_df = list_to_dataframe(fdmi_lst, max_title, sheet_title_import='connected_dev')
-        nsshow_df = list_to_dataframe(nsshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
-        nscamshow_df = list_to_dataframe(nscamshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
-        nsshow_dedicated_df = list_to_dataframe(nsshow_dedicated_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        fdmi_df = dfop.list_to_dataframe(fdmi_lst, max_title, sheet_title_import='connected_dev')
+        nsshow_df = dfop.list_to_dataframe(nsshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        nscamshow_df = dfop.list_to_dataframe(nscamshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        nsshow_dedicated_df = dfop.list_to_dataframe(nsshow_dedicated_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
         # saving data to csv file
         data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -230,12 +230,15 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
+        # fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
+
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
     return fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df
 

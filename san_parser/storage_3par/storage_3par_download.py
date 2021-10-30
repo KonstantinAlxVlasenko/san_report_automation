@@ -8,6 +8,7 @@ import sys
 from datetime import date, timedelta
 
 import numpy as np
+import dataframe_operations as dfop
 
 from common_operations_filesystem import create_folder, find_files
 from common_operations_miscellaneous import reply_request, status_info
@@ -284,7 +285,7 @@ def download_summary(ns_3par_df, report_creation_info_lst):
     query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
     reply = reply_request(query)
     if reply == 'y':
-        dataframe_to_report(ns_3par_df, 'stats_summary', report_creation_info_lst, force_flag=True)
+        dfop.dataframe_to_excel(ns_3par_df, 'stats_summary', report_creation_info_lst, force_flag=True)
 
 
 

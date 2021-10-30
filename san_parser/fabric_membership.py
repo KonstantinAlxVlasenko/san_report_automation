@@ -3,16 +3,16 @@
 
 import re
 
+import dataframe_operations as dfop
 import pandas as pd
-
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
 from common_operations_database import read_db, write_db
+from common_operations_dataframe import list_to_dataframe
+from common_operations_filesystem import load_data, save_data
+from common_operations_miscellaneous import (force_extract_check, line_to_list,
+                                             status_info, update_dct,
+                                             verify_data, verify_force_run)
+from common_operations_servicefile import columns_import, data_extract_objects
+from common_operations_table_report import dataframe_to_report
 
 
 def fabric_membership_extract(switch_params_df, report_creation_info_lst):
@@ -215,19 +215,22 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                 status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        fabricshow_df = list_to_dataframe(fabricshow_lst, max_title, sheet_title_import='fabricshow')
-        ag_principal_df = list_to_dataframe(ag_principal_lst, max_title, sheet_title_import='fabricshow', columns_title_import = 'ag_columns')
+        fabricshow_df = dfop.list_to_dataframe(fabricshow_lst, max_title, sheet_title_import='fabricshow')
+        ag_principal_df = dfop.list_to_dataframe(ag_principal_lst, max_title, sheet_title_import='fabricshow', columns_title_import = 'ag_columns')
         # saving data to csv file
         data_lst = [fabricshow_df, ag_principal_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     else:
-        fabricshow_df, ag_principal_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [fabricshow_df, ag_principal_df]
+        # fabricshow_df, ag_principal_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [fabricshow_df, ag_principal_df]
+
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        fabricshow_df, ag_principal_df = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
             
     return fabricshow_df, ag_principal_df
 

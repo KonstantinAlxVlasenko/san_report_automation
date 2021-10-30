@@ -344,7 +344,6 @@ def trunk_join(isl_df, trunk_df):
                 'Connected_switchWwn', 'Connected_switchDID']  
 
     # merge updated ISL and TRUNK DataFrames
-
     isl_aggregated_df = trunk_df.merge(isl_df, how='outer', on=join_lst)
     return isl_aggregated_df
 

@@ -6,6 +6,8 @@ import re
 import os
 
 import pandas as pd
+import dataframe_operations as dfop
+
 
 from common_operations_filesystem import (find_files, load_data,
                                           save_data)
@@ -359,9 +361,9 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
             status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        blade_module_df = list_to_dataframe(module_comprehensive_lst, max_title, sheet_title_import='blades')
-        blade_servers_df = list_to_dataframe(blades_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_columns')
-        blade_vc_df = list_to_dataframe(blade_vc_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_vc_columns')
+        blade_module_df = dfop.list_to_dataframe(module_comprehensive_lst, max_title, sheet_title_import='blades')
+        blade_servers_df = dfop.list_to_dataframe(blades_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_columns')
+        blade_vc_df = dfop.list_to_dataframe(blade_vc_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_vc_columns')
         # saving data to csv file
         data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -378,6 +380,6 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
         
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
     return blade_module_df, blade_servers_df, blade_vc_df

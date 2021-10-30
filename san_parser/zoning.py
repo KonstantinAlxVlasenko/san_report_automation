@@ -2,7 +2,7 @@
 
 
 import re
-
+import dataframe_operations as dfop
 import pandas as pd
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
@@ -269,13 +269,13 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                 status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        cfg_df = list_to_dataframe(cfg_lst, max_title, sheet_title_import='zoning')
-        zone_df = list_to_dataframe(zone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_columns')
-        alias_df = list_to_dataframe(alias_lst, max_title, sheet_title_import='zoning', columns_title_import = 'alias_columns')
-        cfg_effective_df = list_to_dataframe(cfg_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'cfg_effective_columns')
-        zone_effective_df = list_to_dataframe(zone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_effective_columns')
-        peerzone_df = list_to_dataframe(peerzone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_columns')
-        peerzone_effective_df = list_to_dataframe(peerzone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_effective_columns')
+        cfg_df = dfop.list_to_dataframe(cfg_lst, max_title, sheet_title_import='zoning')
+        zone_df = dfop.list_to_dataframe(zone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_columns')
+        alias_df = dfop.list_to_dataframe(alias_lst, max_title, sheet_title_import='zoning', columns_title_import = 'alias_columns')
+        cfg_effective_df = dfop.list_to_dataframe(cfg_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'cfg_effective_columns')
+        zone_effective_df = dfop.list_to_dataframe(zone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_effective_columns')
+        peerzone_df = dfop.list_to_dataframe(peerzone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_columns')
+        peerzone_effective_df = dfop.list_to_dataframe(peerzone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_effective_columns')
         # saving data to csv file
         data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -284,12 +284,14 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
+        # cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
     return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df
 

@@ -1,22 +1,22 @@
 """Module to extract chassis parameters"""
 
-# import json
-# import os
+
 import re
 
-# import pandas as pd
+import dataframe_operations as dfop
+from common_operations_database import read_db, write_db
+from common_operations_miscellaneous import (status_info, verify_data,
+                                             verify_force_run)
+from common_operations_servicefile import data_extract_objects
 
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (force_extract_check, status_info,
-#                                              verify_data)
-# from common_operations_servicefile import data_extract_objects
+# import pandas as pd
 # from common_operations_dataframe import list_to_dataframe
 # from common_operations_table_report import dataframe_to_report
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_database import read_db, write_db
-
+# from common_operations_filesystem import load_data, save_data
 # from utilities import *
-import utilities as util
+# import utilities as util
+# import json
+# import os
 
 
 def chassis_params_extract(all_config_data, report_creation_info_lst):
@@ -36,11 +36,11 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
 
-    data_lst = util.read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = util.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
 
     if force_run:
         print('\nEXTRACTING CHASSIS PARAMETERS FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
@@ -50,7 +50,7 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
         # collecting data for all chassis during looping 
         chassis_params_fabric_lst = []
         # data imported from init file to extract values from config file
-        chassis_params, chassis_params_add, comp_keys, match_keys, comp_dct = util.data_extract_objects('chassis', max_title)
+        chassis_params, chassis_params_add, comp_keys, match_keys, comp_dct = data_extract_objects('chassis', max_title)
         
         # all_confg_data format ([swtch_name, supportshow file, (ams_maps_log files, ...)])
         # checking each config set(supportshow file) for chassis level parameters
@@ -206,22 +206,22 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
             # and appending this list to the list of all switches chassis_params_fabric_lst
             chassis_params_fabric_lst.append([chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params])
                             
-            util.status_info('ok', max_title, len(info))
+            status_info('ok', max_title, len(info))
 
         # convert list to DataFrame
-        chassis_params_fabric_df = util.list_to_dataframe(chassis_params_fabric_lst, max_title, sheet_title_import='chassis')
+        chassis_params_fabric_df = dfop.list_to_dataframe(chassis_params_fabric_lst, max_title, sheet_title_import='chassis')
         # saving data to csv file
         data_lst = [chassis_params_fabric_df]
         # save_data(report_constant_lst, data_names, *data_lst)
-        util.write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)     
+        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)     
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        chassis_params_fabric_df = util.verify_data(report_constant_lst, data_names, *data_lst)
+        chassis_params_fabric_df = verify_data(report_constant_lst, data_names, *data_lst)
         data_lst = [chassis_params_fabric_df]
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        util.dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
     return chassis_params_fabric_df

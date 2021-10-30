@@ -4,7 +4,7 @@
 import re
 
 import pandas as pd
-
+import dataframe_operations as dfop
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (force_extract_check, line_to_list,
                                              status_info, update_dct,
@@ -100,7 +100,7 @@ def log_extract(chassis_params_df, report_creation_info_lst):
                     # errdump section end
             status_info('ok', max_title, len(info))
         # convert list to DataFrame
-        errdump_df = list_to_dataframe(errdump_lst, max_title, 'log')
+        errdump_df = dfop.list_to_dataframe(errdump_lst, max_title, 'log')
         # saving data to csv file
         data_lst = [errdump_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -114,7 +114,7 @@ def log_extract(chassis_params_df, report_creation_info_lst):
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
     
     return errdump_df
 

@@ -3,16 +3,17 @@
 
 import re
 
-import pandas as pd
-
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
-from common_operations_miscellaneous import verify_force_run
+import dataframe_operations as dfop
 from common_operations_database import read_db, write_db
+from common_operations_miscellaneous import (line_to_list, status_info,
+                                             update_dct, verify_data,
+                                             verify_force_run)
+from common_operations_servicefile import data_extract_objects
+
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_dataframe import list_to_dataframe
+# import pandas as pd
+# from common_operations_filesystem import load_data, save_data
 
 
 def switch_params_extract(chassis_params_df, report_creation_info_lst):
@@ -153,8 +154,8 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
             status_info('ok', max_title, len(info))
 
         # convert list to DataFrame
-        switch_params_df = list_to_dataframe(switch_params_lst, max_title, sheet_title_import='switch')
-        switchshow_ports_df = list_to_dataframe(switchshow_ports_lst, max_title, sheet_title_import='switch', columns_title_import = 'switchshow_portinfo_columns')
+        switch_params_df = dfop.list_to_dataframe(switch_params_lst, max_title, sheet_title_import='switch')
+        switchshow_ports_df = dfop.list_to_dataframe(switchshow_ports_lst, max_title, sheet_title_import='switch', columns_title_import = 'switchshow_portinfo_columns')
         # saving data to csv file
         data_lst = [switch_params_df, switchshow_ports_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -162,11 +163,17 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        switch_params_df, switchshow_ports_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [switch_params_df, switchshow_ports_df]
+        # switch_params_df, switchshow_ports_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [switch_params_df, switchshow_ports_df]
+        
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        switch_params_df, switchshow_ports_df = data_lst
+
+        # data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        #  = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
         
     return switch_params_df, switchshow_ports_df

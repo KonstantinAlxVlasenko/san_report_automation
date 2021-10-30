@@ -4,7 +4,7 @@
 import re
 
 import pandas as pd
-
+import dataframe_operations as dfop
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
@@ -199,8 +199,8 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
         portcfgshow_lst = list(zip(*portcfgshow_lst))
         
         # convert list to DataFrame
-        sfpshow_df = list_to_dataframe(sfpshow_lst, max_title, sheet_title_import='portinfo')
-        portcfgshow_df = list_to_dataframe(portcfgshow_lst, max_title, sheet_title_import='portinfo', columns_title_import = 'portcfg_columns')
+        sfpshow_df = dfop.list_to_dataframe(sfpshow_lst, max_title, sheet_title_import='portinfo')
+        portcfgshow_df = dfop.list_to_dataframe(portcfgshow_lst, max_title, sheet_title_import='portinfo', columns_title_import = 'portcfg_columns')
         # saving data to csv file
         data_lst = [sfpshow_df, portcfgshow_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -210,11 +210,14 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        sfpshow_df, portcfgshow_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [sfpshow_df, portcfgshow_df]
+        # sfpshow_df, portcfgshow_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [sfpshow_df, portcfgshow_df]
+
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        sfpshow_df, portcfgshow_df = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
         
     return sfpshow_df, portcfgshow_df

@@ -4,7 +4,7 @@ import os.path
 import re
 
 import pandas as pd
-
+import dataframe_operations as dfop
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (force_extract_check, status_info,
                                              verify_data)
@@ -147,7 +147,7 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
         # save_data(report_constant_lst, data_names, maps_params_fabric_lst)
 
         # convert list to DataFrame
-        maps_params_fabric_df = list_to_dataframe(maps_params_fabric_lst, max_title, 'maps')
+        maps_params_fabric_df = dfop.list_to_dataframe(maps_params_fabric_lst, max_title, 'maps')
         # saving data to csv file
         data_lst = [maps_params_fabric_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -161,7 +161,7 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
         
     # return maps_params_fabric_lst
 

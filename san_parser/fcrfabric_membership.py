@@ -5,7 +5,7 @@ import itertools
 import re
 
 import pandas as pd
-
+import dataframe_operations as dfop
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
@@ -250,12 +250,12 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                 status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        fcrfabric_df = list_to_dataframe(fcrfabric_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrfabric_columns')
-        fcrproxydev_df = list_to_dataframe(fcrproxydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrproxydev_columns')
-        fcrphydev_df = list_to_dataframe(fcrphydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrphydev_columns')
-        lsan_df = list_to_dataframe(lsan_lst, max_title, sheet_title_import='fcr', columns_title_import = 'lsan_columns')
-        fcredge_df = list_to_dataframe(fcredge_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcredge_columns')
-        fcrresource_df = list_to_dataframe(fcrresource_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrresource_columns')
+        fcrfabric_df = dfop.list_to_dataframe(fcrfabric_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrfabric_columns')
+        fcrproxydev_df = dfop.list_to_dataframe(fcrproxydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrproxydev_columns')
+        fcrphydev_df = dfop.list_to_dataframe(fcrphydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrphydev_columns')
+        lsan_df = dfop.list_to_dataframe(lsan_lst, max_title, sheet_title_import='fcr', columns_title_import = 'lsan_columns')
+        fcredge_df = dfop.list_to_dataframe(fcredge_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcredge_columns')
+        fcrresource_df = dfop.list_to_dataframe(fcrresource_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrresource_columns')
         # saving data to csv file
         data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -263,12 +263,15 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
+        # fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
+
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
             
     return fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df
 

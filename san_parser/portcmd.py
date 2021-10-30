@@ -4,7 +4,7 @@
 import re
 
 import pandas as pd
-
+import dataframe_operations as dfop
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (
     force_extract_check, line_to_list, status_info, update_dct, verify_data)
@@ -212,7 +212,7 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
                     # sshow_port section end                            
             status_info('ok', max_title, len(info))
         # convert list to DataFrame
-        portshow_df = list_to_dataframe(portshow_lst, max_title, sheet_title_import='portcmd')
+        portshow_df = dfop.list_to_dataframe(portshow_lst, max_title, sheet_title_import='portcmd')
         # saving data to csv file
         data_lst = [portshow_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -225,7 +225,7 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
         
     return portshow_df
 

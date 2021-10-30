@@ -6,6 +6,7 @@ import os
 import re
 
 import pandas as pd
+import dataframe_operations as dfop
 
 from .storage_3par_download import configs_download
 from common_operations_filesystem import load_data, save_data
@@ -98,9 +99,9 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
             status_info('skip', max_title, len(info))
             
         # convert list to DataFrame
-        system_3par_df = list_to_dataframe(system_3par_comprehensive_lst, max_title, sheet_title_import='3par')
-        port_3par_df = list_to_dataframe(port_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='port_columns')
-        host_3par_df = list_to_dataframe(host_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='host_columns')
+        system_3par_df = dfop.list_to_dataframe(system_3par_comprehensive_lst, max_title, sheet_title_import='3par')
+        port_3par_df = dfop.list_to_dataframe(port_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='port_columns')
+        host_3par_df = dfop.list_to_dataframe(host_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='host_columns')
         # saving data to csv file
         data_lst = [system_3par_df, port_3par_df, host_3par_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -108,12 +109,15 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         # system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
-        system_3par_df, port_3par_df, host_3par_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [system_3par_df, port_3par_df, host_3par_df]
+        # system_3par_df, port_3par_df, host_3par_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [system_3par_df, port_3par_df, host_3par_df]
+
+        data_lst = system_3par_df, port_3par_df, host_3par_df = verify_data(report_constant_lst, data_names, *data_lst)
+        system_3par_df, port_3par_df, host_3par_df = data_lst
     
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
     return system_3par_df, port_3par_df, host_3par_df
 

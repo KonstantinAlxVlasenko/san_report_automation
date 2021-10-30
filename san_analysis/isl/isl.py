@@ -97,9 +97,14 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
         write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = \
-            verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
+        
+        # isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df = \
+        #     verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
+
+        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        isl_aggregated_df, isl_statistics_df, *_ = data_lst
+
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dataframe_to_report(data_frame, data_name, report_creation_info_lst)

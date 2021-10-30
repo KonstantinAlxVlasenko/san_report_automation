@@ -2,7 +2,7 @@
 
 
 import re
-
+import dataframe_operations as dfop
 from common_operations_filesystem import load_data, save_data
 from common_operations_miscellaneous import (force_extract_check, line_to_list,
                                              status_info, update_dct,
@@ -96,7 +96,7 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
             status_info('ok', max_title, len(info))      
     
         # convert list to DataFrame
-        sensor_df = list_to_dataframe(sensor_lst, max_title, sheet_title_import='sensor')
+        sensor_df = dfop.list_to_dataframe(sensor_lst, max_title, sheet_title_import='sensor')
         # saving data to csv file
         data_lst = [sensor_df]
         # save_data(report_constant_lst, data_names, *data_lst)
@@ -110,6 +110,6 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)    
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)    
     
     return sensor_df
