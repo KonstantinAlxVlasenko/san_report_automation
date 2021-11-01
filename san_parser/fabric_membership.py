@@ -3,16 +3,24 @@
 
 import re
 
-import dataframe_operations as dfop
-import pandas as pd
-from common_operations_database import read_db, write_db
-from common_operations_dataframe import list_to_dataframe
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (force_extract_check, line_to_list,
-                                             status_info, update_dct,
-                                             verify_data, verify_force_run)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_table_report import dataframe_to_report
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+# import dataframe_operations as dfop
+# import pandas as pd
+# from common_operations_database import read_db, write_db
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (force_extract_check, line_to_list,
+#                                              status_info, update_dct,
+#                                              verify_data, verify_force_run)
+# from common_operations_servicefile import columns_import, data_extract_objects
+# from common_operations_table_report import dataframe_to_report
 
 
 def fabric_membership_extract(switch_params_df, report_creation_info_lst):
@@ -34,11 +42,11 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
     if force_run:                 
         print('\nEXTRACTING FABRICS INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
@@ -50,8 +58,8 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
         fabricshow_lst = []
         ag_principal_lst = []    
         # data imported from init file to extract values from config file
-        *_, comp_keys, match_keys, comp_dct = data_extract_objects('fabricshow', max_title)
-        ag_params = columns_import('fabricshow', max_title, 'ag_params')  
+        *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('fabricshow', max_title)
+        ag_params = sfop.columns_import('fabricshow', max_title, 'ag_params')  
         
         # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():        
@@ -98,7 +106,7 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                                 # match_keys ['fabricshow_match'] 
                                 # 'fabricshow_match'
                                 if match_dct[match_keys[0]]:
-                                    fabricshow_lst.append(line_to_list(comp_dct[comp_keys[0]], line, *principal_switch_lst))                                      
+                                    fabricshow_lst.append(dsop.line_to_list(comp_dct[comp_keys[0]], line, *principal_switch_lst))                                      
                                 if not line:
                                     break
                         # ag_principal section start
@@ -141,7 +149,7 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                                             # if ag_attach_dct has been already created (not empty) then it's preserved
                                             ag_attach_dct = ag_attach_dct or dict((n_portid, []) for n_portid in ag_info_dct['N-Port ID(s)'].split(','))
                                             # extracting attached F-port data from line to list
-                                            ag_attach_lst = line_to_list(comp_dct[comp_keys[7]], line)
+                                            ag_attach_lst = dsop.line_to_list(comp_dct[comp_keys[7]], line)
                                             # getting port_ID of N-port from port_id of F-port
                                             n_portid = ag_attach_lst[0][:-2] + '00'
                                             # adding current line F-port information to Attached F-Port information dictionary 
@@ -152,7 +160,7 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                                             # create Access Gateway F-Port information dictionary
                                             ag_fport_dct = ag_fport_dct or dict((n_portid, []) for n_portid in ag_info_dct['N-Port ID(s)'].split(','))
                                             # extracting access gateway F-port data from line to list
-                                            ag_fport_lst = line_to_list(comp_dct[comp_keys[8]], line)
+                                            ag_fport_lst = dsop.line_to_list(comp_dct[comp_keys[8]], line)
                                             # getting port_ID of N-port from port_id of F-port
                                             n_portid = ag_fport_lst[1][:-2] + '00'
                                             # adding current line F-port information to Access Gateway F-Port information dictionary
@@ -210,9 +218,9 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                                 if not line:
                                     break
                         # ag_principal section end       
-                status_info('ok', max_title, len(info))
+                meop.status_info('ok', max_title, len(info))
             else:
-                status_info('skip', max_title, len(info))
+                meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
         fabricshow_df = dfop.list_to_dataframe(fabricshow_lst, max_title, sheet_title_import='fabricshow')
@@ -220,12 +228,12 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
         # saving data to csv file
         data_lst = [fabricshow_df, ag_principal_df]
         # save_data(report_constant_lst, data_names, *data_lst)
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     else:
-        # fabricshow_df, ag_principal_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # fabricshow_df, ag_principal_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [fabricshow_df, ag_principal_df]
 
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         fabricshow_df, ag_principal_df = data_lst
 
     # save data to excel file if it's required

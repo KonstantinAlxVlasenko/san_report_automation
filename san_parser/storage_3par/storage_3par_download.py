@@ -4,15 +4,18 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 from datetime import date, timedelta
 
 import numpy as np
-import dataframe_operations as dfop
+import utilities.dataframe_operations as dfop
+import utilities.module_execution as meop
+import utilities.filesystem_operations as fsop
 
-from common_operations_filesystem import create_folder, find_files
-from common_operations_miscellaneous import reply_request, status_info
-from common_operations_table_report import dataframe_to_report
+
+
+# from common_operations_filesystem import create_folder, find_files
+# from common_operations_miscellaneous import reply_request, status_info
+# from common_operations_table_report import dataframe_to_report
 
 
 S3MFT_DIR = r'C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0120\WINDOWS'
@@ -38,13 +41,13 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
     # if download folder exist and there are 3par config files
     # ask if user wants to use them or download new files after removing existing
     if download_folder_exist:
-        configs_downloaded_lst = find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
+        configs_downloaded_lst = fsop.find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
         if configs_downloaded_lst:
             print(f'{len(configs_downloaded_lst)} 3PAR configuration files found in download folder.')
             print("Do you want to USE EXISTING configuarion files? (reply 'yes')")
             print("If you want to REMOVE EXISTING AND UPDATE configuarion files then reply 'no'.")
             query = "Please select '(y)es' (use existing) or '(n)o' (update): "
-            reply = reply_request(query)
+            reply = meop.reply_request(query)
             if reply == 'n':
                 # delete 3par config files
                 print('\n')
@@ -54,10 +57,10 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
     
     # download from STATs
     query = 'Do you want DOWNLOAD configuration files from STATs? (y)es/(n)o: '
-    reply = reply_request(query)
+    reply = meop.reply_request(query)
     if reply == 'y':
         query = 'Are you connected to HPE network?: '
-        reply = reply_request(query)
+        reply = meop.reply_request(query)
         if reply == 'y':
             # download configs from STATs
             ns_3par_df = stats_download(ns_3par_df, download_folder, max_title)
@@ -66,12 +69,12 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
 
     # find configuration files in local 3PAR folder
     if local_3par_folder:
-        configs_local_lst = find_files(local_3par_folder, max_title, filename_contains=comp_dct['configname_3par'])
+        configs_local_lst = fsop.find_files(local_3par_folder, max_title, filename_contains=comp_dct['configname_3par'])
         if configs_local_lst:
             print('\n')
             print(f'{len(configs_local_lst)} 3PAR configuration files found in local folder.')
             query = 'Do you want COPY configuration files from LOCAL to download folder? (y)es/(n)o: '
-            reply = reply_request(query)
+            reply = meop.reply_request(query)
             if reply == 'y':
                 # download configs from loacl folder
                 ns_3par_df = local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, match_keys, comp_dct, max_title)
@@ -81,7 +84,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
     # from both sources download folder is not created)
     download_folder_exist = verify_download_folder(download_folder, create=False)
     if download_folder_exist:
-        configs_3par_lst = find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
+        configs_3par_lst = fsop.find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
         return configs_3par_lst
     else:
         return []
@@ -94,7 +97,7 @@ def verify_download_folder(download_3par_folder, max_title=80, create=True):
     folder_exist = os.path.isdir(download_3par_folder)
 
     if not folder_exist and create:
-        create_folder(download_3par_folder, max_title)
+        fsop.create_folder(download_3par_folder, max_title)
         return True
     return folder_exist
 
@@ -102,7 +105,6 @@ def verify_download_folder(download_3par_folder, max_title=80, create=True):
 def remove_files(files_lst, max_title):
     """Function to remove files from the list"""
 
-    # print('\n')
     for i, file in enumerate(files_lst):
         filename = os.path.basename(file)
         info = ' '*16 + f'[{i+1} of {len(files_lst)}]: Removing file {filename}'
@@ -111,13 +113,13 @@ def remove_files(files_lst, max_title):
         if os.path.isfile(file) or os.path.islink(file):
             try:
                 os.remove(file)
-                status_info('ok', max_title, len(info))
+                meop.status_info('ok', max_title, len(info))
             except OSError as e:
-                status_info('failed', max_title, len(info))
+                meop.status_info('failed', max_title, len(info))
                 print('\n')
                 print(e.strerror)
         else:
-            status_info('skip', max_title, len(info))
+            meop.status_info('skip', max_title, len(info))
     print('\n')
 
 
@@ -151,9 +153,9 @@ def stats_download(ns_3par_df, download_folder, max_title):
         if output.returncode:
             if 'no data found' in output.stderr:
                 config = None
-                status = status_info('no data', max_title, len(info))
+                status = meop.status_info('no data', max_title, len(info))
             else:
-                status_info('fail', max_title, len(info))
+                meop.status_info('fail', max_title, len(info))
                 print(output.stderr)
                 exit()
         else:
@@ -169,11 +171,11 @@ def stats_download(ns_3par_df, download_folder, max_title):
                 config_filename = 'array_' + sn + '_' + config_filename
                 config_file = os.path.join(download_folder, config_filename)        
                 if not download.returncode and os.path.isfile(config_file):
-                    status = status_info('ok', max_title, len(info))
+                    status = meop.status_info('ok', max_title, len(info))
                 else:
-                    status = status_info('fail', max_title, len(info))
+                    status = meop.status_info('fail', max_title, len(info))
             else:
-                status = status_info('skip', max_title, len(info))
+                status = meop.status_info('skip', max_title, len(info))
         
         ns_3par_df.loc[i, ['configname', 'STATs_status']] = [config, status.lower()]
     return ns_3par_df
@@ -214,19 +216,19 @@ def local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, ma
                 status = 'unknown'
                 try:
                     shutil.copy2(source_file, download_folder)
-                    status = status_info('ok', max_title, len(info))
+                    status = meop.status_info('ok', max_title, len(info))
                 except shutil.Error as e:
-                    status = status_info('failed', max_title, len(info))
+                    status = meop.status_info('failed', max_title, len(info))
                     print('\n')
                     print(e)
                 finally:
                     ns_3par_df.loc[mask_sn, ['filename', 'Local_status']] = [filename, status.lower()]
             else:
-                status = status_info('skip', max_title, len(info))
+                status = meop.status_info('skip', max_title, len(info))
         else:
             info = ' '*16 + f'[{i+1} of {len(configs_local_lst)}]: copying {filename}'
             print(info, end=' ')
-            status_info('skip', max_title, len(info))
+            meop.status_info('skip', max_title, len(info))
     
     if drop_stats_column:
         ns_3par_df.drop(columns=['STATs_status'], inplace=True)
@@ -283,7 +285,7 @@ def download_summary(ns_3par_df, report_creation_info_lst):
     print('\n')
 
     query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
-    reply = reply_request(query)
+    reply = meop.reply_request(query)
     if reply == 'y':
         dfop.dataframe_to_excel(ns_3par_df, 'stats_summary', report_creation_info_lst, force_flag=True)
 

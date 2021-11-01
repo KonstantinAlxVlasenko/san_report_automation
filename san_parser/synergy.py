@@ -9,14 +9,23 @@ import numpy as np
 import pandas as pd
 from openpyxl import load_workbook
 
-from common_operations_database import read_db, write_db
-from common_operations_dataframe import wise_combine
-from common_operations_filesystem import find_files, load_data, save_data
-from common_operations_miscellaneous import (force_extract_check, line_to_list,
-                                             status_info, update_dct,
-                                             verify_data, verify_force_run)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_table_report import dataframe_to_report
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+
+# from common_operations_database import read_db, write_db
+# from common_operations_dataframe import wise_combine
+# from common_operations_filesystem import find_files, load_data, save_data
+# from common_operations_miscellaneous import (force_extract_check, line_to_list,
+#                                              status_info, update_dct,
+#                                              verify_data, verify_force_run)
+# from common_operations_servicefile import columns_import, data_extract_objects
+# from common_operations_table_report import dataframe_to_report
 
 
 def synergy_system_extract(report_entry_sr, report_creation_info_lst):
@@ -41,7 +50,7 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # # unpacking from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -49,7 +58,7 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     if force_run:
 
         # lists to store only REQUIRED infromation
@@ -91,14 +100,14 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
             print('\nEXTRACTING SYNERGY SYSTEM INFORMATION ...\n')   
             
             # collects files in folder with xlsm extension
-            synergy_config_lst = find_files(synergy_folder, max_title, filename_extension='xlsm')
+            synergy_config_lst = fsop.find_files(synergy_folder, max_title, filename_extension='xlsm')
             # number of files to check
             configs_num = len(synergy_config_lst)
 
             if configs_num:
 
                 # # data imported from init file to extract values from config file
-                # enclosure_params, _, comp_keys, match_keys, comp_dct = data_extract_objects('blades', max_title)
+                # enclosure_params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('blades', max_title)
                 # module_params = columns_import('blades', max_title, 'module_params')
                 # blade_params = columns_import('blades', max_title, 'blade_params')
 
@@ -163,9 +172,9 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
 
 
                     if not synergy_servers_df.empty or not synergy_module_df.empty:
-                        status_info('ok', max_title, len(info))
+                        meop.status_info('ok', max_title, len(info))
                     else:
-                        status_info('no data', max_title, len(info))
+                        meop.status_info('no data', max_title, len(info))
 
                 module_columns_dct = {'enclosurename': 'Enclosure_Name',
                                     'enclosure_serialnumber': 'Enclosure_SN',
@@ -202,18 +211,18 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
             # current operation information string
             info = f'Collecting synergy details'
             print(info, end =" ")
-            status_info('skip', max_title, len(info))
+            meop.status_info('skip', max_title, len(info))
         data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
         # save empty data to json file
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # synergy_module_aggregated_df, synergy_servers_aggregated_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # synergy_module_aggregated_df, synergy_servers_aggregated_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
 
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         synergy_module_aggregated_df, synergy_servers_aggregated_df = data_lst
 
     # save data to service file if it's required
@@ -229,7 +238,7 @@ def synergy_module(syn_enclosure_df, syn_module_df):
     synergy_enclosure_df = syn_enclosure_df[enclosure_columns].copy()
     
     synergy_enclosure_df['enclosuretype'] = \
-        synergy_enclosure_df[['enclosuremodel', 'version']].apply(wise_combine, axis=1)
+        synergy_enclosure_df[['enclosuremodel', 'version']].apply(dfop.wise_combine, axis=1)
         
     synergy_enclosure_df.rename(columns={'name': 'enclosurename', 'serialnumber': 'enclosure_serialnumber'}, inplace=True)
     synergy_enclosure_df.drop(columns=['enclosuremodel', 'version'], inplace=True)
@@ -239,7 +248,7 @@ def synergy_module(syn_enclosure_df, syn_module_df):
     mask_state = syn_module_df['state'].notna()
     synergy_module_df = syn_module_df.loc[mask_state, module_columns]
     synergy_module_df['device_location'] = \
-        synergy_module_df[['enclosurename', 'baynumber']].apply(wise_combine, axis=1, args=('Enclosure ', ' bay '))
+        synergy_module_df[['enclosurename', 'baynumber']].apply(dfop.wise_combine, axis=1, args=('Enclosure ', ' bay '))
     
     # add interconnect information to enclosure
     synergy_module_df = synergy_enclosure_df.merge(synergy_module_df, how='left', on=['enclosurename'])
@@ -310,7 +319,7 @@ def synergy_server_wwn(syn_server_hw_df):
         synergy_server_wwn_df = combined_df.copy()
             
     synergy_server_wwn_df['device_location'] = \
-        synergy_server_wwn_df[['enclosurename', 'position']].apply(wise_combine, axis=1, args=('Enclosure ', ' slot '))
+        synergy_server_wwn_df[['enclosurename', 'position']].apply(dfop.wise_combine, axis=1, args=('Enclosure ', ' slot '))
 
     return synergy_server_wwn_df
     
@@ -325,7 +334,7 @@ def synergy_profile_wwn(syn_server_profile_connection_df, synergy_server_wwn_df)
     
     synergy_connection_profile_df[['Mezz_location', 'Mezz_number']] = synergy_connection_profile_df['portid'].str.extract(r'^ *(\w+) *(\d)')
     synergy_connection_profile_df['Mezz_location'] = \
-        synergy_connection_profile_df[['Mezz_location', 'Mezz_number']].apply(wise_combine, axis=1, args=('', ''))
+        synergy_connection_profile_df[['Mezz_location', 'Mezz_number']].apply(dfop.wise_combine, axis=1, args=('', ''))
     synergy_connection_profile_df.rename(columns={'profilename': 'serverprofilename', 'wwpn': 'Mezz_WWPN'}, inplace=True)
     synergy_connection_profile_df = synergy_connection_profile_df.reindex(columns=['serverprofilename', 'Mezz_location', 'Mezz_WWPN'])
     

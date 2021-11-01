@@ -1,79 +1,11 @@
-import re
+""""""
 
-import numpy as np
 import pandas as pd
-
-from common_operations_dataframe import dataframe_fillna, сoncatenate_columns
-from common_operations_dataframe_presentation import translate_dataframe
+import numpy as np
 
 
-def verify_lic(df, lic_column: str, lic_name: str):
-    """Function to check if lic_name is present on both connected switches (trunk capability)"""
-    
-    connected_lic_column = 'Connected_' + lic_column
-    lic_columns_dct = {lic_column : lic_name + '_license', connected_lic_column : 'Connected_' + lic_name + '_license'}
-
-    # verify lic installed on each switch 
-    for licenses_column, verified_lic_column in lic_columns_dct.items():
-        df[verified_lic_column] = \
-            df.loc[df[licenses_column].notnull(), licenses_column].apply(lambda x: lic_name.lower() in x.lower())
-        df[verified_lic_column].replace(to_replace={True: 'Yes', False: 'No'}, inplace = True)
-        
-    # verify lic installed on both switches
-    lic_both_switches_column = lic_name + '_lic_both_switches'    
-    df[lic_both_switches_column] = np.nan
-    # masks license info present and license installed or not
-    mask_lic_notna_both_sw = df[lic_columns_dct.values()].notna().all(axis=1)
-    mask_all_yes = (df[lic_columns_dct.values()] == 'Yes').all(axis=1)
-    mask_any_no = (df[lic_columns_dct.values()] == 'No').any(axis=1)
-    
-    df[lic_both_switches_column] = np.select(
-        [mask_lic_notna_both_sw & mask_all_yes, mask_lic_notna_both_sw & mask_any_no],
-        ['Yes', 'No'], default='Unknown')
-    
-    return df
-
-
-def verify_max_link_speed(df):
-    """
-    Function to evaluate maximum available port speed
-    and check if link operates on maximum speed.
-    Maximum available link speed is calculated as minimum of next values 
-    speed_chassis1, speed_chassis2, max_sfp_speed_switch1, max_sfp_speed_switch2
-    """
-
-    # columns to check speed
-    speed_lst = ['Transceiver_speedMax', 'Connected_Transceiver_speedMax', 
-                 'switch_speedMax', 'Connected_switch_speedMax']
-    
-    if pd.Series(speed_lst).isin(df.columns).all():
-        # minimum of four speed columns
-        mask_speed_notna = df[speed_lst].notna().all(axis=1)
-        # minimum of four speed columns
-        df.loc[mask_speed_notna, 'Link_speedMax'] = df.loc[mask_speed_notna, speed_lst].min(axis = 1, numeric_only=True)
-        # actual link speed
-        df['Link_speedActual'] = df['speed'].str.extract(r'(\d+)').astype('float64')
-        # mask to check speed in columns are not None values
-        mask_speed = df[['Link_speedActual', 'Link_speedMax']].notna().all(1)
-        # compare values in Actual and Maximum speed columns
-        df.loc[mask_speed, 'Link_speedActualMax']  = \
-            pd.Series(np.where(df['Link_speedActual'].eq(df['Link_speedMax']), 'Yes', 'No'))  
-    else:
-        df['Link_speedMax'] = np.nan
-    return df
-
-
-def count_bandwidth(df, speed_column: str, connection_grp_columns: list):
-    """Function to count total bandwidth between each pair of switches 
-    defined by connection_grp_columns"""
-    
-    # extract speed values
-    df['Bandwidth_Gbps'] = df[speed_column].str.extract(r'(\d+)')
-    df['Bandwidth_Gbps'] = df['Bandwidth_Gbps'].astype('int64', errors='ignore')
-    # group links so all links between two switches are in one group
-    # count total bandwidth for each group (connection)
-    bandwidth_df = df.groupby(by=connection_grp_columns, dropna=False)['Bandwidth_Gbps'].sum()
-    return bandwidth_df
+from .value_processing import count_bandwidth
+from .value_presentation import сoncatenate_columns
 
 
 def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_qunatity_column: str, speed_column: str):
@@ -107,6 +39,7 @@ def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_
                                                 left_index=True, right_index=True)
     statistics_df.reset_index(inplace=True)
     return statistics_df
+
 
 # count_total from datframe_operations
 def count_summary(df, group_columns: list, count_columns: list=None, fn: str='sum'):
@@ -143,11 +76,9 @@ def count_all_row(statistics_summary_df):
     statistics_total_df.loc['All']= statistics_total_df.sum(numeric_only=True, axis=0)
     # rename Fabric_name to All
     statistics_total_df.loc['All', 'Fabric_name'] = 'All'
-    
     # drop all rows except 'All'
     mask_fabric_name_all = statistics_total_df['Fabric_name'] == 'All'
     statistics_total_df = statistics_total_df.loc[mask_fabric_name_all].copy()
-    
     statistics_total_df.reset_index(inplace=True, drop=True)
     return statistics_total_df
 
@@ -170,7 +101,8 @@ def concat_statistics(statistics_df, summary_df, total_df, sort_columns):
     return statistics_df
 
 
-def verify_connection_symmetry(statistics_summary_df, connection_symmetry_columns, summary_column='Asymmetry_note'):
+# should be renamed to verify_symmetry verify_connection_symmetry
+def verify_symmetry_regarding_fabric_name(statistics_summary_df, symmetry_columns, summary_column='Asymmetry_note'):
     """Function to verify if connections are symmetric in each Fabrics_name from values in
     connection_symmetry_columns point of view. Function adds Assysmetric_note to statistics_summary_df.
     Column contains parameter name(s) for which connection symmetry condition is not fullfilled"""
@@ -183,11 +115,11 @@ def verify_connection_symmetry(statistics_summary_df, connection_symmetry_column
     
     # find number of unique values in connection_symmetry_columns
     connection_symmetry_df = \
-        statistics_summary_cp_df.groupby(by='Fabric_name')[connection_symmetry_columns].agg('nunique')
+        statistics_summary_cp_df.groupby(by='Fabric_name')[symmetry_columns].agg('nunique')
 
     # temporary ineqaulity_notes columns for  connection_symmetry_columns
-    connection_symmetry_notes = [column + '_ineqaulity' for column in connection_symmetry_columns]
-    for column, column_note in zip(connection_symmetry_columns, connection_symmetry_notes):
+    connection_symmetry_notes = [column + '_inequality' for column in symmetry_columns]
+    for column, column_note in zip(symmetry_columns, connection_symmetry_notes):
         connection_symmetry_df[column_note] = np.nan
         # if fabrics are symmetric then number of unique values in groups should be equal to one 
         # mask_values_nonuniformity = connection_symmetry_df[column] == 1
@@ -199,7 +131,7 @@ def verify_connection_symmetry(statistics_summary_df, connection_symmetry_column
     connection_symmetry_df = сoncatenate_columns(connection_symmetry_df, summary_column, 
                                                  merge_columns=connection_symmetry_notes)
     # drop columns with quantity of unique values
-    connection_symmetry_df.drop(columns=connection_symmetry_columns, inplace=True)
+    connection_symmetry_df.drop(columns=symmetry_columns, inplace=True)
     # add Asymmetry_note column to statistics_summary_df
     statistics_summary_df = statistics_summary_df.merge(connection_symmetry_df, how='left', on=['Fabric_name'])
     # clean notes for dropped fabrics
@@ -207,6 +139,115 @@ def verify_connection_symmetry(statistics_summary_df, connection_symmetry_column
         statistics_summary_df.loc[mask_not_valid, summary_column] = np.nan
 
     return statistics_summary_df
+
+
+def count_group_members(df, group_columns, count_columns: dict):
+    """
+    Auxiliary function to count how many value instances are in a DataFrame group.
+    DataFrame group defined by group_columns. Instances of which column have to be 
+    counted and name of the column containing instances number are in ther count_columns
+    dict (dictionary key is column name with values to be evaluated, dictionary value is 
+    created column name with instances number).
+    After counting members in groups information added to df DataFrame
+    """
+
+    for count_column, rename_column in count_columns.items():
+        if count_column in df.columns:
+            current_sr = df.groupby(by=group_columns)[count_column].count()
+            current_df = pd.DataFrame(current_sr)
+            current_df.rename(columns={count_column: rename_column}, inplace=True)
+            current_df.reset_index(inplace=True)
+            
+            df = df.merge(current_df, how='left', on=group_columns)
+    return df
+
+
+
+# # RENAME TO count_summary
+# def count_total(df, group_columns: list, count_columns: list, fn: str):
+#     """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
+#     on each iteration. Count columns defines column names for which total need to be calculated.
+#     Function in string representation defines aggregation function to find summary values"""
+
+#     if isinstance(count_columns, str):
+#         count_columns = [count_columns]
+    
+#     total_df = pd.DataFrame()
+#     for _ in range(len(group_columns)):
+#         current_df = df.groupby(by=group_columns)[count_columns].agg(fn)
+#         current_df.reset_index(inplace=True)
+#         if total_df.empty:
+#             total_df = current_df.copy()
+#         else:
+#             total_df = pd.concat([total_df, current_df])
+#         # increase group size
+#         group_columns.pop()
+        
+#     return total_df
+
+
+def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabric_label'], margin_column_row:tuple=None):
+    """Auxiliary function to count values in groups for columns in count_columns.
+    Parameter margin_column_row is tuple of doubled booleans tuples ((False, True), (True, False), etc). 
+    It defines if margin for column and row should be calculated for column values from count_columns list.
+    By default column All is dropped and row All is kept. If margin_column_row is defined as tuple of booleans pair
+    than it's repeated for all columns from count_columns"""
+
+    if margin_column_row and len(margin_column_row) == 2:
+        if all([isinstance(element, bool) for element in margin_column_row]):
+            margin_column_row =  ((False, False),) * len(count_columns)
+
+    # by default keep summary row but remove summary column
+    if not margin_column_row:
+        margin_column_row =  ((False, True),) * len(count_columns)
+    if len(count_columns) != len(margin_column_row):
+        print('\n')
+        print('Parameters count_columns and margin_column_row in count_frequency function have different length')
+        exit()
+
+    index_lst = [df[column] for column in group_columns if column in df.columns]
+    frequency_df = pd.DataFrame()
+
+    for column, (margin_column, margin_row) in zip(count_columns, margin_column_row):
+        if column in df.columns and df[column].notna().any():
+            df[column].fillna(np.nan, inplace=True)
+            current_df = pd.crosstab(index=index_lst, columns=df[column], margins=any((margin_column, margin_row)))
+            current_df = current_df.sort_index()
+            if any((margin_column, margin_row)):
+                # drop column All
+                if not margin_column:
+                    current_df.drop(columns=['All'], inplace=True)
+                # drop row All
+                if not margin_row:
+                    current_df.drop(index=['All'], inplace=True)
+            if frequency_df.empty:
+                frequency_df = current_df.copy()
+            else:
+                frequency_df = frequency_df.merge(current_df, how='outer', on=group_columns)
+
+    frequency_df.fillna(0, inplace=True)            
+    frequency_df.reset_index(inplace=True)                
+    return frequency_df
+
+
+def find_mean_max_min(df, count_columns: dict, group_columns = ['Fabric_name', 'Fabric_label']):
+    """Auxiliary function to find mean, max and min values in groups for columns in count_columns
+    and rename columns with corresponding keys from count_columns"""
+    
+    summary_df = pd.DataFrame()
+    for count_column, rename_column in count_columns.items():
+        current_df = df.groupby(by = group_columns)[count_column].agg(['mean', 'max', 'min'])
+        current_df['mean'] = current_df['mean'].round(1)
+        rename_dct = {}
+        for column in current_df.columns:
+            rename_dct[column] = rename_column + '_' + column
+        current_df.rename(columns=rename_dct, inplace=True)
+        current_df.reset_index(inplace=True)
+        if summary_df.empty:
+            summary_df = current_df.copy()
+        else:
+            summary_df = summary_df.merge(current_df, how='outer', on=group_columns)            
+    return summary_df
 
 
 def summarize_statistics(statistics_df, count_columns, connection_symmetry_columns, sort_columns):
@@ -219,7 +260,7 @@ def summarize_statistics(statistics_df, count_columns, connection_symmetry_colum
         count_summary(statistics_df, group_columns=['Fabric_name', 'Fabric_label'], count_columns=count_columns, fn=sum)
     # verify if fabrics are symmetrical from connection_symmetry_columns point of view
     statistics_summary_df = \
-        verify_connection_symmetry(statistics_summary_df, connection_symmetry_columns)
+        verify_symmetry_regarding_fabric_name(statistics_summary_df, connection_symmetry_columns)
     # total statistics for all fabrics
     statistics_total_df = count_all_row(statistics_summary_df)
     # concatenate all statistics in certain order
@@ -227,74 +268,3 @@ def summarize_statistics(statistics_df, count_columns, connection_symmetry_colum
     return statistics_df
 
 
-def statistics_report(statistics_df, report_headers_df, df_name, report_columns_usage_dct, drop_columns=None):
-    """Function to create report table out of statistics_df DataFrame"""
-
-    statistics_report_df = pd.DataFrame()
-    if not drop_columns:
-        drop_columns = []
-    if not statistics_df.empty:
-        chassis_column_usage = report_columns_usage_dct.get('chassis_info_usage')
-        statistics_report_df = statistics_df.copy()
-        # identify columns to drop and drop columns
-        if not chassis_column_usage:
-            drop_columns.append('chassis_name')
-        drop_columns = [column for column in drop_columns if column in statistics_df.columns]
-        statistics_report_df.drop(columns=drop_columns, inplace=True)
-        statistics_report_df = translate_dataframe(statistics_report_df, report_headers_df, df_name)
-        # drop empty columns
-        statistics_report_df.dropna(axis=1, how='all', inplace=True)
-    return statistics_report_df
-
-
-def  convert_wwn(df, wwn_columns: list):
-    """Function to convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)"""
-
-    for wwn_column in wwn_columns:
-        if wwn_column in df.columns and df[wwn_column].notna().any():
-            mask_wwn = df[wwn_column].notna()
-            df.loc[mask_wwn, wwn_column] = df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
-            df[wwn_column] = df[wwn_column].str.lower()
-    return df
-
-
-def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list, fabric_columns: list=[]):
-    """Function to replace wwnn in wwn_column (column with presumably mixed wwnn and wwnp values) 
-    of wwn_df DataFrame with corresponding wwnp value if wwnn is present. wwnn_wwnp_df DataFrame contains strictly defined 
-    wwnn and wwnp values in corresponding columns which passed as wwnn_wwnp_columns parameter.
-    fabric_columns contains additional columns if required find wwnp for wwnn in certain fabric only."""
-    
-    wwnn_column, wwnp_column = wwnn_wwnp_columns
-    join_columns = [*fabric_columns, wwnn_column]
-
-    if wwnp_column in wwn_df.columns:
-        wwn_df[wwnp_column] = np.nan
-
-    # assume that all values in wwn_column are wwnns
-    wwn_df[wwnn_column] = wwn_df[wwn_column]
-    # find corresponding wwnp value from wwnn_wwnp_df for each presumed wwnn in wwn_df
-    # rows with filled values in wwnp_column have confirmed wwnn value in  wwnn_column column of wwn_df
-    wwn_df = dataframe_fillna(wwn_df, wwnn_wwnp_df, 
-                                    join_lst=join_columns, 
-                                    filled_lst=[wwnp_column], remove_duplicates=False)
-    # when rows have empty values in wwnp_column mean wwn doesn't exist in fabric or it is wwnp
-    wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True)
-    wwn_df.drop(columns=[wwnn_column], inplace=True)
-    return wwn_df
-
-
-def tag_value_in_column(df, column, tag, binding_char='_'):
-    """Function to tag all notna values in DataFrame column with tag"""
-
-    tmp_column = 'tag_column'
-    # change temp column name if column in DataFrame
-    while tmp_column in df.columns:
-        tmp_column += '_'
-
-    mask_value_notna = df[column].notna()
-    df[tmp_column] = tag + binding_char
-    df[column] = df[column].astype('Int64', errors='ignore').astype('str', errors='ignore')
-    df[column] = df.loc[mask_value_notna, tmp_column] + df.loc[mask_value_notna, column]
-    df.drop(columns=tmp_column, inplace=True)
-
-    return df

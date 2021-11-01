@@ -3,17 +3,24 @@
 
 import re
 
-import pandas as pd
-from pandas.core import indexing
-import dataframe_operations as dfop
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+# import pandas as pd
+# from pandas.core import indexing
+# import dataframe_operations as dfop
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (
+#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
+# from common_operations_servicefile import columns_import, data_extract_objects
+# from common_operations_miscellaneous import verify_force_run
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
@@ -32,24 +39,24 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration    
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
 
     if force_run:    
         print('\nEXTRACTING INTERSWITCH CONNECTION INFORMATION (ISL, TRUNK, TRUNKAREA) ...\n')   
         
         # # extract chassis parameters names from init file
-        # switch_columns = columns_import('switch', max_title, 'columns')
+        # switch_columns = sfop.columns_import('switch', max_title, 'columns')
         
         # number of switches to check
         switch_num = len(switch_params_df.index)   
      
         # data imported from init file to extract values from config file
-        *_, comp_keys, match_keys, comp_dct = data_extract_objects('isl', max_title)
-        lsdb_params = columns_import('isl', max_title, 'lsdb_params')
+        *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('isl', max_title)
+        lsdb_params = sfop.columns_import('isl', max_title, 'lsdb_params')
 
 
         # lists to store only REQUIRED infromation
@@ -105,7 +112,7 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
                                 match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # islshow_match
                                 if match_dct[match_keys[1]]:
-                                    isl_port = line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst[:-1])
+                                    isl_port = dsop.line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst[:-1])
                                     # portcfg parameters
                                     if isl_port[-1]:
                                         isl_port[-1] = isl_port[-1].replace(' ', ', ')
@@ -129,7 +136,7 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
                                 match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # trunkshow_match
                                 if match_dct[match_keys[4]]:
-                                    trunk_port = line_to_list(comp_dct[comp_keys[4]], line, *switch_info_lst[:-1])
+                                    trunk_port = dsop.line_to_list(comp_dct[comp_keys[4]], line, *switch_info_lst[:-1])
                                     # if trunk line has trunk number then remove ":" from trunk number
                                     if trunk_port[9]:
                                         trunk_port[9] = trunk_port[9].strip(':')
@@ -159,7 +166,7 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
                                 match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # 'porttrunkarea_match'
                                 if match_dct[match_keys[6]]:
-                                    porttrunkarea_port_lst = line_to_list(comp_dct[comp_keys[6]], line, *switch_info_lst[:6])
+                                    porttrunkarea_port_lst = dsop.line_to_list(comp_dct[comp_keys[6]], line, *switch_info_lst[:6])
                                     # for No_light ports port and slot numbers are '--'
                                     if porttrunkarea_port_lst[11] == '--':
                                         porttrunkarea_port_lst[10] = '--'
@@ -194,7 +201,7 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
                                     lsdb_param_dct = {}
                                     # Domain ID described by this LSR. 
                                     # A (self) keyword after the domain ID indicates that LSR describes the local switch.
-                                    domain_self_tag_lst = line_to_list(comp_dct['lsdb_domain'], line)
+                                    domain_self_tag_lst = dsop.line_to_list(comp_dct['lsdb_domain'], line)
                                     # lsdb_link_comp
                                     while not (re.search(comp_dct['lsdb_link'],line) or re.search(comp_dct['switchcmd_end'],line)):
                                         line = file.readline()
@@ -211,14 +218,14 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
                                 # lsdb_domain section end
                                 if match_dct['lsdb_link']:
                                     # extract link information
-                                    lsdb_link_lst = line_to_list(comp_dct['lsdb_link'], line)
+                                    lsdb_link_lst = dsop.line_to_list(comp_dct['lsdb_link'], line)
                                     # add link information to the global list with current switch and lsdb information 
                                     lsdb_lst.append([*switch_info_lst[:6], *domain_self_tag_lst,*lsdb_param_lst, *lsdb_link_lst])
                         # lsdb section end
-                status_info('ok', max_title, len(info))
+                meop.status_info('ok', max_title, len(info))
             # if switch in Access Gateway mode then skip
             else:
-                status_info('skip', max_title, len(info))        
+                meop.status_info('skip', max_title, len(info))        
 
         # convert list to DataFrame
         isl_df = dfop.list_to_dataframe(isl_lst, max_title,  sheet_title_import='isl')
@@ -229,13 +236,13 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
         data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        isl_df, trunk_df, porttrunkarea_df, lsdb_df = verify_data(report_constant_lst, data_names, *data_lst)
+        isl_df, trunk_df, porttrunkarea_df, lsdb_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
 
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         isl_df, trunk_df, porttrunkarea_df, lsdb_df = data_lst
 
     # save data to excel file if it's required

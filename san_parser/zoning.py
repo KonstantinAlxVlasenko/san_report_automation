@@ -2,16 +2,25 @@
 
 
 import re
-import dataframe_operations as dfop
-import pandas as pd
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+
+# import dataframe_operations as dfop
+# import pandas as pd
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (
+#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
+# from common_operations_servicefile import columns_import, data_extract_objects
+# from common_operations_miscellaneous import verify_force_run
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def zoning_extract(switch_params_df, report_creation_info_lst):
@@ -30,11 +39,11 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
 
     if force_run:              
         print('\nEXTRACTING ZONING INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
@@ -46,7 +55,7 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
         switch_num = len(switch_params_df.index)   
          
         # data imported from init file to extract values from config file
-        *_, comp_keys, match_keys, comp_dct = data_extract_objects('zoning', max_title)  
+        *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('zoning', max_title)  
         
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping
@@ -115,7 +124,7 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                     effective = True                                     
                                 # 'cfg_match'
                                 if match_dct[match_keys[1]]:
-                                    cfg_line = line_to_list(comp_dct[comp_keys[1]], line)
+                                    cfg_line = dsop.line_to_list(comp_dct[comp_keys[1]], line)
                                     # zoning config name
                                     cfg_name = cfg_line[0]
                                     # add config name to the set
@@ -142,7 +151,7 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                             break
                                 # 'zone_match'
                                 elif match_dct[match_keys[5]]:
-                                    zone_line = line_to_list(comp_dct[comp_keys[5]], line)
+                                    zone_line = dsop.line_to_list(comp_dct[comp_keys[5]], line)
                                     zone_name = zone_line[0]
                                     # if line contains zone name and zone member
                                     if zone_line[1]:
@@ -170,7 +179,7 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                             break
                                 # 'alias_match'
                                 elif match_dct[match_keys[6]]:
-                                    alias_line = line_to_list(comp_dct[comp_keys[6]], line)
+                                    alias_line = dsop.line_to_list(comp_dct[comp_keys[6]], line)
                                     alias_name = alias_line[0]
                                     # if line contains alias name and alias member
                                     if alias_line[1]:
@@ -213,7 +222,7 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                     peerzone_effective = True                                     
                                 # 'zone_match'
                                 if match_dct[match_keys[5]]:
-                                    zone_line = line_to_list(comp_dct[comp_keys[5]], line)
+                                    zone_line = dsop.line_to_list(comp_dct[comp_keys[5]], line)
                                     zone_name = zone_line[0]
                                     line = file.readline()
                                     # zoning_switchcmd_end_comp separates different zones
@@ -264,9 +273,9 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                 if not line:
                                     break
                         # peerzone section end
-                status_info('ok', max_title, len(info))
+                meop.status_info('ok', max_title, len(info))
             else:
-                status_info('skip', max_title, len(info))
+                meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
         cfg_df = dfop.list_to_dataframe(cfg_lst, max_title, sheet_title_import='zoning')
@@ -280,13 +289,13 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
         data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = data_lst
 
     # save data to excel file if it's required

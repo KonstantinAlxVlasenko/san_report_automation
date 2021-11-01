@@ -1,42 +1,14 @@
-'''Module to import data from service files (san_automation_info.xlsx and report_info.xlsx)'''
+"""Module to import data from service files (san_automation_info.xlsx and report_info.xlsx)"""
 
 import os
 import re
 import sys
-import xlrd
-import pandas as pd
-from common_operations_miscellaneous import status_info
 import warnings
 
+import pandas as pd
+import xlrd
 
-# TO_REMOVE
-# def report_entry_values(max_title):
-#     """
-#     Function to import entry report values:
-#     customer_name, hardware configuration files, directory to save report 
-#     """
-
-#     report_entry_df = dataframe_import('report', max_title, 'report_info.xlsx', ['name', 'value'], 'name', display_status=False)
-
-#     customer_name = report_entry_df.loc['customer_name', 'value']
-#     project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
-#     ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
-#     if not pd.isna(report_entry_df.loc['blade_showall_folder', 'value']):
-#         blade_folder = os.path.normpath(report_entry_df.loc['blade_showall_folder', 'value'])
-#     else:
-#         blade_folder = None
-
-#     if not pd.isna(report_entry_df.loc['synergy_meddler_folder', 'value']):
-#         synergy_folder = os.path.normpath(report_entry_df.loc['synergy_meddler_folder', 'value'])
-#     else:
-#         synergy_folder = None
-
-#     if not pd.isna(report_entry_df.loc['3par_inserv_folder', 'value']):
-#         local_3par_folder = os.path.normpath(report_entry_df.loc['3par_inserv_folder', 'value'])
-#     else:
-#         local_3par_folder = None
-
-#     return customer_name, project_folder, ssave_folder, blade_folder, synergy_folder, local_3par_folder
+from utilities.module_execution import status_info
 
 
 def columns_import(sheet_title, max_title, *args, 
@@ -82,7 +54,7 @@ def columns_import(sheet_title, max_title, *args,
 
 
 def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', 
-                        columns = None, index_name=None, header=0, display_status=True):
+                        columns = None, index_name = None, header = 0, display_status=True):
     """Function to import dataframe from exel file"""
 
     warnings.filterwarnings('ignore', category=UserWarning, module="openpyxl")
@@ -95,8 +67,7 @@ def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xl
         print(info, end = ' ')
     # try read data in excel
     try:
-        dataframe = pd.read_excel(init_file, sheet_name=sheet_title, usecols=columns, 
-                                    index_col=index_name, header=header)
+        dataframe = pd.read_excel(init_file, sheet_name=sheet_title, usecols=columns, index_col=index_name, header=header)
     # if file is not found
     except FileNotFoundError:
         if display_status:
@@ -178,39 +149,4 @@ def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xls
         sys.exit()
 
     return dct
-
-
-def dct_from_dataframe(df, *args) -> dict:
-    """Function to create dictionary from DataFrame columns. Args is column names.
-    If only one column passed then dictionary with keys and empty lists as values created.
-    If several columns imported then first column is keys of dictionary and others are values
-    or list of values)
-    """
-
-    # info string in case if not possible to create dictionary
-    info = f'{args} columns have different length. Not able to create dictionary.'
-
-
-    current_df = df[list(args)].dropna(how='all')
-
-    if current_df.isna().values.any():
-        print(info)
-        exit()
-
-    keys = current_df[args[0]].tolist()
-
-    # if one column is passed then create dictionary with keys and empty lists as values for each key
-    if len(args) == 1:
-        dct = dict((key, []) for key in keys)
-    # if two columns passed then create dictionary of keys with one value for each key
-    elif len(args) == 2:
-        values = current_df[args[1]].tolist()
-        dct ={key: value for key, value in zip(keys, values)}
-    # if morte than two columns passed then create dictionary of keys with list of values for each key
-    else:
-        values = [current_df[arg].tolist() for arg in args[1:]]
-        dct ={key: value for key, *value in zip(keys, *values)}
-
-    return dct
-
 

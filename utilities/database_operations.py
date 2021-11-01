@@ -1,16 +1,17 @@
-"""Module to perform operations SQLite3 database"""
+"""Module to perform operations SQLite3 database and check if data in database is empty"""
 
 
 import os
 import sqlite3
+import warnings
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-from common_operations_miscellaneous import status_info
+from utilities.module_execution import status_info
 
 
-def write_db(report_constant_lst, report_steps_dct, data_names, *args):
+def write_database(report_constant_lst, report_steps_dct, data_names, *args):
     """
     Function to write table data to SQL database.
     Args are comma separated DataFrames to save.
@@ -20,7 +21,6 @@ def write_db(report_constant_lst, report_steps_dct, data_names, *args):
         customer_name, _, db_dir, max_title, _ = report_constant_lst
     else:
         customer_name, _, db_dir, max_title, *_ = report_constant_lst
-
 
     for data_name, data_exported in zip(data_names, args):
 
@@ -35,7 +35,7 @@ def write_db(report_constant_lst, report_steps_dct, data_names, *args):
             data_exported_flat, empty_data = dataframe_flatten(data_exported)
             substitute_names(data_exported_flat, 'write')
             # save single level Index DataFrame to database
-            write_sql(db_path, data_name, data_exported_flat)
+            write_sql(db_path, data_name, data_exported_flat, max_title, info)
             if not empty_data:
                 status_info('ok', max_title, len(info))
             else:
@@ -79,13 +79,8 @@ def substitute_names(df, operation):
     if isinstance(df, pd.DataFrame):
         
         masking_tag = '_sql'
-        # substitution_names = [
-        #     ('SwitchName', 'SwitchName_sql'), ('Fabric_Name', 'Fabric_Name_sql'),
-        #     ('SwitchMode', 'SwitchMode_sql'), 'Memory_Usage'	'Flash_Usage']
-
         duplicated_names = ['SwitchName', 'Fabric_Name', 'SwitchMode', 'Memory_Usage', 'Flash_Usage', 'Speed']
-
-                                
+              
         if operation == 'write':
             # replace_dct = {orig_name: mask_name for orig_name, mask_name in substitution_names}
             replace_dct = {orig_name: orig_name + masking_tag for orig_name in duplicated_names}
@@ -97,17 +92,32 @@ def substitute_names(df, operation):
             df.rename(columns=replace_dct, inplace=True)
 
 
-def write_sql(db_path, data_name, df):
+def write_sql(db_path, data_name, df, max_title, info):
     """Function to write DataFrame to SQL DB"""
 
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", 
+                                message="The spaces in these column names will not be changed. In pandas versions < 0.14, spaces were converted to underscores.")
+        keep_index = True if isinstance(df, pd.Series) else False
+        conn = None
+        status = None
+        try:
+            conn = sqlite3.connect(db_path)
+            df.to_sql(name=data_name, con=conn, index=keep_index, if_exists='replace')
+        except pd.io.sql.DatabaseError as e:
+            status = status_info('fail', max_title, len(info))
+            if 'database is locked' in e.args[0]:
+                print(f"\nCan't write {data_name} to {os.path.basename(db_path)}. DB is locked. Close it to proceed.\n")
+            else:
+                print('\n', e)
+        finally:
+            if conn is not None:
+                conn.close()
+            if status=='FAIL':
+                exit()
+            
 
-    keep_index = True if isinstance(df, pd.Series) else False
-    conn = sqlite3.connect(db_path)
-    df.to_sql(name=data_name, con=conn, index=keep_index, if_exists='replace')
-    conn.close()
-
-
-def read_db(report_constant_lst, report_steps_dct, *args):
+def read_database(report_constant_lst, report_steps_dct, *args):
     """Function to read data from SQL.
     Args are comma separated DataFrames names.
     Returns list of loaded DataFrames or None if no data found.
@@ -117,9 +127,6 @@ def read_db(report_constant_lst, report_steps_dct, *args):
         customer_name, _, db_dir, max_title, _ = report_constant_lst
     else:
         customer_name, _, db_dir, max_title, *_ = report_constant_lst
-
-    # db_name = customer_name + '_database.db'
-    # db_path = os.path.join(db_dir, db_name)
 
     # list to store loaded data
     data_imported = []
@@ -150,5 +157,49 @@ def read_db(report_constant_lst, report_steps_dct, *args):
             data_imported.append(None)
             status_info('no data', max_title, len(info))
         conn.close()
-
     return data_imported
+
+
+def verify_read_data(report_constant_lst, data_names, *args,  show_status=True):
+    """
+    Function to verify if loaded DataFrame or Series contains 'NO DATA FOUND' information string.
+    If yes then data converted to empty DataFrame otherwise remains unchanged.
+    Function implemented to avoid multiple collection and analysis of parameters not applicable
+    for the current SAN (fcr, ag, porttrunkarea) 
+    """
+
+    *_, max_title = report_constant_lst
+    
+    # list to store verified data
+    verified_data_lst = []
+    for data_name, data_verified in zip(data_names, args):
+        if show_status:
+            info = f'Verifying {data_name}'
+            print(info, end =" ")
+
+        if not isinstance(data_verified, (pd.DataFrame, pd.Series)):
+            if show_status:
+                status_info('fail', max_title, len(info))
+            print('\nWrong datatype for verification')
+            exit()
+        
+        first_row = data_verified.iloc[0] if isinstance(data_verified, pd.DataFrame) else data_verified
+        
+        if (len(data_verified.index) == 1 and # have single row
+            first_row.nunique() == 1 and # have single unique value
+            'NO DATA FOUND' in data_verified.values): # and this value is 'NO DATA FOUND'
+            if isinstance(data_verified, pd.DataFrame):
+                columns = data_verified.columns
+                data_verified = pd.DataFrame(columns=columns) # for DataFrame use empty DataFrame with column names only
+                # data_verified = data_verified.iloc[0:0] # for DataFrame use empty DataFrame with column names only
+            else:
+                name = data_verified.name
+                data_verified = pd.Series(name=name) # for Series use empty Series
+            if show_status:
+                status_info('empty', max_title, len(info))
+        else:
+            if show_status:
+                status_info('ok', max_title, len(info))
+
+        verified_data_lst.append(data_verified)
+    return verified_data_lst

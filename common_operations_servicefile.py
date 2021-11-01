@@ -10,34 +10,34 @@ import warnings
 
 
 
-def report_entry_values(max_title):
-    """
-    Function to import entry report values:
-    customer_name, hardware configuration files, directory to save report 
-    """
+# def report_entry_values(max_title):
+#     """
+#     Function to import entry report values:
+#     customer_name, hardware configuration files, directory to save report 
+#     """
 
-    report_entry_df = dataframe_import('report', max_title, 'report_info.xlsx', ['name', 'value'], 'name', display_status=False)
+#     report_entry_df = dataframe_import('report', max_title, 'report_info.xlsx', ['name', 'value'], 'name', display_status=False)
 
-    customer_name = report_entry_df.loc['customer_name', 'value']
-    project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
-    ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
-    if not pd.isna(report_entry_df.loc['blade_showall_folder', 'value']):
-        blade_folder = os.path.normpath(report_entry_df.loc['blade_showall_folder', 'value'])
-    else:
-        blade_folder = None
+#     customer_name = report_entry_df.loc['customer_name', 'value']
+#     project_folder = os.path.normpath(report_entry_df.loc['project_folder', 'value'])
+#     ssave_folder = os.path.normpath(report_entry_df.loc['supportsave_folder', 'value'])
+#     if not pd.isna(report_entry_df.loc['blade_showall_folder', 'value']):
+#         blade_folder = os.path.normpath(report_entry_df.loc['blade_showall_folder', 'value'])
+#     else:
+#         blade_folder = None
 
-    if not pd.isna(report_entry_df.loc['synergy_meddler_folder', 'value']):
-        synergy_folder = os.path.normpath(report_entry_df.loc['synergy_meddler_folder', 'value'])
-    else:
-        synergy_folder = None
+#     if not pd.isna(report_entry_df.loc['synergy_meddler_folder', 'value']):
+#         synergy_folder = os.path.normpath(report_entry_df.loc['synergy_meddler_folder', 'value'])
+#     else:
+#         synergy_folder = None
 
-    if not pd.isna(report_entry_df.loc['3par_inserv_folder', 'value']):
-        local_3par_folder = os.path.normpath(report_entry_df.loc['3par_inserv_folder', 'value'])
-    else:
-        local_3par_folder = None
+#     if not pd.isna(report_entry_df.loc['3par_inserv_folder', 'value']):
+#         local_3par_folder = os.path.normpath(report_entry_df.loc['3par_inserv_folder', 'value'])
+#     else:
+#         local_3par_folder = None
     
 
-    return customer_name, project_folder, ssave_folder, blade_folder, synergy_folder, local_3par_folder
+#     return customer_name, project_folder, ssave_folder, blade_folder, synergy_folder, local_3par_folder
 
 
 def columns_import(sheet_title, max_title, *args, 

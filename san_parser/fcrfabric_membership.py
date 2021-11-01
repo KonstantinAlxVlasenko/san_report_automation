@@ -4,16 +4,25 @@
 import itertools
 import re
 
-import pandas as pd
-import dataframe_operations as dfop
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+
+
+# import pandas as pd
+# import dataframe_operations as dfop
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (
+#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
+# from common_operations_servicefile import columns_import, data_extract_objects
+# from common_operations_miscellaneous import verify_force_run
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def fcr_membership_extract(switch_params_df, report_creation_info_lst):
@@ -32,17 +41,17 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
     if force_run:              
         print('\nEXTRACTING FABRICS ROUTING INFORMATION FROM SUPPORTSHOW CONFIGURATION FILES ...\n')
         
         # # extract switch parameters names from init file
-        # switch_columns = columns_import('switch', max_title, 'columns')
+        # switch_columns = sfop.columns_import('switch', max_title, 'columns')
         
         # number of switches to check
         switch_num = len(switch_params_df.index)
@@ -62,7 +71,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
         fcrdev_dct = {'fcrproxydev': [5, fcrproxydev_lst, None], 'fcrphydev': [6, fcrphydev_lst, -3]}    
    
         # data imported from init file to extract values from config file
-        params, _, comp_keys, match_keys, comp_dct = data_extract_objects('fcr', max_title)  
+        params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('fcr', max_title)  
         
         # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
@@ -121,7 +130,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                     match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                     # fc_router_match'
                                     if match_dct[match_keys[1]]:                                   
-                                        fcrouter_params_lst = line_to_list(comp_dct[comp_keys[1]], line)
+                                        fcrouter_params_lst = dsop.line_to_list(comp_dct[comp_keys[1]], line)
                                         # check if line is empty                                    
                                         while not re.match('\r?\n', line):
                                             line = file.readline()
@@ -131,7 +140,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                                 fcrouter_name = match_dct[match_keys[2]].group(1)
                                             # fcr_exports_match                                        
                                             if match_dct[match_keys[3]]:
-                                                fcrfabric_lst.append(line_to_list(comp_dct[comp_keys[3]], line, 
+                                                fcrfabric_lst.append(dsop.line_to_list(comp_dct[comp_keys[3]], line, 
                                                                                     *fcrouter_info_lst, fcrouter_name, 
                                                                                     *fcrouter_params_lst))                                            
                                             if not line:
@@ -158,7 +167,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                         match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                         # fcrdevshow_match
                                         if match_dct[match_keys[7]]:
-                                            fcrdev_lst.append(line_to_list(comp_dct[comp_keys[7]], line, *fcrouter_info_lst)[:slice_index])                                            
+                                            fcrdev_lst.append(dsop.line_to_list(comp_dct[comp_keys[7]], line, *fcrouter_info_lst)[:slice_index])                                            
                                         if not line:
                                             break                                
                             # fcrdevshow section end
@@ -176,7 +185,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                     # lsan_name_match
                                     if match_dct[match_keys[9]]:
                                         # switch_info and current connected device wwnp
-                                        lsan_name = line_to_list(comp_dct[comp_keys[9]], line)
+                                        lsan_name = dsop.line_to_list(comp_dct[comp_keys[9]], line)
                                         # move cursor to one line down to get inside while loop
                                         line = file.readline()
                                         # lsan_switchcmd_end_comp
@@ -185,7 +194,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                             match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                             # lsan_members_match
                                             if match_dct[match_keys[10]]:
-                                                lsan_member = line_to_list(comp_dct[comp_keys[10]], line)
+                                                lsan_member = dsop.line_to_list(comp_dct[comp_keys[10]], line)
                                                 lsan_lst.append([*fcrouter_info_lst, *lsan_name, *lsan_member])
                                             #     line = file.readline()
                                             # else:
@@ -214,8 +223,8 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                 match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                                 # fcredgeshow_match
                                 if match_dct[match_keys[13]]:
-                                    # fcredge_lst.append(line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst, switch_wwn))
-                                    fcredge_lst.append(line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst))                                            
+                                    # fcredge_lst.append(dsop.line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst, switch_wwn))
+                                    fcredge_lst.append(dsop.line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst))                                            
                                 if not line:
                                     break   
                         # fcredgeshow section end
@@ -245,9 +254,9 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                             fcrresource_lst.append([*fcrouter_info_lst, *tmp_lst]) 
                         # fcrresourceshow section end  
                                                                           
-                status_info('ok', max_title, len(info))
+                meop.status_info('ok', max_title, len(info))
             else:
-                status_info('skip', max_title, len(info))
+                meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
         fcrfabric_df = dfop.list_to_dataframe(fcrfabric_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrfabric_columns')
@@ -259,14 +268,14 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
         # saving data to csv file
         data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
         # save_data(report_constant_lst, data_names, *data_lst)
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
 
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = data_lst
 
     # save data to excel file if it's required

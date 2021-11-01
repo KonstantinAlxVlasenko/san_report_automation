@@ -9,9 +9,11 @@ File report_info_xlsx
 import san_analysis
 import san_init
 import san_parser
+import utilities.dataframe_operations as dfop
+
 # from common_operations_table_report import report_format_completion
 
-from utilities import report_format_completion
+# from utilities import report_format_completion
 
 # import pandas as pd
 
@@ -181,7 +183,7 @@ def main():
 
 
 
-    report_format_completion(project_steps_df, report_creation_info_lst)
+    dfop.report_format_completion(project_steps_df, report_creation_info_lst)
     print('\nExecution successfully finished\n')
       
 

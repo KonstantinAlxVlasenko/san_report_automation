@@ -3,16 +3,24 @@
 import os.path
 import re
 
-import pandas as pd
-import dataframe_operations as dfop
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (force_extract_check, status_info,
-                                             verify_data)
-from common_operations_servicefile import data_extract_objects
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+# import pandas as pd
+# import dataframe_operations as dfop
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (force_extract_check, status_info,
+#                                              verify_data)
+# from common_operations_servicefile import data_extract_objects
+# from common_operations_miscellaneous import verify_force_run
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def maps_params_extract(all_config_data, report_creation_info_lst):
@@ -31,7 +39,7 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     
     
@@ -48,7 +56,7 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
 
     # # when any of data_lst was not saved or 
     # # force extract flag is on then re-extract data  from configueation files
@@ -63,7 +71,7 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
         # collecting data for all switches during looping 
         maps_params_fabric_lst = []
         # data imported from init file to extract values from config file
-        maps_params, maps_params_add, comp_keys, match_keys, comp_dct = data_extract_objects('maps', max_title)
+        maps_params, maps_params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('maps', max_title)
         
         # all_confg_data format ([swtch_name, supportshow file, (ams_maps_log files, ...)])
         # checking each config set(supportshow file) for chassis level parameters
@@ -137,11 +145,11 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
                     # and appending this list to the list of all switches maps_params_fabric_lst
                     maps_params_fabric_lst.append([maps_params_dct.get(maps_param, None) for maps_param in maps_params])
                 
-                    status_info('ok', max_title, len(info))
+                    meop.status_info('ok', max_title, len(info))
             else:
                 info = ' '*16+'No AMS_MAPS configuration found.'
                 print(info, end =" ")
-                status_info('skip', max_title, len(info))
+                meop.status_info('skip', max_title, len(info))
         
         # # save extracted data to json file
         # save_data(report_constant_lst, data_names, maps_params_fabric_lst)
@@ -152,12 +160,15 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
         data_lst = [maps_params_fabric_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)    
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)    
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # maps_params_fabric_lst = verify_data(report_constant_lst, data_names, *data_lst)
-        maps_params_fabric_df = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [maps_params_fabric_df]
+        # maps_params_fabric_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        # maps_params_fabric_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [maps_params_fabric_df]
+
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        maps_params_fabric_df, *_ = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):

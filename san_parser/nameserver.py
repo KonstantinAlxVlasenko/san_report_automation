@@ -2,18 +2,26 @@
 
 import os
 import re
-import dataframe_operations as dfop
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+# import dataframe_operations as dfop
 import pandas as pd
-from common_operations_database import read_db, write_db
-from common_operations_dataframe import list_to_dataframe
-from common_operations_filesystem import find_files
-from common_operations_miscellaneous import (line_to_list, status_info,
-                                             update_dct, verify_data,
-                                             verify_force_run)
-from common_operations_servicefile import (columns_import,
-                                           data_extract_objects,
-                                           dct_from_columns)
-from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_filesystem import find_files
+# from common_operations_miscellaneous import (line_to_list, status_info,
+#                                              update_dct, verify_data,
+#                                              verify_force_run)
+# from common_operations_servicefile import (columns_import,
+#                                            data_extract_objects,
+#                                            dct_from_columns)
+# from common_operations_table_report import dataframe_to_report
 
 
 def connected_devices_extract(switch_params_df, report_entry_sr, report_creation_info_lst):
@@ -38,24 +46,24 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
     if force_run:      
         print('\nEXTRACTING INFORMATION ABOUT CONNECTED DEVICES (FDMI, NSSHOW, NSCAMSHOW) ...\n')   
         
         # # extract chassis parameters names from init file
-        # switch_columns = columns_import('switch', max_title, 'columns')
+        # switch_columns = sfop.columns_import('switch', max_title, 'columns')
         
         # number of switches to check
         switch_num = len(switch_params_df.index)   
      
         # data imported from init file to extract values from config file
-        params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('connected_dev', max_title)
-        nsshow_params, nsshow_params_add = columns_import('connected_dev', max_title, 'nsshow_params', 'nsshow_params_add')
+        params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('connected_dev', max_title)
+        nsshow_params, nsshow_params_add = sfop.columns_import('connected_dev', max_title, 'nsshow_params', 'nsshow_params_add')
 
         # lists to store only REQUIRED infromation
         # collecting data for all switches ports during looping
@@ -121,7 +129,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                 # collecting data only for the logical switch in current loop
                                 fdmi_dct = {}
                                 # switch_info and current connected device wwnp
-                                switch_wwnp = line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst[:6])
+                                switch_wwnp = dsop.line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst[:6])
                                 # move cursor to one line down to get inside while loop
                                 line = file.readline()                                
                                 # wwnp_local_comp
@@ -135,7 +143,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                         break
                                         
                                 # adding additional parameters and values to the fdmi_dct
-                                update_dct(params_add, switch_wwnp, fdmi_dct)               
+                                dsop.update_dct(params_add, switch_wwnp, fdmi_dct)               
                                 # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
                                 fdmi_lst.append([fdmi_dct.get(param, None) for param in params])
                             else:
@@ -167,7 +175,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                         # collecting data only for the logical switch in current loop
                                         nsshow_port_dct = {}
                                         # switch_info and current connected device wwnp
-                                        switch_pid = line_to_list(comp_dct[comp_keys[7]], line, *switch_info_lst[:6])
+                                        switch_pid = dsop.line_to_list(comp_dct[comp_keys[7]], line, *switch_info_lst[:6])
                                         # move cursor to one line down to get inside while loop
                                         line = file.readline()                                
                                         # pid_switchcmd_end_comp
@@ -181,7 +189,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                                 break
                                                 
                                         # adding additional parameters and values to the fdmi_dct
-                                        update_dct(nsshow_params_add, switch_pid, nsshow_port_dct)               
+                                        dsop.update_dct(nsshow_params_add, switch_pid, nsshow_port_dct)               
                                         # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
                                         ns_lst.append([nsshow_port_dct.get(nsshow_param, None) for nsshow_param in nsshow_params])
                                     else:
@@ -189,14 +197,14 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                     if not line:
                                         break                                
                         # nsshow section end                     
-            status_info('ok', max_title, len(info))
+            meop.status_info('ok', max_title, len(info))
         
         # check files in dedicated nsshow folder
         if nsshow_folder:
             print('\nEXTRACTING NAMESERVER INFORMATION FROM DEDICATED FILES ...\n')
             # collects files in folder with txt extension
-            txt_files = find_files(nsshow_folder, max_title, filename_extension='txt')
-            log_files = find_files(nsshow_folder, max_title, filename_extension='log')
+            txt_files = fsop.find_files(nsshow_folder, max_title, filename_extension='txt')
+            log_files = fsop.find_files(nsshow_folder, max_title, filename_extension='log')
             nsshow_files_lst = txt_files + log_files
             # number of files to check
             configs_num = len(nsshow_files_lst)  
@@ -213,9 +221,9 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                     # parse nsshow information from current file
                     parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_keys, nsshow_params, nsshow_params_add)
                     if prev_nsshow_dedicated_lst != nsshow_dedicated_lst:
-                        status_info('ok', max_title, len(info))
+                        meop.status_info('ok', max_title, len(info))
                     else:
-                        status_info('empty', max_title, len(info))
+                        meop.status_info('empty', max_title, len(info))
         
         # convert list to DataFrame
         fdmi_df = dfop.list_to_dataframe(fdmi_lst, max_title, sheet_title_import='connected_dev')
@@ -226,14 +234,14 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
         data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
 
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = data_lst
 
     # save data to excel file if it's required
@@ -255,7 +263,7 @@ def parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_key
                 # dictionary to store all DISCOVERED switch ports information
                 nsshow_port_dct = {}
                 # current connected device wwnp
-                pid = line_to_list(comp_dct['port_pid'], line)
+                pid = dsop.line_to_list(comp_dct['port_pid'], line)
                 # move cursor to one line down to get inside while loop
                 line = file.readline()                                
                 # pid_switchcmd_end_comp
@@ -268,7 +276,7 @@ def parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_key
                     if not line:
                         break
                 # adding additional parameters and values to the fdmi_dct
-                update_dct(nsshow_params_add[6:], pid, nsshow_port_dct)               
+                dsop.update_dct(nsshow_params_add[6:], pid, nsshow_port_dct)               
                 # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
                 nsshow_dedicated_lst.append([nsshow_port_dct.get(nsshow_param) for nsshow_param in nsshow_params])
             else:

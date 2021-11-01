@@ -8,12 +8,12 @@ import pandas as pd
 from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
 
-from common_operations_dataframe import dct_from_dataframe
-from common_operations_miscellaneous import status_info
+from utilities.module_execution import status_info
+from .data_stucture_converting import dct_from_dataframe
 
 
 # saving DataFrame to excel file
-def dataframe_to_report(data_frame, sheet_title, report_creation_info_lst, 
+def dataframe_to_excel(data_frame, sheet_title, report_creation_info_lst, 
                         current_date=str(date.today()), force_flag = False, freeze_column='A'):
     """Check if excel file exists, write DataFrame, create or update table of contents,
     change DataFrame text and presentation format."""

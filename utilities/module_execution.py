@@ -1,17 +1,8 @@
-"""
-Module with auxiliary functions to collect data from configuration files
-and  perform operations on data
-"""
+"""Module with auxiliary functions to request input from user, display operation status and
+checking if each step is required to run"""
 
-import re
 
-import pandas as pd
-import numpy as np
 from functools import wraps
-
-
-# from common_operations_filesystem import save_xlsx_file
-# from common_operations_servicefile import columns_import
 
 
 def status_info(status, max_title, len_info_string, shift=0):
@@ -23,7 +14,6 @@ def status_info(status, max_title, len_info_string, shift=0):
     # status info aligned to the right side
     # space between current operation information and status of its execution filled with dots
     print(status.rjust(str_length - len_info_string, '.'))
-
     return status
 
 
@@ -39,31 +29,20 @@ def display_status(info, max_title):
     return dec
 
 
-def line_to_list(re_object, line, *args):
-    """
-    Function to extract values from line with regex object 
-    and combine values with other optional data into list
-    """
+def reply_request(question: str, reply_options = ['y', 'yes', 'n', 'no'], show_reply = False):
+    """Function to ask user for input until its in reply options"""
 
-    values, = re_object.findall(line)
-    if isinstance(values, tuple) or isinstance(values, list):
-        values_lst = [value.rstrip() if value else None for value in values]
+    reply = None                
+    while not reply in reply_options:
+        reply = input(question).lower()
     else:
-        values_lst = [values.rstrip()]
-    return [*args, *values_lst]
-
-
-def update_dct(keys, values, dct, char = ', '):
-    """Function to add param_add:value pairs
-    to the dictionary with discovered parameters
-    """
-
-    for key, value in zip(keys, values):
-        if value:                
-            if isinstance(value, set) or isinstance(value, list):
-                value = f'{char}'.join(value)
-            dct[key] = value
-    return dct
+        if show_reply:
+            print(f'Your choice: {reply}')
+    
+    if reply in ['yes', 'no']:
+        return reply[0]
+    else:
+        return reply
 
 
 def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title):
@@ -110,66 +89,7 @@ def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
         info = f'Force {force_extract_names_str} invoke'
         print(info, end =" ")
         status_info('ok', max_title, len(info))
-        
     return data_check
-
-
-def verify_data(report_constant_lst, data_names, *args,  show_status=True):
-    """
-    Function to verify if loaded json file contains 'NO DATA FOUND' information string.
-    If yes then data converted to empty list [] or DataFrame otherwise remains unchanged.
-    Function implemented to avoid multiple collection and analysis of parametes not applicable
-    for the current SAN (fcr, ag, porttrunkarea) 
-    """
-
-    *_, max_title = report_constant_lst
-    
-    # list to store verified data
-    verified_data_lst = []
-    for data_name, data_verified in zip(data_names, args):
-        if show_status:
-            info = f'Verifying {data_name}'
-            print(info, end =" ")
-        if isinstance(data_verified, (pd.DataFrame, pd.Series)): # if DataFrame or Series
-            first_row = data_verified.iloc[0] if isinstance(data_verified, pd.DataFrame) else data_verified
-            
-            if (len(data_verified.index) == 1 and # have single row
-                first_row.nunique() == 1 and # have single unique value
-                'NO DATA FOUND' in data_verified.values): # and this value is 'NO DATA FOUND'
-                if isinstance(data_verified, pd.DataFrame):
-                    columns = data_verified.columns
-                    data_verified = pd.DataFrame(columns=columns) # for DataFrame use empty DataFrame with column names only
-                    # data_verified = data_verified.iloc[0:0] # for DataFrame use empty DataFrame with column names only
-                else:
-                    name = data_verified.name
-                    data_verified = pd.Series(name=name) # for Series use empty Series
-                if show_status:
-                    status_info('empty', max_title, len(info))
-
-            # if data_verified.iloc[0, 0] == 'NO DATA FOUND':
-            #     # reset DataFrame (leaves columns title only)
-            #     data_verified = data_verified.iloc[0:0]
-            #     data_verified = 'NO DATA FOUND'                
-
-            #     if show_status:
-            #         status_info('empty', max_title, len(info))
-            else:
-                if show_status:
-                    status_info('ok', max_title, len(info))
-        # for other type of data
-        else:
-            # if json file contains NO DATA information string
-            if data_verified == 'NO DATA FOUND':
-                # transorm data to empty list
-                data_verified = []
-                if show_status:
-                    status_info('empty', max_title, len(info))
-            else:
-                if show_status:
-                    status_info('ok', max_title, len(info))
-        verified_data_lst.append(data_verified)
-
-    return verified_data_lst if len(args) > 1 else verified_data_lst[0]
 
 
 def verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names = []):
@@ -210,24 +130,10 @@ def verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed
     #  then analyze extracted config data  
     if not all(data_check) or any(force_extract_keys_lst) or any(analyzed_data_flags):
         force_run = True
-
     return force_run
 
 
-def reply_request(question: str, reply_options = ['y', 'yes', 'n', 'no'], show_reply = False):
-    """Function to ask user for input until its in reply options"""
 
-    reply = None                
-    while not reply in reply_options:
-        reply = input(question).lower()
-    else:
-        if show_reply:
-            print(f'Your choice: {reply}')
-    
-    if reply in ['yes', 'no']:
-        return reply[0]
-    else:
-        return reply
 
 
 

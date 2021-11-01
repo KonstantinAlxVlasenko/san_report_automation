@@ -6,18 +6,25 @@ import os
 import re
 
 import pandas as pd
-import dataframe_operations as dfop
+
 
 from .storage_3par_download import configs_download
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (force_extract_check, line_to_list,
-                                             status_info, update_dct,
-                                             verify_data)
-from common_operations_servicefile import data_extract_objects
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+
+# import dataframe_operations as dfop
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (force_extract_check, line_to_list,
+#                                              status_info, update_dct,
+#                                              verify_data)
+# from common_operations_servicefile import data_extract_objects
+# from common_operations_miscellaneous import verify_force_run
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creation_info_lst):
@@ -42,11 +49,11 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or
     # force extract flag is on then re-extract data from configuration files
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
     if force_run:    
 
@@ -60,7 +67,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
         host_3par_comprehensive_lst = []
 
         # data imported from init file to extract values from config file
-        params, params_add, comp_keys, match_keys, comp_dct = data_extract_objects('3par', max_title)
+        params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('3par', max_title)
         # verify if 3par systems registered in fabric NameServer
         ns_3par_df = verify_ns_3par(nsshow_df, nscamshow_df, comp_dct)
 
@@ -89,14 +96,14 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
                     port_3par_comprehensive_lst.extend(port_lst)
                     host_3par_comprehensive_lst.extend(host_lst)
                     if port_lst or host_lst:
-                        status_info('ok', max_title, len(info))
+                        meop.status_info('ok', max_title, len(info))
                     else:
-                        status_info('no data', max_title, len(info))
+                        meop.status_info('no data', max_title, len(info))
         else:
             # current operation information string
             info = f'Collecting 3PAR storage systems information'
             print(info, end =" ")
-            status_info('skip', max_title, len(info))
+            meop.status_info('skip', max_title, len(info))
             
         # convert list to DataFrame
         system_3par_df = dfop.list_to_dataframe(system_3par_comprehensive_lst, max_title, sheet_title_import='3par')
@@ -105,14 +112,14 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
         # saving data to csv file
         data_lst = [system_3par_df, port_3par_df, host_3par_df]
         # save_data(report_constant_lst, data_names, *data_lst)
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         # system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
         # system_3par_df, port_3par_df, host_3par_df = verify_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [system_3par_df, port_3par_df, host_3par_df]
 
-        data_lst = system_3par_df, port_3par_df, host_3par_df = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = system_3par_df, port_3par_df, host_3par_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         system_3par_df, port_3par_df, host_3par_df = data_lst
     
     # save data to excel file if it's required
@@ -193,7 +200,7 @@ def parse_config(config_3par, params, params_add, comp_keys, match_keys, comp_dc
                     match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                     # port_line_match
                     if match_dct['port_line']:
-                        port_line = line_to_list(comp_dct['port_line'], line, configname)
+                        port_line = dsop.line_to_list(comp_dct['port_line'], line, configname)
                         port_lst.append(port_line)
                     line = file.readline()
                     if not line:
@@ -207,7 +214,7 @@ def parse_config(config_3par, params, params_add, comp_keys, match_keys, comp_dc
                     match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                     # port_line_match
                     if match_dct['host_line']:
-                        host_line = line_to_list(comp_dct['host_line'], line, configname)
+                        host_line = dsop.line_to_list(comp_dct['host_line'], line, configname)
                         host_lst.append(host_line)
                     line = file.readline()
                     if not line:
@@ -226,7 +233,7 @@ def parse_config(config_3par, params, params_add, comp_keys, match_keys, comp_dc
 
     if showsys_dct:
         # adding additional parameters and values to the parameters dct
-        update_dct(params_add, showsys_values, showsys_dct)                                                
+        dsop.update_dct(params_add, showsys_values, showsys_dct)                                                
         # creating list with REQUIRED parameters for the current system.
         # if no value in the dct for the parameter then None is added 
         # and appending this list to the list of all systems     

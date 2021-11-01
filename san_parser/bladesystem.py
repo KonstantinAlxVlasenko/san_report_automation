@@ -3,21 +3,26 @@
 import os
 import re
 
-import os
-
 import pandas as pd
-import dataframe_operations as dfop
 
 
-from common_operations_filesystem import (find_files, load_data,
-                                          save_data)
-from common_operations_miscellaneous import (
-    force_extract_check, line_to_list, status_info, update_dct, verify_data)
-from common_operations_servicefile import columns_import, data_extract_objects
-from common_operations_miscellaneous import verify_force_run
-from common_operations_dataframe import list_to_dataframe
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+# import dataframe_operations as dfop
+# from common_operations_filesystem import (find_files, load_data,
+#                                           save_data)
+# from common_operations_miscellaneous import (
+#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
+# from common_operations_servicefile import columns_import, data_extract_objects
+# from common_operations_miscellaneous import verify_force_run
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 
@@ -42,11 +47,11 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
 
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
     
     if force_run: 
         # lists to store only REQUIRED infromation
@@ -71,7 +76,7 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
             if configs_num:
 
                 # data imported from init file to extract values from config file
-                enclosure_params, _, comp_keys, match_keys, comp_dct = data_extract_objects('blades', max_title)
+                enclosure_params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('blades', max_title)
                 module_params = columns_import('blades', max_title, 'module_params')
                 blade_params = columns_import('blades', max_title, 'blade_params')
 
@@ -351,14 +356,14 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                             module_comprehensive_lst[num][3] = oa_ip
                         # show status blades information extraction from file
                         if blade_lst or enclosure_vc_lst:
-                            status_info('ok', max_title, len(info))
+                            meop.status_info('ok', max_title, len(info))
                         else:
-                            status_info('no data', max_title, len(info))    
+                            meop.status_info('no data', max_title, len(info))    
         else:
             # current operation information string
             info = f'Collecting enclosure, interconnect modules, blade servers, hba'
             print(info, end =" ")
-            status_info('skip', max_title, len(info))
+            meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
         blade_module_df = dfop.list_to_dataframe(module_comprehensive_lst, max_title, sheet_title_import='blades')
@@ -367,15 +372,15 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
         # saving data to csv file
         data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
         # save_data(report_constant_lst, data_names, *data_lst)
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
-        # blade_module_df, blade_servers_df, blade_vc_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        # blade_module_df, blade_servers_df, blade_vc_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
 
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         blade_module_df, blade_servers_df, blade_vc_df = data_lst
         
     # save data to excel file if it's required
