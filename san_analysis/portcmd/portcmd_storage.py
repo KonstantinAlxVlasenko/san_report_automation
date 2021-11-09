@@ -6,11 +6,18 @@ import re
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import (convert_wwn, count_frequency,
-                                         dataframe_fillna,
-                                         extract_values_from_column,
-                                         sequential_equality_note)
-from common_operations_dataframe_presentation import move_column, remove_duplicates_from_column
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import (convert_wwn, count_frequency,
+#                                          dataframe_fillna,
+#                                          extract_values_from_column,
+#                                          sequential_equality_note)
+# from common_operations_dataframe_presentation import move_column, remove_duplicates_from_column
 
 
 def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):
@@ -27,7 +34,7 @@ def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):
         # add system information to 3PAR ports DataFrame
         system_port_3par_df = port_3par_df.merge(system_3par_cp_df, how='left', on=['configname'])
         # convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)
-        system_port_3par_df = convert_wwn(system_port_3par_df, ['NodeName', 'PortName'])
+        system_port_3par_df = dfop.convert_wwn(system_port_3par_df, ['NodeName', 'PortName'])
         # rename columns to correspond portshow_aggregated_df
         rename_columns = {'System_Name': 'Device_Name',	'System_Model':	'Device_Model', 
                             'Serial_Number': 'Device_SN', 'Location': 'Device_Location'}
@@ -41,15 +48,15 @@ def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):
         # add 3PAR information to portshow_aggregated_df
         fillna_wwnn_columns = ['Device_Name', 'Device_Host_Name', 'Device_Model', 'Device_SN', 'IP_Address', 'Device_Location']
         portshow_aggregated_df = \
-            dataframe_fillna(portshow_aggregated_df, system_port_3par_df, join_lst=['NodeName'] , filled_lst=fillna_wwnn_columns)
+            dfop.dataframe_fillna(portshow_aggregated_df, system_port_3par_df, join_lst=['NodeName'] , filled_lst=fillna_wwnn_columns)
 
         fillna_wwnp_columns = ['Storage_Port_Partner_Fabric_name', 'Storage_Port_Partner_Fabric_label', 
                                 'Storage_Port_Partner', 'Storage_Port_Partner_Wwnp', 
                                 'Storage_Port_Mode', 'Storage_Port_Type']
         portshow_aggregated_df = \
-            dataframe_fillna(portshow_aggregated_df, system_port_3par_df, join_lst=['PortName'] , filled_lst=fillna_wwnp_columns)
+            dfop.dataframe_fillna(portshow_aggregated_df, system_port_3par_df, join_lst=['PortName'] , filled_lst=fillna_wwnp_columns)
 
-        portshow_aggregated_df = sequential_equality_note(portshow_aggregated_df, 
+        portshow_aggregated_df = dfop.sequential_equality_note(portshow_aggregated_df, 
                                                             columns1=['Fabric_name', 'Fabric_label'], 
                                                             columns2=['Storage_Port_Partner_Fabric_name', 'Storage_Port_Partner_Fabric_label'], 
                                                             note_column='Storage_Port_Partner_Fabric_equal')
@@ -65,7 +72,7 @@ def storage_port_partner(system_port_3par_df, portshow_aggregated_df):
     # add port partner Wwnp to system_port_3par_df
     system_port_partner_3par_df = system_port_3par_df[['configname', 'Storage_Port', 'PortName']].copy()
     system_port_partner_3par_df.rename(columns={'Storage_Port': 'Storage_Port_Partner', 'PortName': 'Storage_Port_Partner_Wwnp'}, inplace=True)
-    system_port_3par_df = dataframe_fillna(system_port_3par_df, system_port_partner_3par_df, 
+    system_port_3par_df = dfop.dataframe_fillna(system_port_3par_df, system_port_partner_3par_df, 
                                             filled_lst=['Storage_Port_Partner_Wwnp'], 
                                             join_lst=['configname', 'Storage_Port_Partner'])
 
@@ -80,7 +87,7 @@ def storage_port_partner(system_port_3par_df, portshow_aggregated_df):
     rename_dct = dict(zip(fabric_wwnp_columns, storage_port_partner_columns))
     portshow_fabric_wwnp_df.rename(columns=rename_dct, inplace=True)
     # fill in Fabric connection information of failover ports
-    system_port_3par_df = dataframe_fillna(system_port_3par_df, portshow_fabric_wwnp_df, 
+    system_port_3par_df = dfop.dataframe_fillna(system_port_3par_df, portshow_fabric_wwnp_df, 
                                             join_lst=storage_port_partner_columns[2:], 
                                             filled_lst=storage_port_partner_columns[:2])
     return system_port_3par_df
@@ -108,7 +115,7 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
     pattern_columns_lst = [(comp_dct['3par_ctrl_slot_port'], ['Controller', 'Slot', 'Port']),
                             (comp_dct['emc_ctrl_slot_port'], ['Controller', 'Slot', 'Port']), 
                             (comp_dct['msa_ctrl_port'], ['Controller', 'Port']),]
-    storage_ports_df = extract_values_from_column(storage_ports_df, 'Device_Port', pattern_columns_lst)
+    storage_ports_df = dfop.extract_values_from_column(storage_ports_df, 'Device_Port', pattern_columns_lst)
 
     # create column with even or odd port index tag
     storage_ports_df['Port_parity'] = storage_ports_df['Port'].astype('int')
@@ -151,7 +158,7 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
                     storage_ports_cp_df.drop_duplicates(subset=storage_columns[:-2], inplace=True)
 
                 group_columns = ['deviceSubtype', 'Device_Host_Name', sublevel]
-                current_df = count_frequency(storage_ports_cp_df, count_columns=['Fabric'], 
+                current_df = dfop.count_frequency(storage_ports_cp_df, count_columns=['Fabric'], 
                                             group_columns=group_columns, margin_column_row=[(True, False)])
                 # rename current port group level to 'Group_level' to concatenate DataFrames
                 current_df.rename(columns={sublevel: 'Group_level'}, inplace=True)
@@ -192,10 +199,10 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
         storage_connection_statistics_df.drop(columns=['Port_parity_note'], inplace=True)
 
         # # move Group_type column
-        storage_connection_statistics_df = move_column(storage_connection_statistics_df, cols_to_move=['Group_type', 'FLOGI'], 
+        storage_connection_statistics_df = dfop.move_column(storage_connection_statistics_df, cols_to_move=['Group_type', 'FLOGI'], 
                                                         place='after', ref_col='Device_Host_Name')
         # create duplicates free storage name column
-        storage_connection_statistics_df = remove_duplicates_from_column(storage_connection_statistics_df, column='Device_Host_Name', 
+        storage_connection_statistics_df = dfop.remove_duplicates_from_column(storage_connection_statistics_df, column='Device_Host_Name', 
                                                                             duplicates_subset=['deviceSubtype', 'Device_Host_Name'])
         # drop physical_virtual ports for all storages except 3par (3par PortPersistent detection)
         # keep device_type row 

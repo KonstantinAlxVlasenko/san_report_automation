@@ -3,14 +3,22 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe_presentation import (
-    generate_report_dataframe,
-    translate_values, translate_dataframe)
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (status_info, verify_data,
-                                             verify_force_run)
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe_presentation import (
+#     generate_report_dataframe,
+#     translate_values, translate_dataframe)
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (status_info, verify_data,
+#                                              verify_force_run)
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info_lst):
@@ -31,7 +39,7 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # # unpacking DataFrames from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -42,7 +50,7 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
         # current operation information string
@@ -53,7 +61,7 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info
         sensor_aggregated_df = sensor_aggregation(sensor_df, switch_params_aggregated_df)
 
         # after finish display status
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
 
         # report tables
         sensor_report_df = sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names)
@@ -63,16 +71,21 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst) 
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst) 
 
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        sensor_aggregated_df, sensor_report_df = verify_data(report_constant_lst, data_names, *data_lst)
+        # sensor_aggregated_df, sensor_report_df = verify_data(report_constant_lst, data_names, *data_lst)
 
-        data_lst = [sensor_aggregated_df, sensor_report_df]
+        # data_lst = [sensor_aggregated_df, sensor_report_df]
+
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        sensor_aggregated_df, *_ = data_lst
+
+
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
     return sensor_aggregated_df
 
@@ -138,9 +151,9 @@ def sensor_aggregation(sensor_df, switch_params_aggregated_df):
 #     # loading values to translate
 #     translate_dct = dct_from_columns('customer_report', max_title, 'Датчики_перевод_eng', 
 #                                         'Датчики_перевод_ru', init_file = 'san_automation_info.xlsx')
-#     sensor_report_df = translate_values(sensor_aggregated_df, translate_dct=translate_dct, 
+#     sensor_report_df = dfop.translate_values(sensor_aggregated_df, translate_dct=translate_dct, 
 #                                             translate_columns = ['Type', 'Status', 'Value', 'Unit']) 
-#     # translate_values(sensor_aggregated_df, translate_dct, max_title)
+#     # dfop.translate_values(sensor_aggregated_df, translate_dct, max_title)
 #     sensor_report_df, = dataframe_segmentation(sensor_aggregated_df, data_names[1:], report_columns_usage_dct, max_title)
 #     return sensor_report_df
 
@@ -155,9 +168,9 @@ def sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_
 
     # sensor_report_df = aggregated_to_report_dataframe(sensor_aggregated_df,  data_names[1], report_headers_df, report_columns_usage_dct)
 
-    sensor_report_df = generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    sensor_report_df = dfop.generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[1])
 
-    sensor_report_df = translate_values(sensor_report_df, report_headers_df, data_names[1], 
+    sensor_report_df = dfop.translate_values(sensor_report_df, report_headers_df, data_names[1], 
                                         translated_columns = ['Type', 'Status', 'Value', 'Unit'])
 
     

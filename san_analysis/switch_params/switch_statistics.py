@@ -4,8 +4,15 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import count_frequency
-from common_operations_switch import count_all_row, count_summary, verify_connection_symmetry
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import count_frequency
+# from common_operations_switch import count_all_row, count_summary, verify_connection_symmetry
 
 def fabric_switch_statistics(switch_params_aggregated_df, re_pattern_lst):
     """Function to count switch statistics"""
@@ -31,9 +38,9 @@ def asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df):
     sw_gen = switch_params_cp_df['Generation'].unique().tolist()
     sw_role = switch_params_cp_df['SwitchMode'].unique().tolist()
 
-    fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_models, summary_column='Model_Asymmetry_note')
-    fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_gen, summary_column='Generation_Asymmetry_note')
-    fabric_switch_statistics_df = verify_connection_symmetry(fabric_switch_statistics_df, sw_role, summary_column='Mode_Asymmetry_note')
+    fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_models, summary_column='Model_Asymmetry_note')
+    fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_gen, summary_column='Generation_Asymmetry_note')
+    fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_role, summary_column='Mode_Asymmetry_note')
 
     return fabric_switch_statistics_df
 
@@ -77,14 +84,14 @@ def count_switch_statistics(switch_params_cp_df):
     count_columns = ['Total', 'ModelName', 'Generation', 'Trunking_lic', 'Fabric_Vision_lic', 
                     'FC_Router_ON', 'LS_type', 'SwitchMode', 'Current_Switch_Policy_Status']
 
-    fabric_switch_statistics_df = count_frequency(switch_params_cp_df, count_columns, 
+    fabric_switch_statistics_df = dfop.count_frequency(switch_params_cp_df, count_columns, 
                                                 group_columns=['Fabric_name', 'Fabric_label'],
                                                 margin_column_row=(False, False))
     # count values for fabric_name level by default for all columns
-    fabric_switch_statistics_df = count_summary(fabric_switch_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
+    fabric_switch_statistics_df = dfop.count_summary(fabric_switch_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
     fabric_switch_statistics_df.sort_values(by=['Fabric_name', 'Fabric_label'], inplace=True)
     # count values for san level
-    fabric_switch_statistics_total_df = count_all_row(fabric_switch_statistics_df)
+    fabric_switch_statistics_total_df = dfop.count_all_row(fabric_switch_statistics_df)
     fabric_switch_statistics_total_df['Fabric_name'] = 'Total switches'
     
     fabric_switch_statistics_df = pd.concat([fabric_switch_statistics_df, fabric_switch_statistics_total_df], ignore_index=True)
@@ -100,10 +107,10 @@ def count_chassis_statistics(switch_params_cp_df):
     chassis_cp_df['Fabric_name'] = 'Total chassis'
     # count values for fabric_label level
     chassis_stat_columns = ['Total', 'ModelName', 'Generation', 'Trunking_lic', 'Fabric_Vision_lic']
-    san_chassis_statistics_df = count_frequency(chassis_cp_df, chassis_stat_columns, 
+    san_chassis_statistics_df = dfop.count_frequency(chassis_cp_df, chassis_stat_columns, 
                                                 group_columns=['Fabric_name', 'Fabric_label'],
                                                 margin_column_row=(False, False))
     # count values for san level
-    san_chassis_statistics_df = count_summary(san_chassis_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
+    san_chassis_statistics_df = dfop.count_summary(san_chassis_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
     return san_chassis_statistics_df
 

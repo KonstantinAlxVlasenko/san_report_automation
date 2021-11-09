@@ -176,6 +176,12 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
             series['Device_Port'] = match.group(4)
             series['portSymbUsed'] = 'yes'
             series['portSymbPattern'] = 16
+    # huawei_manufacturer node_symb
+    elif not pd.isnull(node_symb) and match_node_dct[match_keys[32]]:
+        match = match_node_dct[match_keys[32]]
+        series['Device_Manufacturer'] = match.group(1)
+        series['nodeSymbUsed'] = 'yes'
+        series['nodeSymbPattern'] = 32
     # TO_REMOVE duplicated
     # # cna_adapter_match node_symb duplicate with qlogic_cna_match port_symb 5
     # elif not pd.isnull(node_symb) and match_node_dct[match_keys[19]]:
@@ -279,7 +285,7 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
     # dell_storage_match port_symb
     elif not pd.isnull(port_symb) and match_port_dct[match_keys[28]]:
         match = match_port_dct[match_keys[28]]
-        series['Device_Model'] = match.group(2)
+        series['Device_Model'] = 'Compellent ' + match.group(2)
         series['Device_Name'] = match.group(3)
         series['Device_Port'] = match.group(1)
         series['portSymbUsed'] = 'yes'

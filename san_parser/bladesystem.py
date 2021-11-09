@@ -67,9 +67,10 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
             print('\nEXTRACTING BLADES SYSTEM INFORMATION ...\n')   
             
             # collects files in folder with txt extension
-            txt_files = find_files(blade_folder, max_title, filename_extension='txt')
-            log_files = find_files(blade_folder, max_title, filename_extension='log')
-            blade_configs_lst = txt_files + log_files
+            txt_files = fsop.find_files(blade_folder, max_title, filename_extension='txt')
+            log_files = fsop.find_files(blade_folder, max_title, filename_extension='log')
+            noext_files = fsop.find_files(blade_folder, max_title)
+            blade_configs_lst = txt_files + log_files + noext_files
             # number of files to check
             configs_num = len(blade_configs_lst)  
 
@@ -77,8 +78,8 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
 
                 # data imported from init file to extract values from config file
                 enclosure_params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('blades', max_title)
-                module_params = columns_import('blades', max_title, 'module_params')
-                blade_params = columns_import('blades', max_title, 'blade_params')
+                module_params = sfop.columns_import('blades', max_title, 'module_params')
+                blade_params = sfop.columns_import('blades', max_title, 'blade_params')
 
                 for i, blade_config in enumerate(blade_configs_lst):       
                     # file name with extension
@@ -165,8 +166,8 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                     # vc_port_match
                                     if match_dct[match_keys[14]]:
 
-                                        # vc_port = line_to_list(comp_dct[comp_keys[14]], line, *enclosure_lst)
-                                        vc_port = line_to_list(comp_dct[comp_keys[14]], line)
+                                        # vc_port = dsop.line_to_list(comp_dct[comp_keys[14]], line, *enclosure_lst)
+                                        vc_port = dsop.line_to_list(comp_dct[comp_keys[14]], line)
                                         enslosure_id = vc_port[0]
                                         enclosure_lst = enclosure_total_dct[enslosure_id]
                                         vc_port = [*enclosure_lst, *vc_port]

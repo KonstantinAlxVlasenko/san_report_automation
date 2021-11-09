@@ -8,8 +8,16 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import (dataframe_fabric_labeling,
-                                         dataframe_fillna, merge_columns)
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+
+# from common_operations_dataframe import (dataframe_fabric_labeling,
+#                                          dataframe_fillna, merge_columns)
 
 portcmd_columns_lst = ['configname', 'Fabric_name', 'Fabric_label',
                         'chassis_name', 'chassis_wwn',
@@ -66,7 +74,7 @@ def ag_fabric_labeling(ag_principal_df, switch_params_aggregated_df):
     ag_principal_label_df.drop_duplicates(inplace=True)
     ag_principal_label_df.rename(columns=ag_columns_dct, inplace=True)
     # label AG Principal DataFrame and drop columns containing Principal switch information
-    ag_principal_label_df = dataframe_fabric_labeling(ag_principal_label_df, switch_params_aggregated_df)
+    ag_principal_label_df = dfop.dataframe_fabric_labeling(ag_principal_label_df, switch_params_aggregated_df)
     ag_principal_label_df.drop(columns=['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn'], inplace=True)
 
     return ag_principal_label_df
@@ -93,7 +101,7 @@ def ag_principal_fillna(portshow_aggregated_df, ag_principal_label_df, switch_mo
     fillna_columns_lst = ['Fabric_name', 'Fabric_label', 'NodeName',
                         'Device_Host_Name', 'IP_Address', 'Device_Fw', 
                         'Connected_NPIV', 'Device_Model']
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, ag_principal_label_df,
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, ag_principal_label_df,
                                             join_lst=fillna_columns_lst[:3], filled_lst=fillna_columns_lst[3:])
 
     return portshow_aggregated_df
@@ -240,7 +248,7 @@ def add_aglink_connected_port(portshow_aggregated_df,
     # from joint AG link DataFrame to the main portcmd DataFrame.
     join_lst = ['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn', 'Connected_portId', 'portIndex', 'slot', 'port']
     filled_lst = ['Device_Host_Name', 'Device_Port', 'deviceType', 'deviceSubtype', 'Connected_NPIV']
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, ag_df, join_lst, filled_lst)
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, ag_df, join_lst, filled_lst)
 
     return portshow_aggregated_df, expected_ag_links_df
 
@@ -290,7 +298,7 @@ def _merge_ag_groups(left_group_df, right_group_df, slave_group = False):
     right_join_df = right_group_df.loc[:, join_columns_lst].copy()
     right_join_df.rename(columns=rename_columns_dct, inplace= True)
     # fill values for connected switch name and port number for each AG link
-    left_group_df = dataframe_fillna(left_group_df, right_join_df, join_lst, filled_lst, remove_duplicates=False)
+    left_group_df = dfop.dataframe_fillna(left_group_df, right_join_df, join_lst, filled_lst, remove_duplicates=False)
 
     if slave_group:
         # pandas 1.04 is not able to perform grouping if nan values present thus replcae it with unknown value
@@ -342,7 +350,7 @@ def verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df):
         porttrunkarea_cp_df = porttrunkarea_cp_df.astype({'slot': 'str', 'port': 'str', 
                                                     'Master_slot': 'str', 'Master_port': 'str'}, errors = 'ignore')
         # fill device information for each link in trunk area link based on trunk master link
-        porttrunkarea_cp_df = dataframe_fillna(porttrunkarea_cp_df, portshow_cp_df, join_lst=[*switch_columns, *master_port_columns],
+        porttrunkarea_cp_df = dfop.dataframe_fillna(porttrunkarea_cp_df, portshow_cp_df, join_lst=[*switch_columns, *master_port_columns],
                                             filled_lst=[*device_columns[:-2], 'Connected_portId'])
         porttrunkarea_cp_df['Connected_NPIV'] = 'yes'
 
@@ -353,11 +361,11 @@ def verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df):
         # column with pair Wwnns of the npiv link
         porttrunkarea_master_df['Link_Wwnns'] = porttrunkarea_master_df['switchWwn'] + '_' + porttrunkarea_master_df['NodeName']
         porttrunkarea_master_df['NPIV_link_number'] = porttrunkarea_master_df.apply(lambda series: npiv_link_counter(series), axis=1)
-        porttrunkarea_cp_df = dataframe_fillna(porttrunkarea_cp_df, porttrunkarea_master_df, join_lst=[*switch_columns, *master_port_columns],
+        porttrunkarea_cp_df = dfop.dataframe_fillna(porttrunkarea_cp_df, porttrunkarea_master_df, join_lst=[*switch_columns, *master_port_columns],
                                             filled_lst=['NPIV_link_number'])
         # add device information for slave trunk area links
         portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, porttrunkarea_cp_df, 
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, porttrunkarea_cp_df, 
                                                             join_lst=[*switch_columns, 'Connected_portId', *port_columns], 
                                                             filled_lst=device_columns)
     else:
@@ -375,7 +383,7 @@ def verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df):
     if not portshow_trunkless_npiv_df.empty:
         portshow_trunkless_npiv_df['NPIV_link_number'] = portshow_trunkless_npiv_df.apply(lambda series: npiv_link_counter(series), axis=1)
         # add npiv links numbers for links out of trunk area links to portshow_aggregated_df DataFrame
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, portshow_trunkless_npiv_df, 
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, portshow_trunkless_npiv_df, 
                                                     join_lst=[*switch_columns, 'Connected_portId', *port_columns], 
                                                     filled_lst=['NPIV_link_number'])
 

@@ -7,7 +7,14 @@ Auxiliary to analysis_portcmd module.
 
 import pandas as pd
 
-from common_operations_dataframe import dataframe_fillna
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna
 
 
 def group_name_fillna(portshow_aggregated_df):
@@ -17,10 +24,10 @@ def group_name_fillna(portshow_aggregated_df):
 
     portshow_aggregated_df['Group_Name'] = None
 
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, storage_grp_df, ['NodeName'], ['Group_Name'])
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, storage_grp_df, ['NodeName'], ['Group_Name'])
     portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Group_Name, inplace= True)
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, library_sn_grp_df, ['Device_SN'], ['Group_Name'])
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, library_grp_df, ['NodeName'], ['Group_Name'])
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, library_sn_grp_df, ['Device_SN'], ['Group_Name'])
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, library_grp_df, ['NodeName'], ['Group_Name'])
 
     return portshow_aggregated_df
 

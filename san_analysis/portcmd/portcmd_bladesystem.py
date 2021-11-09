@@ -3,11 +3,19 @@ Module to add Blade Servers and Virtual connect information to portcmd table.
 Auxiliary to analysis_portcmd module.
 """
 
-import re
+# import re
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import dataframe_fillna, convert_wwn, sequential_equality_note
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+
+# from common_operations_dataframe import dataframe_fillna, convert_wwn, sequential_equality_note
 
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null
@@ -54,7 +62,7 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_server
 
 
         # fillna portshow_aggregated_df null values with values from blade_servers_join_df
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, blade_servers_join_df, ['Connected_portWwn'], blade_columns_lst)
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, blade_servers_join_df, ['Connected_portWwn'], blade_columns_lst)
         # fillna null values in Device_Host_Name from Host_Name
         portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)
 
@@ -69,7 +77,7 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_server
             ]
 
         # fillna portshow_aggregated_df null values with values from blade_servers_join_df
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, synergy_servers_df, ['Connected_portWwn'], synergy_columns_lst)
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, synergy_servers_df, ['Connected_portWwn'], synergy_columns_lst)
         # fillna null values in Device_Host_Name from Host_Name
         portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)        
     return portshow_aggregated_df
@@ -118,13 +126,13 @@ def blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synerg
         # apply lower case to WWNp column
         blade_vc_join_df.Connected_portWwn = blade_vc_join_df.Connected_portWwn.str.lower()
         # fillna portshow_aggregated_df null values with values Blade Virtual Connect modules DataFram
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, blade_vc_join_df, ['Connected_portWwn'], 
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, blade_vc_join_df, ['Connected_portWwn'], 
                                                 ['Device_Port', 'Device_Location', 'Device_Host_Name', 'Device_Manufacturer', 
                                                 'Device_Model', 'Device_SN', 'IP_Address', 'Device_Fw'])
                             
     if not synergy_module_df.empty:
         synergy_module_join_df = synergy_module_df.rename(columns=interconnect_module_columns_dct)
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, synergy_module_join_df, ['NodeName'], 
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, synergy_module_join_df, ['NodeName'], 
                                                 ['Device_Location', 'Device_Host_Name', 
                                                 'Device_Model', 'Device_SN', 'Device_Fw'])        
     return portshow_aggregated_df

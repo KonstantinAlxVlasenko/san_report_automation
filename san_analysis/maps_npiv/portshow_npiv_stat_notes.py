@@ -4,7 +4,15 @@ import re
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import сoncatenate_columns, dataframe_fillna
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import сoncatenate_columns, dataframe_fillna
 
 
 def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_dct):
@@ -60,7 +68,7 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
         vc_notes_df['Single_VC_note'] = np.where(mask_vc_single & mask_multiple_links, 'single_VC', pd.NA)
         vc_notes_df.reset_index(inplace=True)
         # add note to npiv_statistics_df
-        npiv_statistics_df = dataframe_fillna(npiv_statistics_df, vc_notes_df, filled_lst=['Single_VC_note'], 
+        npiv_statistics_df = dfop.dataframe_fillna(npiv_statistics_df, vc_notes_df, filled_lst=['Single_VC_note'], 
                                               join_lst=link_group_columns)
         return npiv_statistics_df
     
@@ -128,11 +136,11 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
             cfg_note_columns = [tag + column + '_nonuniformity_note' for column in count_native_columns[2:]
                                    if column in portshow_npiv_cp_df.columns]
             # merge transceivers nonuniformity note columns
-            nonuniformity_notes_df = сoncatenate_columns(nonuniformity_notes_df, 
+            nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
                                                       summary_column=tag + 'Transceiver_nonuniformity_note', 
                                                       merge_columns=transeivers_columns)
             # merge port settings nonuniformity note columns
-            nonuniformity_notes_df = сoncatenate_columns(nonuniformity_notes_df, 
+            nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
                                                       summary_column=tag + 'Portcfg_nonuniformity_note', merge_columns=cfg_note_columns)
         # drop columns with unique values quantity
         nonuniformity_notes_df.drop(columns=count_columns, inplace=True)
@@ -178,7 +186,7 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
             npiv_statistics_df['Speed_auto_note'] = np.where(mask_auto_speed, 'auto_speed', pd.NA)
         # merge speed related notes into single column
         speed_note_columns = ['Speed_auto_note', 'Speed_low_note', 'Speed_reduced_note', 'Speed_Gbps_nonuniformity_note']
-        npiv_statistics_df = сoncatenate_columns(npiv_statistics_df, summary_column='Speed_note', 
+        npiv_statistics_df = dfop.сoncatenate_columns(npiv_statistics_df, summary_column='Speed_note', 
                                                  merge_columns=speed_note_columns, drop_merge_columns=True)
         return npiv_statistics_df
     

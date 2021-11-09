@@ -3,8 +3,16 @@
 
 import numpy as np
 import pandas as pd
-from common_operations_dataframe import count_frequency, find_mean_max_min
+# from common_operations_dataframe import count_frequency, find_mean_max_min
 from .zoning_statistics_aux_fn import active_vs_configured_ports, merge_df
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
 
 def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
     """Function to count alias statistics"""
@@ -21,7 +29,7 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
         mask_alias_unused = alias_aggregated_duplicates_free_df['zone_number_alias_used_in'] == 0
         alias_aggregated_duplicates_free_df['alias_unused'] = \
             np.where(mask_alias_unused, 'unused', pd.NA)
-        alias_quantity_summary_df = count_frequency(alias_aggregated_duplicates_free_df, 
+        alias_quantity_summary_df = dfop.count_frequency(alias_aggregated_duplicates_free_df, 
                                                         count_columns=['Total_alias_quantity', 'cfg_type', 'alias_unused'])
         return alias_quantity_summary_df
 
@@ -31,7 +39,7 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
         
         subset_columns = ['Fabric_name', 'Fabric_label', 'alias_member', 'PortName']
         ports_status_df = alias_aggregated_df.drop_duplicates(subset=subset_columns).copy()
-        ports_status_summary_df = count_frequency(ports_status_df, count_columns=['Fabric_device_status'])
+        ports_status_summary_df = dfop.count_frequency(ports_status_df, count_columns=['Fabric_device_status'])
         return ports_status_summary_df
 
 
@@ -43,7 +51,7 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
         wwn_type_df = alias_aggregated_df.drop_duplicates(subset=subset_columns).copy()
         wwn_type_df['Wwnn_unpack'] = \
             wwn_type_df['Wwnn_unpack'].where(wwn_type_df['Wwnn_unpack'].isna(), 'Wwnn_unpack')
-        wwn_type_summary = count_frequency(wwn_type_df, count_columns=['Wwn_type', 'Wwnn_unpack'])
+        wwn_type_summary = dfop.count_frequency(wwn_type_df, count_columns=['Wwn_type', 'Wwnn_unpack'])
         return wwn_type_summary
 
 
@@ -55,12 +63,12 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
         alias_wwnn_df = \
             alias_aggregated_df.groupby(by=zonemember_columns, as_index=False)['Wwn_type'].agg(
                 lambda x: 'alias_Wwnn' if x.isin(['Wwnn']).any() else np.nan)
-        alias_wwnn_summary_df = count_frequency(alias_wwnn_df, count_columns=['Wwn_type'])
+        alias_wwnn_summary_df = dfop.count_frequency(alias_wwnn_df, count_columns=['Wwn_type'])
         # count aliases with unpacked wwnn
         alias_wwnn_unpacked_df = \
             alias_aggregated_df.groupby(by=zonemember_columns, as_index=False)['Wwnn_unpack'].agg(
                 lambda x: 'alias_Wwnn_unpack' if x.notna().any() else np.nan)
-        alias_wwnn_unpacked_summary_df = count_frequency(alias_wwnn_unpacked_df, count_columns=['Wwnn_unpack'])
+        alias_wwnn_unpacked_summary_df = dfop.count_frequency(alias_wwnn_unpacked_df, count_columns=['Wwnn_unpack'])
         return alias_wwnn_summary_df, alias_wwnn_unpacked_summary_df
 
 
@@ -71,7 +79,7 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
             alias_aggregated_df.groupby(by=zonemember_columns, as_index=False)['wwnp_instance_number_per_alias'].agg(
                 lambda x: 'alias_duplicated_wwnp' if (x > 1).any() else np.nan)
         alias_wwnp_duplicated_summary_df = \
-            count_frequency(alias_wwnp_duplicated_df, count_columns=['wwnp_instance_number_per_alias'])
+            dfop.count_frequency(alias_wwnp_duplicated_df, count_columns=['wwnp_instance_number_per_alias'])
         return alias_wwnp_duplicated_summary_df
 
         
@@ -82,7 +90,7 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
         mask_alias_duplicated = alias_aggregated_cp_df['alias_count'] > 1
         alias_aggregated_cp_df['alias_count'] = \
             np.where(mask_alias_duplicated, 'alias_duplicated', pd.NA)
-        alias_duplicated_summary_df = count_frequency(alias_aggregated_cp_df, count_columns=['alias_count'])
+        alias_duplicated_summary_df = dfop.count_frequency(alias_aggregated_cp_df, count_columns=['alias_count'])
         return alias_duplicated_summary_df
 
 
@@ -92,7 +100,7 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
 
         count_columns_lst = ['ports_per_alias', 'active_ports_per_alias', 'zone_number_alias_used_in']
         count_columns_dct = {k:k for k in count_columns_lst}
-        alias_port_statistics_df = find_mean_max_min(alias_aggregated_duplicates_free_df, count_columns = count_columns_dct)
+        alias_port_statistics_df = dfop.find_mean_max_min(alias_aggregated_duplicates_free_df, count_columns = count_columns_dct)
         return alias_port_statistics_df
 
     # count values frequencies in alias aggregated_df

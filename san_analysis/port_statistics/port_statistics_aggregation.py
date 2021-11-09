@@ -7,9 +7,16 @@ import numpy as np
 import pandas as pd
 from pandas.core.dtypes.missing import notna
 
-from common_operations_dataframe import dataframe_fillna
-from common_operations_switch import count_summary, count_all_row
-from common_operations_dataframe_presentation import move_column
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna
+# from common_operations_switch import count_summary, count_all_row
+# from common_operations_dataframe_presentation import move_column
 
 
 def port_statisctics_aggregated(portshow_aggregated_df):
@@ -26,9 +33,9 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     port_statistics_df.reset_index(inplace=True)
     
     # count summary for fabric_name and fabric_label levels
-    port_statistics_summary_df = count_summary(port_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
+    port_statistics_summary_df = dfop.count_summary(port_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
     # count row All with total values for all fabris
-    port_statistics_all_df = count_all_row(port_statistics_summary_df)
+    port_statistics_all_df = dfop.count_all_row(port_statistics_summary_df)
     # concatenate all statistics DataFrames
     port_statistics_df = pd.concat([port_statistics_df, port_statistics_summary_df], ignore_index=True)
     port_statistics_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn'], inplace=True)
@@ -40,7 +47,7 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     port_ne_df = n_e_statistics(portshow_aggregated_df)
     port_statistics_df = port_statistics_df.merge(port_ne_df, how='left', on=['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn'])
     # move columns
-    port_statistics_df = move_column(port_statistics_df, cols_to_move=['Total_ports_number', 'Online', 'Licensed', '%_occupied'],
+    port_statistics_df = dfop.move_column(port_statistics_df, cols_to_move=['Total_ports_number', 'Online', 'Licensed', '%_occupied'],
                                         ref_col='switchWwn')
     return port_statistics_df
 

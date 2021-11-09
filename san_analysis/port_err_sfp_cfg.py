@@ -6,20 +6,28 @@ and add this information to aggregated_portcmd_df DataFrame
 import numpy as np
 import pandas as pd
 
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+
 # from analysis_portshow_maps_ports import maps_db_ports
 # from analysis_portshow_npiv import npiv_link_aggregated, npiv_statistics
-from common_operations_dataframe_presentation import (drop_all_identical,
-                                                      drop_equal_columns,
-                                                      generate_report_dataframe,
-                                                      translate_values)
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (reply_request, status_info,
-                                             verify_data, verify_force_run)
-from common_operations_servicefile import (data_extract_objects,
-                                           dataframe_import, dct_from_columns)
-# from common_operations_switch import statistics_report
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+# from common_operations_dataframe_presentation import (drop_all_identical,
+#                                                       drop_equal_columns,
+#                                                       generate_report_dataframe,
+#                                                       translate_values)
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (reply_request, status_info,
+#                                              verify_data, verify_force_run)
+# from common_operations_servicefile import (data_extract_objects,
+#                                            dataframe_import, dct_from_columns)
+# # from common_operations_switch import statistics_report
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_df, sfpshow_df, portcfgshow_df, isl_statistics_df,
@@ -44,7 +52,7 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
                             'switchshow_ports', 'switch_params_aggregated', 'fdmi', 
@@ -53,16 +61,16 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names)
 
     if force_run:
 
         # # data imported from init file (regular expression patterns) to extract values from data columns
         # # re_pattern list contains comp_keys, match_keys, comp_dct    
-        # _, _, *re_pattern_lst = data_extract_objects('common_regex', max_title)
+        # _, _, *re_pattern_lst = sfop.data_extract_objects('common_regex', max_title)
 
         # import transeivers information from file
-        sfp_model_df = dataframe_import('sfp_models', max_title)        
+        sfp_model_df = sfop.dataframe_import('sfp_models', max_title)        
         # current operation information string
         info = f'Updating connected devices table and searching NPIV links'
         print(info, end =" ") 
@@ -77,7 +85,7 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
 
 
         # after finish display status
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
 
         # warning if UKNOWN SFP present
         if (portshow_sfp_aggregated_df['Transceiver_Supported'] == 'Unknown SFP').any():
@@ -86,10 +94,10 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
             unknown_count = len(portshow_sfp_info_df[portshow_sfp_info_df['Transceiver_Supported'] == 'Unknown SFP'])
             info = f'{unknown_count} {"port" if unknown_count == 1 else "ports"} with UNKNOWN supported SFP tag found'
             print(info, end =" ")
-            status_info('warning', max_title, len(info))
+            meop.status_info('warning', max_title, len(info))
             # ask if save portshow_aggregated_df
             if not portshow_sfp_export_flag:
-                reply = reply_request("Do you want to save 'portshow_sfp_aggregated'? (y)es/(n)o: ")
+                reply = meop.reply_request("Do you want to save 'portshow_sfp_aggregated'? (y)es/(n)o: ")
                 if reply == 'y':
                     portshow_sfp_force_flag = True
 
@@ -101,14 +109,14 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and reset DataFrame if yes
     else:
         # portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df, link_reset_df, crc_good_eof_df, fec_df, pcs_blk_df, link_failure_df, discard_df, enc_crc_df, bad_eof_df, bad_os_df \
-        #     = verify_data(report_constant_lst, data_names, *data_lst)
+        #     = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [portshow_sfp_aggregated_df, error_report_df, sfp_report_df, portcfg_report_df, link_reset_df, crc_good_eof_df, fec_df, pcs_blk_df, link_failure_df, discard_df, enc_crc_df, bad_eof_df, bad_os_df]
     
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         portshow_sfp_aggregated_df, *_ = data_lst
     
     # save data to excel file if it's required
@@ -116,7 +124,7 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_d
         force_flag = False
         if data_name == 'portshow_sfp_aggregated':
             force_flag = portshow_sfp_force_flag
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
 
     return portshow_sfp_aggregated_df
 
@@ -194,7 +202,7 @@ def portshow_report_main(port_complete_df, data_names, report_headers_df, report
     # add speed value column for fillword verification in errors_report_df
     port_complete_df['speed_fillword'] = port_complete_df['speed']
     errors_report_df, sfp_report_df, portcfg_report_df = \
-        generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_dct, *data_names[1:])
+        dfop.generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_dct, *data_names[1:])
     # drop empty columns
     errors_report_df.dropna(axis=1, how = 'all', inplace=True)
     sfp_report_df.dropna(axis=1, how = 'all', inplace=True)

@@ -3,7 +3,15 @@
 import re
 import pandas as pd
 import numpy as np
-from common_operations_dataframe import сoncatenate_columns
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import сoncatenate_columns
 
 
 def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
@@ -39,7 +47,7 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
         
         # concatenate columns with fabric_label connection absence 
         device_connection_statistics_df = \
-            сoncatenate_columns(device_connection_statistics_df, summary_column='Device_connection_note', 
+            dfop.сoncatenate_columns(device_connection_statistics_df, summary_column='Device_connection_note', 
                                 merge_columns=[column for *_, column in fabric_connection_verify_columns])
 
         # devices with device_connection note values
@@ -104,7 +112,7 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
             
         # concatenate columns with fabric labels for current note
         device_connection_statistics_df = \
-            сoncatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
+            dfop.сoncatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
                                 merge_columns=[column for *_, column in verify_columns])
         
         # add string to summary column
@@ -161,7 +169,7 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
                 
         # concatenate columns with fabric labels for current note
         device_connection_statistics_df = \
-            сoncatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
+            dfop.сoncatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
                                 merge_columns=[column for *_, column in verify_columns])
             
         # add string to summary column

@@ -3,8 +3,15 @@
 import re
 import numpy as np
 import pandas as pd
-from common_operations_dataframe import dataframe_fillna
+# from common_operations_dataframe import dataframe_fillna
 
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
 
 def wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
     """Function to verify which type of WWN (port or node WWN) is used for each alias_member"""
@@ -63,6 +70,46 @@ def replace_wwnn(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_
     alias_aggregated_df.Strict_Wwnp.fillna(alias_aggregated_df.alias_member, inplace=True)
 
     return zoning_aggregated_df, alias_aggregated_df
+
+
+def replace_domain_index(aggregated_df, portshow_aggregated_df):
+    """Function to replace Domain_Index with Wwpn"""
+
+    aggregated_df['Strict_Wwnp'].replace(to_replace='\d+,\d+', value=np.nan, regex=True, inplace=True)
+
+    mask_str = aggregated_df['alias_member'].str.contains('6,16')
+    print(aggregated_df.loc[mask_str])
+
+    portshow_cp = portshow_aggregated_df.copy()
+    portshow_cp.rename(columns={'PortName': 'Strict_Wwnp', 'Domain_Index': 'alias_member'}, inplace=True)
+
+
+    print('\n')
+
+    mask_wwnp_notna = portshow_cp['Strict_Wwnp'].notna()
+    mask_616 = portshow_cp['alias_member'].str.contains('6,16')
+    print(portshow_cp.loc[mask_wwnp_notna & mask_616, ['alias_member', 'Strict_Wwnp']])
+
+    
+    print(portshow_cp['alias_member'])
+
+    print(portshow_cp['alias_member'].str.contains('6,16').any())
+
+    print('----------------')
+
+    mask = aggregated_df['alias_member'].str.contains(',')
+    print(aggregated_df.loc[mask, 'alias_member'])
+
+    print(aggregated_df['alias_member'].str.contains('6,16').any())
+
+
+
+    aggregated_df = dfop.dataframe_fillna(aggregated_df, portshow_cp, join_lst=['Fabric_name', 'Fabric_label', 'alias_member'], filled_lst=['Strict_Wwnp'], remove_duplicates=False)
+
+    mask_str = aggregated_df['alias_member'].str.contains('6,16')
+    print(aggregated_df.loc[mask_str])
+
+    return aggregated_df
 
 
 def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df):
@@ -156,9 +203,9 @@ def alias_cfg_type(alias_aggregated_df, zoning_aggregated_df):
     cfg_defined_df = zoning_aggregated_df.loc[mask_defined, cfg_lst]
     # fill empty cfg_type values in alias_aggregated_df DataFrame with config type from cfg_effective_df
     # thus if alias is in effective config it's marked as effective
-    alias_aggregated_df = dataframe_fillna(alias_aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+    alias_aggregated_df = dfop.dataframe_fillna(alias_aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
     # fill rest empty values with defined word if alias is in defined config
-    alias_aggregated_df = dataframe_fillna(alias_aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+    alias_aggregated_df = dfop.dataframe_fillna(alias_aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
 
     return alias_aggregated_df
 
@@ -175,9 +222,9 @@ def verify_cfg_type(aggregated_df, zoning_aggregated_df, search_lst):
     cfg_defined_df = zoning_aggregated_df.loc[mask_defined, cfg_lst]
     # fill empty cfg_type values in alias_aggregated_df DataFrame with config type from cfg_effective_df
     # thus if alias is in effective config it's marked as effective
-    aggregated_df = dataframe_fillna(aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+    aggregated_df = dfop.dataframe_fillna(aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
     # fill rest empty values with defined word if alias is in defined config
-    aggregated_df = dataframe_fillna(aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
+    aggregated_df = dfop.dataframe_fillna(aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
 
     return aggregated_df
 
@@ -340,7 +387,7 @@ def verify_device_hostname_instances(aggregated_df, portshow_aggregated_df):
     # 'Device_Host_Name_per_fabric_name_and_label' and 'Device_Host_Name_per_fabric_name' should stay empty
     # since device is not connected to the current fabric name
     portcmd_join_df.rename(columns={'Fabric_name': 'zonemember_Fabric_name', 'Fabric_label': 'zonemember_Fabric_label'}, inplace=True)
-    aggregated_df = dataframe_fillna(aggregated_df, portcmd_join_df, filled_lst=['Device_Host_Name_per_fabric_label', 'Device_Host_Name_total_fabrics'], 
+    aggregated_df = dfop.dataframe_fillna(aggregated_df, portcmd_join_df, filled_lst=['Device_Host_Name_per_fabric_label', 'Device_Host_Name_total_fabrics'], 
                                     join_lst=['zonemember_Fabric_name', 'zonemember_Fabric_label', 'PortName'])
     # clean 'Device_Host_Name_per_fabric_label' if Fabric_label and 'zonemember_Fabric_label' don't match
     # due to information in device_port_columns is shown relative to fabric name and fabric label

@@ -4,11 +4,19 @@ import shutil
 import sys
 import pandas as pd
 
-from common_operations_database import write_db
-from common_operations_dataframe import list_to_dataframe
-from common_operations_filesystem import check_valid_path, create_folder
-from common_operations_miscellaneous import status_info
-from common_operations_table_report import dataframe_to_report
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
+
+
+# from common_operations_database import write_db
+# from common_operations_dataframe import list_to_dataframe
+# from common_operations_filesystem import check_valid_path, create_folder
+# from common_operations_miscellaneous import status_info
+# from common_operations_table_report import dataframe_to_report
 
 from .santoolbox_parser import santoolbox_process
 
@@ -29,12 +37,12 @@ def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, softw
 
 
     # export unparsed config filenames to DataFrame and saves it to report file and database
-    unparsed_sshow_maps_df = list_to_dataframe(unparsed_sshow_maps_lst, max_title, columns=['sshow', 'ams_maps'])
+    unparsed_sshow_maps_df = dfop.list_to_dataframe(unparsed_sshow_maps_lst, max_title, columns=['sshow', 'ams_maps'])
     # returns list with parsed data
     parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst = santoolbox_process(unparsed_sshow_maps_lst, 
                                                                                 parsed_sshow_folder, parsed_other_folder, software_path_df, max_title)
     # export parsed config filenames to DataFrame and saves it to excel file
-    parsed_sshow_maps_df = list_to_dataframe(parsed_sshow_maps_filename_lst, max_title, 
+    parsed_sshow_maps_df = dfop.list_to_dataframe(parsed_sshow_maps_filename_lst, max_title, 
                                                 columns=['chassis_name', 'sshow', 'ams_maps'])
                                     
     # save files list to database and excel file
@@ -44,10 +52,10 @@ def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, softw
         df['ams_maps'] = df['ams_maps'].astype('str')
         df['ams_maps'] = df['ams_maps'].str.strip('[]()')
 
-    write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)
+    dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)    
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)    
 
     return parsed_sshow_maps_lst
 
@@ -63,7 +71,7 @@ def create_files_list_to_parse(ssave_path, max_title):
     print(f'Configuration data folder {ssave_path}')
 
     # check if ssave_path folder exist
-    check_valid_path(ssave_path)
+    fsop.check_valid_path(ssave_path)
     # rellocate files for each switch in separate folder
     separate_ssave_files(ssave_path, max_title)
    
@@ -145,7 +153,7 @@ def separate_ssave_files(ssave_path, max_title):
         if len(files_group_set) > 1:
             for files_group_name in files_group_set:
                 files_group_folder = os.path.join(root, files_group_name)
-                create_folder(files_group_folder, max_title)
+                fsop.create_folder(files_group_folder, max_title)
                 
             for file in files:
                 if re.match(filename_fid_regex, file):
@@ -164,7 +172,7 @@ def separate_ssave_files(ssave_path, max_title):
                 try:
                     shutil.move(os.path.join(root, file),path_to_move)
                 except shutil.Error:
-                    status_info('fail', max_title, len(info))
+                    meop.status_info('fail', max_title, len(info))
                     sys.exit()
                 else:
-                    status_info('ok', max_title, len(info))
+                    meop.status_info('ok', max_title, len(info))

@@ -8,16 +8,25 @@ from .portcmd_device_connection_statistics import \
     device_connection_statistics
 from .portcmd_devicename_correction import devicename_correction_main
 from .portcmd_storage import storage_connection_statistics
-from common_operations_dataframe import count_group_members, merge_columns
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (reply_request, status_info,
-                                             verify_data, verify_force_run)
-from common_operations_servicefile import (data_extract_objects,
-                                           dataframe_import)
+
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import count_group_members, merge_columns
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (reply_request, status_info,
+#                                              verify_data, verify_force_run)
+# from common_operations_servicefile import (data_extract_objects,
+#                                            dataframe_import)
 from .report_portcmd import portcmd_report_main
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
-from common_operations_dataframe_presentation import remove_duplicates_from_string, remove_value_from_string
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
+# from common_operations_dataframe_presentation import remove_duplicates_from_string, remove_value_from_string
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -54,7 +63,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # flag to forcible save portshow_aggregated_df if required
     portshow_force_flag = False
@@ -82,16 +91,16 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
         # import data with switch models, firmware and etc
-        switch_models_df = dataframe_import('switch_models', max_title)
+        switch_models_df = sfop.dataframe_import('switch_models', max_title)
         # data imported from init file (regular expression patterns) to extract values from data columns
         # re_pattern list contains comp_keys, match_keys, comp_dct    
-        _, _, *re_pattern_lst = data_extract_objects('nameserver', max_title)
+        _, _, *re_pattern_lst = sfop.data_extract_objects('nameserver', max_title)
 
-        oui_df = dataframe_import('oui', max_title, columns=['Connected_oui', 'type', 'subtype'])
+        oui_df = sfop.dataframe_import('oui', max_title, columns=['Connected_oui', 'type', 'subtype'])
 
         # current operation information string
         info = f'Generating connected devices table'
@@ -107,7 +116,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                                 re_pattern_lst)
 
         # after finish display status
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
         # show warning if any UNKNOWN device class founded, if any PortSymb or NodeSymb is not parsed,
         # if new switch founded
         portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag = \
@@ -127,7 +136,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         print(info, end =" ")
         storage_connection_statistics_df = storage_connection_statistics(portshow_aggregated_df, re_pattern_lst)
         device_connection_statistics_df = device_connection_statistics(portshow_aggregated_df)    
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
 
         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
             storage_connection_df,  library_connection_df, server_connection_df, \
@@ -145,10 +154,10 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
             ]
 
         # writing data to sql
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
 
-        dataframe_to_report(nsshow_unsplit_df, 'nsshow_unsplit', report_creation_info_lst, force_flag = nsshow_unsplit_force_flag)
-        dataframe_to_report(expected_ag_links_df, 'expected_ag_links', report_creation_info_lst, force_flag = expected_ag_links_force_flag)
+        dfop.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', report_creation_info_lst, force_flag = nsshow_unsplit_force_flag)
+        dfop.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', report_creation_info_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         # portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
@@ -156,7 +165,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         #         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
         #             storage_connection_df, library_connection_df, server_connection_df, \
         #                 storage_connection_statistics_report_df, device_connection_statistics_report_df \
-        #                     = verify_data(report_constant_lst, data_names, *data_lst)
+        #                     = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         # data_lst = [
         #     portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
         #     device_rename_df, report_columns_usage_dct, 
@@ -165,8 +174,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         #     storage_connection_statistics_report_df, device_connection_statistics_report_df
         #     ]
 
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
-        portshow_aggregated_df = data_lst[0]
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        portshow_aggregated_df, *_ = data_lst
         # add report_columns_usage_sr to report_creation_info_lst
         report_creation_info_lst[3] = data_lst[4]
 
@@ -176,7 +185,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         if data_name == 'portshow_aggregated':
             force_flag = portshow_force_flag
         if data_name != 'report_columns_usage_upd':
-            dataframe_to_report(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
+            dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
     return portshow_aggregated_df
 
 
@@ -196,10 +205,10 @@ def device_ports_per_group(portshow_aggregated_df):
     for level in group_level_lst:
         instance_column_dct['Device_Host_Name'] = 'Device_Host_Name' + level
         if not level == '_per_fabric_name':
-            portshow_native_df = count_group_members(portshow_native_df, group_columns, instance_column_dct)
+            portshow_native_df = dfop.count_group_members(portshow_native_df, group_columns, instance_column_dct)
             group_columns.pop(0)
         else:
-            portshow_native_df = count_group_members(portshow_native_df, ['Fabric_name', 'Device_Host_Name'], instance_column_dct)
+            portshow_native_df = dfop.count_group_members(portshow_native_df, ['Fabric_name', 'Device_Host_Name'], instance_column_dct)
 
 
     port_columns_lst = ['Fabric_name', 'Fabric_label', 'Connected_portWwn', 
@@ -234,10 +243,10 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         unknown_count = len(portshow_aggregated_df[portshow_aggregated_df['deviceType'] == 'UNKNOWN'])
         info = f'{unknown_count} {"port" if unknown_count == 1 else "ports"} with UNKNOWN device Class found'
         print(info, end =" ")
-        status_info('warning', max_title, len(info))
+        meop.status_info('warning', max_title, len(info))
         # ask if save portshow_aggregated_df
         if not portshow_export_flag:
-            reply = reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            reply = meop.reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
             if reply == 'y':
                 portshow_force_flag = True
     # warning if any values in PortSymb or NodeSymb were not parsed
@@ -248,10 +257,10 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         unsplit_str = ' and '.join([str(num) + " " + name for num, name in unsplit_lst if num])
         info = f'{unsplit_str} {"is" if portsymb_unsplit_count + nodesymb_unsplit_count == 1 else "are"} UNPARSED'
         print(info, end =" ")
-        status_info('warning', max_title, len(info))
+        meop.status_info('warning', max_title, len(info))
         # ask if save nsshow_unsplit
         if not nsshow_unsplit_export_flag:
-            reply = reply_request("Do you want to save 'nsshow_unsplit'? (y)es/(n)o: ")
+            reply = meop.reply_request("Do you want to save 'nsshow_unsplit'? (y)es/(n)o: ")
             if reply == 'y':
                 nsshow_unsplit_force_flag = True        
     # warning if unknown switches was found
@@ -264,10 +273,10 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         unknown_count = len(portshow_switch_name_set.difference(switch_name_set))
         info = f'{unknown_count} NEW switch {"name" if unknown_count == 1 else "names"} detected'
         print(info, end =" ")
-        status_info('warning', max_title, len(info))
+        meop.status_info('warning', max_title, len(info))
         # ask if save portshow_aggregated_df
         if not portshow_export_flag and not portshow_force_flag:
-            reply = reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            reply = meop.reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
             if reply == 'y':
                 portshow_force_flag = True
     # if any unconfirmed AG links found
@@ -275,10 +284,10 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         unknown_count = expected_ag_links_df['chassis_name'].notna().sum()
         info = f'{unknown_count} AG {"link" if unknown_count == 1 else "links"} detected'
         print(info, end =" ")
-        status_info('warning', max_title, len(info))
+        meop.status_info('warning', max_title, len(info))
         # ask if save expected_ag_links_df
         if not expected_ag_links_export_flag:
-            reply = reply_request("Do you want to save 'expected_ag_link'? (y)es/(n)o: ")
+            reply = meop.reply_request("Do you want to save 'expected_ag_link'? (y)es/(n)o: ")
             if reply == 'y':
                 expected_ag_links_force_flag = True
     return portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag
@@ -289,7 +298,7 @@ def device_names_per_port(portshow_aggregated_df):
     column with list of all devices connected to the port (more then 1 if connected through the NPIV)"""
 
     # merge device name and port number
-    portshow_aggregated_df = merge_columns(portshow_aggregated_df, summary_column='Device_Host_Name_Port',
+    portshow_aggregated_df = dfop.merge_columns(portshow_aggregated_df, summary_column='Device_Host_Name_Port',
                                         merge_columns=['Device_Host_Name', 'Device_Port'],
                                         sep=' port ', drop_merge_columns=False)
 
@@ -298,13 +307,13 @@ def device_names_per_port(portshow_aggregated_df):
     portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device', inplace=True)
     
     portshow_aggregated_df['Device_Host_Name_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['Device_Host_Name_Port'].transform(', '.join)
-    remove_duplicates_from_string(portshow_aggregated_df, 'Device_Host_Name_Port_group')
+    dfop.remove_duplicates_from_string(portshow_aggregated_df, 'Device_Host_Name_Port_group')
 
     portshow_aggregated_df['alias'].fillna('nan_device', inplace=True)
     portshow_aggregated_df['alias_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['alias'].transform(', '.join)
     # remove temporary 'nan_device value
     portshow_aggregated_df.replace({'nan_device': np.nan}, inplace=True)
-    remove_value_from_string(portshow_aggregated_df, 'nan_device', 'alias_Port_group')
+    dfop.remove_value_from_string(portshow_aggregated_df, 'nan_device', 'alias_Port_group')
 
     # portshow_aggregated_df['Device_Host_Name_Port'].replace({'nan_device': np.nan}, inplace=True)
     # portshow_aggregated_df['Device_Host_Name_Port_group'].replace({'nan_device': np.nan}, inplace=True)

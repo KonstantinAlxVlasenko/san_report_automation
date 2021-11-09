@@ -10,6 +10,13 @@ import numpy as np
 import pandas as pd
 
 
+# import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
 def oui_join(portshow_aggregated_df, oui_df):
     """Function to add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)"""  
     
@@ -45,13 +52,17 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
             return pd.Series((series.type, series.subtype))
         # check SWITCH TYPE
         elif 'SRV|SWITCH' in series['type']:
-            if 'E-Port' in series['portType']:
+            if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
+                return pd.Series(('SRV', series.subtype))
+            elif 'E-Port' in series['portType']:
                 return pd.Series(('SWITCH', series.subtype))
             elif (series['Connected_portWwn'][6:] == switches_oui).any():
                 return pd.Series(('SWITCH', series.subtype))
             elif series['switchMode'] == 'Access Gateway Mode' and series['portType'] == 'N-Port':
                 return pd.Series(('SWITCH', 'AG'))
             elif pd.notna(series['HBA_Manufacturer']) and 'AG Brocade' in series['HBA_Manufacturer']:
+                return pd.Series(('SWITCH', series.subtype))
+            elif series['Device_type'] == "Physical Unknown(initiator/target)":
                 return pd.Series(('SWITCH', series.subtype))
             else:
                 return pd.Series(('SRV', series.subtype))

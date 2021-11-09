@@ -239,8 +239,8 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        isl_df, trunk_df, porttrunkarea_df, lsdb_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
+        # isl_df, trunk_df, porttrunkarea_df, lsdb_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
 
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         isl_df, trunk_df, porttrunkarea_df, lsdb_df = data_lst

@@ -64,6 +64,29 @@ def count_summary(df, group_columns: list, count_columns: list=None, fn: str='su
         group_columns.pop()
     return summary_df
 
+# TO_REMOVE
+# def count_total(df, group_columns: list, count_columns: list=None, fn: str='sum'):
+#     """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
+#     on each iteration. Count columns defines column names for which total need to be calculated.
+#     Function in string representation defines aggregation function to find summary values"""
+
+#     if not count_columns:
+#         count_columns = df.columns.tolist()
+#     elif isinstance(count_columns, str):
+#             count_columns = [count_columns]
+    
+#     summary_df = pd.DataFrame()
+#     for _ in range(len(group_columns)):
+#         current_df = df.groupby(by=group_columns)[count_columns].agg(fn)
+#         current_df.reset_index(inplace=True)
+#         if summary_df.empty:
+#             summary_df = current_df.copy()
+#         else:
+#             summary_df = pd.concat([summary_df, current_df])
+#         # increase group size
+#         group_columns.pop()
+#     return summary_df
+
 
 def count_all_row(statistics_summary_df):
     """Function to count row with index All containing total values of statistics_summary_df
@@ -163,7 +186,7 @@ def count_group_members(df, group_columns, count_columns: dict):
 
 
 
-# # RENAME TO count_summary
+# # # RENAME TO count_summary
 # def count_total(df, group_columns: list, count_columns: list, fn: str):
 #     """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
 #     on each iteration. Count columns defines column names for which total need to be calculated.

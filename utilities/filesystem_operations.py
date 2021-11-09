@@ -11,7 +11,7 @@ from utilities.module_execution import status_info
 def create_folder(path, max_title):
     """Function to create any folder with path"""
 
-    info = f'Make directory {os.path.basename(path)}'
+    info = f'Making directory {os.path.basename(path)}'
     print(info, end = ' ')
     # if folder not exist create 
     if not os.path.exists(path):        

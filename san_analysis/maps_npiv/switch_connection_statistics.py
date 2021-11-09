@@ -4,9 +4,16 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe_presentation import move_all_down, move_column
-from common_operations_dataframe import dataframe_fillna
-from common_operations_switch import verify_connection_symmetry
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe_presentation import move_all_down, move_column
+# from common_operations_dataframe import dataframe_fillna
+# from common_operations_switch import verify_connection_symmetry
 
 sw_columns = ['Fabric_name', 'Fabric_label', 
                'chassis_name', 'SwitchName', 'switchWwn']
@@ -19,12 +26,12 @@ def switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_sta
     if not sw_connection_statistics_df.empty:
         core_sw_df = find_core_switch(sw_connection_statistics_df)
         # add switch role and fos
-        sw_connection_statistics_df = dataframe_fillna(sw_connection_statistics_df, switch_params_aggregated_df, join_lst=sw_columns, 
+        sw_connection_statistics_df = dfop.dataframe_fillna(sw_connection_statistics_df, switch_params_aggregated_df, join_lst=sw_columns, 
                                         filled_lst=['switchRole', 'FOS_version'])
         # find FOS most recent version in each fabric
         sw_connection_statistics_df = find_max_fabric_fos(sw_connection_statistics_df, comp_dct)
         # add core switch tag
-        sw_connection_statistics_df = dataframe_fillna(sw_connection_statistics_df, core_sw_df, join_lst=sw_columns, filled_lst=['Core_switch_note'])
+        sw_connection_statistics_df = dfop.dataframe_fillna(sw_connection_statistics_df, core_sw_df, join_lst=sw_columns, filled_lst=['Core_switch_note'])
         # add notes if principal not in core or if principal fos version is not recent in the fabric
         sw_connection_statistics_df = add_notes(sw_connection_statistics_df)
 
@@ -54,7 +61,7 @@ def connection_statistics(df, connected_dev_columns, tag):
     switch_conn_fabric_summary_df = df.loc[mask_fabric_summary, summary_columns].copy()
     switch_conn_fabric_summary_df[connected_dev_columns[2:]] = switch_conn_fabric_summary_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
     # verify if fabric A and B are symmetrical from Native ang AG connection poin of view
-    switch_conn_fabric_summary_df = verify_connection_symmetry(switch_conn_fabric_summary_df, connected_dev_columns[2:])
+    switch_conn_fabric_summary_df = dfop.verify_symmetry_regarding_fabric_name(switch_conn_fabric_summary_df, connected_dev_columns[2:])
     # sum up connections, links, ports and bandwidth for each switch
     switch_conn_total_df = switch_conn_df.groupby(sw_columns).agg('sum').reset_index()
 
@@ -105,7 +112,7 @@ def native_ag_connection_statistics(isl_statistics_df, npiv_statistics_df):
         return pd.DataFrame()
 
     sw_connection_statistics_df.sort_values(by=sw_columns, inplace=True)
-    sw_connection_statistics_df = move_all_down(sw_connection_statistics_df)
+    sw_connection_statistics_df = dfop.move_all_down(sw_connection_statistics_df)
     return sw_connection_statistics_df
 
 

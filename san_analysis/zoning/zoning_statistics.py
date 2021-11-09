@@ -6,7 +6,15 @@ import pandas as pd
 
 from .zoning_statistics_modify import modify_zoning
 from .zoning_statistics_notes import note_zonemember_statistics
-from common_operations_dataframe import dataframe_fillna
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna
 
 # from common_operations_filesystem import load_data, save_data, save_xlsx_file
 
@@ -41,17 +49,17 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
                                 'Zone_name_device_names_ratio', 'Zone_name_device_names_related', 
                                 'All_devices_multiple_fabric_label_connection', 'zone_paired',
                                 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
-    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
+    zonemember_zonelevel_stat_df = dfop.dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
                                                         join_lst=zoning_paired_columns[:4], filled_lst=zoning_paired_columns[4:])
 
     # add list of identical (duplicated) zones to each zone in statistics
     zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
-    zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
+    zonemember_zonelevel_stat_df = dfop.dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
                                                         join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
     # add list of absorbed zones (zones which are part of other active zones) to each zone in statistics
     if not zoning_absorbed_df.empty:
         zoning_absorbed_columns = ['Fabric_name', 'Fabric_label',  'zone', 'zone_absorber']
-        zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_absorbed_df, 
+        zonemember_zonelevel_stat_df = dfop.dataframe_fillna(zonemember_zonelevel_stat_df, zoning_absorbed_df, 
                                                             join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
 
     # add 'Target_Initiator'and 'Target_model' notes to zonemember_zonelevel_stat_df DataFrame
@@ -67,12 +75,12 @@ def zonemember_statistics(zoning_aggregated_df, report_data_lst):
     # TO_REMOVE rellocated up
     # # add list of identical (duplicated) zones to each zone in statistics
     # zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
-    # zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
+    # zonemember_zonelevel_stat_df = dfop.dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
     #                                                     join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
     # # add list of zone pairs to each zone in statistics
     # zoning_paired_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone', 
     #                             'All_devices_multiple_fabric_label_connection', 'zone_paired']
-    # zonemember_zonelevel_stat_df = dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
+    # zonemember_zonelevel_stat_df = dfop.dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
     #                                                     join_lst=zoning_paired_columns[:4], filled_lst=zoning_paired_columns[4:])
 
 

@@ -3,7 +3,14 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import dataframe_fillna, explode_columns
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna, explode_columns
 
 
 switch_columns = ['Fabric_name', 'Fabric_label', 
@@ -41,10 +48,10 @@ def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, comp_
 def explode_maps_ports(switch_params_cp_df):
     """Function to explode MAPS Dashboard ports"""
 
-    maps_ports_df = explode_columns(switch_params_cp_df, 
+    maps_ports_df = dfop.explode_columns(switch_params_cp_df, 
                                     'Quarantined_Ports', 'Decommissioned_Ports', 
                                     'Fenced_Ports', 'Fenced_circuits', sep=',')
-    top_zoned_ports_df = explode_columns(switch_params_cp_df, 'Top_Zoned_PIDs', sep=' ')
+    top_zoned_ports_df = dfop.explode_columns(switch_params_cp_df, 'Top_Zoned_PIDs', sep=' ')
     # drop excessive columns
     if not maps_ports_df.empty:
         maps_ports_df = maps_ports_df[[*switch_columns, *exploded_columns]].copy()
@@ -90,14 +97,14 @@ def fillna_port_information(portshow_cp_df, maps_ports_df, top_zoned_ports_df):
             portshow_cp_df[column] = portshow_cp_df[column].astype('int64')
             maps_ports_df[column] = maps_ports_df[column].astype('int64')
     
-        maps_ports_df = dataframe_fillna(maps_ports_df, portshow_cp_df, 
+        maps_ports_df = dfop.dataframe_fillna(maps_ports_df, portshow_cp_df, 
                                          join_lst=[*switch_columns[:-2], *slot_port_columns], 
                                          filled_lst=['Connected_portId', *filled_columns], 
                                          remove_duplicates=False)
         maps_ports_df.sort_values(by=sort_columns, inplace=True)
     
     if not top_zoned_ports_df.empty:
-        top_zoned_ports_df = dataframe_fillna(top_zoned_ports_df, portshow_cp_df, 
+        top_zoned_ports_df = dfop.dataframe_fillna(top_zoned_ports_df, portshow_cp_df, 
                                               join_lst=[*switch_columns[:-2], 'Connected_portId'],
                                               filled_lst=[*slot_port_columns, *filled_columns])
         top_zoned_ports_df.sort_values(by=sort_columns, inplace=True)        

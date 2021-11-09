@@ -6,9 +6,16 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import utilities.dataframe_operations as dfop
 
-from common_operations_dataframe import (dataframe_fabric_labeling,
-                                         dataframe_fillna)
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import (dataframe_fabric_labeling,
+#                                          dataframe_fillna)
 
 
 def errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, portshow_aggregated_df, re_pattern_lst):
@@ -43,9 +50,9 @@ def prior_preparation(errdump_df, switchshow_df, switch_params_aggregated_df):
     # add switchWwn information
     errdump_aggregated_df = switchshow_join(errdump_df, switchshow_df)
     # fabric labeling
-    errdump_aggregated_df = dataframe_fabric_labeling(errdump_aggregated_df, switch_params_aggregated_df)
+    errdump_aggregated_df = dfop.dataframe_fabric_labeling(errdump_aggregated_df, switch_params_aggregated_df)
     # add config collection date
-    errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, switch_params_aggregated_df, ['configname', 'chassis_name', 'chassis_wwn'], 
+    errdump_aggregated_df = dfop.dataframe_fillna(errdump_aggregated_df, switch_params_aggregated_df, ['configname', 'chassis_name', 'chassis_wwn'], 
                                              ['config_collection_date'], drop_na=False)    
     # convert dates columns
     errdump_aggregated_df['Message_date'] = pd.to_datetime(errdump_aggregated_df['Message_date'])
@@ -119,7 +126,7 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
         portshow_join_df = portshow_aggregated_df.copy()
         portshow_join_df.rename(columns={'portIndex': 'Message_portIndex'}, inplace=True)
         portshow_join_columns = ['configname', 'chassis_name', 'chassis_wwn', 'Message_portIndex']
-        errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_join_df, 
+        errdump_aggregated_df = dfop.dataframe_fillna(errdump_aggregated_df, portshow_join_df, 
                                                  join_lst=portshow_join_columns, 
                                                  filled_lst=['slot', 'port'], remove_duplicates=False, drop_na=False)
 
@@ -157,7 +164,7 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
         # portshow_join_df = portshow_aggregated_df.loc[mask_device_name].copy()
         portshow_join_df = portshow_aggregated_df.copy()
         portshow_join_df['Message_portId'] = portshow_join_df['Connected_portId']
-        errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_join_df, 
+        errdump_aggregated_df = dfop.dataframe_fillna(errdump_aggregated_df, portshow_join_df, 
                                                 join_lst=[*portshow_columns[:3], 'Message_portId'], 
                                                 filled_lst=portshow_columns[3:], remove_duplicates=False, drop_na=False)
     # add 0 if sid or did contains 5 symbols only
@@ -169,7 +176,7 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
     
     # add fabric name and label for switches with chassis info, slot and port
     errdump_aggregated_df = \
-        dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], ['Fabric_name', 'Fabric_label'])
+        dfop.dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], ['Fabric_name', 'Fabric_label'])
 
     # concatenate devce name and device port columns
     errdump_aggregated_df['Device_Host_Name_Port'] = \

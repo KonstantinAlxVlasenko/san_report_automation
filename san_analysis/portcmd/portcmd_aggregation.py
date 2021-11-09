@@ -12,7 +12,15 @@ from .portcmd_devicetype import oui_join, type_check
 from .portcmd_gateway import verify_gateway_link, verify_trunkarea_link
 from .portcmd_nameserver import nsshow_analysis_main
 from .portcmd_switch import fill_isl_link, fill_switch_info, switchparams_join, switchshow_join
-from common_operations_dataframe import dataframe_fabric_labeling
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fabric_labeling
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
@@ -30,7 +38,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
     # add fabric information (FabricName, FabricLabel)
-    portshow_aggregated_df = dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
+    portshow_aggregated_df = dfop.dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
     # add switchMode to portshow_aggregated DataFrame
     portshow_aggregated_df = switchparams_join(portshow_aggregated_df, switch_params_df, 
                                                 switch_params_aggregated_df)
@@ -142,10 +150,10 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     # if pid ends with anything but 00 then port is NPIV
     portshow_aggregated_df['Device_type'] = np.select(condlist=[mask_device_type_na & mask_port_contains_npiv & mask_pid_physical, 
                                                                 mask_device_type_na & mask_port_contains_npiv & mask_pid_npiv], 
-                                                        choicelist=['Physical Unknown(initiator/target)', 'NPIV Unknown(initiator/target)'], 
+                                                        choicelist=['Physical_unknown(initiator/target)', 'NPIV_unknown(initiator/target)'], 
                                                         default=portshow_aggregated_df['Device_type'])
     # the rest of empty F and N device type ports without npiv tags marked as Physical ports
-    portshow_aggregated_df.loc[mask_device_type_na &  mask_nport_fport, 'Device_type'] = 'Physical Unknown(initiator/target)'
+    portshow_aggregated_df.loc[mask_device_type_na &  mask_nport_fport, 'Device_type'] = 'Physical_unknown(initiator/target)'
                                             
     
     

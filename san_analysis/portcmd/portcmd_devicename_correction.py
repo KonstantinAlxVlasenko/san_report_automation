@@ -5,10 +5,18 @@ import os
 
 import numpy as np
 import pandas as pd
-from common_operations_miscellaneous import (reply_request, status_info,
-                                             verify_data)
-from common_operations_servicefile import dataframe_import
-from common_operations_table_report import dataframe_to_report
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_miscellaneous import (reply_request, status_info,
+#                                              verify_data)
+# from common_operations_servicefile import dataframe_import
+# from common_operations_table_report import dataframe_to_report
 
 
 def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_creation_info_lst):
@@ -42,11 +50,11 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
     # if at least one name is changed apply rename schema 
     if device_rename_df['Device_Host_Name_rename'].notna().any():
         portshow_aggregated_df = device_rename(portshow_aggregated_df, device_rename_df)
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
     else:
         # to ask if group usage required
         force_group_name_usage_update_flag = 1
-        status_info('skip', max_title, len(info))
+        meop.status_info('skip', max_title, len(info))
 
     # check if device Group_Name should be used in report tables (alias group name)
     group_name_usage(report_columns_usage_dct, device_rename_df, max_title, force_group_name_usage_update_flag)
@@ -73,7 +81,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
         print('\n')
         if force_change_data_lst:
             print(f"Request to force change of {', '.join(force_change_data_lst)} data was received.")
-        reply = reply_request('Do you want to CHANGE AUTO assigned device names? (y)es/(n)o: ')
+        reply = meop.reply_request('Do you want to CHANGE AUTO assigned device names? (y)es/(n)o: ')
         if reply == 'y':
             # if device_rename_df DataFrame doesn't exist (1st iteration)
             if device_rename_df is None:
@@ -82,13 +90,13 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
             else:
                 # if any related DataFrames was forcibly changed ask if device rename form reset required
                 if force_change_data_lst:
-                    reply = reply_request('Do you want to APPLY SAVED device rename schema? (y)es/(n)o: ')
+                    reply = meop.reply_request('Do you want to APPLY SAVED device rename schema? (y)es/(n)o: ')
                     if reply == 'y':
                         print('\n')
                         return device_rename_df
                     else:
                         print('\n')
-                        reply = reply_request('Do you want to RESET device rename form? (y)es/(n)o: ')
+                        reply = meop.reply_request('Do you want to RESET device rename form? (y)es/(n)o: ')
                         if reply == 'y':
                             # create new device rename DataFrame
                             manual_device_rename_df = create_device_rename_form(portshow_aggregated_df)
@@ -102,16 +110,16 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
 
             # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
             sheet_title = 'device_rename_form'
-            file_path = dataframe_to_report(manual_device_rename_df, sheet_title, report_creation_info_lst, force_flag = True)
+            file_path = dfop.dataframe_to_excel(manual_device_rename_df, sheet_title, report_creation_info_lst, force_flag = True)
             file_name = os.path.basename(file_path)
             file_directory = os.path.dirname(file_path)
             print(f"\nTo rename devices put new names into the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")
             print('ATTN! CLOSE file after changes were made\n')
             # complete the manual_device_rename_df form and import it
-            reply = reply_request("When finish enter 'yes': ", ['yes'])
+            reply = meop.reply_request("When finish enter 'yes': ", ['yes'])
             if reply == 'y':
                 print('\n')
-                device_rename_df = dataframe_import(sheet_title, max_title, init_file = file_path, header = 2)
+                device_rename_df = sfop.dataframe_import(sheet_title, max_title, init_file = file_path, header = 2)
 
         else:
             # if don't change auto assigned names save empty device_rename_df DataFrame
@@ -120,7 +128,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
             device_rename_df = pd.DataFrame(columns=device_rename_columns)
     else:
         # check loaded device_rename_df DataFrame (if it's empty)
-        device_rename_df = verify_data(report_constant_lst, ['device_rename'], device_rename_df,  show_status=False)
+        device_rename_df = dbop.verify_read_data(report_constant_lst, ['device_rename'], device_rename_df,  show_status=False)
             
     return device_rename_df
 
@@ -235,23 +243,23 @@ def group_name_usage(report_columns_usage_dct, device_rename_df, max_title, forc
     if device_rename_df['Device_Host_Name_rename'].notna().all() and not force_group_name_usage_update_flag:
         report_columns_usage_dct['group_name_usage'] = False
         print(info, end =" ")
-        status_info('off', max_title, len(info))
+        meop.status_info('off', max_title, len(info))
     # if no information in report_columns_usage_dct or force flag is on or any device keep old name
     # ask user input 
     elif report_columns_usage_dct.get('group_name_usage') is None or \
             force_group_name_usage_update_flag or \
                 device_rename_df['Device_Host_Name_rename'].isna().any():
         print('\n')
-        reply = reply_request('Do you want to use Alias Group Device names? (y)es/(n)o: ')
+        reply = meop.reply_request('Do you want to use Alias Group Device names? (y)es/(n)o: ')
         print('\n')
         if reply == 'y':
             report_columns_usage_dct['group_name_usage'] = True
             print(info, end =" ")
-            status_info('on', max_title, len(info))
+            meop.status_info('on', max_title, len(info))
         else:
             report_columns_usage_dct['group_name_usage'] = False
             print(info, end =" ")
-            status_info('off', max_title, len(info))
+            meop.status_info('off', max_title, len(info))
 
 
 

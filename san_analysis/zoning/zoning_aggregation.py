@@ -5,11 +5,19 @@ import numpy as np
 import pandas as pd
 
 from .zoning_aggregation_aux_fn import (
-    alias_cfg_type, replace_wwnn, sort_dataframe,
+    alias_cfg_type, replace_wwnn, replace_domain_index, sort_dataframe,
     verify_alias_duplicate, verify_cfg_type, verify_zonemember_type, wwn_type,
     wwnp_instance_number_per_group, zone_using_alias, zonemember_connection,
     zonemember_in_cfg_fabric_verify, verify_device_hostname_instances)
-from common_operations_dataframe import dataframe_fillna, dataframe_join, count_group_members
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna, dataframe_join, count_group_members
 
 
 def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
@@ -27,6 +35,9 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     zoning_aggregated_df, alias_aggregated_df = wwn_type(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
     # replace each wwnn in zoning configuration with it's wwnp  
     zoning_aggregated_df, alias_aggregated_df = replace_wwnn(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
+    # replace Domain_Index with wwnp
+    zoning_aggregated_df = replace_domain_index(zoning_aggregated_df, portshow_aggregated_df)
+    alias_aggregated_df = replace_domain_index(alias_aggregated_df, portshow_aggregated_df)
     # finds fabric connection for each zonemember (alias)
     zoning_aggregated_df, alias_aggregated_df = \
         zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
@@ -64,7 +75,7 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     # count active alias_members vs defined alias members
     alias_count_columns = {'alias_member': 'ports_per_alias', 'PortName': 'active_ports_per_alias'}
     alias_group_columns = ['Fabric_name', 'Fabric_label', 'zone_member']
-    alias_aggregated_df = count_group_members(alias_aggregated_df, alias_group_columns, alias_count_columns)
+    alias_aggregated_df = dfop.count_group_members(alias_aggregated_df, alias_group_columns, alias_count_columns)
 
     return zoning_aggregated_df, alias_aggregated_df
 
@@ -156,7 +167,7 @@ def lsan_state_verify(zoning_aggregated_df, alias_aggregated_df, switch_params_a
     # add fabric labels to routers of BackBone fabric based on principal router switchWwn
     # and fabric labels to all switches of fabrics connected to BB roters through EX-Port  
     fcr_columns_lst = ['switchWwn', 'Fabric_name', 'Fabric_label']
-    fcrfabric_join_df = dataframe_join(fcrfabric_join_df, switch_params_aggregated_df, fcr_columns_lst, 1)
+    fcrfabric_join_df = dfop.dataframe_join(fcrfabric_join_df, switch_params_aggregated_df, fcr_columns_lst, 1)
 
     # extract required columns and drop duplicates since EX-port column is dropped
     # thus rows with duplicated switches appeared

@@ -1,14 +1,22 @@
 """Module to count Fabric statistics"""
 
 import pandas as pd
-from common_operations_database import read_db, write_db
-from common_operations_dataframe_presentation import (drop_all_identical,
-                                                      drop_equal_columns,
-                                                      drop_zero,
-                                                      translate_dataframe)
-from common_operations_miscellaneous import (status_info, verify_data,
-                                             verify_force_run)
-from common_operations_table_report import dataframe_to_report
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_database import read_db, write_db
+# from common_operations_dataframe_presentation import (drop_all_identical,
+#                                                       drop_equal_columns,
+#                                                       drop_zero,
+#                                                       translate_dataframe)
+# from common_operations_miscellaneous import (status_info, verify_data,
+#                                              verify_force_run)
+# from common_operations_table_report import dataframe_to_report
 
 from .port_statistics_aggregation import port_statisctics_aggregated
 
@@ -31,7 +39,7 @@ def port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst):
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # # unpacking DataFrames from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -43,7 +51,7 @@ def port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst):
             'alias', 'blade_servers', 'fabric_labels']
 
     # chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
         # current operation information string
@@ -52,7 +60,7 @@ def port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst):
 
         port_statistics_df = port_statisctics_aggregated(portshow_aggregated_df)
         # after finish display status
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
         # get report DataFrame
         port_statistics_report_df = port_statistics_report(port_statistics_df, report_headers_df, report_columns_usage_sr)
         # create list with partitioned DataFrames
@@ -60,14 +68,14 @@ def port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst):
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)      
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)      
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        data_lst = verify_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         port_statistics_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
     return port_statistics_df
 
 
@@ -77,15 +85,15 @@ def port_statistics_report(port_statistics_df, report_headers_df, report_columns
     port_statistics_report_df = port_statistics_df.copy()
     port_statistics_report_df.drop(columns = ['switchWwn', 'N:E_int', 'N:E_bw_int'], inplace=True)
     # drop Not Licensed ports column if there are no any
-    port_statistics_report_df = drop_all_identical(port_statistics_report_df, 
+    port_statistics_report_df = dfop.drop_all_identical(port_statistics_report_df, 
                                             columns_values={'Not_licensed': 0, 'Disabled': 0, 'Offline': 0}, dropna=False)
     # drop Licensed column if all ports are licensed
-    port_statistics_report_df = drop_equal_columns(port_statistics_report_df, columns_pairs = [('Total_ports_number', 'Licensed')])
+    port_statistics_report_df = dfop.drop_equal_columns(port_statistics_report_df, columns_pairs = [('Total_ports_number', 'Licensed')])
     # drop column 'chassis_name' if it is not required
     if not report_columns_usage_sr['chassis_info_usage']:
         port_statistics_report_df.drop(columns = ['chassis_name'], inplace=True)
-    # port_statistics_report_df = translate_header(port_statistics_report_df, report_headers_df, 'Статистика_портов')
-    port_statistics_report_df = translate_dataframe(port_statistics_report_df, report_headers_df, 'Статистика_портов')
+    # port_statistics_report_df = dfop.translate_header(port_statistics_report_df, report_headers_df, 'Статистика_портов')
+    port_statistics_report_df = dfop.translate_dataframe(port_statistics_report_df, report_headers_df, 'Статистика_портов')
     # drop visual uninformative zeroes
-    drop_zero(port_statistics_report_df)
+    dfop.drop_zero(port_statistics_report_df)
     return port_statistics_report_df

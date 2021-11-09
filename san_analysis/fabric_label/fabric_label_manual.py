@@ -4,7 +4,15 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_miscellaneous import reply_request
+
+# import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_miscellaneous import reply_request
 
 
 def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_df, info_labels):
@@ -40,7 +48,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
         print('\nS/s - Save changes in labeling\nA/a - Atomatic labeling\nR/r - Reset to default labeling\nV/v - Veriify labeling\nX/x - Exit without saving')
         print(f"{', '.join(fabric_indexes_str_lst)} - Choose fabric index to change labeling\n")
         # reset input_option value after each iteration to enter while loop
-        input_option = reply_request("Choose option: ", reply_options = full_options_lst, show_reply = True)
+        input_option = meop.reply_request("Choose option: ", reply_options = full_options_lst, show_reply = True)
         
         # user input is fabric index to change labeling 
         if input_option in fabric_indexes_str_lst:
@@ -62,7 +70,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
             # ask user to change labels and names by looping over rename_options_dct 
             for option_name, option_column in rename_options_dct.items():
                 if value:
-                    reply = reply_request(f'Do you want to change Fabric {option_name}? (y)es/(n)o: ')
+                    reply = meop.reply_request(f'Do you want to change Fabric {option_name}? (y)es/(n)o: ')
                     # save user input to the list
                     reply_lst.append(reply)
                     # if user want to change name or label ask to enter new value
@@ -108,7 +116,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
                             print('\n')
                             break
 
-                reply = reply_request('Do you want to keep changes? (y)es/(n)o: ')
+                reply = meop.reply_request('Do you want to keep changes? (y)es/(n)o: ')
                 # when user doesn't want to keep data fabricshow_summary DataFrame
                 # returns to the state saved bedore current iteration
                 if reply == 'n':
@@ -127,7 +135,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
                 input_option = None
             else:
                 # if fabric labeling is ok request to save
-                reply = reply_request('Do you want to save changes and exit? (y)es/(n)o: ')
+                reply = meop.reply_request('Do you want to save changes and exit? (y)es/(n)o: ')
                 # for save option do nothing and while loop stops on next condition check
                 if reply == 'y':
                     print('\nSaved fabric labeling\n')
@@ -135,7 +143,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
                     input_option = None
         # user input is reset current labeling configuration and start labeling from scratch
         elif input_option == 'r':
-            reply = reply_request('Do you want to reset fabric labeling to original values? (y)es/(n)o: ')
+            reply = meop.reply_request('Do you want to reset fabric labeling to original values? (y)es/(n)o: ')
             # for reset option actual fabricshow_summary DataFrame returns back
             # to initial DataFrame version and while loop don't stop
             if reply == 'y':
@@ -143,7 +151,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
                 print('\nFabric labeling has been reset to original version\n')
         # user input is automatic re-labeling
         elif input_option == 'a':
-            reply = reply_request('Do you want to perform automatic fabric labeling? (y)es/(n)o: ')
+            reply = meop.reply_request('Do you want to perform automatic fabric labeling? (y)es/(n)o: ')
             # for reset option actual fabricshow_summary DataFrame returns back
             # to initial DataFrame version and while loop don't stop
             if reply == 'y':
@@ -151,7 +159,7 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
                 print('\nAutomatic fabric labeling has been performed\n')
         # user input is exit without saving
         elif input_option == 'x':
-            reply = reply_request('Do you want to leave without saving? (y)es/(n)o: ')
+            reply = meop.reply_request('Do you want to leave without saving? (y)es/(n)o: ')
             # for exit option DataFrame returns back to initial version
             # and while loop stops
             if reply == 'y':

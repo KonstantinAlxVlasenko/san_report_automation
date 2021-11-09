@@ -4,17 +4,24 @@ within a period of six month prior to the switch configuration collection date "
 
 import numpy as np
 import pandas as pd
+# import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+# import utilities.filesystem_operations as fsop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
 
 from .errdump_aggregation import errdump_aggregated
-from common_operations_dataframe import dataframe_fillna
-from common_operations_dataframe_presentation import generate_report_dataframe
-from common_operations_filesystem import load_data, save_data
-from common_operations_table_report import dataframe_to_report
 
-from common_operations_miscellaneous import (status_info, verify_data,
-                                             verify_force_run)
-from common_operations_servicefile import data_extract_objects, dataframe_import
-from common_operations_database import read_db, write_db
+# from common_operations_dataframe import dataframe_fillna
+# from common_operations_dataframe_presentation import generate_report_dataframe
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_table_report import dataframe_to_report
+
+# from common_operations_miscellaneous import (status_info, verify_data,
+#                                              verify_force_run)
+# from common_operations_servicefile import data_extract_objects, dataframe_import
+# from common_operations_database import read_db, write_db
 
 
 
@@ -37,7 +44,7 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # # unpacking DataFrames from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -49,14 +56,14 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
         # data imported from init file (regular expression patterns) to extract values from data columns
         # re_pattern list contains comp_keys, match_keys, comp_dct    
-        _, _, *re_pattern_lst = data_extract_objects('raslog', max_title)
-        raslog_message_details_df = dataframe_import('raslog_details', max_title)
-        raslog_message_id_details_df = dataframe_import('raslog_id_details', max_title, columns=['Message_ID', 'Details', 'Recommended_action'])
+        _, _, *re_pattern_lst = sfop.data_extract_objects('raslog', max_title)
+        raslog_message_details_df = sfop.dataframe_import('raslog_details', max_title)
+        raslog_message_id_details_df = sfop.dataframe_import('raslog_id_details', max_title, columns=['Message_ID', 'Details', 'Recommended_action'])
 
         # current operation information string
         info = f'Counting RASLog messages'
@@ -68,7 +75,7 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
         # count how many times event appears during one month for the last six months 
         raslog_counter_df, raslog_frequent_df = errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_message_id_details_df)
         # after finish display status
-        status_info('ok', max_title, len(info))      
+        meop.status_info('ok', max_title, len(info))      
         # partition aggregated DataFrame to required tables
         raslog_report_df = raslog_report(raslog_frequent_df, data_names, report_headers_df, report_columns_usage_dct)
 
@@ -77,15 +84,19 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        errdump_aggregated_df, raslog_counter_df, raslog_report_df = \
-            verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [errdump_aggregated_df, raslog_counter_df, raslog_report_df]
+        # errdump_aggregated_df, raslog_counter_df, raslog_report_df = \
+        #     dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [errdump_aggregated_df, raslog_counter_df, raslog_report_df]
+
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        errdump_aggregated_df, raslog_counter_df, *_ = data_lst
+
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
     return errdump_aggregated_df, raslog_counter_df
 
 
@@ -134,10 +145,10 @@ def errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_
     # drop columns with all empty empty cells
     raslog_counter_df.dropna(axis=1, how='all', inplace=True)
 
-    raslog_counter_df = dataframe_fillna(raslog_counter_df, raslog_message_details_df, join_lst=['Condition'], 
+    raslog_counter_df = dfop.dataframe_fillna(raslog_counter_df, raslog_message_details_df, join_lst=['Condition'], 
                                             filled_lst=['Details',  'Recommended_action']) 
 
-    raslog_counter_df =  dataframe_fillna(raslog_counter_df, raslog_message_id_details_df, join_lst=['Message_ID'], 
+    raslog_counter_df =  dfop.dataframe_fillna(raslog_counter_df, raslog_message_id_details_df, join_lst=['Message_ID'], 
                                             filled_lst=['Details',  'Recommended_action']) 
     
     # find log messages which appear more then three times a month
@@ -209,6 +220,6 @@ def raslog_report(raslog_frequent_df, data_names, report_headers_df, report_colu
             # change keep chassis_name column tag to True 
             report_columns_usage_upd_dct['chassis_info_usage'] = True
 
-    raslog_report_df = generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_dct, data_names[2])
+    raslog_report_df = dfop.generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_dct, data_names[2])
     raslog_report_df.dropna(axis=1, how = 'all', inplace=True)
     return raslog_report_df

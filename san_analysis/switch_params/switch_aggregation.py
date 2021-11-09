@@ -3,7 +3,15 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import dataframe_fillna
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna
 
 
 def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, 
@@ -105,7 +113,7 @@ def ag_switch_info(switch_params_aggregated_df, ag_principal_df):
     ag_fw_type_df.rename(columns=ag_translate_dct, inplace=True)
     # fill information for AG switches and VC
     switch_params_aggregated_df = \
-        dataframe_fillna(switch_params_aggregated_df, ag_fw_type_df, join_lst=switch_columns_lst[0:1], 
+        dfop.dataframe_fillna(switch_params_aggregated_df, ag_fw_type_df, join_lst=switch_columns_lst[0:1], 
                                                                     filled_lst=switch_columns_lst[1:])
     return switch_params_aggregated_df
 

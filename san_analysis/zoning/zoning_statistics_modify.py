@@ -8,7 +8,15 @@ import re
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import dataframe_fillna, сoncatenate_columns, threshold_exceed
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna, сoncatenate_columns, threshold_exceed
 
 
 def modify_zoning(zoning_aggregated_df):
@@ -72,7 +80,7 @@ def modify_zoning(zoning_aggregated_df):
     zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone_duplicates_free', 'zone_duplicated_tag']
     # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
     zoning_modified_df = \
-        dataframe_fillna(zoning_modified_df, zoning_duplicated_df, join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
+        dfop.dataframe_fillna(zoning_modified_df, zoning_duplicated_df, join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
 
     # verify absorbed zones (zones which are part of other zones in effective configuration excluding duplicated zones)
     zoning_absorbed_df = verify_absorbed_zones(zoning_aggregated_df)
@@ -80,14 +88,14 @@ def modify_zoning(zoning_aggregated_df):
     # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
     if not zoning_absorbed_df.empty:
         zoning_modified_df = \
-            dataframe_fillna(zoning_modified_df, zoning_absorbed_df, join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
+            dfop.dataframe_fillna(zoning_modified_df, zoning_absorbed_df, join_lst=zoning_absorbed_columns[:-1], filled_lst=[zoning_absorbed_columns[-1]])
 
     # find zone pairs (zones with the same set device names) in another fabric_labels of the same fabric_name
     zoning_pairs_df = verify_pair_zones(zoning_aggregated_df)
     zoning_pairs_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone_duplicates_free', 'zone_paired_tag']
     # add zone_paired_tag for each paired zone from zone_duplicates_free column (to count each zone only once further)
     zoning_modified_df = \
-        dataframe_fillna(zoning_modified_df, zoning_pairs_df, join_lst=zoning_pairs_columns[:-1], filled_lst=[zoning_pairs_columns[-1]]) 
+        dfop.dataframe_fillna(zoning_modified_df, zoning_pairs_df, join_lst=zoning_pairs_columns[:-1], filled_lst=[zoning_pairs_columns[-1]]) 
 
     zoning_modified_df.replace(to_replace='nan', value=np.nan, inplace=True)
 
@@ -200,7 +208,7 @@ def verify_tdz(zoning_modified_df):
         zoning_tdz_df['tdz_tag'] = 'tdz_tag'
 
         tdz_columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone_duplicates_free', 'tdz_tag']
-        zoning_modified_df = dataframe_fillna(zoning_modified_df, zoning_tdz_df, filled_lst=tdz_columns[-1:], join_lst=tdz_columns[:-1])
+        zoning_modified_df = dfop.dataframe_fillna(zoning_modified_df, zoning_tdz_df, filled_lst=tdz_columns[-1:], join_lst=tdz_columns[:-1])
 
     return zoning_modified_df
 
@@ -289,14 +297,14 @@ def verify_pair_zones(zoning_aggregated_df):
                         zone_paired_columns.add(zone_paired_column)
                         verified_grp_df.rename(columns={'zone': zone_paired_column}, inplace=True)
                         # add column with pair zones in verified fabric_label to zoning configuration
-                        current_df = dataframe_fillna(current_df, verified_grp_df, 
+                        current_df = dfop.dataframe_fillna(current_df, verified_grp_df, 
                                                     join_lst=cfgtype_zone_device_columns, 
                                                     filled_lst=[zone_paired_column])           
                 # add zoning configuration with pair zones in all fabric_labels to general zoning configuration DataFrame
                 zoning_pairs_df = pd.concat([zoning_pairs_df, current_df])
 
     zone_paired_columns = list(zone_paired_columns)
-    zoning_pairs_df = сoncatenate_columns(zoning_pairs_df, summary_column='zone_paired', 
+    zoning_pairs_df = dfop.сoncatenate_columns(zoning_pairs_df, summary_column='zone_paired', 
                                             merge_columns=zone_paired_columns, sep=', ', drop_merge_columns=True)
     # add zone_paired_tag
     mask_zone_notna = zoning_pairs_df['zone_paired'].notna()
@@ -312,7 +320,7 @@ def verify_zonename_ratio(zoning_pairs_df, zoning_peer_free_grp_df):
 
     # verify if zone name and it's pair zone name related
     zoning_pairs_df['Zone_and_Pairzone_names_ratio'] = zoning_pairs_df.apply(lambda series: calculate_zone_names_ratio(series), axis=1)    
-    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_and_Pairzone_names_ratio', 0.8, 'Zone_and_Pairzone_names_related')
+    zoning_pairs_df = dfop.threshold_exceed(zoning_pairs_df, 'Zone_and_Pairzone_names_ratio', 0.8, 'Zone_and_Pairzone_names_related')
     # verify if zone name related with device names included in this zone
     peer_free_columns = zoning_peer_free_grp_df.columns.tolist()
     peer_free_columns.remove('Device_Host_Name')
@@ -321,7 +329,7 @@ def verify_zonename_ratio(zoning_pairs_df, zoning_peer_free_grp_df):
     zoning_peer_free_grp_df.drop(columns='Device_Host_Name', inplace=True)
     # add zone name and active device names included into zone ratio to zoning_pairs_df
     zoning_pairs_df = zoning_pairs_df.merge(zoning_peer_free_grp_df, how='left', on=peer_free_columns)
-    zoning_pairs_df = threshold_exceed(zoning_pairs_df, 'Zone_name_device_names_ratio', 0.7, 'Zone_name_device_names_related')
+    zoning_pairs_df = dfop.threshold_exceed(zoning_pairs_df, 'Zone_name_device_names_ratio', 0.7, 'Zone_name_device_names_related')
     return zoning_pairs_df
 
 

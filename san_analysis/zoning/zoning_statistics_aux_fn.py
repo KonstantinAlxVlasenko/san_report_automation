@@ -2,8 +2,9 @@
 
 import numpy as np
 import pandas as pd
-from common_operations_dataframe import count_frequency
+# from common_operations_dataframe import count_frequency
 
+import utilities.dataframe_operations as dfop
 
 def active_vs_configured_ports(portshow_zoned_aggregated_df, configuration_type):
     """Function to count total active device ports vs number of unzoned ports or
@@ -41,9 +42,9 @@ def active_vs_configured_ports(portshow_zoned_aggregated_df, configuration_type)
     
     if configuration_type == 'cfg_effective':
        summary_df = \
-           count_frequency(portshow_zoned_aggregated_cp_df, count_columns=['Total_unzoned_ports', 'Total_device_ports'])
+           dfop.count_frequency(portshow_zoned_aggregated_cp_df, count_columns=['Total_unzoned_ports', 'Total_device_ports'])
     elif configuration_type == 'alias':
-        summary_df = count_frequency(portshow_zoned_aggregated_cp_df, count_columns=['Total_no_alias_ports', 'Total_device_ports'])
+        summary_df = dfop.count_frequency(portshow_zoned_aggregated_cp_df, count_columns=['Total_no_alias_ports', 'Total_device_ports'])
     
     return summary_df
 

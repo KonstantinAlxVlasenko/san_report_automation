@@ -2,9 +2,16 @@ import os.path
 import sys
 from datetime import date
 import pandas as pd
-from common_operations_filesystem import check_valid_path, create_folder
-from common_operations_servicefile import dataframe_import
-from common_operations_dataframe import dct_from_dataframe, series_from_dataframe
+# from common_operations_filesystem import check_valid_path, create_folder
+# from common_operations_servicefile import dataframe_import
+# from common_operations_dataframe import dct_from_dataframe, series_from_dataframe
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
+import utilities.filesystem_operations as fsop
 
 
 def service_initialization():
@@ -49,16 +56,16 @@ def import_service_dataframes(max_title):
 
     print(f'\n\nPREREQUISITES 1. IMPORTING STEPS AND TABLES RELATED INFORMATION\n')
 
-    project_steps_df = dataframe_import('service_tables', max_title, init_file = 'report_info.xlsx')
+    project_steps_df = sfop.dataframe_import('service_tables', max_title, init_file = 'report_info.xlsx')
     numeric_columns = ['export_to_excel', 'force_extract', 'sort_weight']
     project_steps_df[numeric_columns] = project_steps_df[numeric_columns].apply(pd.to_numeric, errors='ignore')
 
-    report_steps_dct = dct_from_dataframe(project_steps_df, 'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', 'description')
+    report_steps_dct = dfop.dct_from_dataframe(project_steps_df, 'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', 'description')
 
     # Data_frame with report columns
-    report_headers_df = dataframe_import('customer_report', max_title)
+    report_headers_df = sfop.dataframe_import('customer_report', max_title)
     # software path
-    software_path_df = dataframe_import('software', max_title, init_file = 'report_info.xlsx')
+    software_path_df = sfop.dataframe_import('software', max_title, init_file = 'report_info.xlsx')
 
     return project_steps_df, report_headers_df, software_path_df, report_steps_dct
 
@@ -69,8 +76,8 @@ def import_titles_and_folders(max_title):
     customer_name, project_title, hardware configuration files folders,  
     """
 
-    report_entry_df = dataframe_import('report', max_title, 'report_info.xlsx', display_status=False)
-    report_entry_sr = series_from_dataframe(report_entry_df, index_column='name', value_column='value')
+    report_entry_df = sfop.dataframe_import('report', max_title, 'report_info.xlsx', display_status=False)
+    report_entry_sr = dfop.series_from_dataframe(report_entry_df, index_column='name', value_column='value')
 
     entry_lst = ('customer_name', 'project_title', 'project_folder', 'supportsave_folder')
     empty_entry_lst = [entry for entry in  entry_lst if pd.isna(entry)]
@@ -95,7 +102,7 @@ def create_service_folders(report_entry_sr, max_title):
     project_path = os.path.normpath(report_entry_sr['project_folder'])
 
     # check if project folders exist
-    check_valid_path(project_path)
+    fsop.check_valid_path(project_path)
     # current date
     current_date = str(date.today())   
     
@@ -105,8 +112,8 @@ def create_service_folders(report_entry_sr, max_title):
     santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
     santoolbox_parsed_sshow_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')
     santoolbox_parsed_others_path = os.path.join(project_path, santoolbox_parsed_dir, 'others')
-    create_folder(santoolbox_parsed_sshow_path, max_title)
-    create_folder(santoolbox_parsed_others_path, max_title)
+    fsop.create_folder(santoolbox_parsed_sshow_path, max_title)
+    fsop.create_folder(santoolbox_parsed_others_path, max_title)
 
     report_entry_sr['parsed_sshow_folder'] = santoolbox_parsed_sshow_path
     report_entry_sr['parsed_other_folder'] = santoolbox_parsed_others_path
@@ -114,13 +121,13 @@ def create_service_folders(report_entry_sr, max_title):
     # define folder san_assessment_report to save excel file with parsed configuration data
     san_assessment_report_dir = f'report_{customer_title}_' + current_date
     san_assessment_report_path = os.path.join(os.path.normpath(project_path), san_assessment_report_dir)   
-    create_folder(san_assessment_report_path, max_title)
+    fsop.create_folder(san_assessment_report_path, max_title)
     report_entry_sr['current_report_folder'] = san_assessment_report_path
     
     # define folder to save obects extracted from configuration files
     database_dir = f'database_{customer_title}'
     database_path = os.path.join(os.path.normpath(project_path), database_dir)
-    create_folder(database_path, max_title)
+    fsop.create_folder(database_path, max_title)
     report_entry_sr['database_folder'] = database_path
 
     return report_entry_sr
@@ -130,7 +137,7 @@ def find_max_title(ssave_path):
     """Function to find maximum cinfiguration file length for display puproses"""
 
     # check if ssave_path folder exist
-    check_valid_path(ssave_path)
+    fsop.check_valid_path(ssave_path)
     
     # list to save length of config data file names to find max
     # required in order to proper alighnment information in terminal

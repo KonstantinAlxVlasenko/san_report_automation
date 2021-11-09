@@ -8,9 +8,17 @@ Module to create tables
 
 import pandas as pd
 
-from common_operations_dataframe_presentation import (
-    drop_equal_columns, drop_zero, generate_report_dataframe,
-    remove_duplicates_from_column, translate_dataframe, translate_values)
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+
+# from common_operations_dataframe_presentation import (
+#     drop_equal_columns, drop_zero, generate_report_dataframe,
+#     remove_duplicates_from_column, translate_dataframe, translate_values)
 
 
 def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
@@ -23,7 +31,7 @@ def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df
     # partition aggregated DataFrame to required tables
     servers_report_df, storage_report_df, library_report_df, hba_report_df, \
         storage_connection_df,  library_connection_df, server_connection_df = \
-        generate_report_dataframe(portshow_aggregated_df, report_headers_df, report_columns_usage_dct, *data_names)
+        dfop.generate_report_dataframe(portshow_aggregated_df, report_headers_df, report_columns_usage_dct, *data_names)
 
     # clean and sort DataFrames
     # device report
@@ -36,13 +44,13 @@ def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df
     # device connection reports
     storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean=True)
     storage_connection_df = device_name_duplicates_free_column(storage_connection_df)
-    storage_connection_df = translate_values(storage_connection_df)
+    storage_connection_df = dfop.translate_values(storage_connection_df)
     library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean=True)
     library_connection_df = device_name_duplicates_free_column(library_connection_df)
-    library_connection_df = translate_values(library_connection_df)
+    library_connection_df = dfop.translate_values(library_connection_df)
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean=True)
     server_connection_df = device_name_duplicates_free_column(server_connection_df)
-    server_connection_df = translate_values(server_connection_df)
+    server_connection_df = dfop.translate_values(server_connection_df)
     
     storage_connection_statistics_report_df = connection_statistics_report(storage_connection_statistics_df, report_headers_df)
     device_connection_statistics_report_df = connection_statistics_report(device_connection_statistics_df, report_headers_df)
@@ -114,7 +122,7 @@ def _clean_dataframe(df, mask_type,
     possible_equal_column_pairs = [
                                     ('Количество портов устройства в подсети фабрики', 'Количество портов устройства в фабриках подсети'),
                                     ('Всего портов устройства', 'Количество портов устройства в подсетях фабрики')]
-    df = drop_equal_columns(df, possible_equal_column_pairs)
+    df = dfop.drop_equal_columns(df, possible_equal_column_pairs)
 
 
 
@@ -146,8 +154,8 @@ def device_name_duplicates_free_column(df):
 
     duplicates_subset = ['Фабрика', 'Имя устройства', 'Тип устройства']
     duplicates_subset = [column for column in duplicates_subset if column in df.columns]
-    df = remove_duplicates_from_column(df, 'Имя устройства', duplicates_subset, duplicates_free_column_name='Название устройства')
-    df = drop_equal_columns(df, [('Имя устройства', 'Название устройства')])
+    df = dfop.remove_duplicates_from_column(df, 'Имя устройства', duplicates_subset, duplicates_free_column_name='Название устройства')
+    df = dfop.drop_equal_columns(df, [('Имя устройства', 'Название устройства')])
     return df
 
 
@@ -170,10 +178,10 @@ def connection_statistics_report(connection_statistics_df, report_headers_df):
     columns = [column for column in connection_statistics_df.columns if 'note' in column and connection_statistics_df[column].notna().any()]
     columns.append('Fabric_name')
 
-    connection_statistics_report_df = translate_dataframe(connection_statistics_report_df, report_headers_df, 
+    connection_statistics_report_df = dfop.translate_dataframe(connection_statistics_report_df, report_headers_df, 
                                                             'Статистика_подключения_устройств_перевод', translated_columns=columns)
     # drop empty columns
     connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
     # drop zeroes for clean view
-    connection_statistics_report_df = drop_zero(connection_statistics_report_df)
+    connection_statistics_report_df = dfop.drop_zero(connection_statistics_report_df)
     return connection_statistics_report_df

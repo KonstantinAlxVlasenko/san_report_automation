@@ -2,9 +2,17 @@
 find unequal port configuration parameters from both sides of isl link""" 
 
 import numpy as np
-import pandas as pd
+# import pandas as pd
 
-from common_operations_dataframe import dataframe_fillna, сoncatenate_columns
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+
+# from common_operations_dataframe import dataframe_fillna, сoncatenate_columns
 
 
 def attenuation_calc(isl_aggregated_df):
@@ -89,10 +97,10 @@ def verify_isl_cfg_equality(isl_aggregated_df):
     connected_unequal_cfg_columns = ['Connected_' + cfg for cfg in unequal_cfg_columns]
 
     # join all columns with unequal parameters for main and connected ports separately
-    isl_cp_df = сoncatenate_columns(isl_cp_df, summary_column='Unequal_cfg', 
+    isl_cp_df = dfop.сoncatenate_columns(isl_cp_df, summary_column='Unequal_cfg', 
                                                 merge_columns=unequal_cfg_columns, sep=', ', 
                                                 drop_merge_columns=True)
-    isl_cp_df = сoncatenate_columns(isl_cp_df, summary_column='Connected_Unequal_cfg', 
+    isl_cp_df = dfop.сoncatenate_columns(isl_cp_df, summary_column='Connected_Unequal_cfg', 
                                                 merge_columns=connected_unequal_cfg_columns, sep=', ', 
                                                 drop_merge_columns=True)
 
@@ -102,6 +110,6 @@ def verify_isl_cfg_equality(isl_aggregated_df):
                     'Connected_SwitchName', 'Connected_switchWwn',
                     'Connected_slot', 'Connected_port',
                     'Unequal_cfg', 'Connected_Unequal_cfg']
-    isl_aggregated_df = dataframe_fillna(isl_aggregated_df, isl_cp_df, 
+    isl_aggregated_df = dfop.dataframe_fillna(isl_aggregated_df, isl_cp_df, 
                                         join_lst=isl_cfg_columns[:-2], filled_lst=isl_cfg_columns[-2:])
     return isl_aggregated_df

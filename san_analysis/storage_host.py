@@ -3,18 +3,26 @@
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import (convert_wwn, dataframe_fillna,
-                                         replace_wwnn,
-                                         sequential_equality_note)
-from common_operations_dataframe_presentation import (
-    dataframe_slice_concatenate, drop_all_identical, drop_column_if_all_na,
-    drop_equal_columns, drop_equal_columns_pairs, generate_report_dataframe,
-    remove_duplicates_from_column, translate_values)
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (status_info, verify_data,
-                                             verify_force_run)
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+
+import utilities.dataframe_operations as dfop
+import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import (convert_wwn, dataframe_fillna,
+#                                          replace_wwnn,
+#                                          sequential_equality_note)
+# from common_operations_dataframe_presentation import (
+#     dataframe_slice_concatenate, drop_all_identical, drop_column_if_all_na,
+#     drop_equal_columns, drop_equal_columns_pairs, generate_report_dataframe,
+#     remove_duplicates_from_column, translate_values)
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (status_info, verify_data,
+#                                              verify_force_run)
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def storage_host_analysis(host_3par_df, system_3par_df, port_3par_df, 
@@ -38,7 +46,7 @@ def storage_host_analysis(host_3par_df, system_3par_df, port_3par_df,
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # # unpacking DataFrames from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -49,7 +57,7 @@ def storage_host_analysis(host_3par_df, system_3par_df, port_3par_df,
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
                                             max_title, analyzed_data_names)
     if force_run:
         # current operation information string
@@ -59,7 +67,7 @@ def storage_host_analysis(host_3par_df, system_3par_df, port_3par_df,
         storage_host_aggregated_df = \
             storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portshow_aggregated_df, zoning_aggregated_df)
         # after finish display status
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
         # report tables
         storage_host_report_df, storage_host_compare_report_df = \
             storage_host_report(storage_host_aggregated_df, data_names, report_headers_df, report_columns_usage_dct)
@@ -68,16 +76,21 @@ def storage_host_analysis(host_3par_df, system_3par_df, port_3par_df,
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         # storage_host_aggregated_df, = verify_data(report_constant_lst, data_names, *data_lst)
-        storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df \
-            = verify_data(report_constant_lst, data_names, *data_lst)
-        data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
+        # storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df \
+        #     = verify_data(report_constant_lst, data_names, *data_lst)
+        # data_lst = [storage_host_aggregated_df, storage_host_report_df, storage_host_compare_report_df]
+
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        storage_host_aggregated_df, *_ = data_lst
+
+
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
     return storage_host_aggregated_df
 
 
@@ -89,15 +102,15 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     
     storage_host_aggregated_df = host_3par_df.copy()
     # add system_name
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, system_3par_df, 
+    storage_host_aggregated_df = dfop.dataframe_fillna(storage_host_aggregated_df, system_3par_df, 
                                                     join_lst=['configname'], filled_lst=['System_Name'])
     # add controller's ports Wwnp and Wwnp
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, port_3par_df, 
+    storage_host_aggregated_df = dfop.dataframe_fillna(storage_host_aggregated_df, port_3par_df, 
                                                     join_lst=['configname', 'Storage_Port'], filled_lst=['NodeName', 'PortName'])
     # convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)
-    storage_host_aggregated_df = convert_wwn(storage_host_aggregated_df, ['Host_Wwn', 'NodeName', 'PortName'])
+    storage_host_aggregated_df = dfop.convert_wwn(storage_host_aggregated_df, ['Host_Wwn', 'NodeName', 'PortName'])
     # add controllers ports Fabric_name and Fabric_label
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
+    storage_host_aggregated_df = dfop.dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
                                                     join_lst=['PortName'], filled_lst=['Fabric_name', 'Fabric_label'])
     # rename controllers NodeName and PortName
     rename_columns = {'NodeName': 'Storage_Port_Wwnn', 'PortName': 'Storage_Port_Wwnp'}
@@ -108,11 +121,11 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     # storage_host_aggregated_df = replace_wwnn(storage_host_aggregated_df, 'Host_Wwn', 
     #                                             portshow_aggregated_df, ['NodeName', 'PortName'], 
     #                                             fabric_columns = ['Fabric_name', 'Fabric_label'])
-    storage_host_aggregated_df = replace_wwnn(storage_host_aggregated_df, 'Host_Wwn', 
+    storage_host_aggregated_df = dfop.replace_wwnn(storage_host_aggregated_df, 'Host_Wwn', 
                                                 portshow_aggregated_df, ['NodeName', 'PortName'])
 
     # add Host Wwnp zoning device status in fabric of storage port connection
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, zoning_aggregated_df, 
+    storage_host_aggregated_df = dfop.dataframe_fillna(storage_host_aggregated_df, zoning_aggregated_df, 
                                                 join_lst=['Fabric_name', 'Fabric_label', 'PortName'], 
                                                 filled_lst=['Fabric_device_status'])
 
@@ -126,7 +139,7 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
                     'Device_Host_Name', 'Device_Port', 'Host_OS', 'Device_Location', 
                     'Device_Host_Name_per_fabric_name_and_label',	'Device_Host_Name_per_fabric_label', 
                     'Device_Host_Name_per_fabric_name', 'Device_Host_Name_total_fabrics']
-    storage_host_aggregated_df = dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
+    storage_host_aggregated_df = dfop.dataframe_fillna(storage_host_aggregated_df, portshow_aggregated_df, 
                                                     join_lst=['PortName'], filled_lst=host_columns, remove_duplicates=False)
 
     # rename host columns
@@ -134,7 +147,7 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
 
     # verify if host and storage ports are in the same fabric
-    storage_host_aggregated_df = sequential_equality_note(storage_host_aggregated_df, 
+    storage_host_aggregated_df = dfop.sequential_equality_note(storage_host_aggregated_df, 
                                                             ['Host_Fabric_name', 'Host_Fabric_label'], 
                                                             ['Storage_Fabric_name', 'Storage_Fabric_label'],
                                                             'Host_Storage_Fabric_equal')
@@ -146,7 +159,7 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
     sort_columns = ['System_Name', 'Host_Id', 'Host_Name', 'Storage_Port']
     storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
     # create storage name column free of duplicates
-    storage_host_aggregated_df = remove_duplicates_from_column(storage_host_aggregated_df, 'System_Name',
+    storage_host_aggregated_df = dfop.remove_duplicates_from_column(storage_host_aggregated_df, 'System_Name',
                                                                 duplicates_subset=['configname', 'System_Name'], ) 
     return storage_host_aggregated_df
 
@@ -240,17 +253,17 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_headers_d
     storage_host_report_df = clean_storage_host(storage_host_report_df)
     storage_host_valid_df = clean_storage_host(storage_host_valid_df)
     
-    storage_host_valid_df = remove_duplicates_from_column(storage_host_valid_df, 'System_Name',
+    storage_host_valid_df = dfop.remove_duplicates_from_column(storage_host_valid_df, 'System_Name',
                                                                 duplicates_subset=['configname', 'System_Name'])   
     # slice required columns and translate header
-    storage_host_report_df = generate_report_dataframe(storage_host_report_df, report_headers_df, report_columns_usage_dct, data_names[1])
-    storage_host_valid_df = generate_report_dataframe(storage_host_valid_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    storage_host_report_df = dfop.generate_report_dataframe(storage_host_report_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    storage_host_valid_df = dfop.generate_report_dataframe(storage_host_valid_df, report_headers_df, report_columns_usage_dct, data_names[1])
     # translate values in columns
-    storage_host_report_df = translate_values(storage_host_report_df)
-    storage_host_valid_df = translate_values(storage_host_valid_df)
+    storage_host_report_df = dfop.translate_values(storage_host_report_df)
+    storage_host_valid_df = dfop.translate_values(storage_host_valid_df)
     # create comparision storage_host DataFrame based on Fabric_labels
     slice_column = 'Подсеть' if 'Подсеть' in storage_host_valid_df.columns else 'Подсеть порта массива'
-    storage_host_compare_report_df = dataframe_slice_concatenate(storage_host_valid_df, column=slice_column)
+    storage_host_compare_report_df = dfop.dataframe_slice_concatenate(storage_host_valid_df, column=slice_column)
     return storage_host_report_df, storage_host_compare_report_df
 
 
@@ -258,16 +271,16 @@ def clean_storage_host(df):
     """Function to clean storage_host and storage_host_valid (storage port and host are in the same fabric)"""
 
     # drop second column in each tuple of the list if values in columns of the tuple are equal
-    df = drop_equal_columns(df, columns_pairs=[('Host_Wwnp', 'Host_Wwn'), 
+    df = dfop.drop_equal_columns(df, columns_pairs=[('Host_Wwnp', 'Host_Wwn'), 
                                                 ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
                                                 ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
     # drop empty columns
-    df = drop_column_if_all_na(df, ['Device_Port', 'Device_Location'])
+    df = dfop.drop_column_if_all_na(df, ['Device_Port', 'Device_Location'])
     # drop columns where all values are equal to the item value
     columns_values = {'Host_Storage_Fabric_equal': 'Yes', 'Persona_correct': 'Yes', 'Fabric_host_status': 'local'}
-    df = drop_all_identical(df, columns_values, dropna=True)
+    df = dfop.drop_all_identical(df, columns_values, dropna=True)
     # drop second pair of Fabric_name, Fabric_label if the columns are respectively equal 
-    df = drop_equal_columns_pairs(df, columns_main=['Storage_Fabric_name', 'Storage_Fabric_label'], 
+    df = dfop.drop_equal_columns_pairs(df, columns_main=['Storage_Fabric_name', 'Storage_Fabric_label'], 
                                         columns_droped=['Host_Fabric_name', 'Host_Fabric_label'], dropna=False)
     # rename first pair of Fabric_name, Fabric_label if second one was droped in prev step
     if not 'Host_Fabric_name' in df.columns:

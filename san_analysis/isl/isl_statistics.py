@@ -5,9 +5,17 @@ import numpy as np
 import pandas as pd
 
 from .isl_statistics_notes import add_notes
-from common_operations_dataframe import count_total, сoncatenate_columns
-from common_operations_dataframe_presentation import move_column, remove_duplicates_from_column
-from common_operations_switch import count_summary
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import count_total, сoncatenate_columns
+# from common_operations_dataframe_presentation import move_column, remove_duplicates_from_column
+# from common_operations_switch import count_summary
 
 isl_group_columns = ['Fabric_name', 'Fabric_label',  
                      'chassis_name', 'SwitchName',  'switchWwn', 
@@ -44,7 +52,7 @@ def isl_statistics(isl_aggregated_df, re_pattern_lst, report_data_lst):
         isl_statistics_df['Switch_quantity'] = 1
         isl_statistics_df['Switch_connection_quantity'] = 1
 
-        isl_statistics_df = move_column(isl_statistics_df, ['Switch_quantity', 'Switch_connection_quantity'],
+        isl_statistics_df = dfop.move_column(isl_statistics_df, ['Switch_quantity', 'Switch_connection_quantity'],
                                         ref_col='Logical_link_quantity', place='before')
         # concatenate statistics dataframes
         isl_statistics_df = pd.concat([isl_statistics_df, isl_statistics_summary_df])
@@ -118,7 +126,7 @@ def prior_prepearation(isl_aggregated_df, re_pattern_lst):
     # logical_link quantity tag
     isl_aggregated_modified_df['ISL_IFL'] = isl_aggregated_modified_df['ISL']
     isl_aggregated_modified_df['ISL_IFL'].fillna(isl_aggregated_modified_df['IFL'], inplace=True)
-    isl_aggregated_modified_df = remove_duplicates_from_column(isl_aggregated_modified_df, column='ISL_IFL', 
+    isl_aggregated_modified_df = dfop.remove_duplicates_from_column(isl_aggregated_modified_df, column='ISL_IFL', 
                                                                 duplicates_subset=['Fabric_name', 'Fabric_label', 'switchWwn', 'ISL_IFL'],
                                                                 duplicates_free_column_name='logical_link', drop_orig_column=True)
     mask_link_notna = isl_aggregated_modified_df['logical_link'].notna()
@@ -249,9 +257,6 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     """Function to count ISL statistics summary for fabric_label and fabric_name levels.
     Total Bandwidwidth counts for link. Others statistics for ports (for both switches of ISL link)"""
 
-
-
-
     # columns grouping is performed on to count summary statistics
     grp_columns = ['Fabric_name', 'Fabric_label']
     # columns to calculate port summary (sum function for corresponding level)
@@ -265,7 +270,7 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
         if column in port_summary_columns:
             port_summary_columns.remove(column)
     # count sum statistics for each fabric
-    isl_port_total_df = count_total(isl_statistics_df, grp_columns.copy(), port_summary_columns, sum)
+    isl_port_total_df = dfop.count_summary(isl_statistics_df, grp_columns.copy(), port_summary_columns, sum)
     
 
     """In order to count total ISL bandwidth it is required to allocate unique ISLs only. 
@@ -277,14 +282,14 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     # count sum bandwidth statistics for each fabric
     unique_isl_statistics_df['Bandwidth_Gbps'] = \
         unique_isl_statistics_df['Bandwidth_Gbps'].astype('int64', errors='ignore')
-    unique_isl_bandwidth_total_df = count_total(unique_isl_statistics_df, grp_columns.copy(), 'Bandwidth_Gbps', sum)
+    unique_isl_bandwidth_total_df = dfop.count_summary(unique_isl_statistics_df, grp_columns.copy(), 'Bandwidth_Gbps', sum)
 
-    unique_link_statistics_df = count_summary(unique_isl_statistics_df, grp_columns.copy(), 
+    unique_link_statistics_df = dfop.count_summary(unique_isl_statistics_df, grp_columns.copy(), 
                                                 count_columns=['Logical_link_quantity', 'Physical_link_quantity'], fn=sum)
     
     # switch_connection_quantity summary (all links between two switches considered as one connection)
-    unique_isl_statistics_df = сoncatenate_columns(unique_isl_statistics_df, summary_column='Link_Wwns', merge_columns=['sort_column_1', 'sort_column_2'])
-    switch_connection_quantity_total_df = count_total(unique_isl_statistics_df, grp_columns.copy(), 'Link_Wwns', fn='nunique')
+    unique_isl_statistics_df = dfop.сoncatenate_columns(unique_isl_statistics_df, summary_column='Link_Wwns', merge_columns=['sort_column_1', 'sort_column_2'])
+    switch_connection_quantity_total_df = dfop.count_summary(unique_isl_statistics_df, grp_columns.copy(), 'Link_Wwns', fn='nunique')
     switch_connection_quantity_total_df.rename(columns={'Link_Wwns': 'Switch_connection_quantity'}, inplace=True)
     
     # switch_quantity summary (number of unique wwns in 'switchWwn' and 'Connected_switchWwn' )
@@ -292,7 +297,7 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     isl_sw_connected_wwn_df = isl_statistics_df[['Fabric_name', 'Fabric_label', 'Connected_switchWwn']].copy()
     isl_sw_connected_wwn_df.rename(columns={'Connected_switchWwn': 'switchWwn'}, inplace=True)
     isl_sw_total_wwn_df = pd.concat([isl_sw_wwn_df, isl_sw_connected_wwn_df])
-    switch_quantity_total_df = count_summary(isl_sw_total_wwn_df, ['Fabric_name', 'Fabric_label'], 
+    switch_quantity_total_df = dfop.count_summary(isl_sw_total_wwn_df, ['Fabric_name', 'Fabric_label'], 
                                     count_columns='switchWwn', fn='nunique')
     switch_quantity_total_df.rename(columns={'switchWwn': 'Switch_quantity'}, inplace=True)    
     
@@ -326,7 +331,7 @@ def verify_isl_symmetry(isl_statistics_summary_df):
         isl_symmetry_df[column_note].where(mask_values_nonuniformity, column.lower(), inplace=True)
         
     # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
-    isl_symmetry_df = сoncatenate_columns(isl_symmetry_df, summary_column='Asymmetry_note', merge_columns=isl_symmetry_notes)
+    isl_symmetry_df = dfop.сoncatenate_columns(isl_symmetry_df, summary_column='Asymmetry_note', merge_columns=isl_symmetry_notes)
     # drop columns with quantity of unique values
     isl_symmetry_df.drop(columns=isl_symmetry_columns, inplace=True)
     # add Asymmetry_note column to isl_statistics_summary_df

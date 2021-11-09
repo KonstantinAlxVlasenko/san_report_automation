@@ -2,9 +2,16 @@
 
 import pandas as pd
 import numpy as np
-import sys
+# import sys
 
-from common_operations_dataframe import dataframe_fillna
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna
 
 
 def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df):
@@ -17,7 +24,7 @@ def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_ag
     # columns labels reqiured for join operation
     switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
                         'switchName', 'switchWwn',
-                        'switch_index', 'switchState', 'switchMode']
+                        'switch_index', 'switchState', 'switchMode', 'fabric.domain']
 
     switchparams_join_df = switch_params_df.loc[:, switchparams_lst].copy()
     portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_join_df, how = 'left', on = switchparams_lst[:5])
@@ -27,6 +34,10 @@ def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_ag
     switch_generation_df = switch_params_aggregated_df.loc[:, switch_generation_lst].copy()
     switch_generation_df.drop_duplicates(subset = switch_generation_lst[:3], inplace = True)
     portshow_aggregated_df = portshow_aggregated_df.merge(switch_generation_df, how = 'left', on = switch_generation_lst[:3])
+
+    # join Domain_ID and PortIndex columns
+    mask_notna = portshow_aggregated_df[['fabric.domain', 'portIndex']].notna().all(axis=1)
+    portshow_aggregated_df.loc[mask_notna, 'Domain_Index'] = portshow_aggregated_df['fabric.domain'] + ',' + portshow_aggregated_df['portIndex']
 
     return portshow_aggregated_df
 
@@ -83,7 +94,7 @@ def fill_isl_link(portshow_aggregated_df, isl_aggregated_df):
         isl_join_df = isl_join_df.reindex(columns = isl_columns_lst)
 
         # fill empty values in portshow_aggregated_df from isl_join_df
-        portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, isl_join_df, 
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, isl_join_df, 
                                                     join_lst = isl_columns_lst[:9], filled_lst = isl_columns_lst[9:])
 
     return portshow_aggregated_df
@@ -124,7 +135,7 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     switch_join_columns_lst = switch_params_join_df.columns.to_list()
     portshow_aggregated_df['Device_Model'].replace('^-$', np.nan, regex=True, inplace=True)
     # portshow_aggregated_df['Device_Model'].replace('^-$', np.nan, regex=True, inplace=True)
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
                                                 join_lst = switch_join_columns_lst[:3], filled_lst = switch_join_columns_lst[3:])
     portshow_aggregated_df = switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df)
 
@@ -147,7 +158,7 @@ def switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df):
     portshow_aggregated_df['Device_Host_Name_tmp'] = portshow_aggregated_df['Device_Host_Name']
     portshow_aggregated_df['Device_Host_Name'] = np.nan
 
-    portshow_aggregated_df = dataframe_fillna(portshow_aggregated_df, switch_name_wwn_df,
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, switch_name_wwn_df,
                                                 join_lst=['Fabric_name', 'Fabric_label', 'NodeName'],
                                                 filled_lst=['Device_Host_Name'])
     

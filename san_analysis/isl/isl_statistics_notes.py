@@ -4,7 +4,15 @@ import re
 import numpy as np
 import pandas as pd
 
-from common_operations_dataframe import сoncatenate_columns
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import сoncatenate_columns
 
 def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst):
     """Function to add notes to isl_statistics_df DataFrame"""
@@ -83,9 +91,9 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         # replace pd.NA with np.nan
         nonuniformity_notes_df.fillna(np.nan, inplace=True)
         # merge logically related note columns
-        nonuniformity_notes_df = сoncatenate_columns(nonuniformity_notes_df, 
+        nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
                                                   summary_column='Transceiver_nonuniformity_note', merge_columns=note_columns[3:5])
-        nonuniformity_notes_df = сoncatenate_columns(nonuniformity_notes_df, 
+        nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
                                                   summary_column='Portcfg_nonuniformity_note', merge_columns=note_columns[5:])
         # drop columns with unique values quantity
         nonuniformity_notes_df.drop(columns=count_columns, inplace=True)
@@ -130,7 +138,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
             isl_statistics_df['Speed_auto_note'] = np.where(mask_speed_auto & mask_not_xisl_only, 'auto_speed', pd.NA)
         
         speed_note_columns = ['Speed_auto_note', 'Speed_low_note', 'Speed_reduced_note', 'Speed_Gbps_nonuniformity_note']
-        isl_statistics_df = сoncatenate_columns(isl_statistics_df, summary_column='Speed_note', merge_columns=speed_note_columns, drop_merge_columns=True)
+        isl_statistics_df = dfop.сoncatenate_columns(isl_statistics_df, summary_column='Speed_note', merge_columns=speed_note_columns, drop_merge_columns=True)
         
         return isl_statistics_df
     

@@ -6,7 +6,15 @@ import pandas as pd
 
 from .isl_aggregation_conclusions import (attenuation_calc,
                                                   verify_isl_cfg_equality)
-from common_operations_dataframe import dataframe_join, dataframe_fillna
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_join, dataframe_fillna
 
 
 def isl_aggregated(fabric_labels_df, switch_params_aggregated_df, 
@@ -123,7 +131,7 @@ def fabriclabel_join(fabric_clean_df, isl_aggregated_df, fcredge_df):
     # column names list to slice fabric_clean DataFrame and join with isl_aggregated Dataframe
     switch_ip_lst = ['SwitchName', 'switchWwn', 'Enet_IP_Addr']
     # addition IP adddreses information to isl_aggregated DataFrame
-    isl_aggregated_df = dataframe_join(isl_aggregated_df, fabric_clean_df,  switch_ip_lst, 2)
+    isl_aggregated_df = dfop.dataframe_join(isl_aggregated_df, fabric_clean_df,  switch_ip_lst, 2)
     return isl_aggregated_df, fcredge_df
 
 
@@ -135,7 +143,7 @@ def portcfg_join(portcfgshow_df, isl_aggregated_df):
                    'LOS_TOV_mode', 'QOS_Port', 'QOS_E_Port', 'Rate_Limit', 'Credit_Recovery', 'Compression', 'Encryption', 
                    '10G/16G_FEC', 'Fault_Delay', 'TDZ_mode', 'Fill_Word(Current)', 'FEC']
     # addition portcfg port information to isl_aggregated DataFrame
-    isl_aggregated_df = dataframe_join(isl_aggregated_df, portcfgshow_df, portcfg_lst, 4)
+    isl_aggregated_df = dfop.dataframe_join(isl_aggregated_df, portcfgshow_df, portcfg_lst, 4)
     return isl_aggregated_df
 
 
@@ -146,7 +154,7 @@ def switch_join(switch_params_aggregated_df, isl_sfp_connected_df):
     switch_lst = ['SwitchName', 'switchWwn', 'switchType','licenses', 'switch_speedMax', 'HPE_modelName', 
                     'Base_Switch', 'Allow_XISL_Use', 'Base_switch_in_chassis']   
     # addition switch parameters information to isl_aggregated DataFrame
-    isl_aggregated_df = dataframe_join(isl_sfp_connected_df, switch_params_aggregated_df, switch_lst, 2)
+    isl_aggregated_df = dfop.dataframe_join(isl_sfp_connected_df, switch_params_aggregated_df, switch_lst, 2)
     # convert switchType column to float for later sorting
     isl_aggregated_df = isl_aggregated_df.astype(dtype = {'switchType': 'float64'}, errors = 'ignore')
     # check if Trunking lic present on both swithes in ISL link
@@ -174,7 +182,7 @@ def portshow_join(portshow_df, switchshow_df, isl_aggregated_df):
     # column names list to slice sfphshow DataFrame and join with isl_aggregated Dataframe
     portshow_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Distance']
     # addition switchshow port information to isl_aggregated DataFrame
-    isl_aggregated_df = dataframe_join(isl_aggregated_df, portshow_join_df, portshow_lst, 4)    
+    isl_aggregated_df = dfop.dataframe_join(isl_aggregated_df, portshow_join_df, portshow_lst, 4)    
     return isl_aggregated_df
 
     
@@ -192,7 +200,7 @@ def sfp_join(sfpshow_df, isl_aggregated_df, re_pattern_lst):
     sfpshow_df = sfpshow_df.astype(dtype = sfp_power_dct, errors = 'ignore')
 
     # addition switchshow port information to isl_aggregated DataFrame
-    isl_aggregated_df = dataframe_join(isl_aggregated_df, sfpshow_df, sfp_lst, 4)    
+    isl_aggregated_df = dfop.dataframe_join(isl_aggregated_df, sfpshow_df, sfp_lst, 4)    
     #max Transceiver speed
     sfp_speed_dct = {
             'Transceiver_mode': 'Transceiver_speedMax', 
@@ -220,14 +228,14 @@ def porttype_join(switchshow_df, isl_aggregated_df, fcredge_df):
     # column names list to slice switchshow DataFrame and join with isl_aggregated Dataframe
     porttype_lst = ['SwitchName', 'switchWwn', 'portIndex', 'slot', 'port', 'speed', 'portType']
     # addition switchshow port information to isl_aggregated DataFrame
-    isl_aggregated_df = dataframe_join(isl_aggregated_df, switchshow_join_df, porttype_lst, 3)   
+    isl_aggregated_df = dfop.dataframe_join(isl_aggregated_df, switchshow_join_df, porttype_lst, 3)   
     
     # if Fabric Routing is ON
     if not fcredge_df.empty:
         # drop slot and port columns to avoid duplicate columns after dataframe function 
         fcredge_df.drop(columns = ['slot', 'port'], inplace = True)
         # addition switchshow port information to fcredge DataFrame
-        fcredge_df = dataframe_join(fcredge_df, switchshow_join_df, porttype_lst, 3)
+        fcredge_df = dfop.dataframe_join(fcredge_df, switchshow_join_df, porttype_lst, 3)
     return isl_aggregated_df, fcredge_df
 
 
@@ -252,7 +260,7 @@ def number_ifl(fcredge_df, trunk_df):
 
     if not fcredge_df.empty:
         # add trunk related columns
-        fcredge_df = dataframe_fillna(fcredge_df, trunk_df, join_lst=['switchWwn', 'portIndex'], 
+        fcredge_df = dfop.dataframe_fillna(fcredge_df, trunk_df, join_lst=['switchWwn', 'portIndex'], 
                                     filled_lst=['Trunking_GroupNumber', 'Master'])
 
         # filter master links only to perform numbering (trunkless link considered to be master)
@@ -263,9 +271,9 @@ def number_ifl(fcredge_df, trunk_df):
         # master link numbering
         fcredge_master_df['IFL_number'] = fcredge_master_df.groupby(by=['switchWwn'])['Master'].rank(method="first", ascending=True)
         # number all IFL links which are part of trunk group based on master link IFL number
-        fcredge_df = dataframe_fillna(fcredge_df, fcredge_master_df, join_lst=['switchWwn', 'Trunking_GroupNumber'], filled_lst=['IFL_number'])
+        fcredge_df = dfop.dataframe_fillna(fcredge_df, fcredge_master_df, join_lst=['switchWwn', 'Trunking_GroupNumber'], filled_lst=['IFL_number'])
         # copy IFLs links number for links which are not part of trunk group
-        fcredge_df = dataframe_fillna(fcredge_df, fcredge_master_df, join_lst=['switchWwn', 'portIndex'], filled_lst=['IFL_number'])
+        fcredge_df = dfop.dataframe_fillna(fcredge_df, fcredge_master_df, join_lst=['switchWwn', 'portIndex'], filled_lst=['IFL_number'])
         fcredge_df['IFL_number'] = fcredge_df['IFL_number'].astype('int64', errors='ignore')
     return fcredge_df
 
@@ -281,9 +289,9 @@ def fcredge_to_isl_compliance(fcredge_df, switch_params_aggregated_df):
         switch_params_aggregated_cp_df['FC_router'] = switch_params_aggregated_cp_df['FC_Router']
         switch_params_aggregated_cp_df['Connected_switchWwn'] = switch_params_aggregated_cp_df['switchWwn']
         switch_params_aggregated_cp_df['Connected_switchDID'] = switch_params_aggregated_cp_df['fabric.domain']
-        fcredge_cp_df = dataframe_fillna(fcredge_cp_df, switch_params_aggregated_cp_df, join_lst=['switchWwn'], 
+        fcredge_cp_df = dfop.dataframe_fillna(fcredge_cp_df, switch_params_aggregated_cp_df, join_lst=['switchWwn'], 
                                     filled_lst=['switchRole', 'FC_router'])
-        fcredge_cp_df = dataframe_fillna(fcredge_cp_df, switch_params_aggregated_cp_df, join_lst=['Connected_switchWwn'], 
+        fcredge_cp_df = dfop.dataframe_fillna(fcredge_cp_df, switch_params_aggregated_cp_df, join_lst=['Connected_switchWwn'], 
                                     filled_lst=['Connected_switchDID'], remove_duplicates=True, drop_na=True)
         # tag IFL links to avoid its numbering as ISL
         fcredge_cp_df['ISL_number'] = 'ifl'
@@ -333,10 +341,13 @@ def trunk_join(isl_df, trunk_df):
     """
 
     # convert numerical data in ISL and TRUNK DataFrames to float
-    isl_df = isl_df.astype(dtype='float64', errors='ignore')    
-    trunk_df = trunk_df.astype(dtype='float64', errors='ignore')
-    trunk_df['FabricID'] = trunk_df['FabricID'].astype(dtype='float64', errors='ignore')
-    
+    # isl_df = isl_df.astype(dtype='float64', errors='ignore')    
+    # trunk_df = trunk_df.astype(dtype='float64', errors='ignore')
+    # trunk_df['FabricID'] = trunk_df['FabricID'].astype(dtype='float64', errors='ignore')
+
+    # isl_df = isl_df.apply(pd.to_numeric, errors='ignore')
+    # trunk_df = trunk_df.apply(pd.to_numeric, errors='ignore')
+
     # List of columns DataFrames are joined on     
     join_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 'SwitchName',
                 'switchWwn', 'switchRole', 'FabricID', 'FC_router', 'portIndex', 
@@ -356,14 +367,14 @@ def verify_link_cost(df, lsdb_df):
         lsdb_local_sw_df = lsdb_df.loc[mask_local_sw].copy()
 
         join_lst = ['SwitchName', 'switchWwn', 'portIndex', 'cost']
-        df = dataframe_join(df, lsdb_local_sw_df, join_lst, 3)
+        df = dfop.dataframe_join(df, lsdb_local_sw_df, join_lst, 3)
     return df
 
 def sort_isl(isl_aggregated_df, switch_params_aggregated_df):
     """Function to sort ISLs based on isl_sort_columns"""
 
     # adding switchtype to sort switches by model
-    isl_aggregated_df = dataframe_fillna(isl_aggregated_df, switch_params_aggregated_df, filled_lst=['switchType'], join_lst=['switchWwn'])
+    isl_aggregated_df = dfop.dataframe_fillna(isl_aggregated_df, switch_params_aggregated_df, filled_lst=['switchType'], join_lst=['switchWwn'])
 
     isl_sort_columns = ['Fabric_name', 'Fabric_label',
                         'switchType', 'chassis_name', 'chassis_wwn',

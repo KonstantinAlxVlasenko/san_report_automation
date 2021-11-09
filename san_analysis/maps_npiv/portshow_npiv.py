@@ -4,11 +4,19 @@ import numpy as np
 import pandas as pd
 
 from .portshow_npiv_stat_notes import add_notes
-from common_operations_dataframe import dataframe_fillna, dataframe_join
-from common_operations_dataframe_presentation import drop_equal_columns, remove_duplicates_from_column
-from common_operations_switch import (count_all_row, count_statistics,
-                                      count_summary, summarize_statistics,
-                                      verify_lic, verify_max_link_speed, tag_value_in_column)
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+# from common_operations_dataframe import dataframe_fillna, dataframe_join
+# from common_operations_dataframe_presentation import drop_equal_columns, remove_duplicates_from_column
+# from common_operations_switch import (count_all_row, count_statistics,
+#                                       count_summary, summarize_statistics,
+#                                       verify_lic, verify_max_link_speed, tag_value_in_column)
 
 link_group_columns = ['Fabric_name', 'Fabric_label',  
                      'chassis_name', 'switchName',  'switchWwn', 
@@ -74,9 +82,9 @@ def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df
     portshow_npiv_df.sort_values(by = sort_columns, inplace = True)
 
     # add duplicates free device name column
-    portshow_npiv_df = remove_duplicates_from_column(portshow_npiv_df, 'Device_Host_Name', 
+    portshow_npiv_df = dfop.remove_duplicates_from_column(portshow_npiv_df, 'Device_Host_Name', 
                                                         duplicates_subset=['Fabric_name', 'Fabric_label', 'Device_Host_Name', 'NodeName'])
-    portshow_npiv_df = drop_equal_columns(portshow_npiv_df, [('Device_Host_Name', 'Device_Host_Name_duplicates_free')])
+    portshow_npiv_df = dfop.drop_equal_columns(portshow_npiv_df, [('Device_Host_Name', 'Device_Host_Name_duplicates_free')])
     return portshow_npiv_df
 
 
@@ -106,16 +114,16 @@ def fillna_ag_link(portshow_npiv_df, portshow_sfp_cp_df, switch_params_aggregate
     for column in npiv_port_idx_сolumns:
         npiv_port_columns.remove(column)
     # add detailed npiv port information from portshow_sfp_cp_df
-    portshow_npiv_df = dataframe_fillna(portshow_npiv_df, portshow_sfp_cp_df,
+    portshow_npiv_df = dfop.dataframe_fillna(portshow_npiv_df, portshow_sfp_cp_df,
                                         join_lst=npiv_port_idx_сolumns, filled_lst=npiv_port_columns)
     # add Native and npiv switch related information (licenses and max speed)
-    portshow_npiv_df = dataframe_join(portshow_npiv_df, switch_params_aggregated_df, 
+    portshow_npiv_df = dfop.dataframe_join(portshow_npiv_df, switch_params_aggregated_df, 
                                       columns_lst=['switchWwn', 'licenses', 'switch_speedMax'], 
                                       columns_join_index = 1)
     # verify if link between Native and NPIV switch operates at maximim speed
-    portshow_npiv_df = verify_max_link_speed(portshow_npiv_df)
+    portshow_npiv_df = dfop.verify_max_link_speed(portshow_npiv_df)
     # verify if trunking license installed on both switches
-    portshow_npiv_df = verify_lic(portshow_npiv_df, 'licenses', 'Trunking')
+    portshow_npiv_df = dfop.verify_lic(portshow_npiv_df, 'licenses', 'Trunking')
     return portshow_npiv_df
     
     
@@ -160,7 +168,7 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
     for column in transceiver_columns:
         if column in portshow_npiv_cp_df.columns:
 
-            tag_value_in_column(portshow_npiv_cp_df, column, 'Transceiver_speed')
+            dfop.tag_value_in_column(portshow_npiv_cp_df, column, 'Transceiver_speed')
 
             # mask_notna = portshow_npiv_cp_df[column].notna()
             # tag = re.search(r'^(?:Connected_)?(.+?)(?:_Port)?', column).group(1)
@@ -184,14 +192,14 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
                 # cfg_name = re.match(r'^(?:Connected_)?(.+?)(?:_Port)', cfg_column).group(1).upper() TO_REMOVE
                 cfg_name = re.match(port_settings_re, cfg_column).group(1).upper()
                 tag += cfg_name + '_'
-        tag_value_in_column(portshow_npiv_cp_df, cfg_column, tag=tag, binding_char='')
+        dfop.tag_value_in_column(portshow_npiv_cp_df, cfg_column, tag=tag, binding_char='')
 
         # portshow_npiv_cp_df[cfg_column] = \
         #     portshow_npiv_cp_df[cfg_column].where(~mask_notna, tag + portshow_npiv_cp_df[cfg_column])
 
     # logical and physical links tags
     portshow_npiv_cp_df['physical_link'] = 'Physical_link_quantity'
-    portshow_npiv_cp_df = remove_duplicates_from_column(portshow_npiv_cp_df, column='Link', 
+    portshow_npiv_cp_df = dfop.remove_duplicates_from_column(portshow_npiv_cp_df, column='Link', 
                                                                 duplicates_subset=['Fabric_name', 'Fabric_label', 'Connected_switchWwn', 'Link'],
                                                                 duplicates_free_column_name='logical_link')
     mask_link_notna = portshow_npiv_cp_df['logical_link'].notna()
@@ -206,13 +214,13 @@ def npiv_statistics(portshow_npiv_df, comp_dct):
     portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, comp_dct)
     # count statistics for stat columns
     stat_columns = ['logical_link', 'physical_link', 'port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
-    npiv_statistics_df = count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
+    npiv_statistics_df = dfop.count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
                                             port_qunatity_column = 'port', speed_column = 'speed')
     npiv_statistics_df.fillna(0, inplace=True)
 
     if not npiv_statistics_df.empty:
         # add trunk lic for both switches column
-        npiv_statistics_df = dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
+        npiv_statistics_df = dfop.dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
                                             join_lst=link_group_columns, filled_lst=['Trunking_lic_both_switches'])
         # add notes to statistics DataFrame
         npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_dct)
@@ -223,7 +231,7 @@ def npiv_statistics(portshow_npiv_df, comp_dct):
         count_columns = npiv_statistics_df.columns.tolist()
         connection_symmetry_columns = ['Device_quantity', 'Port_quantity', 'Bandwidth_Gbps']
         sort_columns = ['Fabric_name', 'Fabric_label', 'switchName', 'Device_Host_Name']
-        npiv_statistics_df = summarize_statistics(npiv_statistics_df, count_columns, 
+        npiv_statistics_df = dfop.summarize_statistics(npiv_statistics_df, count_columns, 
                                                     connection_symmetry_columns, sort_columns)
     return npiv_statistics_df
 

@@ -2,8 +2,16 @@
 
 import numpy as np
 import pandas as pd
-from common_operations_dataframe import count_frequency, find_mean_max_min
+# from common_operations_dataframe import count_frequency, find_mean_max_min
 from .zoning_statistics_aux_fn import active_vs_configured_ports, merge_df
+
+import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+# import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
 
 
 def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning_aggregated_df, alias_aggregated_df):
@@ -105,7 +113,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
             ['non-working_zone', 'commented_zone'], default='correct_zone')
 
         zone_notes_summary_df = \
-            count_frequency(zonelevel_statistics_effective_df, \
+            dfop.count_frequency(zonelevel_statistics_effective_df, \
                 count_columns=['zone_duplicated', 'zone_absorber', 'zone_paired', 'Pair_zone_note', 'Target_Initiator_note', 'Target_model_note', 
                                     'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_no_alias_tag', 'zone_note_summary'])
         return zone_notes_summary_df
@@ -118,7 +126,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         # remove duplicated zones
         zonelevel_statistics_duplicates_free_df = \
             zonelevel_statistics_df.drop_duplicates(subset=['Fabric_name', 'Fabric_label', 'zone']).copy()
-        zone_unused_summary = count_frequency(zonelevel_statistics_duplicates_free_df, count_columns=['Effective_cfg_usage_note'])
+        zone_unused_summary = dfop.count_frequency(zonelevel_statistics_duplicates_free_df, count_columns=['Effective_cfg_usage_note'])
         return zone_unused_summary
 
 
@@ -131,7 +139,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         zoned_ports_status_df = zoning_aggregated_df.loc[mask_effective, port_status_columns].copy()
         # each PortWwnn (device port) is counted only once
         zoned_ports_status_df.drop_duplicates(subset=port_status_columns, inplace=True)
-        zoned_ports_status_summary_df = count_frequency(zoned_ports_status_df, count_columns=['Fabric_device_status'])
+        zoned_ports_status_summary_df = dfop.count_frequency(zoned_ports_status_df, count_columns=['Fabric_device_status'])
         return zoned_ports_status_summary_df
 
 
@@ -147,7 +155,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         # count statistics for each Fabric
         count_columns_dct = {'Total_alias': 'alias_per_zone', 'Total_zonemembers_active': 'active_ports_per_zone'}
         alias_vs_active_ports_per_zone_df = \
-            find_mean_max_min(zonelevel_statistics_effective_df, count_columns = count_columns_dct)
+            dfop.find_mean_max_min(zonelevel_statistics_effective_df, count_columns = count_columns_dct)
         return alias_vs_active_ports_per_zone_df
 
 
@@ -162,7 +170,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         alias_effective_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'zone_member'], inplace=True)
         count_columns_lst = ['ports_per_alias', 'active_ports_per_alias', 'zone_number_alias_used_in']
         count_columns_dct = {k:k for k in count_columns_lst}
-        alias_ports_vs_zone_usage_df = find_mean_max_min(alias_effective_df, count_columns = count_columns_dct)
+        alias_ports_vs_zone_usage_df = dfop.find_mean_max_min(alias_effective_df, count_columns = count_columns_dct)
         return alias_ports_vs_zone_usage_df
 
     # split zonemember_statistics_df DataFrame

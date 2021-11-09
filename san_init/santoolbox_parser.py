@@ -4,7 +4,15 @@ import subprocess
 import sys
 import re
 
-from common_operations_miscellaneous import status_info
+# from common_operations_miscellaneous import status_info
+
+# import utilities.dataframe_operations as dfop
+# import utilities.database_operations as dbop
+# import utilities.data_structure_operations as dsop
+import utilities.module_execution as meop
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
 
 # SAN Toolbox.exe path
 santoolbox_path = os.path.normpath(r"C:\\Program Files\\SAN Toolbox - Reloaded\\SAN Toolbox.exe")
@@ -51,7 +59,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         else:
             info = ' '*16+'No AMS_MAPS configuration found.'
             print(info, end =" ")
-            status_info('skip', max_title, len(info))
+            meop.status_info('skip', max_title, len(info))
             # ams_maps_files_lst_tmp.append(None)
             # ams_maps_filenames_lst_tmp.append(None)
             ams_maps_files_lst_tmp = None
@@ -98,13 +106,13 @@ def santoolbox_parser(file, path_to_move_parsed_data, max_title):
         try:
             subprocess.call(f'"{santoolbox_path}" -{option} "{file}"', shell=True)
         except subprocess.CalledProcessError:
-            status_info('fail', max_title, len(info))
+            meop.status_info('fail', max_title, len(info))
         except OSError:
-            status_info('fail', max_title, len(info))
+            meop.status_info('fail', max_title, len(info))
             print('SANToolbox program is not found ')
             sys.exit()
         else:
-            status_info('ok', max_title, len(info))
+            meop.status_info('ok', max_title, len(info))
         
         # moving file to destination config folder
         info = ' '*16+f'{filename} moving'
@@ -112,15 +120,15 @@ def santoolbox_parser(file, path_to_move_parsed_data, max_title):
         try:
             shutil.move(os.path.join(filedir, filename),path_to_move_parsed_data)
         except shutil.Error:
-            status_info('fail', max_title, len(info))
+            meop.status_info('fail', max_title, len(info))
             sys.exit()
         except FileNotFoundError:
-            status_info('fail', max_title, len(info))
+            meop.status_info('fail', max_title, len(info))
             print('The system cannot find the file specified.\nCHECK that SANToolbox is CLOSED before run the script.')
             sys.exit()
         else:
-            status_info('ok', max_title, len(info))
+            meop.status_info('ok', max_title, len(info))
     else:
-        status_info('skip', max_title, len(info))
+        meop.status_info('skip', max_title, len(info))
     
     return os.path.normpath(os.path.join(path_to_move_parsed_data, filename))

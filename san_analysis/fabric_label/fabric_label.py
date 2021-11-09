@@ -4,15 +4,29 @@
 from datetime import date
 
 import pandas as pd
-import numpy as np
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.module_execution as meop
 
-from common_operations_filesystem import load_data, save_data
-from common_operations_miscellaneous import (reply_request, status_info,
-                                             verify_data, verify_force_run)
 from .fabric_label_auto import auto_fabrics_labeling
 from .fabric_label_manual import manual_fabrics_labeling
-from common_operations_table_report import dataframe_to_report
-from common_operations_database import read_db, write_db
+
+# import numpy as np
+
+
+
+# import utilities.data_structure_operations as dsop
+
+# import utilities.servicefile_operations as sfop
+# import utilities.filesystem_operations as fsop
+
+
+# from common_operations_filesystem import load_data, save_data
+# from common_operations_miscellaneous import (reply_request, status_info,
+#                                              verify_data, verify_force_run)
+
+# from common_operations_table_report import dataframe_to_report
+# from common_operations_database import read_db, write_db
 
 
 def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_creation_info_lst):
@@ -33,7 +47,7 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = read_db(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
 
     # unpacking DataFrames from the loaded list with data
     # pylint: disable=unbalanced-tuple-unpacking
@@ -43,7 +57,7 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
     analyzed_data_names = []
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names)
+    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names)
 
     if force_run:             
         print('\nSETTING UP FABRICS NAMES AND LABELS  ...\n')
@@ -69,10 +83,10 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
         
         # ask user if Automatic Fabric labeling need to be corrected
         query = 'Do you want to change Fabrics Names or Labels? (y)es/(n)o: '
-        reply = reply_request(query)
+        reply = meop.reply_request(query)
         if reply == 'y':
             # saving DataFrame to Excel to check during manual labeling if required
-            dataframe_to_report(fabricshow_summary_df, 'fabricshow_summary', report_creation_info_lst, force_flag=True)
+            dfop.dataframe_to_excel(fabricshow_summary_df, 'fabricshow_summary', report_creation_info_lst, force_flag=True)
             fabricshow_summary_df = manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_df, info_labels)
         
         # takes all switches working in Native and AG switches
@@ -83,21 +97,25 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
         
         info = f'Fabric name and label setting'
         print(info, end =" ")
-        status_info('ok', max_title, len(info))
+        meop.status_info('ok', max_title, len(info))
         
         # create list with partitioned DataFrames
         data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        write_db(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-       fabricshow_ag_labels_df, fabricshow_summary_df = verify_data(report_constant_lst, data_names, *data_lst)
-       data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
+    #    fabricshow_ag_labels_df, fabricshow_summary_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+    #    data_lst = [fabricshow_ag_labels_df, fabricshow_summary_df]
+
+        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        fabricshow_ag_labels_df, *_ = data_lst
+       
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dataframe_to_report(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
     return fabricshow_ag_labels_df 
 
