@@ -120,8 +120,10 @@ def remove_duplicates_from_string(df, *args, sep=', '):
     """Function to remove duplicates from strings in column"""
     
     for column in args:
-        if df[column].notna().any() and sep in df[column]:
-            df[column] = df[column].str.split(sep).apply(set).str.join(', ')
+        if df[column].notna().any() and df[column].str.contains(sep).any():
+            df[column].fillna('nan_value', inplace=True)
+            df[column] = df[column].str.split(sep).apply(set).str.join(sep)
+            df[column].replace({'nan_value': np.nan}, inplace=True)
     return df
 
 

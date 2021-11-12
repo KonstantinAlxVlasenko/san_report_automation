@@ -54,7 +54,7 @@ def dataframe_to_excel(data_frame, sheet_title, report_creation_info_lst,
         file_mode = 'a' if os.path.isfile(file_path) else 'w'
         try:
             if_sheet_exists_param = 'replace' if file_mode == 'a' else None
-            with pd.ExcelWriter(file_path, mode=file_mode, if_sheet_exists=if_sheet_exists_param) as writer:
+            with pd.ExcelWriter(file_path, mode=file_mode, if_sheet_exists=if_sheet_exists_param, engine='openpyxl') as writer:
                 table_of_contents_generation(writer, file_mode, sheet_title, df_decription)
                 write_dataframe_to_worksheet(writer, data_frame, sheet_title)
                 workbook = openpyxl.load_workbook(writer)

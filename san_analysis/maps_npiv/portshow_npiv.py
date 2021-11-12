@@ -74,17 +74,23 @@ def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df
     portshow_npiv_df['NPIV_link_number'] = portshow_npiv_df['NPIV_link_number'].astype('int64', errors='ignore')
 
     # sort
+    # sort_columns = ['Fabric_name', 'Fabric_label' , 
+    #                 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn',
+    #                 'Device_Host_Name', 'NodeName',
+    #                 'NPIV_link_number', 
+    #                 'Device_Port', 'Connected_portWwn']
+
     sort_columns = ['Fabric_name', 'Fabric_label' , 
-                    'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn',
-                    'Device_Host_Name', 'NodeName',
-                    'NPIV_link_number', 
-                    'Device_Port', 'Connected_portWwn']
-    portshow_npiv_df.sort_values(by = sort_columns, inplace = True)
+                    'NodeName', 'NPIV_link_number',
+                    'chassis_name', 'switchName', 
+                    'slot', 'port']
+    portshow_npiv_df.sort_values(by=sort_columns, inplace = True)
 
     # add duplicates free device name column
     portshow_npiv_df = dfop.remove_duplicates_from_column(portshow_npiv_df, 'Device_Host_Name', 
                                                         duplicates_subset=['Fabric_name', 'Fabric_label', 'Device_Host_Name', 'NodeName'])
     portshow_npiv_df = dfop.drop_equal_columns(portshow_npiv_df, [('Device_Host_Name', 'Device_Host_Name_duplicates_free')])
+    
     return portshow_npiv_df
 
 

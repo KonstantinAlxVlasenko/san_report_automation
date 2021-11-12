@@ -76,39 +76,10 @@ def replace_domain_index(aggregated_df, portshow_aggregated_df):
     """Function to replace Domain_Index with Wwpn"""
 
     aggregated_df['Strict_Wwnp'].replace(to_replace='\d+,\d+', value=np.nan, regex=True, inplace=True)
-
-    mask_str = aggregated_df['alias_member'].str.contains('6,16')
-    print(aggregated_df.loc[mask_str])
-
     portshow_cp = portshow_aggregated_df.copy()
     portshow_cp.rename(columns={'PortName': 'Strict_Wwnp', 'Domain_Index': 'alias_member'}, inplace=True)
-
-
-    print('\n')
-
-    mask_wwnp_notna = portshow_cp['Strict_Wwnp'].notna()
-    mask_616 = portshow_cp['alias_member'].str.contains('6,16')
-    print(portshow_cp.loc[mask_wwnp_notna & mask_616, ['alias_member', 'Strict_Wwnp']])
-
-    
-    print(portshow_cp['alias_member'])
-
-    print(portshow_cp['alias_member'].str.contains('6,16').any())
-
-    print('----------------')
-
-    mask = aggregated_df['alias_member'].str.contains(',')
-    print(aggregated_df.loc[mask, 'alias_member'])
-
-    print(aggregated_df['alias_member'].str.contains('6,16').any())
-
-
-
-    aggregated_df = dfop.dataframe_fillna(aggregated_df, portshow_cp, join_lst=['Fabric_name', 'Fabric_label', 'alias_member'], filled_lst=['Strict_Wwnp'], remove_duplicates=False)
-
-    mask_str = aggregated_df['alias_member'].str.contains('6,16')
-    print(aggregated_df.loc[mask_str])
-
+    aggregated_df = dfop.dataframe_fillna(aggregated_df, portshow_cp, join_lst=['Fabric_name', 'Fabric_label', 'alias_member'], 
+                                            filled_lst=['Strict_Wwnp'], remove_duplicates=False)
     return aggregated_df
 
 
@@ -246,6 +217,43 @@ def sort_dataframe(zoning_aggregated_df, alias_aggregated_df):
     return zoning_aggregated_df, alias_aggregated_df
 
 
+# def verify_alias_duplicate(alias_aggregated_df):
+#     """
+#     Function to check if alias_member (wwnp or wwnn) has duplicated aliases and
+#     counts its number if they exist
+#     """
+
+#     # perform zone_member (alias names) grouping based on alias_member (set of wwnn and wwnp) for each fabric
+#     alias_count_columns = ['Fabric_name', 'Fabric_label', 'alias_member']
+#     # join zone_members in each group
+
+#     # agg({'text': lambda x: ' '.join(set(x))})
+#     # agg({'zone_member': ', '.join})
+
+
+#     alias_duplicated_names_df = alias_aggregated_df.groupby(alias_count_columns, as_index = False).agg({'zone_member': lambda x: ', '.join(set(x))})    
+#     # rename column with joined zone_members names and perform merge with aggregated DataFrame
+#     alias_duplicated_names_df.rename(columns={'zone_member': 'alias_duplicated'}, inplace=True)
+#     alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_names_df, how='left', on=alias_count_columns)
+
+#     # count number of alias(es) for the alias_member (wwnn or wwnp)
+#     alias_duplicated_number_df = alias_aggregated_df.groupby(alias_count_columns, as_index=False).agg({'zone_member': lambda x: len(set(x))})
+#     alias_duplicated_number_df.rename(columns={'zone_member': 'alias_count'}, inplace=True)
+#     alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_number_df, how='left', on=alias_count_columns)
+
+
+#     # leave duplicated zone_memebers only
+#     mask_duplicated = alias_aggregated_df['alias_duplicated'] != alias_aggregated_df['zone_member']
+#     alias_aggregated_df['alias_duplicated'] = alias_aggregated_df['alias_duplicated'].where(mask_duplicated, np.nan)
+    
+#     # # count number of alias(es) for the alias_member (wwnn or wwnp)
+#     # alias_duplicated_number_df = alias_aggregated_df.groupby(alias_count_columns, as_index = False).agg({'zone_member': 'count'})
+#     # alias_duplicated_number_df.rename(columns={'zone_member': 'alias_count'}, inplace=True)
+#     # alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_number_df, how='left', on=alias_count_columns)
+
+#     return alias_aggregated_df
+
+
 def verify_alias_duplicate(alias_aggregated_df):
     """
     Function to check if alias_member (wwnp or wwnn) has duplicated aliases and
@@ -253,21 +261,27 @@ def verify_alias_duplicate(alias_aggregated_df):
     """
 
     # perform zone_member (alias names) grouping based on alias_member (set of wwnn and wwnp) for each fabric
-    alias_count_columns = ['Fabric_name', 'Fabric_label', 'alias_member']
+    alias_count_columns = ['Fabric_name', 'Fabric_label', 'PortName']
     # join zone_members in each group
-    alias_duplicated_names_df = alias_aggregated_df.groupby(alias_count_columns, as_index = False).agg({'zone_member': ', '.join})
+    alias_duplicated_names_df = alias_aggregated_df.groupby(alias_count_columns, as_index = False).agg({'zone_member': lambda x: ', '.join(set(x))})    
     # rename column with joined zone_members names and perform merge with aggregated DataFrame
     alias_duplicated_names_df.rename(columns={'zone_member': 'alias_duplicated'}, inplace=True)
     alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_names_df, how='left', on=alias_count_columns)
+
+    # count number of alias(es) for the alias_member (wwnn or wwnp)
+    alias_duplicated_number_df = alias_aggregated_df.groupby(alias_count_columns, as_index=False).agg({'zone_member': lambda x: len(set(x))})
+    alias_duplicated_number_df.rename(columns={'zone_member': 'alias_count'}, inplace=True)
+    alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_number_df, how='left', on=alias_count_columns)
+    # alias_aggregated_df['alias_count'].fillna(1, inplace=True)
+
     # leave duplicated zone_memebers only
     mask_duplicated = alias_aggregated_df['alias_duplicated'] != alias_aggregated_df['zone_member']
     alias_aggregated_df['alias_duplicated'] = alias_aggregated_df['alias_duplicated'].where(mask_duplicated, np.nan)
-    # count number of alias(es) for the alias_member (wwnn or wwnp)
-    alias_duplicated_number_df = alias_aggregated_df.groupby(alias_count_columns, as_index = False).agg({'zone_member': 'count'})
-    alias_duplicated_number_df.rename(columns={'zone_member': 'alias_count'}, inplace=True)
-    alias_aggregated_df = alias_aggregated_df.merge(alias_duplicated_number_df, how='left', on=alias_count_columns)
-
+    
     return alias_aggregated_df
+
+
+
 
 
 def zone_using_alias(zoning_aggregated_df, alias_aggregated_df):

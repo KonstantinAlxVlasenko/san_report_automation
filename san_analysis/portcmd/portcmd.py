@@ -314,11 +314,7 @@ def device_names_per_port(portshow_aggregated_df):
     # remove temporary 'nan_device value
     portshow_aggregated_df.replace({'nan_device': np.nan}, inplace=True)
     dfop.remove_value_from_string(portshow_aggregated_df, 'nan_device', 'alias_Port_group')
-
-    # portshow_aggregated_df['Device_Host_Name_Port'].replace({'nan_device': np.nan}, inplace=True)
-    # portshow_aggregated_df['Device_Host_Name_Port_group'].replace({'nan_device': np.nan}, inplace=True)
-    # portshow_aggregated_df['alias'].replace({'nan_device': np.nan}, inplace=True)
-    # portshow_aggregated_df['alias_Port_group'].replace({'nan_device': np.nan}, inplace=True)
+    dfop.remove_duplicates_from_string(portshow_aggregated_df, 'alias_Port_group')
     return portshow_aggregated_df
 
 

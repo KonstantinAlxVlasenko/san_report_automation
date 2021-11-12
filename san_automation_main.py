@@ -23,8 +23,7 @@ def main():
     san_analysis.system_configuration_analysis(extracted_configuration_lst, report_creation_info_lst)
 
     dfop.report_format_completion(project_steps_df, report_creation_info_lst)
-    print('\nExecution successfully finished\n')
-      
+    print("\nExecution successfully finished\n")
 
 
 if __name__ == "__main__":

@@ -146,6 +146,7 @@ def _multi_fabric(df, report_columns_usage_dct):
         identical_values = {k: 'first' for k in df.columns[2:]}
         df = df.groupby(['Имя устройства'], as_index = False).agg({**{'Фабрика': ', '.join}, **identical_values})
         df = df.reindex(columns = df_columns)
+        df = dfop.remove_duplicates_from_string(df, 'Фабрика')
     return df
 
 

@@ -44,7 +44,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
                                                 switch_params_aggregated_df)
     # prepare alias_df (label fabrics, replace WWNn with WWNp if present)
     alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df = \
-        alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df)
+        alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df, portshow_aggregated_df)
     # retrieve storage, host, HBA information from Name Server service and FDMI data
     nsshow_join_df, nsshow_unsplit_df = \
         nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, re_pattern_lst)

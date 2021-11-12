@@ -5,6 +5,7 @@ Auxiliary to analysis_portcmd module.
 """
 
 
+import numpy as np
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
@@ -32,7 +33,7 @@ def group_name_fillna(portshow_aggregated_df):
     return portshow_aggregated_df
 
 
-def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
+def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df, portshow_aggregated_df):
     """Function to label aliases DataFrame and replace WWNn with WWNp if any"""
     
     # create fabric labels DataFrame
@@ -53,8 +54,6 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     alias_prep_df =  alias_df.rename(columns = {'principal_switchName': 'switchName', 'principal_switchWwn': 'switchWwn'})
     alias_labeled_df = alias_prep_df.merge(fabric_labels_df, how = 'left', on = fabric_labels_lst[:5])
 
-
-
     # replacing WWNn with WWNp if any
     # create alias_join DataFrame
     alias_lst = ['Fabric_name', 'Fabric_label', 'alias', 'alias_member']
@@ -66,9 +65,17 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df):
     alias_wwnn_wwnp_df = alias_join_df.merge(nsshow_join_df, how = 'left', left_on = ['Fabric_name', 'Fabric_label', 'alias_member'], \
                                                                             right_on = ['Fabric_name', 'Fabric_label', 'NodeName'])
     # fill empty cells in WWNn -> WWNp column with alias_member WWNp values thus filtering off all WWNn values
-    alias_wwnp_df = alias_wwnn_wwnp_df.copy()   
+    alias_wwnp_df = alias_wwnn_wwnp_df.copy()
     # alias_wwnp_df.PortName.fillna(alias_join_df['alias_member'], inplace = True)
     alias_wwnp_df.PortName.fillna(alias_wwnp_df['alias_member'], inplace = True)
+    
+    # replace domain, index with WWpn
+    alias_wwnp_df['PortName'].replace(to_replace='\d+,\d+', value=np.nan, regex=True, inplace=True)
+    portshow_cp = portshow_aggregated_df.copy()
+    portshow_cp.rename(columns={'Connected_portWwn': 'PortName', 'Domain_Index': 'alias_member'}, inplace=True)
+    alias_wwnp_df = dfop.dataframe_fillna(alias_wwnp_df, portshow_cp, join_lst=['Fabric_name', 'Fabric_label', 'alias_member'], 
+                                            filled_lst=['PortName'], remove_duplicates=False)
+
     # drop possibly mixed WWNp and WWNn column alias_memeber and pure WWNn column
     alias_wwnp_df.drop(columns = ['alias_member', 'NodeName'], inplace = True)
     # if severeal aliases for one wwnp then combine all into one alias or
