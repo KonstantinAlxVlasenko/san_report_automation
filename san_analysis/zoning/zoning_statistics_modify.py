@@ -360,6 +360,8 @@ def calculate_zonename_devicenames_ratio(series):
     device_names = series['Device_Host_Name'].lower().replace('-', '_').split(', ')
     # drop domain name (symbols after dot) for each device name
     device_names = [name.split('.')[0] for name in device_names]
+    # remove duplicated device names
+    device_names = list(dict.fromkeys(device_names))
 
     # list containing all ration values
     ratio_lst = []

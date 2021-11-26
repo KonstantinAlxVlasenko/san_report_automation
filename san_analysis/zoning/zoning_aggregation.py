@@ -8,7 +8,7 @@ from .zoning_aggregation_aux_fn import (
     alias_cfg_type, replace_wwnn, replace_domain_index, sort_dataframe,
     verify_alias_duplicate, verify_cfg_type, verify_zonemember_type, wwn_type,
     wwnp_instance_number_per_group, zone_using_alias, zonemember_connection,
-    zonemember_in_cfg_fabric_verify, verify_device_hostname_instances)
+    zonemember_in_cfg_fabric_verify, verify_device_hostname_instances, verify_enforcement_type)
 
 import utilities.dataframe_operations as dfop
 # import utilities.database_operations as dbop
@@ -41,6 +41,9 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     # finds fabric connection for each zonemember (alias)
     zoning_aggregated_df, alias_aggregated_df = \
         zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_df)
+    # zone enforcement type
+    zoning_aggregated_df = verify_enforcement_type(zoning_aggregated_df, portshow_aggregated_df)
+    alias_aggregated_df = verify_enforcement_type(alias_aggregated_df, portshow_aggregated_df)
     # checks device status (imported, configured and etc) for LSAN zones
     zoning_aggregated_df, alias_aggregated_df = \
         lsan_state_verify(zoning_aggregated_df,alias_aggregated_df, switch_params_aggregated_df, fcrfabric_df, lsan_df)
@@ -69,14 +72,13 @@ def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df,
     # count Device_Host_Name instances for fabric_label, label and total in fabric
     zoning_aggregated_df = verify_device_hostname_instances(zoning_aggregated_df, portshow_aggregated_df)
     alias_aggregated_df = verify_device_hostname_instances(alias_aggregated_df, portshow_aggregated_df)
-
     # verify if zonemember is alias, wwn or DI format
     zoning_aggregated_df = verify_zonemember_type(zoning_aggregated_df, column = 'zone_member')
+    zoning_aggregated_df = verify_zonemember_type(zoning_aggregated_df, column = 'alias_member')
     # count active alias_members vs defined alias members
     alias_count_columns = {'alias_member': 'ports_per_alias', 'PortName': 'active_ports_per_alias'}
     alias_group_columns = ['Fabric_name', 'Fabric_label', 'zone_member']
     alias_aggregated_df = dfop.count_group_members(alias_aggregated_df, alias_group_columns, alias_count_columns)
-
     return zoning_aggregated_df, alias_aggregated_df
 
 

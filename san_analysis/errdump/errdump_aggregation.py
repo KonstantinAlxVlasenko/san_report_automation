@@ -175,8 +175,9 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
             errdump_aggregated_df.loc[mask_cut_pid, column] = '0' +  errdump_aggregated_df.loc[mask_cut_pid, column]
     
     # add fabric name and label for switches with chassis info, slot and port
-    errdump_aggregated_df = \
-        dfop.dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], ['Fabric_name', 'Fabric_label'])
+    if errdump_aggregated_df[portshow_columns[:5]].notna().all(axis=1).any():
+        errdump_aggregated_df = \
+            dfop.dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], ['Fabric_name', 'Fabric_label'])
 
     # concatenate devce name and device port columns
     errdump_aggregated_df['Device_Host_Name_Port'] = \

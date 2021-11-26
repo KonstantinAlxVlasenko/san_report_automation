@@ -31,7 +31,7 @@ from .report_portcmd import portcmd_report_main
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
                             switch_params_aggregated_df, isl_aggregated_df, 
-                            nsshow_df, nscamshow_df, nsshow_dedicated_df,
+                            nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df,
                             ag_principal_df, porttrunkarea_df, 
                             alias_df, fdmi_df, blade_module_df, 
                             blade_servers_df, blade_vc_df, 
@@ -39,7 +39,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                             system_3par_df, port_3par_df, 
                             report_creation_info_lst):
     """Main function to add connected devices information to portshow DataFrame"""
-    
+
     # report_steps_dct contains current step desciption and force and export tags
     # report_headers_df contains column titles, 
     # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
@@ -109,8 +109,9 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
 
         portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df = \
             portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, 
-                                switch_params_aggregated_df, isl_aggregated_df, nsshow_df, nsshow_dedicated_df,
-                                nscamshow_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, 
+                                switch_params_aggregated_df, isl_aggregated_df, 
+                                nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
+                                ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, 
                                 oui_df, fdmi_df, blade_module_df,  blade_servers_df, blade_vc_df, 
                                 synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df,
                                 re_pattern_lst)

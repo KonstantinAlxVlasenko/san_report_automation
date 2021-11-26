@@ -90,7 +90,7 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
                     'Device_Host_Name', 'Group_Name', 'Device_Port',
                     'Device_type', 'deviceType', 'deviceSubtype', 'portType',
                     'PortName', 'NodeName', 'Connected_portId',
-                    'chassis_name', 'switchName', 'Index_slot_port']
+                    'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 'Index_slot_port']
 
     # connection information revealed by merging based on WWNP number
     # of connected device switch port  (PortName) and 
@@ -113,6 +113,14 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
     alias_aggregated_df.drop(columns=['Strict_Wwnp'], inplace=True)
 
     return zoning_aggregated_df, alias_aggregated_df
+
+
+def verify_enforcement_type(aggregated_df, portshow_aggregated_df):
+    """Function to add zone enforcemnt type (hard wwn, hard port, session)"""
+
+    port_columns_lst = ['chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 'Index_slot_port']
+    aggregated_df = dfop.dataframe_fillna(aggregated_df, portshow_aggregated_df, join_lst=port_columns_lst, filled_lst=['zoning_enforcement'])
+    return aggregated_df
 
 
 def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
@@ -159,7 +167,6 @@ def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
         mask_peerzone_property = zoning_aggregated_df['peerzone_member_type'].str.contains('property', na=False)
         zoning_aggregated_df['Fabric_device_status'] = \
             np.where((mask_peerzone_property), np.nan, zoning_aggregated_df['Fabric_device_status'])
-
     return zoning_aggregated_df
 
 
@@ -177,7 +184,6 @@ def alias_cfg_type(alias_aggregated_df, zoning_aggregated_df):
     alias_aggregated_df = dfop.dataframe_fillna(alias_aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
     # fill rest empty values with defined word if alias is in defined config
     alias_aggregated_df = dfop.dataframe_fillna(alias_aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
-
     return alias_aggregated_df
 
 
@@ -196,7 +202,6 @@ def verify_cfg_type(aggregated_df, zoning_aggregated_df, search_lst):
     aggregated_df = dfop.dataframe_fillna(aggregated_df, cfg_effective_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
     # fill rest empty values with defined word if alias is in defined config
     aggregated_df = dfop.dataframe_fillna(aggregated_df, cfg_defined_df, join_lst = cfg_lst[:-1], filled_lst= cfg_lst[-1:])
-
     return aggregated_df
 
 
@@ -213,7 +218,6 @@ def sort_dataframe(zoning_aggregated_df, alias_aggregated_df):
     #     ascending=[False, *6*[True]], inplace=True)
     alias_aggregated_df.sort_values(by=sort_alias_lst, \
         ascending=[False, *4*[True]], inplace=True)
-
     return zoning_aggregated_df, alias_aggregated_df
 
 
@@ -277,11 +281,7 @@ def verify_alias_duplicate(alias_aggregated_df):
     # leave duplicated zone_memebers only
     mask_duplicated = alias_aggregated_df['alias_duplicated'] != alias_aggregated_df['zone_member']
     alias_aggregated_df['alias_duplicated'] = alias_aggregated_df['alias_duplicated'].where(mask_duplicated, np.nan)
-    
     return alias_aggregated_df
-
-
-
 
 
 def zone_using_alias(zoning_aggregated_df, alias_aggregated_df):
@@ -304,7 +304,6 @@ def zone_using_alias(zoning_aggregated_df, alias_aggregated_df):
     alias_zone_number_df.rename(columns={'zone': 'zone_number_alias_used_in'}, inplace=True)
     alias_aggregated_df = alias_aggregated_df.merge(alias_zone_number_df, how='left', on=zone_count_columns)
     alias_aggregated_df['zone_number_alias_used_in'].fillna(0, inplace=True)
-
     return alias_aggregated_df
 
 
@@ -332,7 +331,6 @@ def wwnp_instance_number_per_group(aggregated_df, df_type):
     wwnp_number_df.reset_index(inplace=True)
     # add wwnp instance number to zoning or aliases DataFrames
     aggregated_df = aggregated_df.merge(wwnp_number_df, how='left', on=group_columns)
-    
     return aggregated_df
 
 
@@ -341,6 +339,7 @@ def verify_zonemember_type(aggregated_df, column = 'zone_member'):
 
     # create column name with verified values
     verified_column = column + '_type'
+    member_type = column.replace('_', '')
     # copy values from column to be verified to column with verified values
     aggregated_df[verified_column] = aggregated_df[column]
 
@@ -348,13 +347,16 @@ def verify_zonemember_type(aggregated_df, column = 'zone_member'):
     alias_regex = re.compile(r'^[\w_$^-]+$')
     wwn_regex = re.compile(r'^([0-9a-fA-F]{2}:){7}[0-9a-fA-F]{2}$')
     domain_portindex_regex = re.compile(r'^\d+,\d+$')
-    replace_dct = {alias_regex: 'zonemember_alias',
-                    wwn_regex: 'zonemember_wwn',
-                    domain_portindex_regex: 'zonemember_domain_portindex'}
+    replace_dct = {alias_regex: member_type + '_alias',
+                    wwn_regex: member_type + '_wwn',
+                    domain_portindex_regex: member_type + '_domain_portindex'}
 
     # replace values in verified column with values from dict 
     aggregated_df[verified_column] = aggregated_df[verified_column].replace(to_replace=replace_dct, regex=True)
-
+    # remove wwn type from property member
+    if 'peerzone_member_type' in aggregated_df.columns:
+        mask_peerzone_property = aggregated_df['peerzone_member_type'].str.contains('property', na=False)
+        aggregated_df.loc[mask_peerzone_property, verified_column] = np.nan
     return aggregated_df
 
 # TO REMOVE
@@ -419,5 +421,4 @@ def verify_device_hostname_instances(aggregated_df, portshow_aggregated_df):
     aggregated_df['Multiple_fabric_label_connection'] = np.where(mask_multiple_fabric_label_connection & mask_notna, 'Yes', 'No')
     # remove information from lines without port number information
     aggregated_df['Multiple_fabric_label_connection'] = aggregated_df['Multiple_fabric_label_connection'].where(mask_notna, np.nan)
-
     return aggregated_df

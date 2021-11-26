@@ -118,7 +118,7 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
                     'zone_duplicated_tag', 'zone_absorbed_tag', 'zone_paired_tag', 
                     'Fabric_device_status', 'peerzone_member_type',
                     'deviceType', 'deviceSubtype', 'Unique_device_type_name',
-                    'Device_type', 'Wwn_type', 'Wwnp_duplicated', 'zone_member_type']
+                    'Device_type', 'Wwn_type', 'Wwnp_duplicated', 'zone_member_type', 'alias_member_type']
 
     wwnn_duplicates_columns = ['Fabric_name', 'Fabric_label', 
                                 'cfg', 'cfg_type', 'zone', 
@@ -146,6 +146,10 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
             zoning_modified_df = zoning_modified_df.loc[~mask_property_member]
         if column == 'Wwnp_duplicated':
             zoning_modified_df.drop_duplicates(subset=wwnp_duplicated_columns, inplace=True)
+        # to avoid count same device port
+        if column in ['Fabric_device_status', 'deviceType', 'deviceSubtype', 'Device_type']:
+            zoning_modified_df.drop_duplicates(subset=wwnp_duplicated_columns, inplace=True)
+
         # list of series(columns) grouping performed on
         index_lst = [zoning_modified_df.Fabric_name, zoning_modified_df.Fabric_label,
                     zoning_modified_df.cfg, zoning_modified_df.cfg_type,

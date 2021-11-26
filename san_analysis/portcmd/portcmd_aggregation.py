@@ -24,7 +24,9 @@ import utilities.dataframe_operations as dfop
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
-                        isl_aggregated_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
+                        isl_aggregated_df, 
+                        nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
+                        ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
                         blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df, 
                         re_pattern_lst):
     """
@@ -51,6 +53,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = \
         alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
+    # add enforcement type (hard wwn, hard port, session)
+    portshow_aggregated_df = zoning_enforcement_join(portshow_aggregated_df, nsportshow_df)
     # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
     portshow_aggregated_df = \
         blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, re_pattern_lst)
@@ -173,6 +177,14 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
     # mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk port', na=False)
     # portshow_aggregated_df.loc[mask_nport_fport & mask_device_type_empty & mask_not_trunk, 'Device_type'] = 'Unknown(initiator/target)'
 
+    return portshow_aggregated_df
+
+
+def zoning_enforcement_join(portshow_aggregated_df, nsportshow_df):
+    """Function to add zone enforcment type (hard wwn, hard port, session)"""
+
+    switch_port_columns = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 'portIndex']
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, nsportshow_df, join_lst=switch_port_columns, filled_lst=['zoning_enforcement'])
     return portshow_aggregated_df
 
 

@@ -23,7 +23,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
         switch_params_df, switchshow_ports_df,\
             fabricshow_df, ag_principal_df, \
                 portshow_df, sfpshow_df, portcfgshow_df,\
-                    fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df,\
+                    fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, \
                         isl_df, trunk_df, porttrunkarea_df, lsdb_df,\
                             fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df,\
                                 cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df,\
@@ -49,7 +49,8 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
 
     portshow_aggregated_df = \
         portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, 
-                                nsshow_df, nscamshow_df, nsshow_dedicated_df, ag_principal_df, porttrunkarea_df, alias_df, fdmi_df, blade_module_df, 
+                                nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
+                                ag_principal_df, porttrunkarea_df, alias_df, fdmi_df, blade_module_df, 
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, report_creation_info_lst)
 

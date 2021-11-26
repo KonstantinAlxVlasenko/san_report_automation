@@ -40,7 +40,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
         nsshow_folder = None
     
     # names to save data obtained after current module execution
-    data_names = ['fdmi', 'nsshow', 'nscamshow', 'nsshow_dedicated']
+    data_names = ['fdmi', 'nsshow', 'nscamshow', 'nsshow_dedicated', 'nsportshow']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
@@ -72,6 +72,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
         nsshow_lst = []
         nscamshow_lst = []
         nsshow_dedicated_lst = []
+        nsportshow_lst = []
         
         # dictionary with required to collect nsshow data
         # first element of list is regular expression pattern number, second - list to collect data
@@ -102,8 +103,8 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                        
             # search control dictionary. continue to check sshow_file until all parameters groups are found
             # Name Server service started only in Native mode
-            collected = {'fdmi': False, 'nsshow': False, 'nscamshow': False} \
-                if switch_mode == 'Native' else {'fdmi': False}
+            collected = {'fdmi': False, 'nsshow': False, 'nscamshow': False, 'nsportshow': False} \
+                if switch_mode == 'Native' else {'fdmi': False, 'nsportshow': False}
     
             with open(sshow_file, encoding='utf-8', errors='ignore') as file:
                 # check file until all groups of parameters extracted
@@ -113,7 +114,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                         break
                     # fdmi section start   
                     # switchcmd_fdmishow_comp
-                    if re.search(comp_dct[comp_keys[0]], line):
+                    if re.search(comp_dct[comp_keys[0]], line) and not collected['fdmi']:
                         collected['fdmi'] = True
                         if ls_mode_on:
                             while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -150,7 +151,29 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                 line = file.readline()
                             if not line:
                                 break                                
-                    # fdmi section end                   
+                    # fdmi section end
+
+                    # ns_portshow section start   
+                    # switchcmd_nsportshow_comp
+                    if re.search(comp_dct['switchcmd_nsportshow'], line) and not collected['nsportshow']:
+                        collected['nsportshow'] = True
+                        if ls_mode_on:
+                            while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+                                line = file.readline()
+                                if not line:
+                                    break                        
+                        # switchcmd_end_comp
+                        while not re.search(comp_dct['switchcmd_end'], line):
+                            line = file.readline()
+                            match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                            # islshow_match
+                            if match_dct['ns_portshow']:
+                                port_enforcement = dsop.line_to_list(comp_dct['ns_portshow'], line, *switch_info_lst[:6])
+                                nsportshow_lst.append(port_enforcement)
+                            if not line:
+                                break                                
+                    # ns_portshow section end
+                                       
                     # only switches in Native mode have Name Server service started 
                     if switch_mode == 'Native':
                         # nsshow section start                 
@@ -158,7 +181,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                             # unpacking re number and list to save REQUIRED params
                             re_num, ns_lst = nsshow_dct[nsshow_type]
                             # switchcmd_nsshow_comp, switchcmd_nscamshow_comp
-                            if re.search(comp_dct[comp_keys[re_num]], line):
+                            if re.search(comp_dct[comp_keys[re_num]], line) and not collected[nsshow_type]:
                                 collected[nsshow_type] = True
                                 if ls_mode_on:
                                     while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -230,8 +253,9 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
         nsshow_df = dfop.list_to_dataframe(nsshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
         nscamshow_df = dfop.list_to_dataframe(nscamshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
         nsshow_dedicated_df = dfop.list_to_dataframe(nsshow_dedicated_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        nsportshow_df = dfop.list_to_dataframe(nsportshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsportshow_columns')
         # saving data to csv file
-        data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
+        data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
@@ -242,13 +266,13 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
         # data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df]
 
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df = data_lst
+        fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df = data_lst
 
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
-    return fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df
+    return fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df
 
 
 def parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_keys, nsshow_params, nsshow_params_add):

@@ -242,7 +242,7 @@ def report_format_completion(project_steps_df, report_creation_info_lst, current
         file_name = customer_name + '_' + report_mark + '_' + current_date + '.xlsx'
         file_path = os.path.join(report_path, file_name)
         try:
-            with pd.ExcelWriter(file_path, mode='a', if_sheet_exists= 'replace') as writer: 
+            with pd.ExcelWriter(file_path, mode='a', if_sheet_exists= 'replace', engine='openpyxl') as writer: 
                 # open report
                 workbook = openpyxl.load_workbook(writer)
                 writer.book = workbook

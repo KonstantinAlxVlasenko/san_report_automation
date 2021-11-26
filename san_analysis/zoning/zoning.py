@@ -146,7 +146,7 @@ def statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_s
                     'zone_duplicated', 'zone_absorber', 'zone_paired',
                     'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related',
                     'Pair_zone_note',
-                    'Target_Initiator_note', 'Target_model_note', 'Effective_cfg_usage_note']
+                    'Target_Initiator_note', 'Target_model_note', 'Mixed_zone_note', 'Effective_cfg_usage_note']
     note_columns = [column for column in note_columns if column in zonemember_zonelevel_stat_df.columns]
     zonenote_df = zonemember_zonelevel_stat_df.reindex(columns = [*zone_columns, *note_columns]).copy()
     # compliment aggregated DataFrame 

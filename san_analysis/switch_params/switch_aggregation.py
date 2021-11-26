@@ -72,6 +72,8 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
         switch_params_aggregated_df[lic_check] = \
             switch_params_aggregated_df.loc[switch_params_aggregated_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)
         switch_params_aggregated_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
+    # add notes to switch_params_aggregated_df DataFrame
+    switch_params_aggregated_df = add_notes(switch_params_aggregated_df)
 
     # check if chassis_name and switch_name columns are equal
     # if yes then no need to use chassis information in tables
@@ -86,15 +88,10 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     # If there is only one Fabric_name then no need to use Fabric_name column in report Dataframes
     fabric_name_usage = True if switch_params_aggregated_df.Fabric_name.nunique() > 1 else False
         
-    # report_columns_usage_dct = {'fabric_name_usage': fabric_name_usage, 'chassis_info_usage': chassis_column_usage}
 
     report_columns_usage_dct = pd.Series([fabric_name_usage, chassis_column_usage], 
                                             index=['fabric_name_usage', 'chassis_info_usage'], name='usage')
-    
     return switch_params_aggregated_df, report_columns_usage_dct
-
-
-
 
 
 def ag_switch_info(switch_params_aggregated_df, ag_principal_df):
@@ -189,4 +186,19 @@ def verify_ls_type(switch_params_aggregated_df):
     # add router if base switch in fc_routing mode
     switch_params_aggregated_df.loc[mask_router, 'LS_type_report'] = \
         switch_params_aggregated_df.loc[mask_router, 'LS_type_report'] + ', router'
+    return switch_params_aggregated_df
+
+
+def add_notes(switch_params_aggregated_df):
+    """Function to add notes to switch_params_aggregated_df DataFrame"""
+
+    def fabric_domain_unique_note(switch_params_aggregated_df):
+        """Function to verify if fabric domain ID is unique within fabric_name"""
+
+        mask_unique_fabric_domain = switch_params_aggregated_df.groupby(by=['Fabric_name', 'fabric.domain'])['switchWwn'].transform('count') > 1
+        switch_params_aggregated_df.loc[mask_unique_fabric_domain, 'Fabric_domain_note'] = 'duplicated_fabric_domain'
+        return switch_params_aggregated_df
+    
+    # add notes to switch_params_aggregated_df DataFrame
+    switch_params_aggregated_df = fabric_domain_unique_note(switch_params_aggregated_df)
     return switch_params_aggregated_df

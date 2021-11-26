@@ -73,6 +73,13 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     if not 'Target_Initiator_note' in zonemember_stat_notes_df.columns:
         zonemember_stat_notes_df['Target_Initiator_note'] = np.nan
 
+    # add mixed zone note
+    if {'aliasmember_domain_portindex', 'aliasmember_wwn'}.issubset(zonemember_stat_notes_df.columns):
+        mask_mixed_zone = (zonemember_stat_notes_df[['aliasmember_domain_portindex', 'aliasmember_wwn']] > 0).all(axis=1)
+        zonemember_stat_notes_df.loc[mask_mixed_zone, 'Mixed_zone_note'] = 'mixed_wwn_di_zone'
+    else:
+        zonemember_stat_notes_df['Mixed_zone_note'] = np.nan
+
     # add pair_zone_note
     mask_device_connection = zonemember_stat_notes_df['All_devices_multiple_fabric_label_connection'] == 'Yes'
     mask_no_pair_zone = zonemember_stat_notes_df['zone_paired'].isna()

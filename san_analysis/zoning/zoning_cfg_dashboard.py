@@ -95,6 +95,15 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
                         mask_tdz & mask_zonemember_di], ['zone_no_alias_tag', 'zone_no_alias_tag'],
                         default=pd.NA)
 
+        # add zone_absent_zonemember_tag
+        absent_columns = ['remote_na', 'remote_initializing', 'absent', 'remote_configured']
+        absent_columns = [column for column in absent_columns if column in zonelevel_statistics_effective_df.columns]
+        if absent_columns:
+            mask_zone_absent_zonemember = (zonelevel_statistics_effective_df[absent_columns] > 0).any(axis=1)
+            zonelevel_statistics_effective_df.loc[mask_zone_absent_zonemember, 'zone_absent_zonemember_tag'] = 'zone_absent_zonemember_tag'
+        else:
+            zonelevel_statistics_effective_df['zone_absent_zonemember_tag'] = np.nan
+
         # non_working zones
         non_working_zone_tags = ['no_initiator', 'no_target', 'no_target, no_initiator', 'no_target, several_initiators']
         mask_non_working_zone = zonelevel_statistics_effective_df['Target_Initiator_note'].isin(non_working_zone_tags)
@@ -104,9 +113,13 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         mask_storage_models = zonelevel_statistics_effective_df['Target_model_note'].isin(storage_models_tags)
         mask_wwnn = zonelevel_statistics_effective_df['zone_Wwnn_tag'] == 'zone_Wwnn_tag'
         mask_wwnp_duplicated = zonelevel_statistics_effective_df['zone_Wwnp_duplicated_tag'] == 'zone_Wwnp_duplicated_tag'
-        mask_absent_remote = (zonelevel_statistics_effective_df[['absent', 'remote_na']] > 0).any(axis=1)
+        # mask_absent_remote = (zonelevel_statistics_effective_df[['absent', 'remote_na']] > 0).any(axis=1)
+        mask_missing_zonemember = zonelevel_statistics_effective_df['zone_absent_zonemember_tag'].notna()
+
         mask_no_alias = zonelevel_statistics_effective_df['zone_no_alias_tag'].notna()
-        mask_commented_zone = mask_several_initiators | mask_storage_models | mask_wwnn | mask_wwnp_duplicated | mask_absent_remote | mask_no_alias
+        mask_mixed_zone = zonelevel_statistics_effective_df['Mixed_zone_note'].notna()
+        mask_commented_zone = (mask_several_initiators | mask_storage_models | mask_wwnn | mask_wwnp_duplicated | \
+                                mask_missing_zonemember | mask_no_alias | mask_mixed_zone) & ~mask_non_working_zone
         # zones verification
         zonelevel_statistics_effective_df['zone_note_summary'] = np.select(
             [mask_non_working_zone, mask_commented_zone],
@@ -114,8 +127,9 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
 
         zone_notes_summary_df = \
             dfop.count_frequency(zonelevel_statistics_effective_df, \
-                count_columns=['zone_duplicated', 'zone_absorber', 'zone_paired', 'Pair_zone_note', 'Target_Initiator_note', 'Target_model_note', 
-                                    'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_no_alias_tag', 'zone_note_summary'])
+                count_columns=['zone_duplicated', 'zone_absorber', 'zone_paired', 
+                                'Pair_zone_note', 'Target_Initiator_note', 'Target_model_note', 'Mixed_zone_note',
+                                    'zone_Wwnn_tag', 'zone_Wwnp_duplicated_tag', 'zone_no_alias_tag', 'zone_absent_zonemember_tag','zone_note_summary'])
         return zone_notes_summary_df
     
 

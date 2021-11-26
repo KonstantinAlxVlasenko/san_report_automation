@@ -64,7 +64,7 @@ def create_report(aggregated_df, report_headers_df, report_columns_usage_dct, df
     cleaned_df = drop_excessive_columns(aggregated_df, report_columns_usage_dct)
     translated_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 
                             'Effective_cfg_usage_note', 'Pair_zone_note', 'Multiple_fabric_label_connection',
-                            'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related']
+                            'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related', 'Mixed_zone_note']
     # cleaned_df = dfop.translate_values(cleaned_df, translate_dct, translated_columns)
 
     cleaned_df = dfop.translate_values(cleaned_df, report_headers_df, 'Зонирование_перевод', translated_columns)
@@ -84,7 +84,7 @@ def drop_excessive_columns(df, report_columns_usage_dct):
     # list of columns to check if all values in column are NA
     possible_allna_values = ['LSAN_device_state', 'alias_duplicated', 'Wwnn_unpack', 
                                 'peerzone_member_type', 'zone_duplicated', 'zone_absorber',
-                                'Target_Initiator_note', 'Effective_cfg_usage_note', 'Pair_zone_note',
+                                'Target_Initiator_note', 'Effective_cfg_usage_note', 'Pair_zone_note', 'Mixed_zone_note',
                                 'Device_Port', 'Storage_Port_Type']
     # dictionary of items to check if all values in column (dict key) are equal to certain value (dict value)
 
@@ -190,7 +190,7 @@ def statistics_report(statistics_df, report_headers_df, data_name):
     statistics_report_df = statistics_df.copy()
 
     if data_name == 'Статистика_зон':
-        possible_allna_columns = ['zone_duplicated', 'zone_absorber', 'Target_Initiator_note', 'Effective_cfg_usage_note']
+        possible_allna_columns = ['zone_duplicated', 'zone_absorber', 'Target_Initiator_note', 'Effective_cfg_usage_note', 'Mixed_zone_note']
         statistics_report_df = dfop.drop_column_if_all_na(statistics_report_df, possible_allna_columns)
 
         # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
@@ -200,7 +200,7 @@ def statistics_report(statistics_df, report_headers_df, data_name):
     # rename values in columns
     if data_name == 'Статистика_зон':
         translated_columns = ['Fabric_name', 'Fabric_device_status', 
-                                'Target_Initiator_note', 'Target_model_note', 
+                                'Target_Initiator_note', 'Target_model_note', 'Mixed_zone_note',
                                 'Effective_cfg_usage_note', 'Pair_zone_note',
                                 'All_devices_multiple_fabric_label_connection',
                                 'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related']
@@ -209,6 +209,9 @@ def statistics_report(statistics_df, report_headers_df, data_name):
     
     statistics_report_df = \
         dfop.translate_values(statistics_report_df, report_headers_df, 'Зонирование_перевод', translated_columns)
+    
+    if 'aliasmember_alias' in statistics_report_df.columns:
+        statistics_report_df.drop(columns=['aliasmember_alias'], inplace=True)
 
     # # column titles used to create dictionary to traslate column names
     # statistic_columns_lst = [data_name + '_eng', data_name + '_ru']
