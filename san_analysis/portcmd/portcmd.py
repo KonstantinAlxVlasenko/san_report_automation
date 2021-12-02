@@ -68,7 +68,9 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     # flag to forcible save portshow_aggregated_df if required
     portshow_force_flag = False
     
-    device_rename_df = data_lst[3]
+    # device_rename_df = data_lst[3]
+    device_rename_df, = dbop.verify_read_data(report_constant_lst, ['device_rename'], data_lst[3])
+
     nsshow_unsplit_df = pd.DataFrame()
 
     # on the first iteration report_columns_usage_upd is None 

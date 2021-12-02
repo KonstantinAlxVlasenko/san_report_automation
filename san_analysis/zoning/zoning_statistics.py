@@ -146,9 +146,13 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
             zoning_modified_df = zoning_modified_df.loc[~mask_property_member]
         if column == 'Wwnp_duplicated':
             zoning_modified_df.drop_duplicates(subset=wwnp_duplicated_columns, inplace=True)
-        # to avoid count same device port
-        if column in ['Fabric_device_status', 'deviceType', 'deviceSubtype', 'Device_type']:
+        # to avoid count same device
+        if column in ['deviceType', 'deviceSubtype', 'Device_type']:
             zoning_modified_df.drop_duplicates(subset=wwnp_duplicated_columns, inplace=True)
+        # to avoid count same device status but don't drop absent devices
+        if column == 'Fabric_device_status':
+            zoning_modified_df = \
+                zoning_modified_df[(~zoning_modified_df[wwnp_duplicated_columns].duplicated()) | zoning_modified_df['PortName'].isna()]
 
         # list of series(columns) grouping performed on
         index_lst = [zoning_modified_df.Fabric_name, zoning_modified_df.Fabric_label,

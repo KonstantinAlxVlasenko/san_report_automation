@@ -32,6 +32,8 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
     analyzed_data_names = ['device_rename', 'device_rename_form', 'portshow_aggregated', 'portcmd', 'switchshow_ports', 
                             'switch_params_aggregated', 'switch_parameters', 'chassis_parameters', 
                             'fdmi', 'nscamshow', 'nsshow', 'alias', 'blade_servers', 'synergy_servers', 'system_3par', 'fabric_labels']
+
+    
     
     # check if portshow_aggregated DataFrame is changed or 'device_rename' force flag is on
     force_form_update_flag = any([report_steps_dct[data_name][1] for data_name in analyzed_data_names])
@@ -73,6 +75,9 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
     # report_constant_lst contains information: customer_name, project directory, database directory, max_title
     *_, max_title = report_constant_lst
 
+    device_rename_columns = ['Fabric_name', 'Device_Host_Name', 'Group_Name', 
+                                'deviceType', 'deviceSubtype', 'Device_Host_Name_rename']
+    empty_device_rename_df = pd.DataFrame(columns=device_rename_columns)
 
     # if device_rename_df DataFrame doesn't exist (1st iteration)
     # or force flag to change device_rename_df DataFrame is on 
@@ -84,7 +89,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
         reply = meop.reply_request('Do you want to CHANGE AUTO assigned device names? (y)es/(n)o: ')
         if reply == 'y':
             # if device_rename_df DataFrame doesn't exist (1st iteration)
-            if device_rename_df is None:
+            if device_rename_df is None or device_rename_df.empty:
                 # create new device rename DataFrame
                 manual_device_rename_df = create_device_rename_form(portshow_aggregated_df)
             else:
@@ -108,24 +113,27 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
                     # change initiated use saved device rename DataFrame
                     manual_device_rename_df = device_rename_df.copy()
 
-            # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
-            sheet_title = 'device_rename_form'
-            file_path = dfop.dataframe_to_excel(manual_device_rename_df, sheet_title, report_creation_info_lst, force_flag = True)
-            file_name = os.path.basename(file_path)
-            file_directory = os.path.dirname(file_path)
-            print(f"\nTo rename devices put new names into the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")
-            print('ATTN! CLOSE file after changes were made\n')
-            # complete the manual_device_rename_df form and import it
-            reply = meop.reply_request("When finish enter 'yes': ", ['yes'])
-            if reply == 'y':
-                print('\n')
-                device_rename_df = sfop.dataframe_import(sheet_title, max_title, init_file = file_path, header = 2)
+            
+            if not manual_device_rename_df.empty:
+                # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
+                sheet_title = 'device_rename_form'
+                file_path = dfop.dataframe_to_excel(manual_device_rename_df, sheet_title, report_creation_info_lst, force_flag = True)
+                file_name = os.path.basename(file_path)
+                file_directory = os.path.dirname(file_path)
+                print(f"\nTo rename devices put new names into the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")
+                print('ATTN! CLOSE file after changes were made\n')
+                # complete the manual_device_rename_df form and import it
+                reply = meop.reply_request("When finish enter 'yes': ", ['yes'])
+                if reply == 'y':
+                    print('\n')
+                    device_rename_df = sfop.dataframe_import(sheet_title, max_title, init_file = file_path, header = 2)
+            else:
+                print('No device to rename found')
+                device_rename_df = empty_device_rename_df
 
         else:
             # if don't change auto assigned names save empty device_rename_df DataFrame
-            device_rename_columns = ['Fabric_name', 'Device_Host_Name', 'Group_Name',
-                                        'deviceType', 'deviceSubtype', 'Device_Host_Name_rename']
-            device_rename_df = pd.DataFrame(columns=device_rename_columns)
+            device_rename_df = empty_device_rename_df
     else:
         # check loaded device_rename_df DataFrame (if it's empty)
         device_rename_df = dbop.verify_read_data(report_constant_lst, ['device_rename'], device_rename_df,  show_status=False)

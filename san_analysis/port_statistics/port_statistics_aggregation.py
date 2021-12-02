@@ -23,7 +23,7 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     """Function to create aggregated statistics table by merging DataFrames"""
 
     # count statistics for columns
-    stat_columns = ['portState', 'license', 'portPhys', 'speed', 'deviceType', 'Device_type', 'portType']
+    stat_columns = ['portState', 'license', 'portPhys', 'speed', 'deviceType', 'Device_type', 'portType', 'zoning_enforcement']
     stat_lst = [count_column_statistics(portshow_aggregated_df, column) for column in stat_columns]
     
     # merge all statistics DataFrames in aggregated DataFrame

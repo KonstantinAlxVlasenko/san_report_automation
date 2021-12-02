@@ -195,8 +195,9 @@ def add_notes(switch_params_aggregated_df):
     def fabric_domain_unique_note(switch_params_aggregated_df):
         """Function to verify if fabric domain ID is unique within fabric_name"""
 
-        mask_unique_fabric_domain = switch_params_aggregated_df.groupby(by=['Fabric_name', 'fabric.domain'])['switchWwn'].transform('count') > 1
-        switch_params_aggregated_df.loc[mask_unique_fabric_domain, 'Fabric_domain_note'] = 'duplicated_fabric_domain'
+        mask_duplicated_fabric_domain = switch_params_aggregated_df.groupby(by=['Fabric_name', 'fabric.domain'])['switchWwn'].transform('count') > 1
+        mask_native = switch_params_aggregated_df['fabric.domain'].notna()
+        switch_params_aggregated_df.loc[mask_duplicated_fabric_domain & mask_native, 'Fabric_domain_note'] = 'duplicated_fabric_domain'
         return switch_params_aggregated_df
     
     # add notes to switch_params_aggregated_df DataFrame

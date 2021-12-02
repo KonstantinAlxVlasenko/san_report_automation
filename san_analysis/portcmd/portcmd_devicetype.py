@@ -23,8 +23,8 @@ def oui_join(portshow_aggregated_df, oui_df):
     # extract oui from WWNp
     portshow_aggregated_df['Connected_oui'] = portshow_aggregated_df.Connected_portWwn.str.slice(start = 6, stop = 14)
     # add device types from oui DataFrame
+    oui_df.dropna(subset=['Connected_oui'], inplace=True)
     portshow_aggregated_df = portshow_aggregated_df.merge(oui_df, how = 'left', on = ['Connected_oui'])
-    
     return portshow_aggregated_df
 
 

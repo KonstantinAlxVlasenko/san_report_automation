@@ -108,6 +108,8 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
     storage_ports_df = portshow_aggregated_df.loc[mask_storage_type & mask_storage_port, storage_columns ].copy()
     storage_ports_df.drop_duplicates(inplace=True)
 
+    
+
     if storage_ports_df.empty:
         return pd.DataFrame()
 
@@ -116,6 +118,9 @@ def storage_connection_statistics(portshow_aggregated_df, re_pattern_lst):
                             (comp_dct['emc_ctrl_slot_port'], ['Controller', 'Slot', 'Port']), 
                             (comp_dct['msa_ctrl_port'], ['Controller', 'Port']),]
     storage_ports_df = dfop.extract_values_from_column(storage_ports_df, 'Device_Port', pattern_columns_lst)
+    # drop rows without controller and slot
+    mask_controller_port_notna = storage_ports_df[['Controller', 'Port']].notna().all(axis=1)
+    storage_ports_df = storage_ports_df.loc[mask_controller_port_notna].copy()
 
     # create column with even or odd port index tag
     storage_ports_df['Port_parity'] = storage_ports_df['Port'].astype('int')

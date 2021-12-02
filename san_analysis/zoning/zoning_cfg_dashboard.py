@@ -151,10 +151,31 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         port_status_columns = ['Fabric_name', 'Fabric_label', 'alias_member', 'PortName', 'Fabric_device_status']
         mask_effective = zoning_aggregated_df['cfg_type'] =='effective'
         zoned_ports_status_df = zoning_aggregated_df.loc[mask_effective, port_status_columns].copy()
-        # each PortWwnn (device port) is counted only once
+        # drop duplicated alias memebers
         zoned_ports_status_df.drop_duplicates(subset=port_status_columns, inplace=True)
+        # each PortWwnn (device port) is counted only once. Nan values are not considered as duplicated
+        zoned_ports_status_df = \
+            zoned_ports_status_df[(~zoned_ports_status_df[['Fabric_name', 'Fabric_label', 'PortName']].duplicated()) | zoned_ports_status_df['PortName'].isna()]
+
         zoned_ports_status_summary_df = dfop.count_frequency(zoned_ports_status_df, count_columns=['Fabric_device_status'])
         return zoned_ports_status_summary_df
+
+
+    def count_total_zoned_ports(zoning_aggregated_df):
+        """Function to count total original ports in effective zone configuration including
+        wwn or di which are absent"""
+
+        mask_effective = zoning_aggregated_df['cfg_type'] =='effective'
+        zoned_ports_total_df = zoning_aggregated_df.loc[mask_effective].copy()
+        zoned_ports_total_df['alias_member_PortName'] = zoned_ports_total_df['PortName']
+        zoned_ports_total_df['alias_member_PortName'].fillna(zoned_ports_total_df['alias_member'], inplace=True)
+
+        zoned_ports_total_df.drop_duplicates(subset=['Fabric_name', 'Fabric_label', 'alias_member_PortName'], inplace=True)
+        zoned_ports_total_df['Total_zoned_ports'] = 'Total_zoned_ports'
+
+        zoned_ports_total_summary_df = dfop.count_frequency(zoned_ports_total_df, count_columns=['Total_zoned_ports'])
+
+        return zoned_ports_total_summary_df
 
 
     def count_zone_alias_port_statistics(zonelevel_statistics_effective_df):
@@ -175,7 +196,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
 
     def count_alias_port_zone_statistics(alias_aggregated_df):
         """Function to count mean, max, min values for defined ports, active ports number and 
-        number zones alias applied in in aliases for each Fabric in effective cfg"""
+        number zones alias applied in aliases for each Fabric in effective cfg"""
 
         mask_alias_effective = alias_aggregated_df['cfg_type'] == 'effective'
         alias_effective_df = alias_aggregated_df.loc[mask_alias_effective].copy()
@@ -184,7 +205,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         alias_effective_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'zone_member'], inplace=True)
         count_columns_lst = ['ports_per_alias', 'active_ports_per_alias', 'zone_number_alias_used_in']
         count_columns_dct = {k:k for k in count_columns_lst}
-        alias_ports_vs_zone_usage_df = dfop.find_mean_max_min(alias_effective_df, count_columns = count_columns_dct)
+        alias_ports_vs_zone_usage_df = dfop.find_mean_max_min(alias_effective_df, count_columns=count_columns_dct)
         return alias_ports_vs_zone_usage_df
 
     # split zonemember_statistics_df DataFrame
@@ -194,6 +215,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zone_type_summary_df = count_zone_type(cfglevel_statistics_effective_df)
     zone_notes_summary_df = count_zone_note(zonelevel_statistics_effective_df)
     zone_unused_summary = count_unused_zone(zonelevel_statistics_df)
+    zoned_ports_total_summary_df = count_total_zoned_ports(zoning_aggregated_df)
     zoned_ports_status_summary_df = count_device_port_status(zoning_aggregated_df)
     # count active and unzoned device ports in Fabric
     zoned_vs_total_ports_summary_df = \
@@ -202,7 +224,8 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     alias_ports_vs_zone_usage_df = count_alias_port_zone_statistics(alias_aggregated_df)
     
     # merge all summary DataFrames into one
-    df_lst = [zone_type_summary_df, zone_notes_summary_df, zone_unused_summary, zoned_ports_status_summary_df, 
+    df_lst = [zone_type_summary_df, zone_notes_summary_df, zone_unused_summary, 
+                zoned_ports_total_summary_df, zoned_ports_status_summary_df, 
                     zoned_vs_total_ports_summary_df, alias_vs_active_ports_per_zone_df, alias_ports_vs_zone_usage_df]
     active_cfg_statistics_df = merge_df(df_lst, fillna_index=4)
 

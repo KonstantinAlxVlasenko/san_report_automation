@@ -290,6 +290,21 @@ def _symb_split(series, re_pattern_lst, nsshow_symb_columns):
         series['Device_Port'] = match.group(1)
         series['portSymbUsed'] = 'yes'
         series['portSymbPattern'] = 28
+    # symmetrix_storage_match port_symb
+    elif not pd.isnull(port_symb) and match_port_dct[match_keys[33]]:
+        match = match_port_dct[match_keys[33]]
+        series['Device_Model'] = match.group(1)
+        # series['Device_Name'] = match.group(1)
+        series['Device_Port'] = match.group(2)
+        series['portSymbUsed'] = 'yes'
+        series['portSymbPattern'] = 33
+    # cisco_sw_match port_symb
+    elif not pd.isnull(port_symb) and match_port_dct[match_keys[34]]:
+        match = match_port_dct[match_keys[34]]
+        series['Device_Name'] = match.group(1)
+        series['Device_Port'] = match.group(2)
+        series['portSymbUsed'] = 'yes'
+        series['portSymbPattern'] = 34
     # if no match was found copy values with no split
     else:
         if not pd.isnull(node_symb) and pd.isnull(series['nodeSymbUsed']):

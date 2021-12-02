@@ -164,7 +164,6 @@ def find_zone_absorber(verified_zone_grp, zoning_valid_df):
     """Auxiliary function for verify_absorbed_zones fn 
     to find zones in effective configuration which contain same active portWwns as verified zones.
     Zones with identical set of portWwns (duplicated zones) as verified zone are not taken into account"""
-    
 
     group_columns = ['Fabric_name', 'Fabric_label', 'zone']
 

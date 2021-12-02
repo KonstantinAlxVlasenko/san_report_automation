@@ -9,7 +9,7 @@ import pandas as pd
 import utilities.dataframe_operations as dfop
 # import utilities.database_operations as dbop
 # import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
+import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
@@ -59,6 +59,18 @@ def import_service_dataframes(max_title):
     project_steps_df = sfop.dataframe_import('service_tables', max_title, init_file = 'report_info.xlsx')
     numeric_columns = ['export_to_excel', 'force_extract', 'sort_weight']
     project_steps_df[numeric_columns] = project_steps_df[numeric_columns].apply(pd.to_numeric, errors='ignore')
+
+    info = "Global export report key"
+    print(info, end =" ") 
+
+    # check if global export report key is set
+    mask_global_report = project_steps_df['keys'] == 'report'
+    if project_steps_df.loc[mask_global_report, 'export_to_excel'].values != 0:
+        mask_report_type = project_steps_df['report_type'] == 'report'
+        project_steps_df.loc[mask_report_type, 'export_to_excel'] = 1
+        meop.status_info('on', max_title, len(info))
+    else:
+        meop.status_info('off', max_title, len(info))
 
     report_steps_dct = dfop.dct_from_dataframe(project_steps_df, 'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', 'description')
 
