@@ -70,7 +70,10 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
             txt_files = fsop.find_files(blade_folder, max_title, filename_extension='txt')
             log_files = fsop.find_files(blade_folder, max_title, filename_extension='log')
             noext_files = fsop.find_files(blade_folder, max_title)
+
             blade_configs_lst = txt_files + log_files + noext_files
+            
+
             # number of files to check
             configs_num = len(blade_configs_lst)  
 

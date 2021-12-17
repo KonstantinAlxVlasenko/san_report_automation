@@ -99,12 +99,16 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                     # uptime section start
                     elif re.search(r'^(/fabos/cliexec/)?uptime *:$', line):
                         collected['uptime_cpu'] = True
+                        uptime = None
+                        cpu_load = None
                         while not re.search(r'^real [\w.]+$',line):
                             line = file.readline()
                             match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
                             # 'uptime_cpu_match'   
                             if match_dct[match_keys[4]]:
                                 uptime = match_dct[match_keys[4]].group(1)
+                                if not uptime:
+                                    uptime = '0'
                                 cpu_load = match_dct[match_keys[4]].group(2)
                             if not line:
                                 break
@@ -129,6 +133,7 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                     # flash section start
                     elif re.search(r'^(/bin/)?df\s*:$', line):
                         collected['flash'] = True
+                        flash = None
                         while not re.search(r'^real [\w.]+$',line):
                             line = file.readline()
                             match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}

@@ -25,11 +25,12 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
         npiv_statistics_df['Connection_note'] = np.nan
         # connection have single link only
         mask_single_link_connection = npiv_statistics_df['Port_quantity'] == 1
+        # trunking licence present on both switches
+        mask_trunk_lic =  npiv_statistics_df['Trunking_lic_both_switches'] == 'Yes'
         if 'F_Trunk' in npiv_statistics_df.columns:
             # mask link out of trunk presence
             mask_fport_exceeds_ftrunk = npiv_statistics_df['Port_quantity'] > npiv_statistics_df['F_Trunk']
-            # trunking licence present on both switches
-            mask_trunk_lic =  npiv_statistics_df['Trunking_lic_both_switches'] == 'Yes'
+
             # summary ftrunk absensce mask (at least one link is not set as porttrunkarea when both switches are trunk capable)
             mask_ftrunk_absence = ~mask_single_link_connection & mask_fport_exceeds_ftrunk & mask_trunk_lic
             npiv_statistics_df.loc[mask_ftrunk_absence, 'Connection_note'] = 'link(s)_out_of_trunk'
@@ -43,11 +44,15 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
             # mask there are more then one link in connection, all links are porttrunkarea and 
             # at least one link is single port (single link trunk)
             mask_single_link_trunk = ~mask_single_link_connection & mask_fport_equals_ftrunk & mask_single_port_link
-            npiv_statistics_df.loc[mask_single_link_trunk, 'Connection_note'] = 'single link trunk(s)'
+            npiv_statistics_df.loc[mask_single_link_trunk, 'Connection_note'] = 'single_link_trunk(s)'
 
             # mask there are single link connection and link is porttrunkarea (nonredundat_trunk)
             mask_nonredundat_trunk = mask_single_link_connection & mask_fport_equals_ftrunk
             npiv_statistics_df.loc[mask_nonredundat_trunk, 'Connection_note'] = 'nonredundat_trunk'
+        else:
+            # summary ftrunk absensce mask (no links are set as porttrunkarea when both switches are trunk capable)
+            mask_ftrunk_absence = ~mask_single_link_connection & mask_trunk_lic
+            npiv_statistics_df.loc[mask_ftrunk_absence, 'Connection_note'] = 'no_trunk'
 
         # there are single link in connection and it's not trunk (nonredundant_connection)
         mask_note_empty = npiv_statistics_df['Connection_note'].isna()

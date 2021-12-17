@@ -38,13 +38,28 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_server
         # make copy to avoid changing original DataFrame
         blade_servers_join_df = blade_servers_df.copy()
         blade_servers_join_df.drop_duplicates(inplace=True)
+
+        
+
         # Uppercase Device_Manufacturer column
         blade_servers_join_df.Device_Manufacturer = blade_servers_join_df.Device_Manufacturer.str.upper()
         # lower case WWNp
         blade_servers_join_df.portWwn = blade_servers_join_df.portWwn.str.lower()
 
+
+        # mask_tst = blade_servers_join_df['portWwn'] == '10:00:ac:16:2d:b8:49:a5'
+        # print('\n')
+        # print(blade_servers_join_df.loc[mask_tst, 'Host_Name'])
+
+        
+
         # hostname_clean_comp
         blade_servers_join_df.Host_Name = blade_servers_join_df.Host_Name.replace(comp_dct[comp_keys[0]], np.nan, regex=True)
+
+
+        # print(blade_servers_join_df.loc[mask_tst, 'Host_Name'])
+        # exit()
+
         # combine 'Device_Manufacturer' and 'Device_Model' columns
         blade_servers_join_df.Device_Model = blade_servers_join_df[['Device_Manufacturer', 'Device_Model']].apply(wise_combine, axis=1)
         # combine 'Enclosure_Name' and 'Server_Slot' columns

@@ -60,9 +60,14 @@ def find_files(folder, max_title, filename_contains='', filename_extension=''):
     # going through all directories inside ssave folder to find configuration data
     for root, _, files in os.walk(folder):
         for file in files:
-            if file.endswith(filename_extension) and re.search(filename_contains, file):
+            
+            if re.search(filename_contains, file):
                 file_path = os.path.normpath(os.path.join(root, file))
-                files_lst.append(file_path)
+                if filename_extension and file.endswith(filename_extension):
+                    files_lst.append(file_path)
+                elif not filename_extension and not re.search('\.', file):
+                    files_lst.append(file_path)
+
 
     if len(files_lst) == 0:
         status_info('no data', max_title, len(info))
