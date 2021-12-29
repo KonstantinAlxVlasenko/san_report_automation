@@ -40,7 +40,7 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
     data_names = ['zoning_aggregated', 'alias_aggregated', 'portshow_zoned_aggregated', 
                     'zonemember_statistics', 'alias_statistics', 'effective_cfg_statistics', 
                     'Зонирование', 'Псевдонимы', 'Зонирование_AB', 'Порты_не_в_зонах', 'Порты_без_псевдономов', 
-                    'Отсутсвуют_в_сети', 'Статистика_зон', 'Статистика_псевдонимов', 'Статистика_конфигурации']
+                    'Отсутствуют_в_сети', 'Статистика_зон', 'Статистика_псевдонимов', 'Статистика_конфигурации']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     

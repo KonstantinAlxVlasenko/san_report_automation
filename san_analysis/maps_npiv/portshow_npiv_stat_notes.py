@@ -194,9 +194,19 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
         npiv_statistics_df = dfop.сoncatenate_columns(npiv_statistics_df, summary_column='Speed_note', 
                                                  merge_columns=speed_note_columns, drop_merge_columns=True)
         return npiv_statistics_df
+
+
+    def multiple_sw_conn_note(npiv_statistics_df):
+        """Function to verify if NPIV device connected to more then one Native switch"""
+
+        mask_multiple_connection = npiv_statistics_df.groupby(by=['Fabric_name', 'Fabric_label', 'NodeName'])['NodeName'].transform('count') > 1
+        mask_nodename_notna = npiv_statistics_df['NodeName'].notna()
+        npiv_statistics_df.loc[mask_multiple_connection & mask_nodename_notna, 'NPIV_multiple_sw_connection_note'] = 'npiv_multiple_switch_connection'
+        return npiv_statistics_df
     
     # add notes to npiv_statistics_df DataFrame
     npiv_statistics_df = connection_note(npiv_statistics_df)
+    npiv_statistics_df = multiple_sw_conn_note(npiv_statistics_df)
     npiv_statistics_df = single_vc_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = nonuniformity_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = speed_note(npiv_statistics_df, comp_dct)

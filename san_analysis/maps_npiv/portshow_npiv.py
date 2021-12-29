@@ -135,6 +135,14 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
     native_tag = 'Native_'
     ag_tag = 'AG_'
     
+    # TO_REMOVE
+    # print('\n')
+
+    # mask = portshow_npiv_cp_df['chassis_name'].isin(['BR45_6510_3', 'BR47_6510_3'])
+    # print(portshow_npiv_cp_df.loc[mask, link_group_columns])
+    # # print(portshow_npiv_cp_df.columns.tolist())
+    # exit()
+
     # max and reduced speed tags
     portshow_npiv_cp_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)
     # auto and fixed speed tags
@@ -197,7 +205,7 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
     # logical and physical links tags
     portshow_npiv_cp_df['physical_link'] = 'Physical_link_quantity'
     portshow_npiv_cp_df = dfop.remove_duplicates_from_column(portshow_npiv_cp_df, column='Link', 
-                                                                duplicates_subset=['Fabric_name', 'Fabric_label', 'Connected_switchWwn', 'Link'],
+                                                                duplicates_subset=['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_switchWwn', 'Link'],
                                                                 duplicates_free_column_name='logical_link')
     mask_link_notna = portshow_npiv_cp_df['logical_link'].notna()
     portshow_npiv_cp_df.loc[mask_link_notna, 'logical_link'] = 'Logical_link_quantity'
@@ -209,6 +217,17 @@ def npiv_statistics(portshow_npiv_df, comp_dct):
     """Function to count NPIV connection statistics"""
     
     portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, comp_dct)
+
+#     print('\n')
+
+#     mask = portshow_npiv_cp_df['chassis_name'].isin(['BR45_6510_3', 'BR47_6510_3'])
+#     # print(portshow_npiv_cp_df.columns.tolist())
+
+# # ['configname', 'chassis_name', 'chassis_wwn', 'portIndex', 'slot', 'port', 'Connected_portId', 'Connected_portWwn', 'portId', 'portWwn', 'Logical_portWwn', 'FEC', 'Credit_Recovery', 'Aoq', 'F_Trunk', 'switchName', 'switchWwn', 'speed', 'portType', 'connection_details', 'Fabric_name', 'Fabric_label', 'switchState', 'switchMode', 'switchType', 'Generation', 'HPE_modelName', 'PortName', 'NodeName', 'Device_type', 'Slow_Drain_Device', 'Device_Manufacturer', 'Device_Model', 'Device_SN', 'Device_Name', 'Device_Port', 'Device_Fw', 'Device_Location', 'IP_Address', 'HBA_Manufacturer', 'HBA_Description', 'Virtual_Channel', 'deviceType', 'deviceSubtype', 'Index_slot_port', 'Connected_NPIV', 'Link', 'logical_link', 'Device_Host_Name', 'Device_Host_Name_duplicates_free', 'Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label', 'Device_Host_Name_per_fabric_name', 'Device_Host_Name_total_fabrics', 'Transceiver_speedMax', 'Transceiver_category', 'Transceiver_mode', 'Speed_Cfg', 'Trunk_Port', 'Long_Distance', 'VC_Link_Init', 'NPIV_PP_Limit', 'NPIV_FLOGI_Logout', 'QOS_Port', 'Rate_Limit', 'Credit_Recovery_cfg', '10G/16G_FEC', 'FEC_cfg', 'Connected_switchWwn', 'Connected_Index_slot_port', 'Connected_Generation', 'Connected_speed', 'Connected_portType', 'Connected_FEC_cfg', 'Connected_10G/16G_FEC', 'Connected_Credit_Recovery_cfg', 'Connected_QOS_Port', 'Connected_Trunk_Port', 'Connected_Rate_Limit', 'Connected_Speed_Cfg', 'Connected_Transceiver_mode', 'Connected_Transceiver_speedMax', 'Connected_Transceiver_category', 'licenses', 'switch_speedMax', 'Connected_licenses', 'Connected_switch_speedMax', 'Link_speedMax', 'Link_speedActual', 'Link_speedActualMax', 
+# # 'Trunking_license', 'Connected_Trunking_license', 'Trunking_lic_both_switches', 'Transceiver_speed', 'Connected_Transceiver_speed', 'physical_link']
+#     print(portshow_npiv_cp_df.loc[mask, [*link_group_columns, 'logical_link']])
+#     exit()
+
     # count statistics for stat columns
     stat_columns = ['logical_link', 'physical_link', 'port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
     npiv_statistics_df = dfop.count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 

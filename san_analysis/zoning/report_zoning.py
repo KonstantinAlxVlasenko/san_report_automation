@@ -141,17 +141,18 @@ def unzoned_device_report(portshow_cfg_aggregated_df, report_headers_df, report_
     mask_not_switch_vc = ~portshow_cfg_aggregated_df.deviceType.isin(['SWITCH', 'VC'])
     # show online ports only
     mask_online = portshow_cfg_aggregated_df['portState'] == 'Online'
+    mask_wwn_notna = portshow_cfg_aggregated_df['Connected_portWwn'].notna()
     # Access gateway switch connection information is excessive
     mask_native = portshow_cfg_aggregated_df['switchMode'] == 'Native'
     # show ports which are not part of any configuration
-    mask_not_zoned = portshow_cfg_aggregated_df['cfg_type'].isna()
+    mask_not_zoned = portshow_cfg_aggregated_df['cfg_type'] != 'effective'
     # show_devices that have no aliases
     mask_no_alias = portshow_cfg_aggregated_df['alias'].isna()
 
-    unzoned_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_not_switch_vc & mask_not_zoned]
+    unzoned_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_wwn_notna & mask_not_switch_vc & mask_not_zoned]
     unzoned_device_df.dropna(axis='columns', how='all')
 
-    no_alias_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_not_switch_vc & mask_no_alias]
+    no_alias_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_wwn_notna & mask_not_switch_vc & mask_no_alias]
 
     # no_alias_devices_df.dropna(axis='columns', how='all')
     # create report DataFeame
@@ -174,9 +175,9 @@ def absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_
                         'Fabric_device_status', 'zonemember_Fabric_name', 'zonemember_Fabric_label', 'zone']
     absent_device_df = zoning_aggregated_df.loc[mask_absent, absent_columns]
     absent_device_df = absent_device_df.groupby(absent_columns[:-1], as_index = False, dropna=False).agg({'zone': ', '.join})
-    # absent_device_df = dfop.translate_values(absent_device_df, translate_dct, ['Fabric_device_status'])
+    
     absent_device_df = dfop.translate_values(absent_device_df, report_headers_df, 'Зонирование_перевод', translated_columns='Fabric_device_status')
-    # zoning_absent_device_report_df, = dataframe_segmentation(absent_device_df, data_name, report_columns_usage_dct, max_title)
+    absent_device_df = dfop.drop_column_if_all_na(absent_device_df, columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'])
     zoning_absent_device_report_df = dfop.generate_report_dataframe(absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
 
     return zoning_absent_device_report_df

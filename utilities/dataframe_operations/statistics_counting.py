@@ -22,11 +22,16 @@ def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_
     stat_columns = [column for column in stat_columns if df[column].notna().any()]
     # index list to groupby switches connection on to count statistics
     index_lst = [df[column] for column in connection_grp_columns]
+
+    # in case some values in first columns of stat_columns is none
+    df['tmp_column'] = 'tmp'
+
     # count statistcics for each column from stat_columns in df DataFrame
-    for column in stat_columns:
+    for column in ['tmp_column', *stat_columns]:
         # count statistics for current column
         current_statistics_df = pd.crosstab(index = index_lst,
                                 columns = df[column])
+
         # add connection bandwidth column after column with port quantity 
         if column == port_qunatity_column:
             current_statistics_df = current_statistics_df.merge(bandwidth_df, how='left',
@@ -37,6 +42,8 @@ def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_
         else:
             statistics_df = statistics_df.merge(current_statistics_df, how='left', 
                                                 left_index=True, right_index=True)
+    
+    statistics_df.drop(columns=['tmp'], inplace=True)
     statistics_df.reset_index(inplace=True)
     return statistics_df
 
