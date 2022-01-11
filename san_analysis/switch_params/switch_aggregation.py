@@ -15,7 +15,7 @@ import utilities.dataframe_operations as dfop
 
 
 def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, 
-                        switch_models_df, ag_principal_df, re_pattern_lst):
+                        switch_models_df, ag_principal_df, pattern_dct):
     """Function to combine chassis, switch, maps parameters DataFrames and label it with fabric labels"""
 
     # complete fabric DataFrame with information from switch_params DataFrame
@@ -42,7 +42,7 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     # complete f_s_c DataFrame with information from maps_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(maps_params_df, how = 'left', on = ['configname', 'chassis_name', 'switch_index'])
     # count sddq ports and verify if sddq limit has been reached
-    switch_params_aggregated_df = verify_sddq_reserve(switch_params_aggregated_df, re_pattern_lst)
+    switch_params_aggregated_df = verify_sddq_reserve(switch_params_aggregated_df, pattern_dct)
     # maps.activePolicy is in configshow,  Active_policy is in AMS_MAPS file. 
     switch_params_aggregated_df['maps.activePolicy'].fillna(switch_params_aggregated_df['Active_policy'], inplace=True)
     # convert switchType in f_s_c_m and switch_models DataFrames to same type
@@ -115,15 +115,15 @@ def ag_switch_info(switch_params_aggregated_df, ag_principal_df):
     return switch_params_aggregated_df
 
 
-def verify_sddq_reserve(switch_params_aggregated_df, re_pattern_lst):
+def verify_sddq_reserve(switch_params_aggregated_df, pattern_dct):
     """Function to count sddq ports and verify if sddq limit is reached"""
 
     # regular expression patterns
-    *_, comp_dct = re_pattern_lst
+    # *_, comp_dct = re_pattern_lst
 
     if 'Quarantined_Ports' in switch_params_aggregated_df.columns:
         # clean value if it doesn't contain port information
-        maps_clean_pattern = comp_dct['maps_clean']
+        maps_clean_pattern = pattern_dct['maps_clean']
         switch_params_aggregated_df['Quarantined_Ports_clean'] = switch_params_aggregated_df['Quarantined_Ports']
         # switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={'None|N/A|(No FV lic)|^ +$': np.nan} , regex=True, inplace=True)
         switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={maps_clean_pattern: np.nan}, regex=True, inplace=True)

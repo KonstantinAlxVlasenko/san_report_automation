@@ -2,16 +2,7 @@
 
 import numpy as np
 import pandas as pd
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fillna, explode_columns
-
 
 switch_columns = ['Fabric_name', 'Fabric_label', 
                   'configname', 'chassis_name', 'chassis_wwn',
@@ -22,7 +13,7 @@ exploded_columns = ['Exploded_column', 'Exploded_values']
 slot_port_columns = ['slot', 'port']
 
 
-def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, comp_dct):
+def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, pattern_dct):
     """Function to verify Quarantined_Ports, Decommissioned_Ports, Fenced_Ports
     and Top_Zoned_PIDs in MAPS Dashboard"""
 
@@ -33,11 +24,11 @@ def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, comp_
     switch_params_cp_df = switch_params_aggregated_df.copy()
     switch_params_cp_df['switchName'].fillna(switch_params_cp_df['SwitchName'], inplace=True)
     # remove uninfomative values from switch DataFrame
-    switch_params_cp_df.replace(to_replace={comp_dct['maps_clean']: np.nan} , regex=True, inplace=True)
+    switch_params_cp_df.replace(to_replace={pattern_dct['maps_clean']: np.nan} , regex=True, inplace=True)
     # explode ports so that each port presented as separate row
     maps_ports_df, top_zoned_ports_df = explode_maps_ports(switch_params_cp_df)
     # extract slot, port, pid and it-flows
-    maps_ports_df, top_zoned_ports_df = extract_exploded_ports(maps_ports_df, top_zoned_ports_df, comp_dct)
+    maps_ports_df, top_zoned_ports_df = extract_exploded_ports(maps_ports_df, top_zoned_ports_df, pattern_dct)
     # find port information in portshow_sfp_aggregated_df
     maps_ports_df, top_zoned_ports_df = fillna_port_information(portshow_cp_df, maps_ports_df, top_zoned_ports_df)
     # concatenate maps_ports_df and top_zoned_ports_df
@@ -60,17 +51,17 @@ def explode_maps_ports(switch_params_cp_df):
     return maps_ports_df, top_zoned_ports_df
 
 
-def extract_exploded_ports(maps_ports_df, top_zoned_ports_df, comp_dct):
+def extract_exploded_ports(maps_ports_df, top_zoned_ports_df, pattern_dct):
     """Function to extract slot, port and portid, it-flows from exploded column"""
 
     # slot_port_pattern = '(?:(\d+)/)?(\d+)'
-    slot_port_pattern = comp_dct['slot_port']
+    slot_port_pattern = pattern_dct['slot_port']
     if not maps_ports_df.empty:
         maps_ports_df[slot_port_columns] = maps_ports_df['Exploded_values'].str.extract(slot_port_pattern)
         maps_ports_df['slot'].fillna('0', inplace=True)
     
     # pid_flow_pattern = '0x([0-9a-f]{6})\((\d+)\)'
-    pid_flow_pattern = comp_dct['pid_flow']
+    pid_flow_pattern = pattern_dct['pid_flow']
     if not top_zoned_ports_df.empty:
         top_zoned_ports_df[['Connected_portId', 'it-flows']] = top_zoned_ports_df['Exploded_values'].str.extract(pid_flow_pattern)
     return maps_ports_df, top_zoned_ports_df

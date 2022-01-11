@@ -22,7 +22,7 @@ S3MFT_DIR = r'C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\
 S3MFT = r's3mft.exe'
 
 
-def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, match_keys, comp_dct, report_creation_info_lst):
+def configs_download(ns_3par_df, project_folder, local_3par_folder, pattern_dct, report_creation_info_lst):
     """Function to prepare 3PAR configuration files for parsing. 
     Download in from STATs and local (defined in report.xlsx file) folders"""
 
@@ -41,11 +41,11 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
     # if download folder exist and there are 3par config files
     # ask if user wants to use them or download new files after removing existing
     if download_folder_exist:
-        configs_downloaded_lst = fsop.find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
+        configs_downloaded_lst = fsop.find_files(download_folder, max_title, filename_contains=pattern_dct['configname_3par'])
         if configs_downloaded_lst:
             print(f'{len(configs_downloaded_lst)} 3PAR configuration files found in download folder.')
-            print("Do you want to USE EXISTING configuarion files? (reply 'yes')")
-            print("If you want to REMOVE EXISTING AND UPDATE configuarion files then reply 'no'.")
+            print("Do you want to USE EXISTING configuarion files? (reply 'YES')")
+            print("If you want to REMOVE EXISTING AND UPDATE configuarion files then reply 'NO'.")
             query = "Please select '(y)es' (use existing) or '(n)o' (update): "
             reply = meop.reply_request(query)
             if reply == 'n':
@@ -69,7 +69,7 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
 
     # find configuration files in local 3PAR folder
     if local_3par_folder:
-        configs_local_lst = fsop.find_files(local_3par_folder, max_title, filename_contains=comp_dct['configname_3par'])
+        configs_local_lst = fsop.find_files(local_3par_folder, max_title, filename_contains=pattern_dct['configname_3par'])
         if configs_local_lst:
             print('\n')
             print(f'{len(configs_local_lst)} 3PAR configuration files found in local folder.')
@@ -77,14 +77,14 @@ def configs_download(ns_3par_df, project_folder, local_3par_folder, comp_keys, m
             reply = meop.reply_request(query)
             if reply == 'y':
                 # download configs from loacl folder
-                ns_3par_df = local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, match_keys, comp_dct, max_title)
+                ns_3par_df = local_download(ns_3par_df, configs_local_lst, download_folder, pattern_dct, max_title)
 
     download_summary(ns_3par_df, report_creation_info_lst)
     # create configs list in download folder if it exist (if user reject download config files
     # from both sources download folder is not created)
     download_folder_exist = verify_download_folder(download_folder, create=False)
     if download_folder_exist:
-        configs_3par_lst = fsop.find_files(download_folder, max_title, filename_contains=comp_dct['configname_3par'])
+        configs_3par_lst = fsop.find_files(download_folder, max_title, filename_contains=pattern_dct['configname_3par'])
         return configs_3par_lst
     else:
         return []
@@ -181,7 +181,7 @@ def stats_download(ns_3par_df, download_folder, max_title):
     return ns_3par_df
 
 
-def local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, match_keys, comp_dct, max_title):
+def local_download(ns_3par_df, configs_local_lst, download_folder, pattern_dct, max_title):
     """Function to copy 3PAR configuration files from local folder
     to download folder"""
 
@@ -204,7 +204,7 @@ def local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, ma
         filename = os.path.basename(source_file)
         if os.path.isfile(source_file) or os.path.islink(source_file):
             # extract model and seral number from config file
-            model, sn = parse_serial(source_file, comp_keys, match_keys, comp_dct)
+            model, sn = parse_serial(source_file, pattern_dct)
             info = ' '*16 + f'[{i+1} of {len(configs_local_lst)}]: Copying {filename} for {model} {sn}'
             print(info, end=' ')
             # verify if config for current sn was downloaded from STATs or local folder before
@@ -236,7 +236,7 @@ def local_download(ns_3par_df, configs_local_lst, download_folder, comp_keys, ma
     return ns_3par_df
 
 
-def parse_serial(config_3par, comp_keys, match_keys, comp_dct):
+def parse_serial(config_3par, pattern_dct):
     """Function to parse 3PAR serial number""" 
 
     # search control dictionary. continue to check file until all parameters groups are found
@@ -251,13 +251,13 @@ def parse_serial(config_3par, comp_keys, match_keys, comp_dct):
             if not line:
                 break
             # showsys section start
-            if re.search(comp_dct['showsys_header'], line) and not collected['system']:
+            if re.search(pattern_dct['showsys_header'], line) and not collected['system']:
                 collected['system'] = True
                 # while not reach empty line
-                while not re.search(comp_dct['section_end'],line):
+                while not re.search(pattern_dct['section_end'],line):
                     line = file.readline()
                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                     # name_value_pair_match
                     if match_dct['serial_number']:
                         result = match_dct['serial_number']

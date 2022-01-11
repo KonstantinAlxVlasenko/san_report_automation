@@ -10,18 +10,6 @@ import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
-# import pandas as pd
-# import dataframe_operations as dfop
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (force_extract_check, line_to_list,
-#                                              status_info, update_dct,
-#                                              verify_data)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
 
 def log_extract(chassis_params_df, report_creation_info_lst):
     """Function to extract logs"""
@@ -54,7 +42,9 @@ def log_extract(chassis_params_df, report_creation_info_lst):
         switch_num = len(chassis_params_df.index)
 
         # data imported from init file to extract values from config file
-        _, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('log', max_title)
+        # _, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('log', max_title)
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('log', max_title)
 
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping       
@@ -63,11 +53,6 @@ def log_extract(chassis_params_df, report_creation_info_lst):
         # checking each chassis for switch level parameters
         for i, chassis_params_sr in chassis_params_df.iterrows():       
             
-            # # data unpacking from iter param
-            # # dictionary with parameters for the current chassis
-            # chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
-            # chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
-            # chassis_info_lst = [chassis_params_data_dct.get(key) for key in chassis_info_keys]
             chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
             chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
 
@@ -87,19 +72,19 @@ def log_extract(chassis_params_df, report_creation_info_lst):
                         break
                     # errdump section start
                     # errdump_start_comp
-                    if re.search(comp_dct['errdump_start'], line) and not collected['errdump']:
+                    if re.search(pattern_dct['errdump_start'], line) and not collected['errdump']:
                         # when section is found corresponding collected dict values changed to True
                         collected['errdump'] = True
                         # switchcmd_end_comp
-                        while not re.search(comp_dct['switchcmd_end'], line):
+                        while not re.search(pattern_dct['switchcmd_end'], line):
                             line = file.readline()
                             if not line:
                                 break
                             # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                             # errdump_message_match
                             if match_dct['errdump_message']:
-                                error_message = dsop.line_to_list(comp_dct['errdump_message'], line, *chassis_info_lst)
+                                error_message = dsop.line_to_list(pattern_dct['errdump_message'], line, *chassis_info_lst)
                                 # append current value to the list of values 
                                 errdump_lst.append(error_message)
                             if not line:
@@ -107,10 +92,15 @@ def log_extract(chassis_params_df, report_creation_info_lst):
                     # errdump section end
             meop.status_info('ok', max_title, len(info))
         # convert list to DataFrame
-        errdump_df = dfop.list_to_dataframe(errdump_lst, max_title, 'log')
-        # saving data to csv file
-        data_lst = [errdump_df]
-        # save_data(report_constant_lst, data_names, *data_lst)
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'errdump_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, errdump_lst)
+        errdump_df, *_ = data_lst    
+
+        # errdump_df = dfop.list_to_dataframe(errdump_lst, max_title, 'log')
+        # # saving data to csv file
+        # data_lst = [errdump_df]
+        # # save_data(report_constant_lst, data_names, *data_lst)
+
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)   
 

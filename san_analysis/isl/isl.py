@@ -1,30 +1,14 @@
 """Module to generate 'InterSwitch links', 'InterFabric links' customer report tables"""
 
 
-# import numpy as np
 import pandas as pd
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
 
 from .isl_aggregation import isl_aggregated
 from .isl_statistics import isl_statistics
-
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-import utilities.module_execution as meop
-import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe_presentation import (drop_column_if_all_na,
-#                                                       generate_report_dataframe,
-#                                                       translate_dataframe,
-#                                                       translate_values, drop_zero)
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (force_extract_check, status_info,
-#                                              verify_data, verify_force_run)
-# from common_operations_servicefile import (data_extract_objects,
-#                                            dct_from_columns)
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
 
 
 def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,  
@@ -67,7 +51,8 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
 
         # data imported from init file (regular expression patterns) to extract values from data columns
         # re_pattern list contains comp_keys, match_keys, comp_dct    
-        _, _, *re_pattern_lst = sfop.data_extract_objects('common_regex', max_title)
+        # _, _, *re_pattern_lst = sfop.data_extract_objects('common_regex', max_title)
+        pattern_dct, _ = sfop.regex_pattern_import('common_regex', max_title)
 
         # current operation information string
         info = f'Generating ISL and IFL tables'
@@ -76,8 +61,8 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
         # get aggregated DataFrames
         isl_aggregated_df, fcredge_df = \
             isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
-            isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, re_pattern_lst)
-        isl_statistics_df = isl_statistics(isl_aggregated_df, re_pattern_lst, report_constant_lst)
+            isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, pattern_dct)
+        isl_statistics_df = isl_statistics(isl_aggregated_df, pattern_dct, report_constant_lst)
         # after finish display status
         meop.status_info('ok', max_title, len(info))      
 

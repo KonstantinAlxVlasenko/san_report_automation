@@ -40,8 +40,12 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
         # list to store only REQUIRED chassis parameters
         # collecting data for all chassis during looping 
         chassis_params_fabric_lst = []
+
         # data imported from init file to extract values from config file
-        chassis_params, chassis_params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('chassis', max_title)
+        # chassis_params, chassis_params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('chassis', max_title)
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('chassis', max_title)
+        chassis_params,  chassis_params_add = dfop.list_from_dataframe(re_pattern_df, 'chassis_params', 'chassis_params_add')
         
         # all_confg_data format ([swtch_name, supportshow file, (ams_maps_log files, ...)])
         # checking each config set(supportshow file) for chassis level parameters
@@ -77,22 +81,23 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                         while not re.search(r'^(\[Chassis Configuration End\])|(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
                             line = file.readline()
                             # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                            # match_dct_ ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                             # match_keys ['chassis_param_match', 'snmp_target_match', 'syslog_match', 'tz_match', 'uptime_cpu_match', 'memory_match', 'flash_match'] 
-                            # 'chassis_param_match'
-                            if match_dct[match_keys[0]]:
-                                chassis_params_dct[match_dct[match_keys[0]].group(1).rstrip()] = match_dct[match_keys[0]].group(3)                            
+                            # 'chassis_param_match' pattern #0
+                            if match_dct['chassis_param']:
+                                chassis_params_dct[match_dct['chassis_param'].group(1).rstrip()] = match_dct['chassis_param'].group(3)                            
                             # for snmp and syslog data addresses are added to the coreesponding sets to avoid duplicates
-                            # 'snmp_target_match'
-                            if match_dct[match_keys[1]] and match_dct[match_keys[1]].group(2) != '0.0.0.0':
-                                snmp_target_set.add(match_dct[match_keys[1]].group(2))
-                            # 'syslog_match'
-                            if match_dct[match_keys[2]]:
-                                syslog_set.add(match_dct[match_keys[2]].group(2))
+                            # 'snmp_target_match' pattern #1
+                            if match_dct['snmp_target'] and match_dct['snmp_target'].group(2) != '0.0.0.0':
+                                snmp_target_set.add(match_dct['snmp_target'].group(2))
+                            # 'syslog_match' pattern #2
+                            if match_dct['syslog']:
+                                syslog_set.add(match_dct['syslog'].group(2))
                             # for timezone extracted data added to the list for later concatenation
-                            # 'tz_match'
-                            if match_dct[match_keys[3]]:
-                                tz_lst.append(match_dct[match_keys[3]].group(2))                                             
+                            # 'tz_match' pattern #3
+                            if match_dct['tz']:
+                                tz_lst.append(match_dct['tz'].group(2))                                             
                             if not line:
                                 break
                     # config section end                
@@ -103,13 +108,13 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                         cpu_load = None
                         while not re.search(r'^real [\w.]+$',line):
                             line = file.readline()
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            # 'uptime_cpu_match'   
-                            if match_dct[match_keys[4]]:
-                                uptime = match_dct[match_keys[4]].group(1)
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                            # 'uptime_cpu_match' pattern #4 
+                            if match_dct['uptime_cpu']:
+                                uptime = match_dct['uptime_cpu'].group(1)
                                 if not uptime:
                                     uptime = '0'
-                                cpu_load = match_dct[match_keys[4]].group(2)
+                                cpu_load = match_dct['uptime_cpu'].group(2)
                             if not line:
                                 break
                     # uptime section end
@@ -119,10 +124,10 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                         memory_dct = {}
                         while not re.search(r'^real [\w.]+$',line):
                             line = file.readline()
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            # 'memory_match'                      
-                            if match_dct[match_keys[5]]:
-                                memory_dct[match_dct[match_keys[5]].group(1)] = match_dct[match_keys[5]].group(2)
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                            # 'memory_match' pattern #5                    
+                            if match_dct['memory']:
+                                memory_dct[match_dct['memory'].group(1)] = match_dct['memory'].group(2)
                             if not line:
                                 break
                         # free_mem + buffers > 5% from total memory
@@ -136,10 +141,10 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                         flash = None
                         while not re.search(r'^real [\w.]+$',line):
                             line = file.readline()
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            # 'flash_match'                      
-                            if match_dct[match_keys[6]]:
-                                flash = match_dct[match_keys[6]].group(1)
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                            # 'flash_match' pattern #6                    
+                            if match_dct['flash']:
+                                flash = match_dct['flash'].group(1)
                             if not line:
                                 break
                     # flash section end
@@ -148,10 +153,10 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                         collected['dhcp'] = True
                         while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
                             line = file.readline()
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            # 'dhcp_match'
-                            if match_dct[match_keys[7]]:
-                                chassis_params_dct[match_dct[match_keys[7]].group(1).rstrip()] = match_dct[match_keys[7]].group(2)                                                      
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                            # 'dhcp_match' pattern #7
+                            if match_dct['dhcp']:
+                                chassis_params_dct[match_dct['dhcp'].group(1).rstrip()] = match_dct['dhcp'].group(2)                                                      
                             if not line:
                                 break  
                     # ipaddrshow section end
@@ -160,10 +165,10 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                         collected['licenses'] = True
                         while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
                             line = file.readline()
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            # 'licenses_match'
-                            if match_dct[match_keys[8]]:
-                                licenses.append(match_dct[match_keys[8]].group(1))
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                            # 'licenses_match' pattern #8
+                            if match_dct['licence']:
+                                licenses.append(match_dct['licence'].group(1))
                             elif re.match('^No licenses installed.$', line):
                                 licenses = 'No licenses installed'                                                                            
                             if not line:
@@ -198,16 +203,22 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
                         chassis_param_value = f'{s}'.join(chassis_param_value)
                     chassis_params_dct[chassis_param_add] = chassis_param_value
             # creating list with REQUIRED chassis parameters for the current switch
-            # if no value in the chassis_params_dct for the parameter then None is added  
-            # and appending this list to the list of all switches chassis_params_fabric_lst
-            chassis_params_fabric_lst.append([chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params])
-                            
-            meop.status_info('ok', max_title, len(info))
+            # if no value in the chassis_params_dct for the parameter then None is added
+            chassis_params_lst = [chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params]  
+            # appending this list to the list of all switches chassis_params_fabric_lst
+            chassis_params_fabric_lst.append(chassis_params_lst)
+            
+            if dsop.list_is_empty(chassis_params_lst):
+                meop.status_info('no data', max_title, len(info))
+            else:
+                meop.status_info('ok', max_title, len(info))
 
         # convert list to DataFrame
-        chassis_params_fabric_df = dfop.list_to_dataframe(chassis_params_fabric_lst, max_title, sheet_title_import='chassis')
-        # saving data to csv file
-        data_lst = [chassis_params_fabric_df]
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'chassis_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, chassis_params_fabric_lst)
+        chassis_params_fabric_df, *_ = data_lst
+        # # saving data to csv file
+        # data_lst = [chassis_params_fabric_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)     
 

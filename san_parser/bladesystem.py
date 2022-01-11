@@ -4,26 +4,12 @@ import os
 import re
 
 import pandas as pd
-
-
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-import utilities.filesystem_operations as fsop
-
-# import dataframe_operations as dfop
-# from common_operations_filesystem import (find_files, load_data,
-#                                           save_data)
-# from common_operations_miscellaneous import (
-#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
 
 
 def blade_system_extract(report_entry_sr, report_creation_info_lst):
@@ -69,7 +55,7 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
             # collects files in folder with txt extension
             txt_files = fsop.find_files(blade_folder, max_title, filename_extension='txt')
             log_files = fsop.find_files(blade_folder, max_title, filename_extension='log')
-            noext_files = fsop.find_files(blade_folder, max_title)
+            noext_files = fsop.find_files(blade_folder, max_title, filename_extension=None)
 
             blade_configs_lst = txt_files + log_files + noext_files
             
@@ -80,9 +66,13 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
             if configs_num:
 
                 # data imported from init file to extract values from config file
-                enclosure_params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('blades', max_title)
-                module_params = sfop.columns_import('blades', max_title, 'module_params')
-                blade_params = sfop.columns_import('blades', max_title, 'blade_params')
+                
+                # enclosure_params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('blades', max_title)
+                # module_params = sfop.columns_import('blades', max_title, 'module_params')
+                # blade_params = sfop.columns_import('blades', max_title, 'blade_params')
+
+                pattern_dct, re_pattern_df = sfop.regex_pattern_import('blades', max_title)
+                enclosure_params, module_params, blade_params = dfop.list_from_dataframe(re_pattern_df, 'enclosure_params', 'module_params', 'blade_params')
 
                 for i, blade_config in enumerate(blade_configs_lst):       
                     # file name with extension
@@ -118,10 +108,10 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                 while not re.search(r'Serial Number',line):
                                     line = file.readline()
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # name_value_pair_match
-                                    if match_dct[match_keys[0]]:
-                                        result = match_dct[match_keys[0]]
+                                    if match_dct['name_value_pair']:
+                                        result = match_dct['name_value_pair']
                                         enclosure_dct[result.group(1).strip()] = result.group(2).strip()      
                                     if not line:
                                         break
@@ -139,10 +129,10 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                         enclosure_current_dct = {}
                                         while not re.search(r'Part Number',line):
                                             # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                             # name_value_pair_match
-                                            if match_dct[match_keys[0]]:
-                                                result = match_dct[match_keys[0]]
+                                            if match_dct['name_value_pair']:
+                                                result = match_dct['name_value_pair']
                                                 enclosure_current_dct[result.group(1).strip()] = result.group(2).strip()
                                             line = file.readline()      
                                             if not line:
@@ -165,12 +155,12 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                 while not re.search(r'FC-CONNECTION INFORMATION', line):
 
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # vc_port_match
-                                    if match_dct[match_keys[14]]:
+                                    if match_dct['vc_port']:
 
-                                        # vc_port = dsop.line_to_list(comp_dct[comp_keys[14]], line, *enclosure_lst)
-                                        vc_port = dsop.line_to_list(comp_dct[comp_keys[14]], line)
+                                        # vc_port = dsop.line_to_list(pattern_dct['vc_port'], line, *enclosure_lst)
+                                        vc_port = dsop.line_to_list(pattern_dct['vc_port'], line)
                                         enslosure_id = vc_port[0]
                                         enclosure_lst = enclosure_total_dct[enslosure_id]
                                         vc_port = [*enclosure_lst, *vc_port]
@@ -193,10 +183,10 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                 collected['oa_ip'] = True
                                 while not re.search(r'^>SHOW', line):
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # oa_ip_match
-                                    if match_dct[match_keys[1]]:
-                                        oa_ip = match_dct[match_keys[1]].group(1)
+                                    if match_dct['oa_ip']:
+                                        oa_ip = match_dct['oa_ip'].group(1)
                                         line = file.readline()
                                         break
                                     else:
@@ -210,24 +200,24 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                 collected['modules'] = True
                                 while not re.search(r'^>SHOW', line):
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # module_type_num_match
-                                    if match_dct[match_keys[2]]:
+                                    if match_dct['module_type_num']:
                                         module_dct = {}
                                         module_lst= []
-                                        module = match_dct[match_keys[2]]
+                                        module = match_dct['module_type_num']
                                         # interconnect module slot number
                                         module_slot = module.group(1)
                                         # interconnect module type (Ethernet, FC)
                                         module_type = module.group(2).rstrip()
                                         line = file.readline()
                                         # module_section_end_comp
-                                        while not re.search(comp_dct[comp_keys[3]], line):
+                                        while not re.search(pattern_dct['module_section_end'], line):
                                             # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                             # name_value_pair_match
-                                            if match_dct[match_keys[0]]:
-                                                result = match_dct[match_keys[0]]
+                                            if match_dct['name_value_pair']:
+                                                result = match_dct['name_value_pair']
                                                 name = result.group(1).strip()
                                                 value = result.group(2).strip()
                                                 # if value is empty string use None
@@ -257,60 +247,60 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                 collected['servers'] = True
                                 while not re.search(r'^>SHOW', line):
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # blade_server_num_match
-                                    if match_dct[match_keys[4]]:
+                                    if match_dct['blade_server_num']:
                                         blade_dct = {}
                                         blade_lst = []
                                         hba_lst = []
-                                        result = match_dct[match_keys[4]]
+                                        result = match_dct['blade_server_num']
                                         blade_dct[result.group(1)] = result.group(2)
                                         # blade_num = result.group(2)
                                         # print("Blade number:", blade_num)
                                         line = file.readline()
                                         # server_section_end_comp
-                                        while not re.search(comp_dct[comp_keys[11]], line):
+                                        while not re.search(pattern_dct['server_section_end'], line):
                                             # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                             # mezzanin hba section start
                                             # mezzanine_model_match
-                                            if match_dct[match_keys[6]]:
-                                                result = match_dct[match_keys[6]]
+                                            if match_dct['mezzanine_description']:
+                                                result = match_dct['mezzanine_description']
                                                 hba_description = result.group(1)
                                                 hba_model = result.group(2)
                                                 line = file.readline()
                                                 # mezzanine_wwn_comp
-                                                while re.search(comp_dct[comp_keys[7]], line):
+                                                while re.search(pattern_dct['mezzanine_wwn'], line):
                                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                                     # mezzanine_wwn_match
-                                                    result = match_dct[match_keys[7]]
+                                                    result = match_dct['mezzanine_wwn']
                                                     wwnp = result.group(1)
                                                     hba_lst.append([hba_description, hba_model, wwnp])
                                                     line = file.readline()
                                             # mezzanin hba section end
                                             # flex flb hba section start
                                             # flb_model_match and flex_ethernet_match
-                                            elif match_dct[match_keys[8]] or match_dct[match_keys[15]]:
-                                                if match_dct[match_keys[8]]:
-                                                    result = match_dct[match_keys[8]]
+                                            elif match_dct['flb_description'] or match_dct['flex_ethernet']:
+                                                if match_dct['flb_description']:
+                                                    result = match_dct['flb_description']
                                                     flex_description = result.group(1)
-                                                    if re.search(comp_dct[comp_keys[13]], line):
-                                                        flex_model = re.search(comp_dct[comp_keys[13]], line).group(1)
+                                                    if re.search(pattern_dct['flb_model'], line):
+                                                        flex_model = re.search(pattern_dct['flb_model'], line).group(1)
                                                     else:
                                                         flex_model = None
-                                                elif match_dct[match_keys[15]]:
-                                                    result = match_dct[match_keys[15]]
+                                                elif match_dct['flex_ethernet']:
+                                                    result = match_dct['flex_ethernet']
                                                     flex_description = result.group(1)
                                                     flex_model = result.group(1)
                                                 line = file.readline()
                                                 # wwn_mac_line_comp
-                                                while re.search(comp_dct[comp_keys[9]], line):
+                                                while re.search(pattern_dct['wwn_mac_line'], line):
                                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                                     # flb_wwn_match
-                                                    if match_dct[match_keys[10]]:
-                                                        result = match_dct[match_keys[10]]
+                                                    if match_dct['flb_wwn']:
+                                                        result = match_dct['flb_wwn']
                                                         wwnp = result.group(1)
                                                         hba_lst.append([flex_description, flex_model, wwnp])
 
@@ -318,8 +308,8 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                                             # flex flb hba section end
                                             # blade server section start
                                             # blade_server_info_match
-                                            elif match_dct[match_keys[5]]:
-                                                result = match_dct[match_keys[5]]
+                                            elif match_dct['blade_server_info']:
+                                                result = match_dct['blade_server_info']
                                                 # name = result.group(1) + result.group(2) if result.group(2) else result.group(1)
                                                 name = result.group(1).rstrip()
                                                 value = result.group(3).rstrip()
@@ -370,11 +360,16 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
             meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        blade_module_df = dfop.list_to_dataframe(module_comprehensive_lst, max_title, sheet_title_import='blades')
-        blade_servers_df = dfop.list_to_dataframe(blades_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_columns')
-        blade_vc_df = dfop.list_to_dataframe(blade_vc_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_vc_columns')
-        # saving data to csv file
-        data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'enclosure_columns', 'blade_columns', 'blade_vc_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
+        blade_module_df, blade_servers_df, blade_vc_df, *_ = data_lst  
+
+        # blade_module_df = dfop.list_to_dataframe(module_comprehensive_lst, max_title, sheet_title_import='blades')
+        # blade_servers_df = dfop.list_to_dataframe(blades_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_columns')
+        # blade_vc_df = dfop.list_to_dataframe(blade_vc_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_vc_columns')
+        # # saving data to csv file
+        # data_lst = [blade_module_df, blade_servers_df, blade_vc_df]
+        
         # save_data(report_constant_lst, data_names, *data_lst)
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 

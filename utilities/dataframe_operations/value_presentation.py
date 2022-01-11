@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 
-def сoncatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
+def concatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
     """Function to concatenate values in several columns (merge_columns) into summary_column 
     as comma separated values"""
     
@@ -114,6 +114,14 @@ def  convert_wwn(df, wwn_columns: list):
             df.loc[mask_wwn, wwn_column] = df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
             df[wwn_column] = df[wwn_column].str.lower()
     return df
+
+
+def sort_cell_values(df, *args, sep=', '):
+    """Function to sort values in cells of columns (args)"""
+    
+    for column in args:
+        mask_notna = df[column].notna()
+        df[column] = df.loc[mask_notna, column].str.split(sep).apply(sorted).str.join(sep).str.strip(',')
 
 
 # auxiliary lambda function to combine two columns in DataFrame

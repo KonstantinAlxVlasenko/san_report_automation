@@ -3,25 +3,13 @@
 import os
 import re
 
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
+import pandas as pd
 import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-import utilities.filesystem_operations as fsop
-
-# import dataframe_operations as dfop
-import pandas as pd
-# from common_operations_database import read_db, write_db
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_filesystem import find_files
-# from common_operations_miscellaneous import (line_to_list, status_info,
-#                                              update_dct, verify_data,
-#                                              verify_force_run)
-# from common_operations_servicefile import (columns_import,
-#                                            data_extract_objects,
-#                                            dct_from_columns)
-# from common_operations_table_report import dataframe_to_report
 
 
 def connected_devices_extract(switch_params_df, report_entry_sr, report_creation_info_lst):
@@ -62,8 +50,14 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
         switch_num = len(switch_params_df.index)   
      
         # data imported from init file to extract values from config file
-        params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('connected_dev', max_title)
-        nsshow_params, nsshow_params_add = sfop.columns_import('connected_dev', max_title, 'nsshow_params', 'nsshow_params_add')
+        
+        # params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('connected_dev', max_title)
+        # nsshow_params, nsshow_params_add = sfop.columns_import('connected_dev', max_title, 'nsshow_params', 'nsshow_params_add')
+
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('ns_fdmi', max_title)
+        params, params_add, nsshow_params, nsshow_params_add = dfop.list_from_dataframe(re_pattern_df, 'fdmi_params', 'fdmi_params_add', 
+                                                                                                        'nsshow_params', 'nsshow_params_add')
 
         # lists to store only REQUIRED infromation
         # collecting data for all switches ports during looping
@@ -72,23 +66,15 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
         nsshow_lst = []
         nscamshow_lst = []
         nsshow_dedicated_lst = []
+        # list with zoning enforcement
         nsportshow_lst = []
         
         # dictionary with required to collect nsshow data
         # first element of list is regular expression pattern number, second - list to collect data
-        nsshow_dct = {'nsshow': [5, nsshow_lst], 'nscamshow': [6, nscamshow_lst]}
+        nsshow_dct = {'nsshow': ['switchcmd_nsshow', nsshow_lst], 'nscamshow': ['switchcmd_nscamshow', nscamshow_lst]}
         
-        # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():       
-            # # data unpacking from iter param
-            # # dictionary with parameters for the current chassis
-            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
-            #                     'SwitchName', 'switchWwn', 'switchMode']
-            # switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
-            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
-
 
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchMode']
@@ -114,7 +100,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                         break
                     # fdmi section start   
                     # switchcmd_fdmishow_comp
-                    if re.search(comp_dct[comp_keys[0]], line) and not collected['fdmi']:
+                    if re.search(pattern_dct['switchcmd_fdmishow'], line) and not collected['fdmi']:
                         collected['fdmi'] = True
                         if ls_mode_on:
                             while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -122,24 +108,24 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                 if not line:
                                     break                        
                         # local_database_comp
-                        while not re.search(comp_dct[comp_keys[4]], line):
-                            match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                        while not re.search(pattern_dct['local_database'], line):
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                             # wwnp_match
-                            if match_dct[match_keys[1]]:
+                            if match_dct['wwpn']:
                                 # dictionary to store all DISCOVERED switch ports information
                                 # collecting data only for the logical switch in current loop
                                 fdmi_dct = {}
                                 # switch_info and current connected device wwnp
-                                switch_wwnp = dsop.line_to_list(comp_dct[comp_keys[1]], line, *switch_info_lst[:6])
+                                switch_wwnp = dsop.line_to_list(pattern_dct['wwpn'], line, *switch_info_lst[:6])
                                 # move cursor to one line down to get inside while loop
                                 line = file.readline()                                
                                 # wwnp_local_comp
-                                while not re.search(comp_dct[comp_keys[3]], line):
+                                while not re.search(pattern_dct['wwpn_local'], line):
                                     line = file.readline()
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # fdmi_port_match
-                                    if match_dct[match_keys[2]]:
-                                        fdmi_dct[match_dct[match_keys[2]].group(1).rstrip()] = match_dct[match_keys[2]].group(2).rstrip()                                       
+                                    if match_dct['fdmi_port']:
+                                        fdmi_dct[match_dct['fdmi_port'].group(1).rstrip()] = match_dct['fdmi_port'].group(2).rstrip()                                       
                                     if not line:
                                         break
                                         
@@ -155,7 +141,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
 
                     # ns_portshow section start   
                     # switchcmd_nsportshow_comp
-                    if re.search(comp_dct['switchcmd_nsportshow'], line) and not collected['nsportshow']:
+                    if re.search(pattern_dct['switchcmd_nsportshow'], line) and not collected['nsportshow']:
                         collected['nsportshow'] = True
                         if ls_mode_on:
                             while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -163,12 +149,12 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                 if not line:
                                     break                        
                         # switchcmd_end_comp
-                        while not re.search(comp_dct['switchcmd_end'], line):
+                        while not re.search(pattern_dct['switchcmd_end'], line):
                             line = file.readline()
-                            match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                             # islshow_match
                             if match_dct['ns_portshow']:
-                                port_enforcement = dsop.line_to_list(comp_dct['ns_portshow'], line, *switch_info_lst[:6])
+                                port_enforcement = dsop.line_to_list(pattern_dct['ns_portshow'], line, *switch_info_lst[:6])
                                 nsportshow_lst.append(port_enforcement)
                             if not line:
                                 break                                
@@ -176,12 +162,12 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                        
                     # only switches in Native mode have Name Server service started 
                     if switch_mode == 'Native':
-                        # nsshow section start                 
+                        # nsshow section start (nsshow_type: nsshow, nscamshow)                 
                         for nsshow_type in nsshow_dct.keys():
                             # unpacking re number and list to save REQUIRED params
-                            re_num, ns_lst = nsshow_dct[nsshow_type]
+                            ns_pattern_name, ns_lst = nsshow_dct[nsshow_type]
                             # switchcmd_nsshow_comp, switchcmd_nscamshow_comp
-                            if re.search(comp_dct[comp_keys[re_num]], line) and not collected[nsshow_type]:
+                            if re.search(pattern_dct[ns_pattern_name], line) and not collected[nsshow_type]:
                                 collected[nsshow_type] = True
                                 if ls_mode_on:
                                     while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
@@ -189,24 +175,24 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                                         if not line:
                                             break                        
                                 # switchcmd_end_comp
-                                while not re.search(comp_dct[comp_keys[9]], line):
+                                while not re.search(pattern_dct['switchcmd_end'], line):
                                     # line = file.readline()
-                                    match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # port_pid__match
-                                    if match_dct[match_keys[7]]:
+                                    if match_dct['port_pid']:
                                         # dictionary to store all DISCOVERED switch ports information
                                         # collecting data only for the logical switch in current loop
                                         nsshow_port_dct = {}
                                         # switch_info and current connected device wwnp
-                                        switch_pid = dsop.line_to_list(comp_dct[comp_keys[7]], line, *switch_info_lst[:6])
+                                        switch_pid = dsop.line_to_list(pattern_dct['port_pid'], line, *switch_info_lst[:6])
                                         # move cursor to one line down to get inside while loop
                                         line = file.readline()                                
                                         # pid_switchcmd_end_comp
-                                        while not re.search(comp_dct[comp_keys[8]], line):
-                                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                        while not re.search(pattern_dct['pid_switchcmd_end'], line):
+                                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                             # nsshow_port_match
-                                            if match_dct[match_keys[2]]:
-                                                nsshow_port_dct[match_dct[match_keys[2]].group(1).rstrip()] = match_dct[match_keys[2]].group(2).rstrip()
+                                            if match_dct['fdmi_port']:
+                                                nsshow_port_dct[match_dct['fdmi_port'].group(1).rstrip()] = match_dct['fdmi_port'].group(2).rstrip()
                                             line = file.readline()
                                             if not line:
                                                 break
@@ -242,21 +228,26 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
                     print(info, end =" ")
                     prev_nsshow_dedicated_lst = nsshow_dedicated_lst.copy()
                     # parse nsshow information from current file
-                    parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_keys, nsshow_params, nsshow_params_add)
+                    parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, pattern_dct, nsshow_params, nsshow_params_add)
                     if prev_nsshow_dedicated_lst != nsshow_dedicated_lst:
                         meop.status_info('ok', max_title, len(info))
                     else:
                         meop.status_info('empty', max_title, len(info))
         
         # convert list to DataFrame
-        fdmi_df = dfop.list_to_dataframe(fdmi_lst, max_title, sheet_title_import='connected_dev')
-        nsshow_df = dfop.list_to_dataframe(nsshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
-        nscamshow_df = dfop.list_to_dataframe(nscamshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
-        nsshow_dedicated_df = dfop.list_to_dataframe(nsshow_dedicated_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
-        nsportshow_df = dfop.list_to_dataframe(nsportshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsportshow_columns')
-        # saving data to csv file
-        data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df]
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fdmi_columns', 'nsshow_columns', 'nsshow_columns', 'nsshow_columns', 'nsportshow_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, fdmi_lst, nsshow_lst, nscamshow_lst, nsshow_dedicated_lst, nsportshow_lst)
+        fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, *_ = data_lst  
+
+        # fdmi_df = dfop.list_to_dataframe(fdmi_lst, max_title, sheet_title_import='connected_dev')
+        # nsshow_df = dfop.list_to_dataframe(nsshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        # nscamshow_df = dfop.list_to_dataframe(nscamshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        # nsshow_dedicated_df = dfop.list_to_dataframe(nsshow_dedicated_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsshow_columns')
+        # nsportshow_df = dfop.list_to_dataframe(nsportshow_lst, max_title, sheet_title_import='connected_dev', columns_title_import = 'nsportshow_columns')
+        # # saving data to csv file
+        # data_lst = [fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df]
         # save_data(report_constant_lst, data_names, *data_lst)
+        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
@@ -275,24 +266,24 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
     return fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df
 
 
-def parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, comp_dct, comp_keys, nsshow_params, nsshow_params_add):
+def parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, pattern_dct, nsshow_params, nsshow_params_add):
     """Function to extract NameSerevr information from dedicated file"""               
     
     with open(nsshow_file, encoding='utf-8', errors='ignore') as file:
         line = file.readline()
         while line:
-            match_dct = {comp_key: comp_dct[comp_key].match(line) for comp_key in comp_keys}
+            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
             # port_pid_match
             if match_dct['port_pid']:
                 # dictionary to store all DISCOVERED switch ports information
                 nsshow_port_dct = {}
                 # current connected device wwnp
-                pid = dsop.line_to_list(comp_dct['port_pid'], line)
+                pid = dsop.line_to_list(pattern_dct['port_pid'], line)
                 # move cursor to one line down to get inside while loop
                 line = file.readline()                                
                 # pid_switchcmd_end_comp
-                while not re.search(comp_dct['port_pid'], line):
-                    match_dct = {comp_key: comp_dct[comp_key].match(line) for comp_key in comp_keys}
+                while not re.search(pattern_dct['port_pid'], line):
+                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                     # nsshow_port_match
                     if match_dct['fdmi_port']:
                         nsshow_port_dct[match_dct['fdmi_port'].group(1).rstrip()] = match_dct['fdmi_port'].group(2).rstrip()

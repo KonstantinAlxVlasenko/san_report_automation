@@ -11,20 +11,6 @@ import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
 
-# import pandas as pd
-# import dataframe_operations as dfop
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (
-#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
-# from common_operations_servicefile import (columns_import,
-#                                            data_extract_objects,
-#                                            dct_from_columns)
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
-
 def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
     """Function to extract switch port information"""
     
@@ -60,8 +46,13 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
 
      
         # data imported from init file to extract values from config file
-        params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('portinfo', max_title)
-        portcfg_params = sfop.columns_import('portinfo', max_title, 'portcfg_params')
+        # params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('portinfo', max_title)
+        # portcfg_params = sfop.columns_import('portinfo', max_title, 'portcfg_params')
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('portinfo', max_title)
+        params, params_add, portcfg_params = dfop.list_from_dataframe(re_pattern_df, 'sfp_params', 'sfp_params_add', 'portcfg_params')
+
+
         # dictionary to save portcfg ALL information for all ports in fabric
         portcfgshow_dct = dict((key, []) for key in portcfg_params)
         # list to store only REQUIRED switch parameters
@@ -113,20 +104,20 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
                                     break
                         while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
                             line = file.readline()
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            if match_dct[match_keys[0]]:
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                            if match_dct['slot_port']:
                                 # dictionary to store all DISCOVERED switch ports information
                                 # collecting data only for the logical switch in current loop
                                 sfpshow_dct = {}
-                                _, slot_num, port_num = dsop.line_to_list(comp_dct[comp_keys[0]], line)
+                                _, slot_num, port_num = dsop.line_to_list(pattern_dct['slot_port'], line)
                                 # if switch has no slots then all ports have slot 0
                                 slot_num = '0' if not slot_num else slot_num
                                 while not re.match('\r?\n', line):
                                     line = file.readline()
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # power_match
-                                    if match_dct[match_keys[1]]:
-                                        sfp_power_lst = dsop.line_to_list(comp_dct[comp_keys[1]], line)
+                                    if match_dct['power']:
+                                        sfp_power_lst = dsop.line_to_list(pattern_dct['power'], line)
                                         # cut off RX or TX Power
                                         sfp_power_value_unit = sfp_power_lst[1:]
                                         for v, k in zip(sfp_power_value_unit[::2], sfp_power_value_unit[1::2]):
@@ -135,17 +126,17 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
                                             key = sfp_power_lst[0] + '_' + k
                                             sfpshow_dct[key] = v
                                     # transceiver_match
-                                    elif match_dct[match_keys[2]]:
-                                        sfpshow_dct[match_dct[match_keys[2]].group(1).rstrip()] = match_dct[match_keys[2]].group(2).rstrip()
+                                    elif match_dct['transceiver']:
+                                        sfpshow_dct[match_dct['transceiver'].group(1).rstrip()] = match_dct['transceiver'].group(2).rstrip()
                                     # no_sfp_match
-                                    elif match_dct[match_keys[3]]:
+                                    elif match_dct['no_sfp']:
                                             sfpshow_dct['Vendor Name'] = 'No SFP module'
                                     # not_available_match
-                                    elif match_dct[match_keys[4]]:
-                                            sfpshow_dct[match_dct[match_keys[4]].group(1).rstrip()] = match_dct[match_keys[4]].group(2).rstrip()
+                                    elif match_dct['info_na']:
+                                            sfpshow_dct[match_dct['info_na'].group(1).rstrip()] = match_dct['info_na'].group(2).rstrip()
                                     # sfp_info_match
-                                    elif match_dct[match_keys[5]]:
-                                        sfpshow_dct[match_dct[match_keys[5]].group(1).rstrip()] = match_dct[match_keys[5]].group(2).rstrip()                                        
+                                    elif match_dct['sfp_info']:
+                                        sfpshow_dct[match_dct['sfp_info'].group(1).rstrip()] = match_dct['sfp_info'].group(2).rstrip()                                        
                                     if not line:
                                         break
                                     
@@ -167,13 +158,13 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
                                     break
                         while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$|No ports found in switch',line):
                             line = file.readline()
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                             # 'slot_port_line_match'
-                            if match_dct[match_keys[6]]:
+                            if match_dct['slot_port_line']:
                                 # dictionary to store all DISCOVERED switch ports information
                                 portcfgshow_tmp_dct = {}
                                 # extract slot and port numbers
-                                slot_num, port_nums_str = dsop.line_to_list(comp_dct[comp_keys[6]], line)
+                                slot_num, port_nums_str = dsop.line_to_list(pattern_dct['slot_port_line'], line)
                                 port_nums_lst = port_nums_str.split()
                                 port_nums = len(port_nums_lst)
                                 # list with switch and slot information
@@ -186,11 +177,11 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
                                 portcfgshow_tmp_dct[portcfg_params[7]] = port_nums_lst                                
                                 while not re.match('\r?\n', line):
                                     line = file.readline()
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # portcfg_match
-                                    if match_dct[match_keys[7]]:
+                                    if match_dct['portcfg']:
                                         # extract param name and values for each port and adding to dictionary
-                                        param_name, param_values_str = dsop.line_to_list(comp_dct[comp_keys[7]], line)
+                                        param_name, param_values_str = dsop.line_to_list(pattern_dct['portcfg'], line)
                                         portcfgshow_tmp_dct[param_name] = param_values_str.split()
                                     if not line:
                                         break
@@ -207,11 +198,16 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
         portcfgshow_lst = list(zip(*portcfgshow_lst))
         
         # convert list to DataFrame
-        sfpshow_df = dfop.list_to_dataframe(sfpshow_lst, max_title, sheet_title_import='portinfo')
-        portcfgshow_df = dfop.list_to_dataframe(portcfgshow_lst, max_title, sheet_title_import='portinfo', columns_title_import = 'portcfg_columns')
-        # saving data to csv file
-        data_lst = [sfpshow_df, portcfgshow_df]
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'sfp_columns', 'portcfg_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, sfpshow_lst, portcfgshow_lst)
+        sfpshow_df, portcfgshow_df, *_ = data_lst  
+
+        # sfpshow_df = dfop.list_to_dataframe(sfpshow_lst, max_title, sheet_title_import='portinfo')
+        # portcfgshow_df = dfop.list_to_dataframe(portcfgshow_lst, max_title, sheet_title_import='portinfo', columns_title_import = 'portcfg_columns')
+        # # saving data to csv file
+        # data_lst = [sfpshow_df, portcfgshow_df]
         # save_data(report_constant_lst, data_names, *data_lst)
+        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)   
 

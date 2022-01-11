@@ -5,7 +5,7 @@ import numpy as np
 
 
 from .value_processing import count_bandwidth
-from .value_presentation import сoncatenate_columns
+from .value_presentation import concatenate_columns
 
 
 def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_qunatity_column: str, speed_column: str):
@@ -158,7 +158,7 @@ def verify_symmetry_regarding_fabric_name(statistics_summary_df, symmetry_column
         connection_symmetry_df[column_note].where(mask_values_nonuniformity, column.lower(), inplace=True)
         
     # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
-    connection_symmetry_df = сoncatenate_columns(connection_symmetry_df, summary_column, 
+    connection_symmetry_df = concatenate_columns(connection_symmetry_df, summary_column, 
                                                  merge_columns=connection_symmetry_notes)
     # drop columns with quantity of unique values
     connection_symmetry_df.drop(columns=symmetry_columns, inplace=True)

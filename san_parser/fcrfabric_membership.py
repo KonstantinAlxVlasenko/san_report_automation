@@ -12,19 +12,6 @@ import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
 
-
-# import pandas as pd
-# import dataframe_operations as dfop
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (
-#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
-
 def fcr_membership_extract(switch_params_df, report_creation_info_lst):
     """Function to extract fabrics routing information"""
 
@@ -68,21 +55,18 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
         # dictionary to collect fcr device data
         # first element of list is regular expression pattern number,
         # second - list to collect data, third is index in line to which slice extracted list 
-        fcrdev_dct = {'fcrproxydev': [5, fcrproxydev_lst, None], 'fcrphydev': [6, fcrphydev_lst, -3]}    
+        fcrdev_dct = {'fcrproxydev': ['switchcmd_fcrproxydevshow', fcrproxydev_lst, None], 'fcrphydev': ['switchcmd_fcrphydevshow', fcrphydev_lst, -3]}    
    
         # data imported from init file to extract values from config file
-        params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('fcr', max_title)  
+        # params, _, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('fcr', max_title)
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('fcr', max_title)
+        params = dfop.list_from_dataframe(re_pattern_df, 'fcrresource_params')
+
         
-        # switch_params_lst [[switch_params_sw1], [switch_params_sw1]]
+        # switch__lst [[switch_params_sw1], [switch_params_sw1]]
         # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():       
-            
-            # # dictionary with parameters for the current switch
-            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
-            #                     'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router']
-            # switch_info_lst = [switch_params_data_dct.get(key) for key in switch_info_keys]
-            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router']
@@ -116,7 +100,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                         if switch_role == 'Principal':
                             # fcrfabricshow section start
                             # switchcmd_fcrfabricshow
-                            if re.search(comp_dct[comp_keys[0]], line) and not collected['fcrfabric']:
+                            if re.search(pattern_dct['switchcmd_fcrfabricshow'], line) and not collected['fcrfabric']:
                                 collected['fcrfabric'] = True
                                 if ls_mode_on:
                                     while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid}$',line):
@@ -124,23 +108,23 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                         if not line:
                                             break 
                                 # switchcmd_end_comp
-                                while not re.search(comp_dct[comp_keys[4]], line):
+                                while not re.search(pattern_dct['switchcmd_end'], line):
                                     line = file.readline()
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # fc_router_match'
-                                    if match_dct[match_keys[1]]:                                   
-                                        fcrouter_params_lst = dsop.line_to_list(comp_dct[comp_keys[1]], line)
+                                    if match_dct['fc_router']:                                   
+                                        fcrouter_params_lst = dsop.line_to_list(pattern_dct['fc_router'], line)
                                         # check if line is empty                                    
                                         while not re.match('\r?\n', line):
                                             line = file.readline()
-                                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                             # fcr_info_match
-                                            if match_dct[match_keys[2]]:
-                                                fcrouter_name = match_dct[match_keys[2]].group(1)
+                                            if match_dct['fcr_info']:
+                                                fcrouter_name = match_dct['fcr_info'].group(1)
                                             # fcr_exports_match                                        
-                                            if match_dct[match_keys[3]]:
-                                                fcrfabric_lst.append(dsop.line_to_list(comp_dct[comp_keys[3]], line, 
+                                            if match_dct['fcr_exports']:
+                                                fcrfabric_lst.append(dsop.line_to_list(pattern_dct['fcr_exports'], line, 
                                                                                     *fcrouter_info_lst, fcrouter_name, 
                                                                                     *fcrouter_params_lst))                                            
                                             if not line:
@@ -152,9 +136,9 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                             # fcrproxydev and fcrphydev checked in a loop over dictionary keys coz data representation is similar
                             # fcrdevshow section start
                             for fcrdev_type in fcrdev_dct.keys():
-                                re_num, fcrdev_lst, slice_index = fcrdev_dct[fcrdev_type]
+                                fcrdev_pattern_name, fcrdev_lst, slice_index = fcrdev_dct[fcrdev_type]
                                 # switchcmd_fcrproxydevshow_comp
-                                if re.search(comp_dct[comp_keys[re_num]], line) and not collected[fcrdev_type]:
+                                if re.search(pattern_dct[fcrdev_pattern_name], line) and not collected[fcrdev_type]:
                                     collected[fcrdev_type] = True                                    
                                     if ls_mode_on:
                                         while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid} *$',line):
@@ -162,17 +146,17 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                             if not line:
                                                 break                                                            
                                     # switchcmd_end_comp
-                                    while not re.search(comp_dct[comp_keys[4]], line):
+                                    while not re.search(pattern_dct['switchcmd_end'], line):
                                         line = file.readline()
-                                        match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                         # fcrdevshow_match
-                                        if match_dct[match_keys[7]]:
-                                            fcrdev_lst.append(dsop.line_to_list(comp_dct[comp_keys[7]], line, *fcrouter_info_lst)[:slice_index])                                            
+                                        if match_dct['fcrdevshow']:
+                                            fcrdev_lst.append(dsop.line_to_list(pattern_dct['fcrdevshow'], line, *fcrouter_info_lst)[:slice_index])                                            
                                         if not line:
                                             break                                
                             # fcrdevshow section end
                             # lsanzoneshow section start
-                            if re.search(comp_dct[comp_keys[8]], line) and not collected['lsanzone']:
+                            if re.search(pattern_dct['switchcmd_lsanzoneshow'], line) and not collected['lsanzone']:
                                 collected['lsanzone'] = True
                                 if ls_mode_on:
                                     while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid} *$',line):
@@ -180,21 +164,21 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                         if not line:
                                             break                      
                                 # switchcmd_end_comp
-                                while not re.search(comp_dct[comp_keys[4]], line):
-                                    match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                while not re.search(pattern_dct['switchcmd_end'], line):
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # lsan_name_match
-                                    if match_dct[match_keys[9]]:
+                                    if match_dct['lsan_name']:
                                         # switch_info and current connected device wwnp
-                                        lsan_name = dsop.line_to_list(comp_dct[comp_keys[9]], line)
+                                        lsan_name = dsop.line_to_list(pattern_dct['lsan_name'], line)
                                         # move cursor to one line down to get inside while loop
                                         line = file.readline()
                                         # lsan_switchcmd_end_comp
-                                        while not re.search(comp_dct[comp_keys[11]], line):
+                                        while not re.search(pattern_dct['lsan_switchcmd_end'], line):
                                             # line = file.readline()
-                                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                             # lsan_members_match
-                                            if match_dct[match_keys[10]]:
-                                                lsan_member = dsop.line_to_list(comp_dct[comp_keys[10]], line)
+                                            if match_dct['lsan_members']:
+                                                lsan_member = dsop.line_to_list(pattern_dct['lsan_members'], line)
                                                 lsan_lst.append([*fcrouter_info_lst, *lsan_name, *lsan_member])
                                             #     line = file.readline()
                                             # else:
@@ -210,7 +194,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                         
                         # fcredge and fcrresource checked for Principal and Subordinate routers
                         # fcredgeshow section start
-                        if re.search(comp_dct[comp_keys[12]], line) and not collected['fcredge']:
+                        if re.search(pattern_dct['switchcmd_fcredgeshow'], line) and not collected['fcredge']:
                             collected['fcredge'] = True
                             if ls_mode_on:
                                 while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid} *$',line):
@@ -218,18 +202,17 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                     if not line:
                                         break                      
                             # switchcmd_end_comp
-                            while not re.search(comp_dct[comp_keys[4]], line):
+                            while not re.search(pattern_dct['switchcmd_end'], line):
                                 line = file.readline()
-                                match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                 # fcredgeshow_match
-                                if match_dct[match_keys[13]]:
-                                    # fcredge_lst.append(dsop.line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst, switch_wwn))
-                                    fcredge_lst.append(dsop.line_to_list(comp_dct[comp_keys[13]], line, *fcrouter_info_lst))                                            
+                                if match_dct['fcredgeshow']:
+                                    fcredge_lst.append(dsop.line_to_list(pattern_dct['fcredgeshow'], line, *fcrouter_info_lst))                                            
                                 if not line:
                                     break   
                         # fcredgeshow section end
                         # fcrresourceshow section start
-                        if re.search(comp_dct[comp_keys[14]], line) and not collected['fcrresource']:
+                        if re.search(pattern_dct['switchcmd_fcrresourceshow'], line) and not collected['fcrresource']:
                             collected['fcrresource'] = True
                             fcrresource_dct = {}
                             if ls_mode_on:
@@ -238,13 +221,13 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                                     if not line:
                                         break                      
                             # switchcmd_end_comp
-                            while not re.search(comp_dct[comp_keys[4]], line):
+                            while not re.search(pattern_dct['switchcmd_end'], line):
                                 line = file.readline()
-                                match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                # fcredgeshow_match
-                                if match_dct[match_keys[15]]:
-                                    fcrresource_dct[match_dct[match_keys[15]].group(1).rstrip()] = \
-                                        [match_dct[match_keys[15]].group(2), match_dct[match_keys[15]].group(3)]                                           
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                # fcrresourceshow_match
+                                if match_dct['fcrresourceshow']:
+                                    fcrresource_dct[match_dct['fcrresourceshow'].group(1).rstrip()] = \
+                                        [match_dct['fcrresourceshow'].group(2), match_dct['fcrresourceshow'].group(3)]                                             
                                 if not line:
                                     break
                             # each value of dictionary is list of two elements
@@ -259,14 +242,22 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
                 meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        fcrfabric_df = dfop.list_to_dataframe(fcrfabric_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrfabric_columns')
-        fcrproxydev_df = dfop.list_to_dataframe(fcrproxydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrproxydev_columns')
-        fcrphydev_df = dfop.list_to_dataframe(fcrphydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrphydev_columns')
-        lsan_df = dfop.list_to_dataframe(lsan_lst, max_title, sheet_title_import='fcr', columns_title_import = 'lsan_columns')
-        fcredge_df = dfop.list_to_dataframe(fcredge_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcredge_columns')
-        fcrresource_df = dfop.list_to_dataframe(fcrresource_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrresource_columns')
-        # saving data to csv file
-        data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fcrfabric_columns', 'fcrproxydev_columns', 'fcrphydev_columns', 
+                                                                'lsan_columns', 'fcredge_columns', 'fcrresource_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst,
+                                                            lsan_lst, fcredge_lst, fcrresource_lst)
+        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, *_ = data_lst    
+
+
+        # fcrfabric_df = dfop.list_to_dataframe(fcrfabric_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrfabric_columns')
+        # fcrproxydev_df = dfop.list_to_dataframe(fcrproxydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrproxydev_columns')
+        # fcrphydev_df = dfop.list_to_dataframe(fcrphydev_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrphydev_columns')
+        # lsan_df = dfop.list_to_dataframe(lsan_lst, max_title, sheet_title_import='fcr', columns_title_import = 'lsan_columns')
+        # fcredge_df = dfop.list_to_dataframe(fcredge_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcredge_columns')
+        # fcrresource_df = dfop.list_to_dataframe(fcrresource_lst, max_title, sheet_title_import='fcr', columns_title_import = 'fcrresource_columns')
+        # # saving data to csv file
+        # data_lst = [fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df]
+        
         # save_data(report_constant_lst, data_names, *data_lst)
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 

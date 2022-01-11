@@ -26,3 +26,9 @@ def update_dct(keys, values, dct, char = ', '):
                 value = f'{char}'.join(value)
             dct[key] = value
     return dct
+
+
+def list_is_empty(lst):
+    """Function to check if nested list is empty. None considered to be empty value"""
+
+    return all(map(list_is_empty, lst)) if isinstance(lst, list) else True if lst is None else False

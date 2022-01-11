@@ -3,22 +3,14 @@
 
 import numpy as np
 import pandas as pd
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
-# from common_operations_dataframe import count_frequency
-# from common_operations_switch import count_all_row, count_summary, verify_connection_symmetry
 
-def fabric_switch_statistics(switch_params_aggregated_df, re_pattern_lst):
+def fabric_switch_statistics(switch_params_aggregated_df, pattern_dct):
     """Function to count switch statistics"""
 
     # modify switch_params_aggregated_df to count statistics
-    switch_params_cp_df = prior_prepearation(switch_params_aggregated_df, re_pattern_lst)
+    switch_params_cp_df = prior_prepearation(switch_params_aggregated_df, pattern_dct)
     # count switch statistics (logical and physical) in each fabric_name, fabric_label
     fabric_switch_statistics_df = count_switch_statistics(switch_params_cp_df)
     # count chassis statistics (physical only) for each fabric_label
@@ -46,15 +38,15 @@ def asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df):
 
 
 
-def prior_prepearation(switch_params_aggregated_df, re_pattern_lst):
+def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     """Function to modify switch_params_aggregated_df to count statistics"""
 
-        # regular expression patterns
-    *_, comp_dct = re_pattern_lst
+    #     # regular expression patterns
+    # *_, comp_dct = re_pattern_lst
     
     switch_params_cp_df = switch_params_aggregated_df.copy()
     # remove uninfomative values from switch DataFrame
-    maps_clean_pattern = comp_dct['maps_clean']
+    maps_clean_pattern = pattern_dct['maps_clean']
     switch_params_cp_df.replace(to_replace={maps_clean_pattern: np.nan} , regex=True, inplace=True)
     # change count columns values representation
     switch_params_cp_df['LS_type'] = switch_params_cp_df['LS_type'].str.capitalize() + '_sw'

@@ -11,21 +11,9 @@ import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
-# import pandas as pd
-# import dataframe_operations as dfop
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (force_extract_check, status_info,
-#                                              verify_data)
-# from common_operations_servicefile import data_extract_objects
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
 
 def maps_params_extract(all_config_data, report_creation_info_lst):
-    """Function to extract maps parameters
-    """
+    """Function to extract MAPS parameters"""
 
     # report_steps_dct contains current step desciption and force and export tags
     report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
@@ -38,21 +26,8 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # data_lst = load_data(report_constant_lst, *data_names)
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
-    
-    
-    # # unpacking from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # maps_params_fabric_lst, = data_lst
-    
-    # # data force extract check 
-    # # list of keys for each data from data_lst representing if it is required 
-    # # to re-collect or re-analyze data even they were obtained on previous iterations
-    # force_extract_keys_lst = [report_steps_dct[data_name][1] for data_name in data_names]
-    # # print data which were loaded but for which force extract flag is on
-    # force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title)
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
@@ -71,7 +46,10 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
         # collecting data for all switches during looping 
         maps_params_fabric_lst = []
         # data imported from init file to extract values from config file
-        maps_params, maps_params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('maps', max_title)
+        # maps_params, maps_params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('maps', max_title)
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('maps', max_title)
+        maps_params, maps_params_add = dfop.list_from_dataframe(re_pattern_df, 'maps_params', 'maps_params_add')
         
         # all_confg_data format ([swtch_name, supportshow file, (ams_maps_log files, ...)])
         # checking each config set(supportshow file) for chassis level parameters
@@ -106,8 +84,9 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
                             if re.search(r'^[= ]*AMS/MAPS *Data *Switch *(\d+)[= ]*$', line):
                                 # when section is found corresponding collected dict values changed to True
                                 collected['switch_index'] = True
-                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                switch_index = match_dct[match_keys[0]].group(1)
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                # pattern #0
+                                switch_index = match_dct['switch_index'].group(1)
                             # logical switch index section end
                             # global dashboard section start
                             if re.search(r'^[- ]*MAPS +Global +Monitoring +Configuration[ -]*$', line):
@@ -115,16 +94,16 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
                                 while not re.search(r'^[- ]*NM +Data[- ]*$',line):
                                     line = file.readline()
                                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                    match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                     # match_keys ['switch_index_match', 'dashboard_match', 'report_match', 'no_lic_match'] 
-                                    # 'dashboard_match'
-                                    if match_dct[match_keys[1]]:
-                                        maps_params_dct[match_dct[match_keys[1]].group(1).rstrip()] = match_dct[match_keys[1]].group(2)                            
-                                    # 'report_match'
-                                    if match_dct[match_keys[2]]:
-                                        maps_params_dct[match_dct[match_keys[2]].group(1).rstrip()] = match_dct[match_keys[2]].group(2)
-                                    # 'no Fabric lic match'
-                                    if match_dct[match_keys[3]]:
+                                    # 'dashboard_match' pattern #1
+                                    if match_dct['dashborad']:
+                                        maps_params_dct[match_dct['dashborad'].group(1).rstrip()] = match_dct['dashborad'].group(2)                            
+                                    # 'report_match' pattern #2
+                                    if match_dct['report']:
+                                        maps_params_dct[match_dct['report'].group(1).rstrip()] = match_dct['report'].group(2)
+                                    # 'no Fabric lic match' pattern #3
+                                    if match_dct['no_lic']:
                                         for maps_param in maps_params[6:23]:
                                             maps_params_dct[maps_param] = 'No FV lic'                                         
                                     if not line:
@@ -141,11 +120,17 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
                             maps_params_dct[maps_param_add] = maps_param_value
 
                     # creating list with REQUIRED maps parameters for the current switch
-                    # if no value in the maps_params_dct for the parameter then None is added  
+                    # if no value in the maps_params_dct for the parameter then None is added
+                    maps_params_lst = [maps_params_dct.get(maps_param, None) for maps_param in maps_params]  
                     # and appending this list to the list of all switches maps_params_fabric_lst
-                    maps_params_fabric_lst.append([maps_params_dct.get(maps_param, None) for maps_param in maps_params])
-                
-                    meop.status_info('ok', max_title, len(info))
+                    maps_params_fabric_lst.append(maps_params_lst)
+
+                    if dsop.list_is_empty(maps_params_lst):
+                        meop.status_info('no data', max_title, len(info))
+                    else:
+                        meop.status_info('ok', max_title, len(info))
+
+
             else:
                 info = ' '*16+'No AMS_MAPS configuration found.'
                 print(info, end =" ")
@@ -155,9 +140,11 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
         # save_data(report_constant_lst, data_names, maps_params_fabric_lst)
 
         # convert list to DataFrame
-        maps_params_fabric_df = dfop.list_to_dataframe(maps_params_fabric_lst, max_title, 'maps')
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'maps_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, maps_params_fabric_lst)
+        maps_params_fabric_df, *_ = data_lst
         # saving data to csv file
-        data_lst = [maps_params_fabric_df]
+        # data_lst = [maps_params_fabric_df]
         # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)    

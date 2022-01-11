@@ -2,21 +2,13 @@ import os
 import re
 import shutil
 import sys
-import pandas as pd
 
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-import utilities.filesystem_operations as fsop
-
-
-# from common_operations_database import write_db
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_filesystem import check_valid_path, create_folder
-# from common_operations_miscellaneous import status_info
-# from common_operations_table_report import dataframe_to_report
 
 from .santoolbox_parser import santoolbox_process
 
@@ -37,13 +29,16 @@ def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, softw
 
 
     # export unparsed config filenames to DataFrame and saves it to report file and database
-    unparsed_sshow_maps_df = dfop.list_to_dataframe(unparsed_sshow_maps_lst, max_title, columns=['sshow', 'ams_maps'])
+    # unparsed_sshow_maps_df = dfop.list_to_dataframe(unparsed_sshow_maps_lst, max_title, columns=['sshow', 'ams_maps'])
+    unparsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['sshow', 'ams_maps'], unparsed_sshow_maps_lst)
     # returns list with parsed data
     parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst = santoolbox_process(unparsed_sshow_maps_lst, 
                                                                                 parsed_sshow_folder, parsed_other_folder, software_path_df, max_title)
     # export parsed config filenames to DataFrame and saves it to excel file
-    parsed_sshow_maps_df = dfop.list_to_dataframe(parsed_sshow_maps_filename_lst, max_title, 
-                                                columns=['chassis_name', 'sshow', 'ams_maps'])
+    
+    # parsed_sshow_maps_df = dfop.list_to_dataframe(parsed_sshow_maps_filename_lst, max_title, 
+    #                                             columns=['chassis_name', 'sshow', 'ams_maps'])
+    parsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['chassis_name', 'sshow', 'ams_maps'], parsed_sshow_maps_filename_lst)
                                     
     # save files list to database and excel file
     data_names = ['unparsed_files', 'parsed_files']

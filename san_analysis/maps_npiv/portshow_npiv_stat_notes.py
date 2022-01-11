@@ -1,21 +1,13 @@
 """Module to add notes to npiv_statistics_df DataFrame"""
 
 import re
+
 import numpy as np
 import pandas as pd
-
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import сoncatenate_columns, dataframe_fillna
 
 
-def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_dct):
+def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, pattern_dct):
     """Function to add notes to npiv_statistics_df DataFrame"""
 
     def connection_note(npiv_statistics_df):
@@ -141,11 +133,11 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
             cfg_note_columns = [tag + column + '_nonuniformity_note' for column in count_native_columns[2:]
                                    if column in portshow_npiv_cp_df.columns]
             # merge transceivers nonuniformity note columns
-            nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
+            nonuniformity_notes_df = dfop.concatenate_columns(nonuniformity_notes_df, 
                                                       summary_column=tag + 'Transceiver_nonuniformity_note', 
                                                       merge_columns=transeivers_columns)
             # merge port settings nonuniformity note columns
-            nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
+            nonuniformity_notes_df = dfop.concatenate_columns(nonuniformity_notes_df, 
                                                       summary_column=tag + 'Portcfg_nonuniformity_note', merge_columns=cfg_note_columns)
         # drop columns with unique values quantity
         nonuniformity_notes_df.drop(columns=count_columns, inplace=True)
@@ -157,16 +149,16 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
         return npiv_statistics_df
     
     
-    def speed_note(npiv_statistics_df, comp_dct):
+    def speed_note(npiv_statistics_df, pattern_dct):
         """Function to verify link speed value and mode. Adds note if speed is in auto mode,
         speed is low (1-4 Gbps) or reduced (lower then port could provide), speed is not uniform
         for all links between pair of switches"""
 
         # # regular expression patterns
-        # *_, comp_dct = re_pattern_lst
+        # *_,  = re_pattern_lst
         
         # low speed note
-        low_speed_regex = comp_dct['low_speed']
+        low_speed_regex = pattern_dct['low_speed']
         # low_speed_regex = r'^(?:Native_|AG_)?N?[124]G?$' # 1G, N1, 2G, N2, 4G, N4 # TO_REMOVE
         low_speed_columns = [column for column in npiv_statistics_df.columns if re.search(low_speed_regex, column)]
         # if low speed port present 
@@ -181,7 +173,7 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
             mask_speed_reduced = npiv_statistics_df['Speed_Reduced'].notna() & npiv_statistics_df['Speed_Reduced'] != 0
             npiv_statistics_df['Speed_reduced_note'] = np.where(mask_speed_reduced, 'reduced_speed', pd.NA)
         # auto speed note
-        auto_speed_regex = comp_dct['auto_speed']
+        auto_speed_regex = pattern_dct['auto_speed']
         # auto_speed_regex = r'^(?:Native_|AG_)?Speed_Auto$' # TO_REMOVE
         auto_speed_columns = [column for column in npiv_statistics_df.columns if re.search(auto_speed_regex, column)]
         npiv_statistics_df['Speed_auto_note'] = pd.NA
@@ -191,7 +183,7 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
             npiv_statistics_df['Speed_auto_note'] = np.where(mask_auto_speed, 'auto_speed', pd.NA)
         # merge speed related notes into single column
         speed_note_columns = ['Speed_auto_note', 'Speed_low_note', 'Speed_reduced_note', 'Speed_Gbps_nonuniformity_note']
-        npiv_statistics_df = dfop.сoncatenate_columns(npiv_statistics_df, summary_column='Speed_note', 
+        npiv_statistics_df = dfop.concatenate_columns(npiv_statistics_df, summary_column='Speed_note', 
                                                  merge_columns=speed_note_columns, drop_merge_columns=True)
         return npiv_statistics_df
 
@@ -209,6 +201,6 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_
     npiv_statistics_df = multiple_sw_conn_note(npiv_statistics_df)
     npiv_statistics_df = single_vc_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = nonuniformity_note(npiv_statistics_df, portshow_npiv_cp_df)
-    npiv_statistics_df = speed_note(npiv_statistics_df, comp_dct)
+    npiv_statistics_df = speed_note(npiv_statistics_df, pattern_dct)
     npiv_statistics_df.fillna(np.nan, inplace=True)
     return npiv_statistics_df

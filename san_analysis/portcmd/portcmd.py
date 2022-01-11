@@ -1,32 +1,17 @@
 """Module to identify Fabric devices in portshow DataFrame"""
 
-import pandas as pd
 import numpy as np
-
-from .portcmd_aggregation import portshow_aggregated
-from .portcmd_device_connection_statistics import \
-    device_connection_statistics
-from .portcmd_devicename_correction import devicename_correction_main
-from .portcmd_storage import storage_connection_statistics
-
-
-import utilities.dataframe_operations as dfop
+import pandas as pd
 import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
-# from common_operations_dataframe import count_group_members, merge_columns
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (reply_request, status_info,
-#                                              verify_data, verify_force_run)
-# from common_operations_servicefile import (data_extract_objects,
-#                                            dataframe_import)
+from .portcmd_aggregation import portshow_aggregated
+from .portcmd_device_connection_statistics import device_connection_statistics
+from .portcmd_devicename_correction import devicename_correction_main
+from .portcmd_storage_statistics import storage_connection_statistics
 from .report_portcmd import portcmd_report_main
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-# from common_operations_dataframe_presentation import remove_duplicates_from_string, remove_value_from_string
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -100,9 +85,13 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         # import data with switch models, firmware and etc
         switch_models_df = sfop.dataframe_import('switch_models', max_title)
         # data imported from init file (regular expression patterns) to extract values from data columns
-        # re_pattern list contains comp_keys, match_keys, comp_dct    
-        _, _, *re_pattern_lst = sfop.data_extract_objects('nameserver', max_title)
+        pattern_dct, *_ = sfop.regex_pattern_import('ns_split', max_title)
 
+        # TO_REMOVE
+        # re_pattern list contains comp_keys, match_keys, comp_dct    
+        # _, _, *re_pattern_lst = sfop.data_extract_objects('nameserver', max_title)
+
+    
         oui_df = sfop.dataframe_import('oui', max_title, columns=['Connected_oui', 'type', 'subtype'])
 
         # current operation information string
@@ -117,7 +106,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                                 ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, 
                                 oui_df, fdmi_df, blade_module_df,  blade_servers_df, blade_vc_df, 
                                 synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df,
-                                re_pattern_lst)
+                                pattern_dct)
 
         # after finish display status
         meop.status_info('ok', max_title, len(info))
@@ -138,7 +127,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         # count device connection statistics
         info = f'Counting device connection statistics'
         print(info, end =" ")
-        storage_connection_statistics_df = storage_connection_statistics(portshow_aggregated_df, re_pattern_lst)
+        storage_connection_statistics_df = storage_connection_statistics(portshow_aggregated_df, pattern_dct)
         device_connection_statistics_df = device_connection_statistics(portshow_aggregated_df)    
         meop.status_info('ok', max_title, len(info))
 
@@ -159,25 +148,11 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
 
         # writing data to sql
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
-
+        # save data to service file if it's required
         dfop.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', report_creation_info_lst, force_flag = nsshow_unsplit_force_flag)
         dfop.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', report_creation_info_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        # portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, \
-        #     device_rename_df, report_columns_usage_dct, \
-        #         servers_report_df, storage_report_df, library_report_df, hba_report_df, \
-        #             storage_connection_df, library_connection_df, server_connection_df, \
-        #                 storage_connection_statistics_report_df, device_connection_statistics_report_df \
-        #                     = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        # data_lst = [
-        #     portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
-        #     device_rename_df, report_columns_usage_dct, 
-        #     servers_report_df, storage_report_df, library_report_df, hba_report_df, 
-        #     storage_connection_df, library_connection_df, server_connection_df, 
-        #     storage_connection_statistics_report_df, device_connection_statistics_report_df
-        #     ]
-
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         portshow_aggregated_df, *_ = data_lst
         # add report_columns_usage_sr to report_creation_info_lst
@@ -317,8 +292,9 @@ def device_names_per_port(portshow_aggregated_df):
     portshow_aggregated_df['alias_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['alias'].transform(', '.join)
     # remove temporary 'nan_device value
     portshow_aggregated_df.replace({'nan_device': np.nan}, inplace=True)
-    dfop.remove_value_from_string(portshow_aggregated_df, 'nan_device', 'alias_Port_group')
-    dfop.remove_duplicates_from_string(portshow_aggregated_df, 'alias_Port_group')
+    dfop.remove_value_from_string(portshow_aggregated_df, 'nan_device', 'alias_Port_group', 'Device_Host_Name_Port_group')
+    dfop.remove_duplicates_from_string(portshow_aggregated_df, 'alias_Port_group', 'Device_Host_Name_Port_group')
+    dfop.sort_cell_values(portshow_aggregated_df, 'alias_Port_group', 'Device_Host_Name_Port_group')
     return portshow_aggregated_df
 
 

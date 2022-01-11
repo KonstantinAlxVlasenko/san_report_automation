@@ -97,10 +97,10 @@ def verify_isl_cfg_equality(isl_aggregated_df):
     connected_unequal_cfg_columns = ['Connected_' + cfg for cfg in unequal_cfg_columns]
 
     # join all columns with unequal parameters for main and connected ports separately
-    isl_cp_df = dfop.сoncatenate_columns(isl_cp_df, summary_column='Unequal_cfg', 
+    isl_cp_df = dfop.concatenate_columns(isl_cp_df, summary_column='Unequal_cfg', 
                                                 merge_columns=unequal_cfg_columns, sep=', ', 
                                                 drop_merge_columns=True)
-    isl_cp_df = dfop.сoncatenate_columns(isl_cp_df, summary_column='Connected_Unequal_cfg', 
+    isl_cp_df = dfop.concatenate_columns(isl_cp_df, summary_column='Connected_Unequal_cfg', 
                                                 merge_columns=connected_unequal_cfg_columns, sep=', ', 
                                                 drop_merge_columns=True)
 

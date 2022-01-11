@@ -5,27 +5,13 @@ Module to generate aggregated switch parameters table and
 """
 
 import numpy as np
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
 
 from .switch_aggregation import switch_param_aggregation
 from .switch_statistics import fabric_switch_statistics
-
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-import utilities.module_execution as meop
-import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe_presentation import (drop_column_if_all_na,
-#                                                       generate_report_dataframe,
-#                                                       translate_dataframe, drop_zero)
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (status_info, verify_data,
-#                                              verify_force_run)
-# from common_operations_servicefile import (data_extract_objects,
-#                                            dataframe_import, dct_from_columns)
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
 
 
 def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df, 
@@ -69,9 +55,7 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
     if force_run:
 
         # data imported from init file (regular expression patterns) to extract values from data columns
-        # re_pattern list contains comp_keys, match_keys, comp_dct    
-        _, _, *re_pattern_lst = sfop.data_extract_objects('common_regex', max_title)
-
+        pattern_dct, _ = sfop.regex_pattern_import('common_regex', max_title)
         # import data with switch models, firmware and etc
         switch_models_df = sfop.dataframe_import('switch_models', max_title)
 
@@ -82,7 +66,7 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         # create aggregated table by joining DataFrames
         switch_params_aggregated_df, report_columns_usage_dct = \
             switch_param_aggregation(fabric_clean_df, chassis_params_df, \
-                switch_params_df, maps_params_df, switch_models_df, ag_principal_df, re_pattern_lst)
+                switch_params_df, maps_params_df, switch_models_df, ag_principal_df, pattern_dct)
 
         report_creation_info_lst.append(report_columns_usage_dct)
 
@@ -95,7 +79,7 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         # current operation information string
         info = f'Counting switch statistics'
         print(info, end =" ") 
-        fabric_switch_statistics_df = fabric_switch_statistics(switch_params_aggregated_df, re_pattern_lst)
+        fabric_switch_statistics_df = fabric_switch_statistics(switch_params_aggregated_df, pattern_dct)
         # after finish display status
         meop.status_info('ok', max_title, len(info))        
 
@@ -117,20 +101,11 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
                     switches_report_df, fabric_report_df, 
                     switches_parameters_report_df, maps_report_df, licenses_report_df,
                     global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
-
-        # saving data to json or csv file
-        # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
-    # verify if loaded data is empty and replace information string with empty DataFrame
+    
     else:
-        # report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df,  \
-        #     switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = verify_data(report_constant_lst, data_names, *data_lst)
-        # data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
-        #             switches_report_df, fabric_report_df, 
-        #             switches_parameters_report_df, maps_report_df, licenses_report_df,
-        #             global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
-
+        # verify if loaded data is empty and replace information string with empty DataFrame
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         report_columns_usage_dct, switch_params_aggregated_df, *_ = data_lst
 

@@ -11,18 +11,6 @@ import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
 
-# import dataframe_operations as dfop
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (force_extract_check, line_to_list,
-#                                              status_info, update_dct,
-#                                              verify_data)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
-
 def sensor_extract(chassis_params_df, report_creation_info_lst):
     """Function to extract sensor information"""  
 
@@ -54,7 +42,9 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
         # number of switches to check
         switch_num = len(chassis_params_df.index)   
         # data imported from init file to extract values from config file
-        *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('sensor', max_title)
+        # *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('sensor', max_title)
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('sensor', max_title)
 
         # lists to store only REQUIRED infromation
         # collecting data for all switches ports during looping
@@ -62,13 +52,7 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
 
         # checking each chassis for switch level parameters
         for i, chassis_params_sr in chassis_params_df.iterrows():   
-            
-            # # data unpacking from iter param
-            # # dictionary with parameters for the current chassis
-            # chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
-            # chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
-            # chassis_info_lst = [chassis_params_data_dct.get(key) for key in chassis_info_keys]            
-
+                        
             chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
             chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
             sshow_file, chassis_name, _ = chassis_info_lst
@@ -87,15 +71,15 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
                         break
                     # sensor section start   
                     # switchcmd_sensorshow_comp
-                    if re.search(comp_dct[comp_keys[0]], line) and not collected['sensor']:
+                    if re.search(pattern_dct['switchcmd_sensorhow'], line) and not collected['sensor']:
                         collected['sensor'] = True                      
                         # switchcmd_end_comp
-                        while not re.search(comp_dct[comp_keys[2]], line):
+                        while not re.search(pattern_dct['switchcmd_end'], line):
                             line = file.readline()
-                            match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                             # islshow_match
-                            if match_dct[match_keys[1]]:
-                                sensor_reading = dsop.line_to_list(comp_dct[comp_keys[1]], line, *chassis_info_lst)
+                            if match_dct['sensor']:
+                                sensor_reading = dsop.line_to_list(pattern_dct['sensor'], line, *chassis_info_lst)
                                 # appending list with only REQUIRED port info for the current loop iteration 
                                 # to the list with all ISL port info
                                 sensor_lst.append(sensor_reading)
@@ -105,10 +89,15 @@ def sensor_extract(chassis_params_df, report_creation_info_lst):
             meop.status_info('ok', max_title, len(info))      
     
         # convert list to DataFrame
-        sensor_df = dfop.list_to_dataframe(sensor_lst, max_title, sheet_title_import='sensor')
-        # saving data to csv file
-        data_lst = [sensor_df]
-        # save_data(report_constant_lst, data_names, *data_lst)
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'sensor_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, sensor_lst)
+        sensor_df, *_ = data_lst   
+
+        # sensor_df = dfop.list_to_dataframe(sensor_lst, max_title, sheet_title_import='sensor')
+        # # saving data to csv file
+        # data_lst = [sensor_df]
+        # # save_data(report_constant_lst, data_names, *data_lst)
+        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)    
 

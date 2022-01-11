@@ -15,14 +15,6 @@ import utilities.module_execution as meop
 # import utilities.filesystem_operations as fsop
 
 
-# from common_operations_dataframe_presentation import generate_report_dataframe
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (status_info, verify_data,
-#                                              verify_force_run)
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
-
 def blade_system_analysis(blade_module_df, synergy_module_df, report_creation_info_lst):
     """Main function to add connected devices information to portshow DataFrame"""
     
@@ -49,7 +41,7 @@ def blade_system_analysis(blade_module_df, synergy_module_df, report_creation_in
     # blade_module_loc_df, blade_module_report_df = data_lst
 
     # list of data to analyze from report_info table
-    analyzed_data_names = ['blade_interconnect', 'synergy_interconnect', 'Blade_шасси']
+    analyzed_data_names = ['blade_interconnect', 'blade_servers', 'blade_vc', 'synergy_interconnect', 'Blade_шасси']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  

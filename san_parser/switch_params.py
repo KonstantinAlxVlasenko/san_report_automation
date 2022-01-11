@@ -9,17 +9,6 @@ import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 
-# from common_operations_database import read_db, write_db
-# from common_operations_miscellaneous import (line_to_list, status_info,
-#                                              update_dct, verify_data,
-#                                              verify_force_run)
-# from common_operations_servicefile import data_extract_objects
-
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_dataframe import list_to_dataframe
-# import pandas as pd
-# from common_operations_filesystem import load_data, save_data
-
 
 def switch_params_extract(chassis_params_df, report_creation_info_lst):
     """Function to extract switch parameters"""
@@ -56,8 +45,12 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
         switch_params_lst = []
         # list to store switch ports details 
         switchshow_ports_lst = []    
+        
         # data imported from init file to extract values from config file
-        switch_params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('switch', max_title)
+        # switch_params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('switch', max_title)
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('switch', max_title)
+        switch_params, params_add = dfop.list_from_dataframe(re_pattern_df, 'switch_params', 'switch_params_add')
         
         # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
         # checking each chassis for switch level parameters
@@ -98,10 +91,10 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
                             while not re.search(fr'^\[Switch Configuration End : {i}\]$',line):
                                 line = file.readline()
                                 # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}                           
-                                # match_keys ['switch_configall_match', 'switch_switchshow_match']
-                                if match_dct[match_keys[0]]:
-                                    switch_params_dct[match_dct[match_keys[0]].group(1).rstrip()] = match_dct[match_keys[0]].group(3).rstrip()              
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}                           
+                                # 'switch_configall_match' pattern #0
+                                if match_dct['switch_configall']:
+                                    switch_params_dct[match_dct['switch_configall'].group(1).rstrip()] = match_dct['switch_configall'].group(3).rstrip()              
                                 if not line:
                                     break
                         # config section end
@@ -115,24 +108,24 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
                                         break
                             while not re.search(r'^real [\w.]+$',line):
                                 line = file.readline()
-                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                # 'switch_switchshow_match'
-                                if match_dct[match_keys[1]]:
-                                    switch_params_dct[match_dct[match_keys[1]].group(1).rstrip()] = match_dct[match_keys[1]].group(2).rstrip()
-                                # 'ls_attr_match'
-                                if match_dct[match_keys[2]]:
-                                    ls_attr = comp_dct[comp_keys[2]].findall(line)[0]
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                # 'switch_switchshow_match' pattern #1
+                                if match_dct['switch_switchshow']:
+                                    switch_params_dct[match_dct['switch_switchshow'].group(1).rstrip()] = match_dct['switch_switchshow'].group(2).rstrip()
+                                # 'ls_attr_match' pattern #2
+                                if match_dct['ls_attr']:
+                                    ls_attr = pattern_dct['ls_attr'].findall(line)[0]
                                     for k, v in zip(ls_attr[::2], ls_attr[1::2]):
                                         switch_params_dct[k] = v
-                                # 'switchshow_portinfo_match'
-                                if match_dct[match_keys[3]]:
+                                # 'switchshow_portinfo_match' pattern #3 
+                                if match_dct['switchshow_portinfo']:
                                     switchinfo_lst = [sshow_file, chassis_name, chassis_wwn, str(i), 
                                                       switch_params_dct.get('switchName', None), 
                                                       switch_params_dct.get('switchWwn', None), 
                                                       switch_params_dct.get('switchState', None), 
                                                       switch_params_dct.get('switchMode', None)
                                                       ]
-                                    switchshow_port_lst = dsop.line_to_list(comp_dct[comp_keys[3]], line, *switchinfo_lst)
+                                    switchshow_port_lst = dsop.line_to_list(pattern_dct['switchshow_portinfo'], line, *switchinfo_lst)
                                     # if switch has no slots than slot number is 0
                                     if not switchshow_port_lst[9]:
                                         switchshow_port_lst[9] = str(0)
@@ -152,18 +145,29 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
                     # adding additional parameters and values to the switch_params_switch_dct
                     dsop.update_dct(params_add, switch_params_values, switch_params_dct)                                                
                     # creating list with REQUIRED chassis parameters for the current switch.
-                    # if no value in the switch_params_dct for the parameter then None is added 
+                    # if no value in the switch_params_dct for the parameter then None is added
+                    switch_params_current_lst = [switch_params_dct.get(switch_param, None) for switch_param in switch_params]
                     # and appending this list to the list of all switches switch_params_fabric_lst            
-                    switch_params_lst.append([switch_params_dct.get(switch_param, None) for switch_param in switch_params])
-                                
-            meop.status_info('ok', max_title, len(info))
+                    switch_params_lst.append(switch_params_current_lst)
+                else:
+                    switch_params_current_lst = []
+            
+            if dsop.list_is_empty(switch_params_current_lst):
+                meop.status_info('no data', max_title, len(info))
+            else:
+                meop.status_info('ok', max_title, len(info))                                
 
         # convert list to DataFrame
-        switch_params_df = dfop.list_to_dataframe(switch_params_lst, max_title, sheet_title_import='switch')
-        switchshow_ports_df = dfop.list_to_dataframe(switchshow_ports_lst, max_title, sheet_title_import='switch', columns_title_import = 'switchshow_portinfo_columns')
-        # saving data to csv file
-        data_lst = [switch_params_df, switchshow_ports_df]
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'switch_columns', 'switchshow_portinfo_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, switch_params_lst, switchshow_ports_lst)
+        switch_params_df, switchshow_ports_df, *_ = data_lst        
+
+        # switch_params_df = dfop.list_to_dataframe(switch_params_lst, max_title, sheet_title_import='switch')
+        # switchshow_ports_df = dfop.list_to_dataframe(switchshow_ports_lst, max_title, sheet_title_import='switch', columns_title_import = 'switchshow_portinfo_columns')
+        # # saving data to csv file
+        # data_lst = [switch_params_df, switchshow_ports_df]
         # save_data(report_constant_lst, data_names, *data_lst)
+        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list

@@ -2,21 +2,12 @@
 and find pair zones, duplicated and target driven zones"""
 
 import itertools
+import re
 from difflib import SequenceMatcher
 
-import re
 import numpy as np
 import pandas as pd
-
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fillna, сoncatenate_columns, threshold_exceed
 
 
 def modify_zoning(zoning_aggregated_df):
@@ -303,7 +294,7 @@ def verify_pair_zones(zoning_aggregated_df):
                 zoning_pairs_df = pd.concat([zoning_pairs_df, current_df])
 
     zone_paired_columns = list(zone_paired_columns)
-    zoning_pairs_df = dfop.сoncatenate_columns(zoning_pairs_df, summary_column='zone_paired', 
+    zoning_pairs_df = dfop.concatenate_columns(zoning_pairs_df, summary_column='zone_paired', 
                                             merge_columns=zone_paired_columns, sep=', ', drop_merge_columns=True)
     # add zone_paired_tag
     mask_zone_notna = zoning_pairs_df['zone_paired'].notna()

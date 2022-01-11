@@ -18,13 +18,13 @@ import utilities.dataframe_operations as dfop
 #                                          dataframe_fillna)
 
 
-def errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, portshow_aggregated_df, re_pattern_lst):
+def errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, portshow_aggregated_df, pattern_dct):
     """Function to label errdump_df and count filtered messages"""
     
     # label errdumm_df, add switchWwn, datetime config collection
     errdump_aggregated_df = prior_preparation(errdump_df, switchshow_df, switch_params_aggregated_df)
     # extract values from Events descriprion (Event, slot, port etc) to corresponding columns
-    errdump_aggregated_df = message_extract(errdump_aggregated_df, re_pattern_lst)
+    errdump_aggregated_df = message_extract(errdump_aggregated_df, pattern_dct)
     # add port details and connected to port device information
     errdump_aggregated_df = errdump_portshow(errdump_aggregated_df, portshow_aggregated_df)
     return errdump_aggregated_df
@@ -61,28 +61,28 @@ def prior_preparation(errdump_df, switchshow_df, switch_params_aggregated_df):
     return errdump_aggregated_df
 
 
-def message_extract(errdump_aggregated_df, re_pattern_lst):
+def message_extract(errdump_aggregated_df, pattern_dct):
     """Function to parse errdump Message column into corresponding set of columns and label each message
     with extracted, copied or ignored tag"""
     
-    # regular expression patterns
-    comp_keys, _, comp_dct = re_pattern_lst
+    # regular expression patterns TO_REMOVE
+    # comp_keys, _, comp_dct = re_pattern_lst
 
     # list with regex pattern and columns values to be extracted to pairs
     extract_pattern_columns_lst = [
-        [comp_dct['port_idx_slot_number'], ['Message_portIndex', 'Message_portType', 'slot', 'port']],
-        [comp_dct['pid'], ['Message_portId']],
-        [comp_dct['event_portidx'], ['Condition', 'Message_portIndex']],
-        [comp_dct['event_slot_portidx'], ['Condition', 'slot', 'Message_portIndex']],
-        [comp_dct['bottleneck_detected'], ['Condition', 'slot', 'port', 'Current_value']],
-        [comp_dct['bottleneck_cleared'], ['slot', 'port', 'Condition']],
-        [comp_dct['severe_bottleneck'], ['Condition', 'Message_portType', 'slot', 'port']],
-        [comp_dct['maps_current_value'],  ['Condition', 'Current_value', 'Dashboard_category']],
-        [comp_dct['maps_object'], ['Condition', 'obj']],
-        [comp_dct['c2_message_1'], ['Condition', 'slot', 'port', 'Message_portIndex', 'Message_portId']],
-        [comp_dct['slow_drain_device'], ['Condition','slot', 'port', 'Message_portIndex']],
-        [comp_dct['frame_detected'], ['Condition', 'tx_port', 'rx_port', 'sid', 'did']],
-        [comp_dct['els_unzoned_device'], ['Condition', 'Message_portIndex', 'did', 'sid', 'wwn']],
+        [pattern_dct['port_idx_slot_number'], ['Message_portIndex', 'Message_portType', 'slot', 'port']],
+        [pattern_dct['pid'], ['Message_portId']],
+        [pattern_dct['event_portidx'], ['Condition', 'Message_portIndex']],
+        [pattern_dct['event_slot_portidx'], ['Condition', 'slot', 'Message_portIndex']],
+        [pattern_dct['bottleneck_detected'], ['Condition', 'slot', 'port', 'Current_value']],
+        [pattern_dct['bottleneck_cleared'], ['slot', 'port', 'Condition']],
+        [pattern_dct['severe_bottleneck'], ['Condition', 'Message_portType', 'slot', 'port']],
+        [pattern_dct['maps_current_value'],  ['Condition', 'Current_value', 'Dashboard_category']],
+        [pattern_dct['maps_object'], ['Condition', 'obj']],
+        [pattern_dct['c2_message_1'], ['Condition', 'slot', 'port', 'Message_portIndex', 'Message_portId']],
+        [pattern_dct['slow_drain_device'], ['Condition','slot', 'port', 'Message_portIndex']],
+        [pattern_dct['frame_detected'], ['Condition', 'tx_port', 'rx_port', 'sid', 'did']],
+        [pattern_dct['els_unzoned_device'], ['Condition', 'Message_portIndex', 'did', 'sid', 'wwn']],
         ]        
     
     # extract corresponding values if regex pattern applicable
@@ -101,7 +101,7 @@ def message_extract(errdump_aggregated_df, re_pattern_lst):
     
     # masks for labeleing messages with tags
     mask_condition_na = errdump_aggregated_df['Condition'].isna()
-    mask_ignored_message = errdump_aggregated_df['Message_ID'].str.contains(comp_dct['ignore_message'], regex=True)
+    mask_ignored_message = errdump_aggregated_df['Message_ID'].str.contains(pattern_dct['ignore_message'], regex=True)
     # mark messages with extracted, ingnored or copied tag
     errdump_aggregated_df.loc[~mask_condition_na, 'Message_status'] = 'extracted'
     errdump_aggregated_df.loc[mask_ignored_message, 'Message_status'] = 'ignored'

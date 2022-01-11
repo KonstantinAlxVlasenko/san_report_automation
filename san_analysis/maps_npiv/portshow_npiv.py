@@ -2,21 +2,9 @@ import re
 
 import numpy as np
 import pandas as pd
+import utilities.dataframe_operations as dfop
 
 from .portshow_npiv_stat_notes import add_notes
-
-import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fillna, dataframe_join
-# from common_operations_dataframe_presentation import drop_equal_columns, remove_duplicates_from_column
-# from common_operations_switch import (count_all_row, count_statistics,
-#                                       count_summary, summarize_statistics,
-#                                       verify_lic, verify_max_link_speed, tag_value_in_column)
 
 link_group_columns = ['Fabric_name', 'Fabric_label',  
                      'chassis_name', 'switchName',  'switchWwn', 
@@ -105,14 +93,14 @@ def fillna_ag_link(portshow_npiv_df, portshow_sfp_cp_df, switch_params_aggregate
     # rename_columns_dct = {column: 'Connected_' + column for column in port_columns}
     portshow_sfp_cp_df.rename(columns=rename_columns_dct, inplace=True)
     # columns identifying npiv switch and port
-    npiv_port_idx_сolumns = ['Connected_switchWwn', 'Connected_Index_slot_port']
+    npiv_port_idx_columns = ['Connected_switchWwn', 'Connected_Index_slot_port']
     portshow_npiv_df[['Connected_switchWwn', 'Connected_Index_slot_port']] = portshow_npiv_df[['NodeName', 'Device_Port']]
     # split columns on which merge is performed and columns to be filled
-    for column in npiv_port_idx_сolumns:
+    for column in npiv_port_idx_columns:
         npiv_port_columns.remove(column)
     # add detailed npiv port information from portshow_sfp_cp_df
     portshow_npiv_df = dfop.dataframe_fillna(portshow_npiv_df, portshow_sfp_cp_df,
-                                        join_lst=npiv_port_idx_сolumns, filled_lst=npiv_port_columns)
+                                        join_lst=npiv_port_idx_columns, filled_lst=npiv_port_columns)
     # add Native and npiv switch related information (licenses and max speed)
     portshow_npiv_df = dfop.dataframe_join(portshow_npiv_df, switch_params_aggregated_df, 
                                       columns_lst=['switchWwn', 'licenses', 'switch_speedMax'], 
@@ -124,7 +112,7 @@ def fillna_ag_link(portshow_npiv_df, portshow_sfp_cp_df, switch_params_aggregate
     return portshow_npiv_df
     
     
-def prior_prepearation(portshow_npiv_df, comp_dct):
+def prior_prepearation(portshow_npiv_df, pattern_dct):
     """Function to modify portshow_npiv_df to count statistics"""
 
 
@@ -135,14 +123,6 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
     native_tag = 'Native_'
     ag_tag = 'AG_'
     
-    # TO_REMOVE
-    # print('\n')
-
-    # mask = portshow_npiv_cp_df['chassis_name'].isin(['BR45_6510_3', 'BR47_6510_3'])
-    # print(portshow_npiv_cp_df.loc[mask, link_group_columns])
-    # # print(portshow_npiv_cp_df.columns.tolist())
-    # exit()
-
     # max and reduced speed tags
     portshow_npiv_cp_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)
     # auto and fixed speed tags
@@ -158,8 +138,7 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
         'Link' + '_' + portshow_npiv_cp_df['Link'].astype('int', errors='ignore').astype('str', errors='ignore')
 
     # extract available transceiver speed values
-    sfp_speed_re = comp_dct['transceiver_speed']
-    # sfp_speed_re =  r'((?:\d+,){2}\d+_\w+)' TO_REMOVE
+    sfp_speed_re = pattern_dct['transceiver_speed']
     portshow_npiv_cp_df['Transceiver_speed'] = \
         portshow_npiv_cp_df['Transceiver_mode'].str.extract(sfp_speed_re)
     if portshow_npiv_cp_df['Connected_Transceiver_mode'].notna().any():
@@ -172,13 +151,7 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
     transceiver_columns = ['Transceiver_speed', 'Connected_Transceiver_speed']
     for column in transceiver_columns:
         if column in portshow_npiv_cp_df.columns:
-
             dfop.tag_value_in_column(portshow_npiv_cp_df, column, 'Transceiver_speed')
-
-            # mask_notna = portshow_npiv_cp_df[column].notna()
-            # tag = re.search(r'^(?:Connected_)?(.+?)(?:_Port)?', column).group(1)
-            # portshow_npiv_cp_df.loc[mask_notna, column] = 'Transceiver_speed_' + portshow_npiv_cp_df.loc[mask_notna, column]
-
 
     # for services remove 'Inactive' status and add service name instead 'Active' status
     for column in service_columns:
@@ -188,19 +161,13 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
     
     # add AG or Native to tag and column name to the value
     for cfg_column in cfg_columns:
-        # mask_notna = portshow_npiv_cp_df[cfg_column].notna()
         tag = ag_tag if 'Connected_' in cfg_column else native_tag
         if not 'speed' in cfg_column.lower():
-            port_settings_re = comp_dct['port_settings']
+            port_settings_re = pattern_dct['port_settings']
             if re.match(port_settings_re, cfg_column):
-            # if re.match(r'^(?:Connected_)?(.+?)(?:_Port)', cfg_column): TO_REMOVE
-                # cfg_name = re.match(r'^(?:Connected_)?(.+?)(?:_Port)', cfg_column).group(1).upper() TO_REMOVE
                 cfg_name = re.match(port_settings_re, cfg_column).group(1).upper()
                 tag += cfg_name + '_'
         dfop.tag_value_in_column(portshow_npiv_cp_df, cfg_column, tag=tag, binding_char='')
-
-        # portshow_npiv_cp_df[cfg_column] = \
-        #     portshow_npiv_cp_df[cfg_column].where(~mask_notna, tag + portshow_npiv_cp_df[cfg_column])
 
     # logical and physical links tags
     portshow_npiv_cp_df['physical_link'] = 'Physical_link_quantity'
@@ -213,21 +180,10 @@ def prior_prepearation(portshow_npiv_df, comp_dct):
     return portshow_npiv_cp_df
 
 
-def npiv_statistics(portshow_npiv_df, comp_dct):
+def npiv_statistics(portshow_npiv_df, pattern_dct):
     """Function to count NPIV connection statistics"""
     
-    portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, comp_dct)
-
-#     print('\n')
-
-#     mask = portshow_npiv_cp_df['chassis_name'].isin(['BR45_6510_3', 'BR47_6510_3'])
-#     # print(portshow_npiv_cp_df.columns.tolist())
-
-# # ['configname', 'chassis_name', 'chassis_wwn', 'portIndex', 'slot', 'port', 'Connected_portId', 'Connected_portWwn', 'portId', 'portWwn', 'Logical_portWwn', 'FEC', 'Credit_Recovery', 'Aoq', 'F_Trunk', 'switchName', 'switchWwn', 'speed', 'portType', 'connection_details', 'Fabric_name', 'Fabric_label', 'switchState', 'switchMode', 'switchType', 'Generation', 'HPE_modelName', 'PortName', 'NodeName', 'Device_type', 'Slow_Drain_Device', 'Device_Manufacturer', 'Device_Model', 'Device_SN', 'Device_Name', 'Device_Port', 'Device_Fw', 'Device_Location', 'IP_Address', 'HBA_Manufacturer', 'HBA_Description', 'Virtual_Channel', 'deviceType', 'deviceSubtype', 'Index_slot_port', 'Connected_NPIV', 'Link', 'logical_link', 'Device_Host_Name', 'Device_Host_Name_duplicates_free', 'Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label', 'Device_Host_Name_per_fabric_name', 'Device_Host_Name_total_fabrics', 'Transceiver_speedMax', 'Transceiver_category', 'Transceiver_mode', 'Speed_Cfg', 'Trunk_Port', 'Long_Distance', 'VC_Link_Init', 'NPIV_PP_Limit', 'NPIV_FLOGI_Logout', 'QOS_Port', 'Rate_Limit', 'Credit_Recovery_cfg', '10G/16G_FEC', 'FEC_cfg', 'Connected_switchWwn', 'Connected_Index_slot_port', 'Connected_Generation', 'Connected_speed', 'Connected_portType', 'Connected_FEC_cfg', 'Connected_10G/16G_FEC', 'Connected_Credit_Recovery_cfg', 'Connected_QOS_Port', 'Connected_Trunk_Port', 'Connected_Rate_Limit', 'Connected_Speed_Cfg', 'Connected_Transceiver_mode', 'Connected_Transceiver_speedMax', 'Connected_Transceiver_category', 'licenses', 'switch_speedMax', 'Connected_licenses', 'Connected_switch_speedMax', 'Link_speedMax', 'Link_speedActual', 'Link_speedActualMax', 
-# # 'Trunking_license', 'Connected_Trunking_license', 'Trunking_lic_both_switches', 'Transceiver_speed', 'Connected_Transceiver_speed', 'physical_link']
-#     print(portshow_npiv_cp_df.loc[mask, [*link_group_columns, 'logical_link']])
-#     exit()
-
+    portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, pattern_dct)
     # count statistics for stat columns
     stat_columns = ['logical_link', 'physical_link', 'port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
     npiv_statistics_df = dfop.count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
@@ -239,7 +195,7 @@ def npiv_statistics(portshow_npiv_df, comp_dct):
         npiv_statistics_df = dfop.dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
                                             join_lst=link_group_columns, filled_lst=['Trunking_lic_both_switches'])
         # add notes to statistics DataFrame
-        npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, comp_dct)
+        npiv_statistics_df = add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, pattern_dct)
         # insert 'Device_quantity' column to place it to correct location in final statistics DataFrame 
         insert_index = npiv_statistics_df.columns.get_loc('Logical_link_quantity')
         npiv_statistics_df.insert(loc=insert_index, column='Device_quantity', value=1)

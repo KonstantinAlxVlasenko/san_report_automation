@@ -5,33 +5,15 @@ Verify if all switches and vc-fc of the same blade systems bay parity group are 
 
 import numpy as np
 import pandas as pd
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.module_execution as meop
+import utilities.servicefile_operations as sfop
 
 from .portshow_maps_ports import maps_db_ports
 from .portshow_npiv import npiv_link_aggregated, npiv_statistics
-
-
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-import utilities.module_execution as meop
-import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe_presentation import (drop_all_identical,
-#                                                       drop_equal_columns,
-#                                                       generate_report_dataframe,
-#                                                       translate_values, drop_zero, drop_column_if_all_na)
-# from common_operations_dataframe import dataframe_fillna
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (status_info,
-#                                              verify_data, verify_force_run)
-# from common_operations_servicefile import data_extract_objects
-                                           
-# from common_operations_switch import statistics_report
-# from common_operations_table_report import dataframe_to_report
-
-from .switch_connection_statistics import switch_connection_statistics_aggregated
-# from common_operations_database import read_db, write_db
+from .switch_connection_statistics import \
+    switch_connection_statistics_aggregated
 
 
 def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
@@ -75,21 +57,14 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
     force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names)
 
     if force_run:
-
         # data imported from init file (regular expression patterns) to extract values from data columns
-        # re_pattern list contains comp_keys, match_keys, comp_dct    
-        # _, _, *re_pattern_lst = sfop.data_extract_objects('common_regex', max_title)
-        # *_, comp_dct = re_pattern_lst
-
-        # _, _, *re_pattern_lst = sfop.data_extract_objects('common_regex', max_title)
-        *_, comp_dct = sfop.data_extract_objects('common_regex', max_title)
-    
+        pattern_dct, _ = sfop.regex_pattern_import('common_regex', max_title)
         # current operation information string
         info = f'MAPS and NPIV ports verification'
         print(info, end =" ") 
 
         portshow_npiv_df = npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df)
-        maps_ports_df = maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, comp_dct)
+        maps_ports_df = maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, pattern_dct)
         # verify if all switches and vc-fc of the same bay parity group are in the same fabric_label
         blade_module_loc_df = verify_interconnect_slot_fabric(blade_module_loc_df, switch_params_aggregated_df, portshow_npiv_df)
         # after finish display status
@@ -98,9 +73,9 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
         info = f'Counting NPIV link and Native switch connection statistics'
         print(info, end =" ") 
 
-        npiv_statistics_df = npiv_statistics(portshow_npiv_df, comp_dct)
+        npiv_statistics_df = npiv_statistics(portshow_npiv_df, pattern_dct)
         sw_connection_statistics_df = \
-            switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_statistics_df, npiv_statistics_df, comp_dct)
+            switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_statistics_df, npiv_statistics_df, pattern_dct)
         # after finish display status
         meop.status_info('ok', max_title, len(info))
 

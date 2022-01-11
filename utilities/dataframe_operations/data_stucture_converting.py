@@ -1,11 +1,8 @@
 """Module with functions converting data structures to DataFrame or from DataFrame"""
 
 import pandas as pd
-
-# from common_operations_servicefile import columns_import
-
-
 from utilities.servicefile_operations import columns_import
+
 
 def dct_from_dataframe(df, *args) -> dict:
     """Function to create dictionary from DataFrame columns. Args is column names.
@@ -54,17 +51,41 @@ def series_from_dataframe(df, index_column: str, value_column: str=None):
     return  sr
 
 
-def list_to_dataframe(data_lst, max_title, sheet_title_import=None, 
-                        columns=columns_import, columns_title_import='columns'):
-    """Function to export list to DataFrame and then save it to excel report file
-    returns DataFrame
-    """
+# def list_to_dataframe(data_lst, max_title, sheet_title_import=None, 
+#                         columns=columns_import, columns_title_import='columns'):
+#     """Function to export list to DataFrame and then save it to excel report file
+#     returns DataFrame
+#     """
 
-    # checks if columns were passed to function as a list
-    if isinstance(columns, list):
-        columns_title = columns
-    # if not (default) then import columns from excel file
-    else:
-        columns_title = columns(sheet_title_import, max_title, columns_title_import)
-    data_df = pd.DataFrame(data_lst, columns=columns_title)
-    return data_df
+#     # checks if columns were passed to function as a list
+#     if isinstance(columns, list):
+#         columns_title = columns
+#     # if not (default) then import columns from excel file
+#     else:
+#         columns_title = columns(sheet_title_import, max_title, columns_title_import)
+#     data_df = pd.DataFrame(data_lst, columns=columns_title)
+#     return data_df
+
+
+def list_to_dataframe(header_lst, *args):
+    """Function to export lists (args) to DataFrame with column titles from header_lst"""
+
+    if len(args) == 1:
+        header_lst = [header_lst]
+
+    if len(args) != len(header_lst):
+        print('Number of lists to convert to DataFrame and length of list of column titles are not equal')
+        exit()
+    return [pd.DataFrame(lst, columns=columns) for lst, columns in zip(args, header_lst)]
+
+   
+
+
+
+def list_from_dataframe(df, *args, drop_na=True):
+    """Function to convert DataFrame columns to list of lists"""
+
+    result = [df[column].dropna().tolist() if drop_na else df[column].tolist() for column in args]
+    return result if len(args)>1 else result[0]
+
+

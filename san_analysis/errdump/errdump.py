@@ -61,7 +61,8 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
     if force_run:
         # data imported from init file (regular expression patterns) to extract values from data columns
         # re_pattern list contains comp_keys, match_keys, comp_dct    
-        _, _, *re_pattern_lst = sfop.data_extract_objects('raslog', max_title)
+        # _, _, *re_pattern_lst = sfop.data_extract_objects('raslog', max_title)
+        pattern_dct, _ = sfop.regex_pattern_import('raslog_split', max_title)
         raslog_message_details_df = sfop.dataframe_import('raslog_details', max_title)
         raslog_message_id_details_df = sfop.dataframe_import('raslog_id_details', max_title, columns=['Message_ID', 'Details', 'Recommended_action'])
 
@@ -71,7 +72,7 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
 
         # get aggregated DataFrames
         errdump_aggregated_df = errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, 
-                                                    portshow_aggregated_df, re_pattern_lst)
+                                                    portshow_aggregated_df, pattern_dct)
         # count how many times event appears during one month for the last six months 
         raslog_counter_df, raslog_frequent_df = errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_message_id_details_df)
         # after finish display status

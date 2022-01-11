@@ -43,7 +43,8 @@ def find_files(folder, max_title, filename_contains='', filename_extension=''):
     """
     Function to create list with files. Takes directory, regex_pattern to verify if filename
     contains that pattern (default empty string) and filename extension (default is empty string)
-    as parameters. Returns list of files with the extension deteceted in root folder defined as
+    as parameters. If filename extension is None then filename shouldn't contain any extension. 
+    Returns list of files with the extension deteceted in root folder defined as
     folder parameter and it's nested folders. If both parameters are default functions returns
     list of all files in directory
     """
@@ -58,14 +59,26 @@ def find_files(folder, max_title, filename_contains='', filename_extension=''):
     files_lst = []
 
     # going through all directories inside ssave folder to find configuration data
+    
+    # for root, _, files in os.walk(folder):
+    #     for file in files:
+    #         if re.search(filename_contains, file):
+    #             file_path = os.path.normpath(os.path.join(root, file))
+    #             if filename_extension and file.endswith(filename_extension):
+    #                 files_lst.append(file_path)
+    #             elif not filename_extension and not re.search('\.', file):
+    #                 files_lst.append(file_path)
+
     for root, _, files in os.walk(folder):
         for file in files:
-            
             if re.search(filename_contains, file):
                 file_path = os.path.normpath(os.path.join(root, file))
                 if filename_extension and file.endswith(filename_extension):
                     files_lst.append(file_path)
-                elif not filename_extension and not re.search('\.', file):
+                # when file extension flag is None and file name doesn't contain extension (.7zip, .exe, .log, .3g2)
+                elif filename_extension is None and not re.search('.+\.(\d)?[A-Za-z]+(\d)?$', file):
+                    files_lst.append(file_path)
+                elif filename_extension=='':
                     files_lst.append(file_path)
 
 

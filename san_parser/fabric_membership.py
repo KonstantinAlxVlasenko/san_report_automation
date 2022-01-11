@@ -1,8 +1,6 @@
-
 """Module to extract fabrics information"""
 
 import re
-
 
 import utilities.dataframe_operations as dfop
 import utilities.database_operations as dbop
@@ -10,17 +8,6 @@ import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
-
-# import dataframe_operations as dfop
-# import pandas as pd
-# from common_operations_database import read_db, write_db
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (force_extract_check, line_to_list,
-#                                              status_info, update_dct,
-#                                              verify_data, verify_force_run)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_table_report import dataframe_to_report
 
 
 def fabric_membership_extract(switch_params_df, report_creation_info_lst):
@@ -58,8 +45,11 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
         fabricshow_lst = []
         ag_principal_lst = []    
         # data imported from init file to extract values from config file
-        *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('fabricshow', max_title)
-        ag_params = sfop.columns_import('fabricshow', max_title, 'ag_params')  
+        # *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('fabricshow', max_title)
+        # ag_params = sfop.columns_import('fabricshow', max_title, 'ag_params')
+
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('fabric', max_title)
+        ag_params = dfop.list_from_dataframe(re_pattern_df, 'ag_params')          
         
         # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():        
@@ -102,16 +92,16 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                             while not re.search(r'^(real [\w.]+)|(\*\* SS CMD END \*\*)$',line):
                                 line = file.readline()
                                 # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                 # match_keys ['fabricshow_match'] 
-                                # 'fabricshow_match'
-                                if match_dct[match_keys[0]]:
-                                    fabricshow_lst.append(dsop.line_to_list(comp_dct[comp_keys[0]], line, *principal_switch_lst))                                      
+                                # 'fabricshow_match' pattern #0
+                                if match_dct['fabricshow']:
+                                    fabricshow_lst.append(dsop.line_to_list(pattern_dct['fabricshow'], line, *principal_switch_lst))                                      
                                 if not line:
                                     break
                         # ag_principal section start
                         # switchcmd_agshow_comp
-                        if re.search(comp_dct[comp_keys[4]], line):
+                        if re.search(pattern_dct['switchcmd_agshow'], line):
                             collected['ag_principal'] = True
                             # if switch in LS mode switch to required LS number
                             if ls_mode_on:
@@ -120,10 +110,10 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                                     if not line:
                                         break                        
                             # switchcmd_end_comp
-                            while not re.search(comp_dct[comp_keys[10]], line):
-                                match_dct = {match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                # ag_num_match
-                                if match_dct[match_keys[5]]:
+                            while not re.search(pattern_dct['switchcmd_end'], line):
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                # ag_num_match pattern #5
+                                if match_dct['ag_num']:
                                     # dictionary to store all DISCOVERED switch ports information
                                     # collecting data only for the logical switch in current loop
                                     # Access Gateway common information dictionary
@@ -138,29 +128,29 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                                     # move cursor to one line down to get inside while loop
                                     line = file.readline()                                
                                     # ag_switchcmd_end_comp
-                                    while not re.search(comp_dct[comp_keys[9]], line):
-                                        match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                        # ag_info_match
-                                        if match_dct[match_keys[6]]:
-                                            ag_info_dct[match_dct[match_keys[6]].group(1).rstrip()] = match_dct[match_keys[6]].group(2).rstrip()
-                                        # ag_attached_match
-                                        elif match_dct[match_keys[7]]:
+                                    while not re.search(pattern_dct['ag_switchcmd_end'], line):
+                                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                        # ag_info_match pattern #6
+                                        if match_dct['ag_info']:
+                                            ag_info_dct[match_dct['ag_info'].group(1).rstrip()] = match_dct['ag_info'].group(2).rstrip()
+                                        # ag_attached_match pattern #7
+                                        elif match_dct['ag_attached']:
                                             # if Attached F-Port information dictionary is empty than create dictionary with N-Port ID(s) as keys and empty lists as values
                                             # if ag_attach_dct has been already created (not empty) then it's preserved
                                             ag_attach_dct = ag_attach_dct or dict((n_portid, []) for n_portid in ag_info_dct['N-Port ID(s)'].split(','))
                                             # extracting attached F-port data from line to list
-                                            ag_attach_lst = dsop.line_to_list(comp_dct[comp_keys[7]], line)
+                                            ag_attach_lst = dsop.line_to_list(pattern_dct['ag_attached'], line)
                                             # getting port_ID of N-port from port_id of F-port
                                             n_portid = ag_attach_lst[0][:-2] + '00'
                                             # adding current line F-port information to Attached F-Port information dictionary 
                                             if n_portid in ag_attach_dct.keys():
                                                 ag_attach_dct[n_portid].append(ag_attach_lst)
-                                        # ag_fport_match
-                                        elif match_dct[match_keys[8]]:
+                                        # ag_fport_match pattern #8
+                                        elif match_dct['ag_fport']:
                                             # create Access Gateway F-Port information dictionary
                                             ag_fport_dct = ag_fport_dct or dict((n_portid, []) for n_portid in ag_info_dct['N-Port ID(s)'].split(','))
                                             # extracting access gateway F-port data from line to list
-                                            ag_fport_lst = dsop.line_to_list(comp_dct[comp_keys[8]], line)
+                                            ag_fport_lst = dsop.line_to_list(pattern_dct['ag_fport'], line)
                                             # getting port_ID of N-port from port_id of F-port
                                             n_portid = ag_fport_lst[1][:-2] + '00'
                                             # adding current line F-port information to Access Gateway F-Port information dictionary
@@ -223,8 +213,13 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                 meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        fabricshow_df = dfop.list_to_dataframe(fabricshow_lst, max_title, sheet_title_import='fabricshow')
-        ag_principal_df = dfop.list_to_dataframe(ag_principal_lst, max_title, sheet_title_import='fabricshow', columns_title_import = 'ag_columns')
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fabric_columns', 'ag_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, fabricshow_lst, ag_principal_lst)
+        fabricshow_df, ag_principal_df, *_ = data_lst    
+
+
+        # fabricshow_df = dfop.list_to_dataframe(fabricshow_lst, max_title, sheet_title_import='fabricshow')
+        # ag_principal_df = dfop.list_to_dataframe(ag_principal_lst, max_title, sheet_title_import='fabricshow', columns_title_import = 'ag_columns')
         # saving data to csv file
         data_lst = [fabricshow_df, ag_principal_df]
         # save_data(report_constant_lst, data_names, *data_lst)

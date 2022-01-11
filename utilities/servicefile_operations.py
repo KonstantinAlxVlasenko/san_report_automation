@@ -85,29 +85,43 @@ def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xl
             status_info('ok', max_title, len(info))
     return dataframe
 
+# TO_REMOVE fn replaced with regex_pattern_import
+# def data_extract_objects(sheet_title, max_title, param_columns = True):
+#     """Function imports parameters names and regex tepmplates
+#     to extract required data from configuration files   
+#     """
+    
+#     if param_columns:
+#         # imports keys to extract switch parameters from tmp dictionary
+#         params_names, params_add_names = columns_import(sheet_title, max_title, 'params', 'params_add')
+#     else:
+#         params_names, params_add_names = None, None
+#     # imports base names for compile and match templates and creates corresonding names
+#     keys = columns_import(sheet_title, max_title, 're_names')
+#     comp_keys = [key for key in keys]
+#     match_keys = [key for key in keys]
+#     # imports string for regular expressions
+#     comp_values = columns_import(sheet_title,  max_title, 'comp_values')
+#     # creates regular expressions
+#     comp_values_re = [re.compile(fr"{element}", re.IGNORECASE) for element in comp_values]
+#     # creates dictionary with regular expressions  
+#     comp_dct = dict(zip(comp_keys, comp_values_re))
+#     return params_names, params_add_names, comp_keys, match_keys, comp_dct
 
-def data_extract_objects(sheet_title, max_title, param_columns = True):
-    """Function imports parameters names and regex tepmplates
-    to extract required data from configuration files   
-    """
+
+def regex_pattern_import(sheet_title, max_title):
+    """Function to import regex tepmplates"""
     
-    if param_columns:
-        # imports keys to extract switch parameters from tmp dictionary
-        params_names, params_add_names = columns_import(sheet_title, max_title, 'params', 'params_add')
+    re_pattern_df = dataframe_import(sheet_title, max_title)
+    pattern_names = re_pattern_df['pattern_name'].dropna().to_list()
+    patterns = re_pattern_df['pattern_value'].dropna().to_list()
+    if len(pattern_names) == len(patterns):
+        patterns = [re.compile(fr"{element}", re.IGNORECASE) for element in patterns]
+        pattern_dct = dict(zip(pattern_names, patterns))
+        return pattern_dct, re_pattern_df
     else:
-        params_names, params_add_names = None, None
-    # imports base names for compile and match templates and creates corresonding names
-    keys = columns_import(sheet_title, max_title, 're_names')
-    comp_keys = [key for key in keys]
-    match_keys = [key for key in keys]
-    # imports string for regular expressions
-    comp_values = columns_import(sheet_title,  max_title, 'comp_values')
-    # creates regular expressions
-    comp_values_re = [re.compile(fr"{element}", re.IGNORECASE) for element in comp_values]
-    # creates dictionary with regular expressions  
-    comp_dct = dict(zip(comp_keys, comp_values_re))
-    
-    return params_names, params_add_names, comp_keys, match_keys, comp_dct
+        print("'pattern_name' and 'pattern' columns have different length. Check data in {sheet_title} tab")
+        exit()
 
 
 def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xlsx', display_status=True):

@@ -3,23 +3,13 @@
 
 import numpy as np
 import pandas as pd
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe_presentation import move_all_down, move_column
-# from common_operations_dataframe import dataframe_fillna
-# from common_operations_switch import verify_connection_symmetry
 
 sw_columns = ['Fabric_name', 'Fabric_label', 
                'chassis_name', 'SwitchName', 'switchWwn']
 
 
-def switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_statistics_df, npiv_statistics_df, comp_dct):
+def switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_statistics_df, npiv_statistics_df, pattern_dct):
     """Main function to count switch connection statistics"""
 
     sw_connection_statistics_df = native_ag_connection_statistics(isl_statistics_df, npiv_statistics_df)
@@ -30,7 +20,7 @@ def switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_sta
                                         filled_lst=['switchRole', 'FOS_version', 'switch.edgeHoldTime'])
 
         # find FOS most recent version in each fabric
-        sw_connection_statistics_df = find_max_fabric_fos(sw_connection_statistics_df, comp_dct)
+        sw_connection_statistics_df = find_max_fabric_fos(sw_connection_statistics_df, pattern_dct)
         # add core switch tag
         sw_connection_statistics_df = dfop.dataframe_fillna(sw_connection_statistics_df, core_sw_df, join_lst=sw_columns, filled_lst=['Core_switch_note'])
         # add notes if principal not in core or if principal fos version is not recent in the fabric
@@ -155,12 +145,12 @@ def find_core_switch(sw_connection_statistics_df):
     return core_sw_df
 
 
-def find_max_fabric_fos(sw_connection_statistics_df, comp_dct):
+def find_max_fabric_fos(sw_connection_statistics_df, pattern_dct):
     """Function to find the most recent FOS version in the Fabric"""
 
     # remove excessive symbols from FOS version
     # sw_connection_statistics_df['FOS_version_clean'] = sw_connection_statistics_df['FOS_version'].str.extract('v?(\d+\.\d+\.\d+[a-z]?\d?)')
-    sw_connection_statistics_df['FOS_version_clean'] = sw_connection_statistics_df['FOS_version'].str.extract(comp_dct['fos'])
+    sw_connection_statistics_df['FOS_version_clean'] = sw_connection_statistics_df['FOS_version'].str.extract(pattern_dct['fos'])
     # fill nan values with char 0 to find maximum
     sw_connection_statistics_df['FOS_version_clean'].fillna('0', inplace=True)
     # find most recent FOS veriosn for each fabric

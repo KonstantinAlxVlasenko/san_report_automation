@@ -25,57 +25,37 @@ wise_combine = lambda series, str1='', str2=' ': \
         if pd.notna(series.iloc[[0,1]]).all() else series.iloc[1]
 
 
-def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, re_pattern_lst):
+def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, pattern_dct):
     """
     Function to fillna portshow_aggregated_df null values with values from blade_servers_join_df.
     Hostname, location and HBA infromation
     """
 
-    # regular expression patterns
-    comp_keys, _, comp_dct = re_pattern_lst
+    # regular expression patterns TO_REMOVE
+    # comp_keys, _, comp_dct = re_pattern_lst
 
     if not blade_servers_df.empty:
         # make copy to avoid changing original DataFrame
         blade_servers_join_df = blade_servers_df.copy()
         blade_servers_join_df.drop_duplicates(inplace=True)
-
-        
-
         # Uppercase Device_Manufacturer column
         blade_servers_join_df.Device_Manufacturer = blade_servers_join_df.Device_Manufacturer.str.upper()
         # lower case WWNp
         blade_servers_join_df.portWwn = blade_servers_join_df.portWwn.str.lower()
-
-
-        # mask_tst = blade_servers_join_df['portWwn'] == '10:00:ac:16:2d:b8:49:a5'
-        # print('\n')
-        # print(blade_servers_join_df.loc[mask_tst, 'Host_Name'])
-
-        
-
         # hostname_clean_comp
-        blade_servers_join_df.Host_Name = blade_servers_join_df.Host_Name.replace(comp_dct[comp_keys[0]], np.nan, regex=True)
-
-
-        # print(blade_servers_join_df.loc[mask_tst, 'Host_Name'])
-        # exit()
-
+        blade_servers_join_df.Host_Name = blade_servers_join_df.Host_Name.replace(pattern_dct['hostname_clean'], np.nan, regex=True)
         # combine 'Device_Manufacturer' and 'Device_Model' columns
         blade_servers_join_df.Device_Model = blade_servers_join_df[['Device_Manufacturer', 'Device_Model']].apply(wise_combine, axis=1)
         # combine 'Enclosure_Name' and 'Server_Slot' columns
         blade_servers_join_df['Device_Location'] = \
             blade_servers_join_df[['Enclosure_Name', 'Server_Slot']].apply(wise_combine, axis=1, args=('Enclosure ', ' slot '))
-
         # rename column to correspond name in portshow_aggregated_df DataFrame
         blade_servers_join_df.rename(columns = {'portWwn': 'Connected_portWwn'}, inplace = True)
-
         # columns with null values to fill
         blade_columns_lst = [
             'Device_Manufacturer', 'Device_Model', 'Device_SN', 'Host_Name', 
             'IP_Address', 'HBA_Description', 'HBA_Model', 'Device_Location'
             ]
-
-
         # fillna portshow_aggregated_df null values with values from blade_servers_join_df
         portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, blade_servers_join_df, ['Connected_portWwn'], blade_columns_lst)
         # fillna null values in Device_Host_Name from Host_Name

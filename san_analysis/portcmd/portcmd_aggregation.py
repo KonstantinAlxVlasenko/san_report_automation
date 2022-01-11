@@ -28,7 +28,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
                         nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
                         ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
                         blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df, 
-                        re_pattern_lst):
+                        pattern_dct):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
@@ -49,7 +49,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
         alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df, portshow_aggregated_df)
     # retrieve storage, host, HBA information from Name Server service and FDMI data
     nsshow_join_df, nsshow_unsplit_df = \
-        nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, re_pattern_lst)
+        nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, pattern_dct)
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = \
         alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
@@ -57,7 +57,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df = zoning_enforcement_join(portshow_aggregated_df, nsportshow_df)
     # fillna portshow_aggregated DataFrame null values with values from blade_servers_join_df
     portshow_aggregated_df = \
-        blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, re_pattern_lst)
+        blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_servers_df, pattern_dct)
     # fillna portshow_aggregated DataFrame null values with values from blade_vc_join_df
     portshow_aggregated_df = \
         blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synergy_module_df)

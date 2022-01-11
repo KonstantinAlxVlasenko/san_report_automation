@@ -47,7 +47,7 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
         
         # concatenate columns with fabric_label connection absence 
         device_connection_statistics_df = \
-            dfop.сoncatenate_columns(device_connection_statistics_df, summary_column='Device_connection_note', 
+            dfop.concatenate_columns(device_connection_statistics_df, summary_column='Device_connection_note', 
                                 merge_columns=[column for *_, column in fabric_connection_verify_columns])
 
         # devices with device_connection note values
@@ -112,7 +112,7 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
             
         # concatenate columns with fabric labels for current note
         device_connection_statistics_df = \
-            dfop.сoncatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
+            dfop.concatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
                                 merge_columns=[column for *_, column in verify_columns])
         
         # add string to summary column
@@ -169,7 +169,7 @@ def add_notes(device_connection_statistics_df, fabric_labels_lst, columns_str):
                 
         # concatenate columns with fabric labels for current note
         device_connection_statistics_df = \
-            dfop.сoncatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
+            dfop.concatenate_columns(device_connection_statistics_df, summary_column=summary_column, 
                                 merge_columns=[column for *_, column in verify_columns])
             
         # add string to summary column

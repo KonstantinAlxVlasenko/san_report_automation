@@ -9,18 +9,7 @@ import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-import utilities.filesystem_operations as fsop
-
-# import pandas as pd
-# import dataframe_operations as dfop
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (
-#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_database import read_db, write_db
+# import utilities.filesystem_operations as fsop
 
 
 def portcmd_extract(chassis_params_df, report_creation_info_lst):
@@ -59,24 +48,13 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
         # collecting data for all switches during looping       
         portshow_lst = []  
         # data imported from init file to extract values from config file
-        portcmd_params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('portcmd', max_title)  
+        # portcmd_params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('portcmd', max_title)  
         
-        # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
-        # checking each chassis for switch level parameters
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('portcmd', max_title)
+        portcmd_params, params_add = dfop.list_from_dataframe(re_pattern_df, 'portcmd_params', 'portcmd_params_add')
         
         # for i, chassis_params_data in enumerate(chassis_params_fabric_lst):
         for i, chassis_params_sr in chassis_params_df.iterrows():           
-            # data unpacking from iter param
-            # dictionary with parameters for the current chassis
-            
-            # chassis_params_data_dct = dict(zip(chassis_columns, chassis_params_data))
-            # sshow_file = chassis_params_data_dct['configname']
-            # chassis_name = chassis_params_data_dct['chassis_name']
-            # chassis_wwn = chassis_params_data_dct['chassis_wwn']
-
-            # sshow_file = chassis_params_sr['configname']
-            # chassis_name = chassis_params_sr['chassis_name']
-            # chassis_wwn = chassis_params_sr['chassis_wwn']
 
             chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
             chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
@@ -105,9 +83,9 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
                             if not line:
                                 break
                             # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                            match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                            # portFcPortCmdShow section start
-                            if match_dct[match_keys[0]]:
+                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                            # portFcPortCmdShow section start pattern #0
+                            if match_dct['slot_port_number']:
                                 # dictionary to store all DISCOVERED parameters
                                 # collecting data only for the chassis in current loop
                                 portcmd_dct = {}
@@ -116,21 +94,21 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
                                 # list to store connected devices port_id and wwn pairs in portlogin section
                                 portid_wwn_lst = []
                                 port_index = None
-                                slot_port_lst = dsop.line_to_list(comp_dct[comp_keys[0]], line)
+                                slot_port_lst = dsop.line_to_list(pattern_dct['slot_port_number'], line)
                                 while not re.search(r'^portshow +(\d{1,4})$',line):
                                     line = file.readline()
                                     if not line:
                                         break
-                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                # portshow section start
-                                if match_dct[match_keys[1]]:
-                                    port_index = match_dct[match_keys[1]].group(1)
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                # portshow section start pattern #1
+                                if match_dct['port_index']:
+                                    port_index = match_dct['port_index'].group(1)
                                     while not re.search(fr'^portloginshow +{int(port_index)}$', line):
                                         line = file.readline()
-                                        match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                        # portshow_params_match
-                                        if match_dct[match_keys[2]]:
-                                            portshow_attr, = comp_dct[comp_keys[2]].findall(line)
+                                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                        # portshow_params_match pattern #2
+                                        if match_dct['portshow_params']:
+                                            portshow_attr, = pattern_dct['portshow_params'].findall(line)
                                             # portstate parameter has special processing rule
                                             if portshow_attr[0] == 'portState':
                                                 portcmd_dct['portState'] = portshow_attr[2]
@@ -139,18 +117,18 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
                                             else:
                                                 for k, v in zip(portshow_attr[::2], portshow_attr[1::2]):
                                                     portcmd_dct[k] = v
-                                        # portscn_match has two parameter name and value pairs
-                                        if match_dct[match_keys[6]]:
-                                            portscn_line = dsop.line_to_list(comp_dct[comp_keys[6]], line)
+                                        # portscn_match has two parameter name and value pairs pattern #6
+                                        if match_dct['portscn']:
+                                            portscn_line = dsop.line_to_list(pattern_dct['portscn'], line)
                                             for k, v in zip(portscn_line[::2], portscn_line[1::2]):
                                                 portcmd_dct[k] = v
-                                        # portdistance_match
-                                        if match_dct[match_keys[7]]:
-                                            portdistance_line = dsop.line_to_list(comp_dct[comp_keys[7]], line)
+                                        # portdistance_match pattern #7
+                                        if match_dct['portdistance']:
+                                            portdistance_line = dsop.line_to_list(pattern_dct['portdistance'], line)
                                             portcmd_dct[portdistance_line[0]] = portdistance_line[1]
-                                        # device_connected_wwn_match
-                                        if match_dct[match_keys[8]]:
-                                            connected_wwn = dsop.line_to_list(comp_dct[comp_keys[8]], line)
+                                        # device_connected_wwn_match pattern #7
+                                        if match_dct['device_connected_wwn']:
+                                            connected_wwn = dsop.line_to_list(pattern_dct['device_connected_wwn'], line)
                                             connected_wwn_lst.append((portcmd_dct.get('portId'), connected_wwn))
                                         if not line:
                                             break
@@ -160,11 +138,11 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
 
                                     while not re.search(fr'^portregshow +{int(port_index)}$', line):
                                         line = file.readline()
-                                        match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                        # connected_wwn_match
-                                        if match_dct[match_keys[3]]:
+                                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                        # connected_wwn_match pattern #3
+                                        if match_dct['login_connected_wwn']:
                                             # first value in tuple unpacking is fe or fd and not required
-                                            _, port_id, wwn = dsop.line_to_list(comp_dct[comp_keys[3]], line)
+                                            _, port_id, wwn = dsop.line_to_list(pattern_dct['login_connected_wwn'], line)
                                             # port_id = '0x' + port_id
                                             portid_wwn_lst.append((port_id, wwn))
                                         if not line:
@@ -188,13 +166,13 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
                                 if re.match(fr'^portstatsshow +{int(port_index)}$', line):
                                     while not re.search(fr'^(portstats64show|portcamshow) +{int(port_index)}$', line):
                                         line = file.readline()
-                                        match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
-                                        # port information without virtual channel numbers
-                                        if match_dct[match_keys[4]]:
-                                            portcmd_dct[match_dct[match_keys[4]].group(1).rstrip()] = match_dct[match_keys[4]].group(2)
-                                        # port information with virtual channel numbers
-                                        elif match_dct[match_keys[5]]:
-                                            line_values = dsop.line_to_list(comp_dct[comp_keys[5]], line)
+                                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                        # port information without virtual channel numbers pattern #4
+                                        if match_dct['portstats']:
+                                            portcmd_dct[match_dct['portstats'].group(1).rstrip()] = match_dct['portstats'].group(2)
+                                        # port information with virtual channel numbers pattern #5
+                                        elif match_dct['portstats_vc']:
+                                            line_values = dsop.line_to_list(pattern_dct['portstats_vc'], line)
                                             param_name, start_vc = line_values[0:2]
                                             for i, value in enumerate(line_values[3:]):
                                                 param_name_vc = param_name + '_' + str(int(start_vc) + i)
@@ -220,10 +198,15 @@ def portcmd_extract(chassis_params_df, report_creation_info_lst):
                     # sshow_port section end                            
             meop.status_info('ok', max_title, len(info))
         # convert list to DataFrame
-        portshow_df = dfop.list_to_dataframe(portshow_lst, max_title, sheet_title_import='portcmd')
-        # saving data to csv file
-        data_lst = [portshow_df]
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'portcmd_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, portshow_lst)
+        portshow_df, *_ = data_lst
+
+        # portshow_df = dfop.list_to_dataframe(portshow_lst, max_title, sheet_title_import='portcmd')
+        # # saving data to csv file
+        # data_lst = [portshow_df]
         # save_data(report_constant_lst, data_names, *data_lst)
+        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)      
     # verify if loaded data is empty after first iteration and replace information string with empty list

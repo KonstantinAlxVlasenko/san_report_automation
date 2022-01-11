@@ -11,18 +11,6 @@ import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
 
-# import dataframe_operations as dfop
-# import pandas as pd
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (
-#     force_extract_check, line_to_list, status_info, update_dct, verify_data)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_miscellaneous import verify_force_run
-# from common_operations_dataframe import list_to_dataframe
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
-
 def zoning_extract(switch_params_df, report_creation_info_lst):
     """Function to extract zoning information"""
 
@@ -55,7 +43,8 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
         switch_num = len(switch_params_df.index)   
          
         # data imported from init file to extract values from config file
-        *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('zoning', max_title)  
+        # *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('zoning', max_title)
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('zoning', max_title) 
         
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping
@@ -69,14 +58,6 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
 
         # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():       
-            
-            # # data unpacking from iter param
-            # # dictionary with parameters for the current switch
-            # switch_params_data_dct = dict(zip(switch_columns, switch_params_data))
-            # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
-            #                     'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
-            # switch_info_lst = [switch_params_data_dct[key] for key in switch_info_keys]
-            # ls_mode_on = True if switch_params_data_dct['LS_mode'] == 'ON' else False
             
             switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
                                 'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
@@ -103,7 +84,7 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                         if not line:
                             break
                         # cfgshow section start
-                        if re.search(comp_dct[comp_keys[0]], line) and not collected['cfgshow']:
+                        if re.search(pattern_dct['switchcmd_cfgshow'], line) and not collected['cfgshow']:
                             # when section is found corresponding collected dict values changed to True
                             collected['cfgshow'] = True
                             # control flag to check if Effective configuration line passed
@@ -116,15 +97,15 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                     if not line:
                                         break    
                             # switchcmd_end_comp
-                            while not re.search(comp_dct[comp_keys[4]], line):                               
+                            while not re.search(pattern_dct['switchcmd_end'], line):                               
                                 # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                                 # if Effective configuration line passed
-                                if match_dct[match_keys[7]]:
+                                if match_dct['effective']:
                                     effective = True                                     
                                 # 'cfg_match'
-                                if match_dct[match_keys[1]]:
-                                    cfg_line = dsop.line_to_list(comp_dct[comp_keys[1]], line)
+                                if match_dct['cfg']:
+                                    cfg_line = dsop.line_to_list(pattern_dct['cfg'], line)
                                     # zoning config name
                                     cfg_name = cfg_line[0]
                                     # add config name to the set
@@ -141,17 +122,17 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                     # switch to the next line to enter the loop
                                     line = file.readline()
                                     # zoning_switchcmd_end_comp separates different configs, zones and aliases 
-                                    while not re.search(comp_dct[comp_keys[3]], line):
+                                    while not re.search(pattern_dct['zoning_switchcmd_end'], line):
                                         # find all zone names in line
-                                        members_lst = re.findall(comp_dct[comp_keys[2]], line)
+                                        members_lst = re.findall(pattern_dct['zones'], line)
                                         for member in members_lst:
                                             cfg_lst.append([*principal_switch_lst, cfg_name, member.rstrip(';')])
                                         line = file.readline()
                                         if not line:
                                             break
                                 # 'zone_match'
-                                elif match_dct[match_keys[5]]:
-                                    zone_line = dsop.line_to_list(comp_dct[comp_keys[5]], line)
+                                elif match_dct['zone']:
+                                    zone_line = dsop.line_to_list(pattern_dct['zone'], line)
                                     zone_name = zone_line[0]
                                     # if line contains zone name and zone member
                                     if zone_line[1]:
@@ -165,8 +146,8 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                                 zone_effective_lst.append([*principal_switch_lst, zone_name, member])
                                     line = file.readline()
                                     # zoning_switchcmd_end_comp separates different configs, zones and aliases
-                                    while not re.search(comp_dct[comp_keys[3]], line):
-                                        members_lst = re.findall(comp_dct[comp_keys[2]], line)
+                                    while not re.search(pattern_dct['zoning_switchcmd_end'], line):
+                                        members_lst = re.findall(pattern_dct['zones'], line)
                                         for member in members_lst:
                                             # for Defined configuration add zones to zone_lst
                                             if not effective:
@@ -178,8 +159,8 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                         if not line:
                                             break
                                 # 'alias_match'
-                                elif match_dct[match_keys[6]]:
-                                    alias_line = dsop.line_to_list(comp_dct[comp_keys[6]], line)
+                                elif match_dct['alias']:
+                                    alias_line = dsop.line_to_list(pattern_dct['alias'], line)
                                     alias_name = alias_line[0]
                                     # if line contains alias name and alias member
                                     if alias_line[1]:
@@ -188,8 +169,8 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                             alias_lst.append([*principal_switch_lst, alias_name, member])
                                     line = file.readline()
                                     # zoning_switchcmd_end_comp separates different configs, zones and aliases
-                                    while not re.search(comp_dct[comp_keys[3]], line):
-                                        member_lst = re.findall(comp_dct[comp_keys[2]], line)
+                                    while not re.search(pattern_dct['zoning_switchcmd_end'], line):
+                                        member_lst = re.findall(pattern_dct['zones'], line)
                                         for member in member_lst:
                                             alias_lst.append([*principal_switch_lst, alias_name, member.rstrip(';')])
                                         line = file.readline()
@@ -203,7 +184,7 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                     break
                         # cfgshow section end
                         # peerzone section start
-                        elif re.search(comp_dct[comp_keys[8]], line) and not collected['peerzone']:
+                        elif re.search(pattern_dct['switchcmd_zonehow'], line) and not collected['peerzone']:
                             # when section is found corresponding collected dict values changed to True
                             collected['peerzone'] = True
                             # control flag to check if Effective configuration line passed
@@ -214,25 +195,25 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                     if not line:
                                         break
                             # switchcmd_end_comp
-                            while not re.search(comp_dct[comp_keys[4]], line):
+                            while not re.search(pattern_dct['switchcmd_end'], line):
                                 # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}                              
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}                              
                                 # if Effective configuration line passed
-                                if match_dct[match_keys[7]]:
+                                if match_dct['effective']:
                                     peerzone_effective = True                                     
                                 # 'zone_match'
-                                if match_dct[match_keys[5]]:
-                                    zone_line = dsop.line_to_list(comp_dct[comp_keys[5]], line)
+                                if match_dct['zone']:
+                                    zone_line = dsop.line_to_list(pattern_dct['zone'], line)
                                     zone_name = zone_line[0]
                                     line = file.readline()
                                     # zoning_switchcmd_end_comp separates different zones
-                                    while not re.search(comp_dct[comp_keys[3]], line):
+                                    while not re.search(pattern_dct['zoning_switchcmd_end'], line):
                                         # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                        match_dct ={match_key: comp_dct[comp_key].match(line) for comp_key, match_key in zip(comp_keys, match_keys)}  
+                                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}  
                                         # peerzone_property_match
-                                        if match_dct[match_keys[9]]:
+                                        if match_dct['peerzone_property']:
                                             # peerzone_property is tuple. contains property member ot created by info
-                                            peerzone_property = match_dct[match_keys[9]].groups()
+                                            peerzone_property = match_dct['peerzone_property'].groups()
                                             zonemember = [*principal_switch_lst, zone_name, *peerzone_property]
                                             # for Effective configuration add member to peerzone_effective_lst
                                             if peerzone_effective:
@@ -242,13 +223,13 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                                                 peerzone_lst.append(zonemember)
                                             line = file.readline()
                                         # peerzone_member_type_match (principal or peer)
-                                        elif match_dct[match_keys[10]]:
-                                            member_type = match_dct[match_keys[10]].group(1)
+                                        elif match_dct['peerzone_member_type']:
+                                            member_type = match_dct['peerzone_member_type'].group(1)
                                             line = file.readline()
                                             # peerzone_member_end_comp separates peer and principals groups
-                                            while not re.search(comp_dct[comp_keys[11]], line):
+                                            while not re.search(pattern_dct['peerzone_member_end'], line):
                                                 # find zonemembers
-                                                members_lst = re.findall(comp_dct[comp_keys[2]], line)
+                                                members_lst = re.findall(pattern_dct['zones'], line)
                                                 for member in members_lst:
                                                     # for Defined configuration add zones to zone_lst
                                                     zonemember = [*principal_switch_lst, zone_name, member_type, member.rstrip(';')]
@@ -278,16 +259,25 @@ def zoning_extract(switch_params_df, report_creation_info_lst):
                 meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
-        cfg_df = dfop.list_to_dataframe(cfg_lst, max_title, sheet_title_import='zoning')
-        zone_df = dfop.list_to_dataframe(zone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_columns')
-        alias_df = dfop.list_to_dataframe(alias_lst, max_title, sheet_title_import='zoning', columns_title_import = 'alias_columns')
-        cfg_effective_df = dfop.list_to_dataframe(cfg_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'cfg_effective_columns')
-        zone_effective_df = dfop.list_to_dataframe(zone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_effective_columns')
-        peerzone_df = dfop.list_to_dataframe(peerzone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_columns')
-        peerzone_effective_df = dfop.list_to_dataframe(peerzone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_effective_columns')
-        # saving data to csv file
-        data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
-        # save_data(report_constant_lst, data_names, *data_lst)
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'cfg_columns', 'zone_columns', 'alias_columns',
+                                                                'cfg_effective_columns', 'zone_effective_columns',
+                                                                'peerzone_columns', 'peerzone_effective_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, cfg_lst, zone_lst, alias_lst, 
+                                                        cfg_effective_lst, zone_effective_lst,
+                                                        peerzone_lst, peerzone_effective_lst)
+        cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df, *_ = data_lst
+
+        # cfg_df = dfop.list_to_dataframe(cfg_lst, max_title, sheet_title_import='zoning')
+        # zone_df = dfop.list_to_dataframe(zone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_columns')
+        # alias_df = dfop.list_to_dataframe(alias_lst, max_title, sheet_title_import='zoning', columns_title_import = 'alias_columns')
+        # cfg_effective_df = dfop.list_to_dataframe(cfg_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'cfg_effective_columns')
+        # zone_effective_df = dfop.list_to_dataframe(zone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'zone_effective_columns')
+        # peerzone_df = dfop.list_to_dataframe(peerzone_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_columns')
+        # peerzone_effective_df = dfop.list_to_dataframe(peerzone_effective_lst, max_title, sheet_title_import='zoning', columns_title_import = 'peerzone_effective_columns')
+        # # saving data to csv file
+        # data_lst = [cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df]
+        # # save_data(report_constant_lst, data_names, *data_lst)
+        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 

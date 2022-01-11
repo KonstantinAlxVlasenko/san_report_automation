@@ -14,7 +14,7 @@ import utilities.dataframe_operations as dfop
 
 # from common_operations_dataframe import сoncatenate_columns
 
-def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, re_pattern_lst):
+def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, pattern_dct):
     """Function to add notes to isl_statistics_df DataFrame"""
 
     if not 'XISL' in isl_statistics_df.columns:
@@ -91,9 +91,9 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         # replace pd.NA with np.nan
         nonuniformity_notes_df.fillna(np.nan, inplace=True)
         # merge logically related note columns
-        nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
+        nonuniformity_notes_df = dfop.concatenate_columns(nonuniformity_notes_df, 
                                                   summary_column='Transceiver_nonuniformity_note', merge_columns=note_columns[3:5])
-        nonuniformity_notes_df = dfop.сoncatenate_columns(nonuniformity_notes_df, 
+        nonuniformity_notes_df = dfop.concatenate_columns(nonuniformity_notes_df, 
                                                   summary_column='Portcfg_nonuniformity_note', merge_columns=note_columns[5:])
         # drop columns with unique values quantity
         nonuniformity_notes_df.drop(columns=count_columns, inplace=True)
@@ -105,16 +105,16 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         return isl_statistics_df
     
     
-    def speed_note(isl_statistics_df, re_pattern_lst):
+    def speed_note(isl_statistics_df, pattern_dct):
         """Function to verify ISL speed value and mode. Adds note if speed is in auto mode,
         speed is low (1-4 Gbps) or reduced (lower then port could provide), speed is not uniform
         for all links between pair of switches"""
 
         # regular expression patterns
-        comp_keys, _, comp_dct = re_pattern_lst
+        # comp_keys, _, comp_dct = re_pattern_lst
 
         # low speed note
-        low_speed_regex = comp_dct.get('low_speed')
+        low_speed_regex = pattern_dct['low_speed']
         # low_speed_regex = r'^N?[124]G?$' # 1G, N1, 2G, N2, 4G, N4 # TO_REMOVE
         low_speed_columns = [column for column in isl_statistics_df.columns if re.search(low_speed_regex, column)]
         # if low speed port present 
@@ -138,7 +138,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
             isl_statistics_df['Speed_auto_note'] = np.where(mask_speed_auto & mask_not_xisl_only, 'auto_speed', pd.NA)
         
         speed_note_columns = ['Speed_auto_note', 'Speed_low_note', 'Speed_reduced_note', 'Speed_Gbps_nonuniformity_note']
-        isl_statistics_df = dfop.сoncatenate_columns(isl_statistics_df, summary_column='Speed_note', merge_columns=speed_note_columns, drop_merge_columns=True)
+        isl_statistics_df = dfop.concatenate_columns(isl_statistics_df, summary_column='Speed_note', merge_columns=speed_note_columns, drop_merge_columns=True)
         
         return isl_statistics_df
     
@@ -146,7 +146,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
     isl_statistics_df = connection_note(isl_statistics_df)
     
     isl_statistics_df = nonuniformity_note(isl_statistics_df, isl_aggregated_modified_df)
-    isl_statistics_df = speed_note(isl_statistics_df, re_pattern_lst)
+    isl_statistics_df = speed_note(isl_statistics_df, pattern_dct)
     isl_statistics_df.fillna(np.nan, inplace=True)
 
     if (isl_statistics_df['XISL'] == 0).all():

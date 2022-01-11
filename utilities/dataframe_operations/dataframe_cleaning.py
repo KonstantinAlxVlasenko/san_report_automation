@@ -5,6 +5,7 @@ import numpy as np
 
 from .dataframe_presentation import move_column
 
+
 def drop_column_if_all_na(df, columns: list):
     """Function to drop columns if all values are nan"""
 
@@ -128,10 +129,12 @@ def remove_duplicates_from_string(df, *args, sep=', '):
 
 
 def remove_value_from_string(df, removed_value: str, *args, sep=', '):
-    """Function to remove removed_value from strings in column"""
+    """Function to remove removed_value from strings in columns (args)"""
 
     for column in args:
         if df[column].notna().any():
             df[column].replace(f'{removed_value}(?:{sep})?', value='', regex=True, inplace=True)
             df[column] = df[column].str.rstrip(sep)
     return df
+
+
