@@ -73,7 +73,7 @@ def verify_isl_cfg_equality(isl_aggregated_df):
                     'Locked_E_Port', 'ISL_R_RDY_Mode',	'RSCN_Suppressed', 
                     'LOS_TOV_mode', 'QOS_Port', 'Rate_Limit', 
                     'Credit_Recovery', 'Compression', 'Encryption', '10G/16G_FEC', 
-                    'Fault_Delay', 'TDZ_mode', 'Fill_Word(Current)', 'FEC', 'Wavelength_nm']
+                    'Fault_Delay', 'TDZ_mode', 'Fill_Word(Current)', 'FEC', 'Wavelength_nm', 'Distance']
 
     for cfg in cfg_columns:
         # column names with current main port and connected port configuration parameter of the switch

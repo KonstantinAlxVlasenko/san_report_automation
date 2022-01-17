@@ -49,6 +49,9 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
         # list containing virtual connect ports information for all blade systems
         blade_vc_comprehensive_lst = []
 
+        pattern_dct, re_pattern_df = sfop.regex_pattern_import('blades', max_title)
+        enclosure_params, module_params, blade_params = dfop.list_from_dataframe(re_pattern_df, 'enclosure_params', 'module_params', 'blade_params')
+
         if blade_folder:    
             print('\nEXTRACTING BLADES SYSTEM INFORMATION ...\n')   
             
@@ -71,8 +74,7 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                 # module_params = sfop.columns_import('blades', max_title, 'module_params')
                 # blade_params = sfop.columns_import('blades', max_title, 'blade_params')
 
-                pattern_dct, re_pattern_df = sfop.regex_pattern_import('blades', max_title)
-                enclosure_params, module_params, blade_params = dfop.list_from_dataframe(re_pattern_df, 'enclosure_params', 'module_params', 'blade_params')
+
 
                 for i, blade_config in enumerate(blade_configs_lst):       
                     # file name with extension
@@ -353,16 +355,19 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
                             meop.status_info('ok', max_title, len(info))
                         else:
                             meop.status_info('no data', max_title, len(info))    
+        
         else:
             # current operation information string
             info = f'Collecting enclosure, interconnect modules, blade servers, hba'
             print(info, end =" ")
             meop.status_info('skip', max_title, len(info))
 
+
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'enclosure_columns', 'blade_columns', 'blade_vc_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
-        blade_module_df, blade_servers_df, blade_vc_df, *_ = data_lst  
+        blade_module_df, blade_servers_df, blade_vc_df, *_ = data_lst 
+
 
         # blade_module_df = dfop.list_to_dataframe(module_comprehensive_lst, max_title, sheet_title_import='blades')
         # blade_servers_df = dfop.list_to_dataframe(blades_comprehensive_lst, max_title, sheet_title_import='blades', columns_title_import='blade_columns')

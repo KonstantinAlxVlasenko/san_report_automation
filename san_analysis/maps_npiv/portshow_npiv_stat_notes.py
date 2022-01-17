@@ -194,11 +194,17 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, patte
         mask_multiple_connection = npiv_statistics_df.groupby(by=['Fabric_name', 'Fabric_label', 'NodeName'])['NodeName'].transform('count') > 1
         mask_nodename_notna = npiv_statistics_df['NodeName'].notna()
         npiv_statistics_df.loc[mask_multiple_connection & mask_nodename_notna, 'NPIV_multiple_sw_connection_note'] = 'npiv_multiple_switch_connection'
+        # find multiple switch names
+        npiv_statistics_df.loc[mask_multiple_connection, 'Connected_switch_names_note'] = \
+            npiv_statistics_df.groupby(by=['Fabric_name', 'Fabric_label', 'NodeName'])['switchName'].transform(lambda x: '(' + ', '.join(x) + ')')
+
         return npiv_statistics_df
     
     # add notes to npiv_statistics_df DataFrame
     npiv_statistics_df = connection_note(npiv_statistics_df)
     npiv_statistics_df = multiple_sw_conn_note(npiv_statistics_df)
+
+
     npiv_statistics_df = single_vc_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = nonuniformity_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = speed_note(npiv_statistics_df, pattern_dct)

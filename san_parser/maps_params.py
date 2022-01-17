@@ -143,9 +143,11 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'maps_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, maps_params_fabric_lst)
         maps_params_fabric_df, *_ = data_lst
+        
         # saving data to csv file
         # data_lst = [maps_params_fabric_df]
         # save_data(report_constant_lst, data_names, *data_lst)
+        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)    
     # verify if loaded data is empty after first iteration and replace information string with empty list

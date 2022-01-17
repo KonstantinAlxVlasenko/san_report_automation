@@ -64,8 +64,17 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
                 return pd.Series(('SWITCH', series.subtype))
             elif series['Device_type'] == "Physical Unknown(initiator/target)":
                 return pd.Series(('SWITCH', series.subtype))
+            # when device behind NPIV port
+            elif series['Connected_portId'][4:5] != '00':
+                return pd.Series(('SRV', series.subtype))
             else:
                 return pd.Series(('SRV', series.subtype))
+
+        elif 'STORAGE|SWITCH' in series['type']:
+            if series['Device_type'] == 'Physical Unknown(initiator/target)':
+                return pd.Series(('SWITCH', series.subtype))
+            elif series['Device_type'] == 'Physical Initiator+Target':
+                return pd.Series(('STORAGE', series.subtype))           
 
         # check StoreOnce and D2D devices
         elif pd.notna(series.Device_Model) and 'storeonce' in series['Device_Model'].lower():

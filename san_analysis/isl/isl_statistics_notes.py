@@ -81,7 +81,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         for count_column, note_column in zip(count_columns, note_columns):
             # mask if number of unique values in count_columns exceeds one
             mask_nonuniformity = nonuniformity_notes_df[count_column] > 1
-            if count_column in count_columns[:4]:
+            if count_column in count_columns[:3]:
                 note = count_column.lower() + '_nonuniformity'
             else:
                 note = count_column.lower()

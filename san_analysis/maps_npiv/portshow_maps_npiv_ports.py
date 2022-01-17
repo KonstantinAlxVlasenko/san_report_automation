@@ -39,12 +39,6 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
     # reade data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
 
-
-    # # unpacking DataFrames from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_connection_statistics_df, \
-    #     maps_ports_report_df, npiv_report_df, npiv_statistics_report_df, sw_connection_statistics_report_df = data_lst
-
     # list of data to analyze from report_info table
     analyzed_data_names = ['portshow_aggregated', 'portshow_sfp_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
                             'switchshow_ports', 'switch_params_aggregated', 'maps_parameters', 'fdmi', 
@@ -184,6 +178,10 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     # npiv statistics report
     npiv_statistics_report_df = dfop.statistics_report(npiv_statistics_df, report_headers_df, 'Статистика_ISL_перевод', 
                                                     report_columns_usage_dct, drop_columns=['switchWwn', 'NodeName'])
+    # add switch names if NPIV device connected to multiple switches
+    npiv_statistics_report_df = dfop.merge_columns(npiv_statistics_report_df, summary_column='Примечание. Подключение NPIV устройства к нескольким коммутаторам',
+                                                    merge_columns=['Примечание. Подключение NPIV устройства к нескольким коммутаторам', 'Connected_switch_names_note'],
+                                                    sep=' ')
     # remove zeroes to clean view
     dfop.drop_zero(npiv_statistics_report_df)
     

@@ -9,14 +9,6 @@ import utilities.module_execution as meop
 # import utilities.servicefile_operations as sfop
 # import utilities.filesystem_operations as fsop
 
-# from common_operations_database import read_db, write_db
-# from common_operations_dataframe_presentation import (drop_all_identical,
-#                                                       drop_equal_columns,
-#                                                       drop_zero,
-#                                                       translate_dataframe)
-# from common_operations_miscellaneous import (status_info, verify_data,
-#                                              verify_force_run)
-# from common_operations_table_report import dataframe_to_report
 
 from .port_statistics_aggregation import port_statisctics_aggregated
 

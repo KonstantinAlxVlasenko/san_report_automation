@@ -18,6 +18,9 @@ def concatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', 
     df['separator_symbol'] = sep
     merge_columns = [column for column in merge_columns if column in df.columns]
     
+    if not merge_columns:
+        return df
+
     for column in merge_columns:
         # value in summary column is empty
         mask_summary_note_empty = df[summary_column].isna()
@@ -40,12 +43,16 @@ def concatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', 
 
 def merge_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
     """Function to concatenate values in several columns (merge_columns) into summary_column 
-    as comma separated values"""
+    with separator. If drop flag is True all merged columns except summary column are dropped"""
     
+    merge_columns = [column for column in merge_columns if column in df.columns]
+    if not merge_columns:
+        return df
     df[summary_column] = df[merge_columns].stack().groupby(level=0).agg(sep.join)
     # drop merge_columns
     if drop_merge_columns:
-        df.drop(columns=merge_columns, inplace=True)
+        drop_columns = [column for column in merge_columns if column != summary_column]
+        df.drop(columns=drop_columns, inplace=True)
     return df
 
 
