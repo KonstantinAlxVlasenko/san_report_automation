@@ -129,6 +129,8 @@ def sort_cell_values(df, *args, sep=', '):
     for column in args:
         mask_notna = df[column].notna()
         df[column] = df.loc[mask_notna, column].str.split(sep).apply(sorted).str.join(sep).str.strip(',')
+    
+    return df
 
 
 # auxiliary lambda function to combine two columns in DataFrame

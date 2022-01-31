@@ -57,8 +57,18 @@ def import_service_dataframes(max_title):
     print(f'\n\nPREREQUISITES 1. IMPORTING STEPS AND TABLES RELATED INFORMATION\n')
 
     project_steps_df = sfop.dataframe_import('service_tables', max_title, init_file = 'report_info.xlsx')
+    # replace all nan values with 0 and all notna values (except 0) with 1
+    project_steps_df.fillna({'export_to_excel': 0, 'force_extract': 0}, inplace=True)
+    for column in ['export_to_excel', 'force_extract']: 
+        mask_force_run = project_steps_df[column].notna() & ~project_steps_df[column].isin([0, '0'])
+        project_steps_df.loc[mask_force_run, column] = 1
+
     numeric_columns = ['export_to_excel', 'force_extract', 'sort_weight']
     project_steps_df[numeric_columns] = project_steps_df[numeric_columns].apply(pd.to_numeric, errors='ignore')
+
+    # print(project_steps_df[numeric_columns])
+    # mask_report_type = project_steps_df['report_type'] == 'report'
+    # print(project_steps_df.loc[mask_report_type, numeric_columns])
 
     info = "Global export report key"
     print(info, end =" ") 
@@ -71,6 +81,10 @@ def import_service_dataframes(max_title):
         meop.status_info('on', max_title, len(info))
     else:
         meop.status_info('off', max_title, len(info))
+
+    
+    # print(project_steps_df.loc[mask_report_type, numeric_columns])
+    # exit()
 
     report_steps_dct = dfop.dct_from_dataframe(project_steps_df, 'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', 'description')
 

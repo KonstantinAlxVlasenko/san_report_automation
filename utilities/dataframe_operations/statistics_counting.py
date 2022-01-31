@@ -43,7 +43,8 @@ def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_
             statistics_df = statistics_df.merge(current_statistics_df, how='left', 
                                                 left_index=True, right_index=True)
     
-    statistics_df.drop(columns=['tmp'], inplace=True)
+    if 'tmp' in statistics_df.columns:
+        statistics_df.drop(columns=['tmp'], inplace=True)
     statistics_df.reset_index(inplace=True)
     return statistics_df
 
@@ -235,7 +236,7 @@ def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabr
         print('Parameters count_columns and margin_column_row in count_frequency function have different length')
         exit()
 
-    index_lst = [df[column] for column in group_columns if column in df.columns]
+    index_lst = [df[column] for column in group_columns if column in df.columns and df[column].notna().any()]
     frequency_df = pd.DataFrame()
 
     for column, (margin_column, margin_row) in zip(count_columns, margin_column_row):

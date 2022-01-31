@@ -63,3 +63,9 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     return df[seg1 + seg2 + seg3].copy()
 
 
+def verify_columns_in_dataframe(df, columns):
+    """Function to verify if columns are in DataFrame"""
+
+    if not isinstance(columns, list):
+        columns = [columns]
+    return set(columns).issubset(df.columns)

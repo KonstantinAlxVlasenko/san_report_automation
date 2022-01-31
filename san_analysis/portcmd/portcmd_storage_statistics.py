@@ -45,12 +45,15 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
     # add corresponding tag to index
     component_level_lst = ['Controller', 'Slot', 'Port', 'Port_parity']    
     for column in component_level_lst:
-        mask_notna = storage_ports_df[column].notna()
-        storage_ports_df.loc[mask_notna, column] = column + '_' + storage_ports_df.loc[mask_notna, column]
-        
+        mask_column_notna = storage_ports_df[column].notna()
+        if mask_column_notna.any():
+            storage_ports_df.loc[mask_column_notna, column] = column + '_' + storage_ports_df.loc[mask_column_notna, column]
     # create controller slot column to count statistics for each controller's slot individually
     mask_controller_slot = storage_ports_df[['Controller', 'Slot']].notna().all(axis=1)
-    storage_ports_df.loc[mask_controller_slot, ['Controller_Slot']] = storage_ports_df['Controller'] + ' - ' + storage_ports_df['Slot']
+    if mask_controller_slot.any():
+        storage_ports_df.loc[mask_controller_slot, ['Controller_Slot']] = storage_ports_df['Controller'] + ' - ' + storage_ports_df['Slot']
+    else:
+        storage_ports_df['Controller_Slot'] = np.nan
 
     # create storage column to count summary statistics for all storage ports
     storage_ports_df['Storage'] = 'Storage ' + storage_ports_df['Device_Host_Name']
@@ -73,7 +76,7 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
                 storage_ports_cp_df = storage_ports_df.copy()
                 if sublevel_suffix == component_sublevel_suffix_lst[0]:
                     storage_ports_cp_df.drop_duplicates(subset=storage_columns[:-2], inplace=True)
-
+                
                 group_columns = ['deviceSubtype', 'Device_Host_Name', sublevel]
                 current_df = dfop.count_frequency(storage_ports_cp_df, count_columns=['Fabric'], 
                                             group_columns=group_columns, margin_column_row=[(True, False)])
@@ -129,11 +132,16 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
         mask_valid = ~(mask_not_3par & mask_physical_virtual & ~mask_device_type)
         storage_connection_statistics_df = storage_connection_statistics_df.loc[mask_valid]
 
-        # drop 'physical_virtual' rows for Groups where no virtual port ligin detected
+        # drop 'physical_virtual' rows for Groups where no virtual port login detected
         storage_stat_columns = storage_connection_statistics_df.columns.tolist()
         for column in ['Device_Host_Name_duplicates_free', 'FLOGI']:
             storage_stat_columns.remove(column)
         storage_connection_statistics_df.drop_duplicates(subset=storage_stat_columns, inplace=True)
+        
+        # drop rows with empty Group_level (Port group type)
+        # if Group_level is empty then this group show stats for strorage level and thus excessive 
+        mask_group_type_notna = storage_connection_statistics_df['Group_level'].notna()
+        storage_connection_statistics_df = storage_connection_statistics_df.loc[mask_group_type_notna].copy()
 
     return storage_connection_statistics_df
 
