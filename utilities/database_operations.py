@@ -104,7 +104,7 @@ def write_sql(db_path, data_name, df, max_title, info):
         try:
             conn = sqlite3.connect(db_path)
             df.to_sql(name=data_name, con=conn, index=keep_index, if_exists='replace')
-        except pd.io.sql.DatabaseError as e:
+        except (pd.io.sql.DatabaseError, sqlite3.OperationalError) as e:
             status = status_info('fail', max_title, len(info))
             if 'database is locked' in e.args[0]:
                 print(f"\nCan't write {data_name} to {os.path.basename(db_path)}. DB is locked. Close it to proceed.\n")
@@ -203,3 +203,11 @@ def verify_read_data(report_constant_lst, data_names, *args,  show_status=True):
 
         verified_data_lst.append(data_verified)
     return verified_data_lst
+
+
+def is_dataframe_empty(data_verified):
+
+    first_row = data_verified.iloc[0]
+    return (len(data_verified.index) == 1 and # have single row
+        first_row.nunique() == 1 and # have single unique value
+        'NO DATA FOUND' in data_verified.values) # and this value is 'NO DATA FOUND'

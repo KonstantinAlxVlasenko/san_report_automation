@@ -12,6 +12,7 @@ from .storage_host import storage_host_analysis
 from .sensor import sensor_analysis
 from .port_statistics import port_statistics_analysis
 from .errdump import errdump_analysis
+from .switch_pair import switch_pair_analysis
 
 
 def system_configuration_analysis(extracted_configuration_lst, report_creation_info_lst):
@@ -53,6 +54,8 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
                                 ag_principal_df, porttrunkarea_df, alias_df, fdmi_df, blade_module_df, 
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, report_creation_info_lst)
+
+    switch_pair_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)
 
     portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_df, 
                                                                 sfpshow_df, portcfgshow_df, isl_statistics_df, report_creation_info_lst)

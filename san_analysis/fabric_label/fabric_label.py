@@ -11,23 +11,6 @@ import utilities.module_execution as meop
 from .fabric_label_auto import auto_fabrics_labeling
 from .fabric_label_manual import manual_fabrics_labeling
 
-# import numpy as np
-
-
-
-# import utilities.data_structure_operations as dsop
-
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (reply_request, status_info,
-#                                              verify_data, verify_force_run)
-
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
 
 def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, report_creation_info_lst):
     """Function to set Fabric labels"""

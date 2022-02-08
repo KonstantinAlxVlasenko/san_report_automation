@@ -18,16 +18,6 @@ import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
 
-# from common_operations_database import read_db, write_db
-# from common_operations_dataframe import wise_combine
-# from common_operations_filesystem import find_files, load_data, save_data
-# from common_operations_miscellaneous import (force_extract_check, line_to_list,
-#                                              status_info, update_dct,
-#                                              verify_data, verify_force_run)
-# from common_operations_servicefile import columns_import, data_extract_objects
-# from common_operations_table_report import dataframe_to_report
-
-
 def synergy_system_extract(report_entry_sr, report_creation_info_lst):
     """Function to extract blade systems information"""
     

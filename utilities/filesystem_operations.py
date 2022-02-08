@@ -89,4 +89,29 @@ def find_files(folder, max_title, filename_contains='', filename_extension=''):
     return files_lst
 
 
+def check_file_is_closed(file_path, show_error=True):
+    """Function to verify if file is closed. Works for Windows only.
+    The OSError generates when the rename() function is called more than one time 
+    for a file that is opened already."""    
+    
+    if os.path.exists(file_path):
+        try:
+            # Call the rename function for the first time
+            os.rename(file_path, file_path)
+            # Call the rename function for the second time
+            os.rename(file_path, file_path)
+            return True
+        # Raise error if the file has opened
+        except OSError:
+            if show_error:
+                file_name = os.path.basename(file_path)
+                print(f"File {file_name} is still opened.")
+            return False
+    else:
+        if show_error:
+            # Print message if the file does not exist
+            print("File does not exist.")
+        return True
+
+
          

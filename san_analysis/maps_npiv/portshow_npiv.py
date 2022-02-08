@@ -191,7 +191,6 @@ def npiv_statistics(portshow_npiv_df, pattern_dct):
     npiv_statistics_df.fillna(0, inplace=True)
 
     if not npiv_statistics_df.empty:
-        npiv_statistics_df = count_native_sw_conn(npiv_statistics_df)
         # add trunk lic for both switches column
         npiv_statistics_df = dfop.dataframe_fillna(npiv_statistics_df, portshow_npiv_cp_df, 
                                             join_lst=link_group_columns, filled_lst=['Trunking_lic_both_switches'])
@@ -209,14 +208,7 @@ def npiv_statistics(portshow_npiv_df, pattern_dct):
     return npiv_statistics_df
 
 
-def count_native_sw_conn(npiv_statistics_df):
-    """Function to count Native switches within SAN to which NPIV device connected to"""
 
-    npiv_statistics_df['Native_Switch_connection_quantity'] = npiv_statistics_df.groupby(by=['NodeName'])['NodeName'].transform('count')
-    # # remove count for empty 
-    # mask_nodename_na = npiv_statistics_df['NodeName'].isna()
-    # npiv_statistics_df.loc[mask_nodename_na, 'Native_Switch_connection_quantity'] = np.nan
-    return npiv_statistics_df
 
 
 

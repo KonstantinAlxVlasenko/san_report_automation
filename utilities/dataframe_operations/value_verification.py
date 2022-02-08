@@ -96,3 +96,9 @@ def verify_max_link_speed(df):
     return df
 
 
+def verify_value_occurence_in_series(value, series):
+    """Function to count value occurrence in Series"""
+     
+    series_values_occurence = series.value_counts()
+    if value in series_values_occurence:
+        return series_values_occurence[value]

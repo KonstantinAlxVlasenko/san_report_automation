@@ -18,7 +18,6 @@ def switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_sta
         # add switch role and fos
         sw_connection_statistics_df = dfop.dataframe_fillna(sw_connection_statistics_df, switch_params_aggregated_df, join_lst=sw_columns, 
                                         filled_lst=['switchRole', 'FOS_version', 'switch.edgeHoldTime'])
-
         # find FOS most recent version in each fabric
         sw_connection_statistics_df = find_max_fabric_fos(sw_connection_statistics_df, pattern_dct)
         # add core switch tag

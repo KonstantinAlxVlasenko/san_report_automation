@@ -1,0 +1,1 @@
+from .switch_pair import switch_pair_analysis

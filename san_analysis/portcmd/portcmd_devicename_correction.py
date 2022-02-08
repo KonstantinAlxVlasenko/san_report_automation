@@ -13,10 +13,7 @@ import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 # import utilities.filesystem_operations as fsop
 
-# from common_operations_miscellaneous import (reply_request, status_info,
-#                                              verify_data)
-# from common_operations_servicefile import dataframe_import
-# from common_operations_table_report import dataframe_to_report
+
 
 
 def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_creation_info_lst):
@@ -101,7 +98,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
                         return device_rename_df
                     else:
                         print('\n')
-                        reply = meop.reply_request('Do you want to RESET device rename form? (y)es/(n)o: ')
+                        
                         if reply == 'y':
                             # create new device rename DataFrame
                             manual_device_rename_df = create_device_rename_form(portshow_aggregated_df)
