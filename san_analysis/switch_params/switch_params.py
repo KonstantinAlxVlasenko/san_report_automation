@@ -26,9 +26,13 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
     *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
-    data_names = ['report_columns_usage', 'switch_params_aggregated', 'fabric_switch_statistics', 
-                    'Коммутаторы', 'Фабрика', 'Параметры_коммутаторов', 'MAPS', 'Лицензии', 
-                    'Глобальные_параметры_фабрики', 'Статистика_коммутаторов']
+    data_names = ['report_columns_usage', 'switch_params_aggregated']
+
+    # data_names = ['report_columns_usage', 'switch_params_aggregated', 'fabric_switch_statistics', 
+    #                 'Коммутаторы', 'Фабрика', 'Параметры_коммутаторов', 'MAPS', 'Лицензии', 
+    #                 'Глобальные_параметры_фабрики', 'Статистика_коммутаторов']
+
+
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -76,12 +80,12 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         # after finish display status
         meop.status_info('ok', max_title, len(info))
 
-        # current operation information string
-        info = f'Counting switch statistics'
-        print(info, end =" ") 
-        fabric_switch_statistics_df = fabric_switch_statistics(switch_params_aggregated_df, pattern_dct)
-        # after finish display status
-        meop.status_info('ok', max_title, len(info))        
+        # # current operation information string
+        # info = f'Counting switch statistics'
+        # print(info, end =" ") 
+        # fabric_switch_statistics_df = fabric_switch_statistics(switch_params_aggregated_df, pattern_dct)
+        # # after finish display status
+        # meop.status_info('ok', max_title, len(info))        
 
         # check if switch config files missing
         mask_fabric = switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].notna().all(axis=1)
@@ -92,15 +96,17 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
             print(info, end =" ")
             meop.status_info('warning', max_title, len(info))
 
-        switches_report_df, fabric_report_df, switches_parameters_report_df, \
-            maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = \
-                switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names)
+        # switches_report_df, fabric_report_df, switches_parameters_report_df, \
+        #     maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = \
+        #         switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names)
 
         # create list with partitioned DataFrames
-        data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
-                    switches_report_df, fabric_report_df, 
-                    switches_parameters_report_df, maps_report_df, licenses_report_df,
-                    global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
+        data_lst = [report_columns_usage_dct, switch_params_aggregated_df]
+
+        # data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
+        #             switches_report_df, fabric_report_df, 
+        #             switches_parameters_report_df, maps_report_df, licenses_report_df,
+        #             global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
         # writing data to sql
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
     

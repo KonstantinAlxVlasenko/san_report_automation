@@ -8,7 +8,8 @@ from .portshow_npiv_stat_notes import add_notes
 
 link_group_columns = ['Fabric_name', 'Fabric_label',  
                      'chassis_name', 'switchName',  'switchWwn', 
-                     'Device_Host_Name', 'NodeName']
+                     'Device_Host_Name', 'NodeName',
+                     'switchPair_id', 'Connected_switchPair_id']
 
 cfg_native_columns = ['speed', 'Speed_Cfg', 'Transceiver_speed', 'Trunk_Port']
 cfg_ag_columns = ['Connected_' + cfg for cfg in cfg_native_columns]
@@ -16,7 +17,7 @@ cfg_columns = [x for xs in zip(cfg_native_columns, cfg_ag_columns) for x in xs]
 
 service_columns = ['F_Trunk', 'Aoq', 'FEC', 'Credit_Recovery']
 
-def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df):
+def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df, switch_pair_df):
 
     npiv_link_columns = ['configname', 'chassis_name', 'chassis_wwn',
                          'portIndex', 'slot', 'port',
@@ -70,6 +71,8 @@ def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df
     portshow_npiv_df = dfop.remove_duplicates_from_column(portshow_npiv_df, 'Device_Host_Name', 
                                                         duplicates_subset=['Fabric_name', 'Fabric_label', 'Device_Host_Name', 'NodeName'])
     portshow_npiv_df = dfop.drop_equal_columns(portshow_npiv_df, [('Device_Host_Name', 'Device_Host_Name_duplicates_free')])
+    # add switchPair_id
+    portshow_npiv_df = dfop.dataframe_join(portshow_npiv_df, switch_pair_df,  ['switchWwn', 'switchPair_id'], 1)
     return portshow_npiv_df
 
 
@@ -204,7 +207,7 @@ def npiv_statistics(portshow_npiv_df, pattern_dct):
         connection_symmetry_columns = ['Device_quantity', 'Port_quantity', 'Bandwidth_Gbps']
         sort_columns = ['Fabric_name', 'Fabric_label', 'switchName', 'Device_Host_Name']
         npiv_statistics_df = dfop.summarize_statistics(npiv_statistics_df, count_columns, 
-                                                    connection_symmetry_columns, sort_columns)
+                                                    connection_symmetry_columns, sort_columns, exclude_columns=['switchPair_id', 'Connected_switchPair_id'])
     return npiv_statistics_df
 
 

@@ -2,16 +2,7 @@
 
 import numpy as np
 import pandas as pd
-
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fillna
 
 
 def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, 
@@ -72,8 +63,9 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
         switch_params_aggregated_df[lic_check] = \
             switch_params_aggregated_df.loc[switch_params_aggregated_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)
         switch_params_aggregated_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
-    # add notes to switch_params_aggregated_df DataFrame
-    switch_params_aggregated_df = add_notes(switch_params_aggregated_df)
+
+    # # add notes to switch_params_aggregated_df DataFrame
+    # switch_params_aggregated_df = add_notes(switch_params_aggregated_df)
 
     # check if chassis_name and switch_name columns are equal
     # if yes then no need to use chassis information in tables
@@ -188,30 +180,30 @@ def verify_ls_type(switch_params_aggregated_df):
         switch_params_aggregated_df.loc[mask_router, 'LS_type_report'] + ', router'
     return switch_params_aggregated_df
 
+# REMOVE  moved to switch_params_sw_pair
+# def add_notes(switch_params_aggregated_df):
+#     """Function to add notes to switch_params_aggregated_df DataFrame"""
 
-def add_notes(switch_params_aggregated_df):
-    """Function to add notes to switch_params_aggregated_df DataFrame"""
+#     def fabric_domain_unique_note(switch_params_aggregated_df):
+#         """Function to verify if fabric domain ID is unique within fabric_name"""
 
-    def fabric_domain_unique_note(switch_params_aggregated_df):
-        """Function to verify if fabric domain ID is unique within fabric_name"""
-
-        mask_duplicated_fabric_domain = switch_params_aggregated_df.groupby(by=['Fabric_name', 'switchDomain'])['switchWwn'].transform('count') > 1
-        mask_native = switch_params_aggregated_df['switchDomain'].notna()
-        switch_params_aggregated_df.loc[mask_duplicated_fabric_domain & mask_native, 'Fabric_domain_note'] = 'duplicated_fabric_domain'
-        return switch_params_aggregated_df
+#         mask_duplicated_fabric_domain = switch_params_aggregated_df.groupby(by=['Fabric_name', 'switchDomain'])['switchWwn'].transform('count') > 1
+#         mask_native = switch_params_aggregated_df['switchDomain'].notna()
+#         switch_params_aggregated_df.loc[mask_duplicated_fabric_domain & mask_native, 'Fabric_domain_note'] = 'duplicated_fabric_domain'
+#         return switch_params_aggregated_df
     
 
-    def uptime_limit_note(switch_params_aggregated_df):
-        """function to verify if uptime is less then a year"""
+#     def uptime_limit_note(switch_params_aggregated_df):
+#         """function to verify if uptime is less then a year"""
 
-        switch_params_aggregated_df['uptime_days'] = switch_params_aggregated_df['uptime_days'].apply(pd.to_numeric)
-        mask_uptime_exceeded = switch_params_aggregated_df['uptime_days'] > 365
-        mask_uptime_notna = switch_params_aggregated_df['uptime_days'].notna()
-        switch_params_aggregated_df.loc[mask_uptime_notna & mask_uptime_exceeded, 'Uptime_note'] = 'uptime_exceeded'
-        return switch_params_aggregated_df 
+#         switch_params_aggregated_df['uptime_days'] = switch_params_aggregated_df['uptime_days'].apply(pd.to_numeric)
+#         mask_uptime_exceeded = switch_params_aggregated_df['uptime_days'] > 365
+#         mask_uptime_notna = switch_params_aggregated_df['uptime_days'].notna()
+#         switch_params_aggregated_df.loc[mask_uptime_notna & mask_uptime_exceeded, 'Uptime_note'] = 'uptime_exceeded'
+#         return switch_params_aggregated_df 
 
 
-    # add notes to switch_params_aggregated_df DataFrame
-    switch_params_aggregated_df = fabric_domain_unique_note(switch_params_aggregated_df)
-    switch_params_aggregated_df = uptime_limit_note(switch_params_aggregated_df)
-    return switch_params_aggregated_df
+#     # add notes to switch_params_aggregated_df DataFrame
+#     switch_params_aggregated_df = fabric_domain_unique_note(switch_params_aggregated_df)
+#     switch_params_aggregated_df = uptime_limit_note(switch_params_aggregated_df)
+#     return switch_params_aggregated_df

@@ -5,18 +5,8 @@ out of portshow_aggregated_df and switchshow_ports_df DataFrame
 
 import numpy as np
 import pandas as pd
-from pandas.core.dtypes.missing import notna
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fillna
-# from common_operations_switch import count_summary, count_all_row
-# from common_operations_dataframe_presentation import move_column
+# from pandas.core.dtypes.missing import notna
 
 
 def port_statisctics_aggregated(portshow_aggregated_df):

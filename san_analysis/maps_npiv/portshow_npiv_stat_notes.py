@@ -197,16 +197,25 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, patte
         # find multiple switch names
         npiv_statistics_df.loc[mask_multiple_connection, 'Connected_switch_names_note'] = \
             npiv_statistics_df.groupby(by=['Fabric_name', 'Fabric_label', 'NodeName'])['switchName'].transform(lambda x: '(' + ', '.join(x) + ')')
-
         return npiv_statistics_df
     
+    def connection_pair_absent_note(npiv_statistics_df):
+        """Function to verify if pair connection exist in another Fabric_label"""
+    
+        mask_connection_pair_absent = npiv_statistics_df.groupby(by=['Fabric_name', 'switchPair_id', 'Connected_switchPair_id'])['switchWwn'].transform('count') < 2
+        npiv_statistics_df.loc[mask_connection_pair_absent , 'Connection_pair_absence_note'] = 'connection_pair_absent'
+        npiv_statistics_df['Asymmetry_note'].fillna(npiv_statistics_df['Connection_pair_absence_note'], inplace=True)
+        npiv_statistics_df.drop(columns=['Connection_pair_absence_note'], inplace=True)
+        return npiv_statistics_df 
+
     # add notes to npiv_statistics_df DataFrame
     npiv_statistics_df = connection_note(npiv_statistics_df)
     npiv_statistics_df = multiple_sw_conn_note(npiv_statistics_df)
-
-
     npiv_statistics_df = single_vc_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = nonuniformity_note(npiv_statistics_df, portshow_npiv_cp_df)
     npiv_statistics_df = speed_note(npiv_statistics_df, pattern_dct)
+    npiv_statistics_df = dfop.verify_group_symmetry(npiv_statistics_df, symmetry_grp=['Fabric_name','switchPair_id', 'Connected_switchPair_id'], 
+                                                    symmetry_columns=['Logical_link_quantity', 'Physical_link_quantity', 'Port_quantity', 'Bandwidth_Gbps'])
+    npiv_statistics_df = connection_pair_absent_note(npiv_statistics_df)
     npiv_statistics_df.fillna(np.nan, inplace=True)
     return npiv_statistics_df

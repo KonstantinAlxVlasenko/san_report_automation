@@ -62,6 +62,13 @@ def find_nonzero_device_connected_switch_pair(switch_sr, sw_wwn_name_match_sr, p
         max_device_match_number_lst.append(max_device_match_number)
         max_device_match_ratio_lst.append(max_device_match_number_ratio)
         
+        # print('\n')
+        # print(switch_sr['switchName'])
+        # print(sw_pair_wwn_max_device_connected_lst)
+        # print(sw_pair_wwn_lst)
+        # print(bool(sw_pair_wwn_lst))
+        # print(max_device_match_number, max_device_match_number_ratio, sw_pair_name_lst, sw_pair_wwn_lst)
+
         if sw_pair_wwn_lst:
             sw_pair_wwn_max_device_connected_lst.extend(sw_pair_wwn_lst)
             sw_pair_name_max_device_connected_lst.extend(sw_pair_name_lst)
@@ -99,7 +106,7 @@ def find_max_device_match_switch(sw_wwn_name_match_sr, sw_current_devices_sr, po
     sw_candidates_wwn_lst = portshow_sw_candidates_df['switchWwn'].unique().tolist()
     
     if not sw_candidates_wwn_lst:
-        return [np.nan]*3
+        return [None]*3
     
     # list with the number of device matches of each candidate switch with the current switch
     # how many devices from current switch connected to switch being verified
@@ -123,7 +130,7 @@ def find_max_device_match_switch(sw_wwn_name_match_sr, sw_current_devices_sr, po
         sw_pair_name_lst = [sw_wwn_name_match_sr[sw_wwn] for sw_wwn in sw_pair_wwn_lst]
         return max_device_match_number, max_device_match_number_ratio, sw_pair_name_lst, sw_pair_wwn_lst
     else:
-        return max_device_match_number, max_device_match_number_ratio, np.nan, np.nan
+        return max_device_match_number, max_device_match_number_ratio, None, None
 
 
 

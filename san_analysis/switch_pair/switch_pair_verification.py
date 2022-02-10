@@ -20,10 +20,13 @@ def verify_switch_pair_match(switch_pair_df):
     switch_pair_df['switchWwn_pair_occurrence_in_switchWwn'] = switch_pair_df['switchWwn_pair'].apply(lambda value: dfop.verify_value_occurence_in_series(value, switch_pair_df['switchWwn']))
     switch_pair_df['switchWwn_pair_duplication'] = switch_pair_df.groupby(['switchWwn_pair'])['switchWwn'].transform('count')
     
-    # for 'switchWwn_occurrence_in_switchWwn_pair', 'switchWwn_pair_occurrence_in_switchWwn' columns 
-    # if switchWwn is not present then ocсurrence number is 0
-    for column in sw_pair_match_columns[1:3]:
-        switch_pair_df[column].fillna(0, inplace=True)  
+    # # for 'switchWwn_occurrence_in_switchWwn_pair', 'switchWwn_pair_occurrence_in_switchWwn' columns 
+    # # if switchWwn is not present then ocсurrence number is 0
+    # for column in sw_pair_match_columns[1:3]:
+    #     switch_pair_df[column].fillna(0, inplace=True)
+
+    switch_pair_df['switchWwn_occurrence_in_switchWwn_pair'].fillna(0, inplace=True)    
+
     return switch_pair_df
 
 

@@ -2,8 +2,9 @@
 
 from .fabric_label import fabric_label_analysis
 from .blade_system import blade_system_analysis
-from .switch_params import switch_params_analysis
+from .switch_params import switch_params_analysis, switch_params_sw_pair_update
 from .isl import isl_analysis
+from .isl import isl_sw_pair_update
 from .portcmd import portcmd_analysis
 from .port_err_sfp_cfg import port_err_sfp_cfg_analysis
 from .maps_npiv import maps_npiv_ports_analysis
@@ -44,7 +45,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
     if len(report_creation_info_lst) == 3:
         report_creation_info_lst.append(report_columns_usage_dct)
 
-    isl_aggregated_df, isl_statistics_df = \
+    isl_aggregated_df, fcredge_df = \
         isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df, isl_df, trunk_df, lsdb_df, 
                             fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_creation_info_lst)
 
@@ -57,12 +58,15 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
 
     switch_pair_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)
 
-    portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_df, 
-                                                                sfpshow_df, portcfgshow_df, isl_statistics_df, report_creation_info_lst)
+    switch_params_aggregated_df = switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, report_creation_info_lst)
+
+    isl_aggregated_df, isl_statistics_df = isl_sw_pair_update(isl_aggregated_df, fcredge_df, switch_pair_df, report_creation_info_lst)
+
+    portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_creation_info_lst)
 
 
     portshow_npiv_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
-                                                isl_statistics_df, blade_module_loc_df, report_creation_info_lst)
+                                                isl_statistics_df, blade_module_loc_df, switch_pair_df, report_creation_info_lst)
 
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 

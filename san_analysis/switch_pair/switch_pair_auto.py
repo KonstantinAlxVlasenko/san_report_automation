@@ -92,6 +92,7 @@ def search_vc_cisco_pairs(portshow_aggregated_df, fabric_labels_lst):
     # find devices connected to VC and Cisco switches
     portshow_vc_cisco_devices_df = find_sw_npv_ag_connected_devices(vc_cisco_pair_df, portshow_aggregated_df, merge_column='NodeName')
     # find switch pairs with highest connected device match
+
     vc_cisco_pair_df[sw_pair_columns] = vc_cisco_pair_df.apply(
         lambda series: find_nonzero_device_connected_switch_pair(series, vc_cisco_wwn_name_match_sr, portshow_vc_cisco_devices_df, 
                                                                 fabric_labels_lst, sw_pair_columns, 

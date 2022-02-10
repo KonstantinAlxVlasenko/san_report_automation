@@ -17,7 +17,7 @@ from .switch_connection_statistics import \
 
 
 def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
-                            isl_statistics_df, blade_module_loc_df, report_creation_info_lst):
+                            isl_statistics_df, blade_module_loc_df, switch_pair_df, report_creation_info_lst):
     """Main function to add porterr, transceiver and portcfg information to portshow DataFrame"""
     
     # report_steps_dct contains current step desciption and force and export tags
@@ -57,7 +57,7 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
         info = f'MAPS and NPIV ports verification'
         print(info, end =" ") 
 
-        portshow_npiv_df = npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df)
+        portshow_npiv_df = npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df, switch_pair_df)
         maps_ports_df = maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, pattern_dct)
         # verify if all switches and vc-fc of the same bay parity group are in the same fabric_label
         blade_module_loc_df = verify_interconnect_slot_fabric(blade_module_loc_df, switch_params_aggregated_df, portshow_npiv_df)
@@ -154,8 +154,6 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     maps_ports_report_df.dropna(axis=1, how = 'all', inplace=True)
     maps_ports_report_df = dfop.translate_values(maps_ports_report_df)
 
-    
-
     # npiv ports report
     npiv_report_df = portshow_npiv_df.copy()
     # drop allna columns
@@ -163,16 +161,11 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     # drop columns where all values after dropping NA are equal to certian value
     possible_identical_values = {'Slow_Drain_Device': 'No'}
     
-    
-    
     npiv_report_df = dfop.drop_all_identical(npiv_report_df, possible_identical_values, dropna=True)
     # if all devices connected to one fabric_label only
     npiv_report_df = dfop.drop_equal_columns(npiv_report_df, columns_pairs=[
                                                                 ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
                                                                 ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
-    
-
-    
     npiv_report_df = dfop.translate_values(npiv_report_df)
     npiv_report_df = dfop.generate_report_dataframe(npiv_report_df, report_headers_df, report_columns_usage_dct, data_names[6])
     # npiv statistics report
@@ -184,7 +177,6 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
                                                     sep=' ')
     # remove zeroes to clean view
     dfop.drop_zero(npiv_statistics_report_df)
-    
     # switch connection statistics
     report_columns_usage_cp_dct = report_columns_usage_dct.copy()
     report_columns_usage_cp_dct['fabric_name_usage'] = True

@@ -104,6 +104,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, re
 
         sw_wwn_occurrence_stats_df = count_switch_pairs_match_stats(switch_pair_df)
         
+        print('\n')
         info = f'Switch pairs setting'
         print(info, end =" ")
         if first_run or change_flag:

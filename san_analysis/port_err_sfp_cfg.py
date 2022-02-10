@@ -14,23 +14,7 @@ import utilities.servicefile_operations as sfop
 # import utilities.filesystem_operations as fsop
 
 
-# from analysis_portshow_maps_ports import maps_db_ports
-# from analysis_portshow_npiv import npiv_link_aggregated, npiv_statistics
-# from common_operations_dataframe_presentation import (drop_all_identical,
-#                                                       drop_equal_columns,
-#                                                       generate_report_dataframe,
-#                                                       translate_values)
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (reply_request, status_info,
-#                                              verify_data, verify_force_run)
-# from common_operations_servicefile import (data_extract_objects,
-#                                            dataframe_import, dct_from_columns)
-# # from common_operations_switch import statistics_report
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
-
-
-def port_err_sfp_cfg_analysis(portshow_aggregated_df, switch_params_aggregated_df, sfpshow_df, portcfgshow_df, isl_statistics_df,
+def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df,
                                 report_creation_info_lst):
     """Main function to add porterr, transceiver and portcfg information to portshow DataFrame"""
     

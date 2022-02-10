@@ -1,4 +1,4 @@
-"""Module to count Fabric statistics"""
+"""Module to count Fabric statistics (quantity of port_types)"""
 
 import pandas as pd
 

@@ -7,9 +7,10 @@ import utilities.dataframe_operations as dfop
 
 from .isl_statistics_notes import add_notes
 
-isl_group_columns = ['Fabric_name', 'Fabric_label',  
+isl_group_columns = ['Fabric_name', 'Fabric_label',
                      'chassis_name', 'SwitchName',  'switchWwn', 
-                     'Connected_SwitchName', 'Connected_switchWwn']
+                     'Connected_SwitchName', 'Connected_switchWwn', 
+                     'switchPair_id', 'Connected_switchPair_id']
 
 
 def isl_statistics(isl_aggregated_df, pattern_dct, report_data_lst):
@@ -33,11 +34,12 @@ def isl_statistics(isl_aggregated_df, pattern_dct, report_data_lst):
         # count switches connection statistics for Fabric_lable and Fabric_name levels
         isl_statistics_summary_df = isl_statistics_summary(isl_statistics_df, report_data_lst)
         # verify if fabrics are symmetric
-        isl_statistics_summary_df = verify_isl_symmetry(isl_statistics_summary_df)
+        # isl_statistics_summary_df = verify_isl_symmetry(isl_statistics_summary_df) REMOVE
+        isl_statistics_summary_df = dfop.verify_group_symmetry(isl_statistics_summary_df, symmetry_grp=['Fabric_name'], symmetry_columns=['Switch_quantity', 'Port_quantity', 'Bandwidth_Gbps'])
         # add notes to isl_statistics_df if any violations present
         isl_statistics_df = add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, pattern_dct)
         # count row with index All containing total values of isl_statistics_summary_df for all fabrics
-        isl_statistics_total_df = count_all_row(isl_statistics_summary_df)
+        isl_statistics_total_df = dfop.count_all_row(isl_statistics_summary_df) 
         # insert 'Switch_quantity' and 'Switch_connection_quantity' columns
         isl_statistics_df['Switch_quantity'] = 1
         isl_statistics_df['Switch_connection_quantity'] = 1
@@ -60,8 +62,8 @@ def prior_prepearation(isl_aggregated_df, pattern_dct):
     # comp_keys, _, comp_dct = re_pattern_lst
 
 
-    columns_lst =  ['Fabric_name', 'Fabric_label',  'chassis_name', 'SwitchName',  'switchWwn', 
-                    'Connected_SwitchName', 'Connected_switchWwn', 
+    columns_lst =  ['Fabric_name', 'Fabric_label',  'switchPair_id', 'chassis_name', 'SwitchName',  'switchWwn', 
+                    'Connected_switchPair_id', 'Connected_SwitchName', 'Connected_switchWwn', 
                     'port', 'ISL_number', 'IFL_number', 'portType', 'speed', 'Speed_Cfg', 'Link_speedActualMax', 
                     'Distance', 'Transceiver_mode', 'Trunking_license',  'Connected_Trunking_license', 
                     'Trunk_Port', 'Credit_Recovery', 'Encryption', 'Compression', 'QOS_Port', 'QOS_E_Port', 'FEC', '10G/16G_FEC',
@@ -129,7 +131,6 @@ def prior_prepearation(isl_aggregated_df, pattern_dct):
 
     isl_aggregated_modified_df.loc[mask_xisl & mask_unavailable_speed, 'speed'] = \
         isl_aggregated_modified_df.loc[mask_xisl & mask_unavailable_speed, 'speed'] = 'XISL'
-        
     return isl_aggregated_modified_df
 
 
@@ -142,7 +143,6 @@ def count_isl_bandwidth(isl_aggregated_modified_df):
     # group ISLs so all ISLs between two switches are in one group and count total bandwidth for each ISL group
     # count total bandwidth for each ISL group
     isl_bandwidth_df = isl_aggregated_modified_df.groupby(by=isl_group_columns)['Bandwidth_Gbps'].sum()
-    
     return isl_bandwidth_df
 
 
@@ -176,9 +176,7 @@ def count_isl_statistics(isl_aggregated_modified_df, isl_bandwidth_df):
             isl_statistics_df = isl_statistics_df.merge(current_statistics_df, how='left', 
                                                                                     left_index=True, right_index=True)
     isl_statistics_df.reset_index(inplace=True)
-
-    isl_statistics_df.fillna(0, inplace=True)
-                
+    isl_statistics_df.fillna(0, inplace=True)       
     return isl_statistics_df
     
 
@@ -202,7 +200,6 @@ def verify_trunking_lic(isl_aggregated_modified_df, isl_statistics_df):
     
     # add Trunking_lic_both_switches column to isl_statistics_df DataFrame
     isl_statistics_df = isl_statistics_df.merge(switches_trunking_lic_df, how='left', on=isl_group_columns)
-    
     return isl_statistics_df
 
 
@@ -239,7 +236,6 @@ def sort_isl(isl_statistics_df):
     
     isl_statistics_sort_df.reset_index(inplace=True, drop=True)
     isl_statistics_df = isl_statistics_sort_df.copy()
-    
     return isl_statistics_df
     
 
@@ -256,7 +252,7 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
     thus sum of links bandwidth give wrong total ISL bandwidth result.
     It is required to use different approach to count total ISL bandwidth"""
     
-    for column in ['Logical_link_quantity', 'Physical_link_quantity', 'Bandwidth_Gbps']:
+    for column in ['Logical_link_quantity', 'Physical_link_quantity', 'Bandwidth_Gbps', 'switchPair_id', 'Connected_switchPair_id']:
         if column in port_summary_columns:
             port_summary_columns.remove(column)
     # count sum statistics for each fabric
@@ -297,58 +293,57 @@ def isl_statistics_summary(isl_statistics_df, report_data_lst):
 
     isl_statistics_summary_df = isl_statistics_summary_df.merge(unique_link_statistics_df, how='left', on=grp_columns)
     isl_statistics_summary_df = isl_statistics_summary_df.merge(unique_isl_bandwidth_total_df, how='left', on=grp_columns)
-
     return isl_statistics_summary_df
     
+# TO_REMOVE functiom replaced with verify_group_symmetry
+# def verify_isl_symmetry(isl_statistics_summary_df):
+#     """Function to verify if ISLs are symmetric in each Fabrics_name from 'Switch_quantity', 'Port_quantity' 
+#     and 'Bandwidth_Gbps point of view. Function adds Assysmetric_note to isl_statistics_summary_df.
+#     Column contains parameter name(s) for which ISL symmetry condition is not fullfilled"""
 
-def verify_isl_symmetry(isl_statistics_summary_df):
-    """Function to verify if ISLs are symmetric in each Fabrics_name from 'Switch_quantity', 'Port_quantity' 
-    and 'Bandwidth_Gbps point of view. Function adds Assysmetric_note to isl_statistics_summary_df.
-    Column contains parameter name(s) for which ISL symmetry condition is not fullfilled"""
-
-    isl_symmetry_columns = ['Switch_quantity', 'Port_quantity', 'Bandwidth_Gbps']
-    # drop fabric summary rows (rows with empty Fabric_label), group values for each Fabric_name
-    # and find number of unique values in isl_symmetry_columns
-    isl_symmetry_df = \
-        isl_statistics_summary_df.dropna(subset=['Fabric_label']).groupby(by='Fabric_name')[isl_symmetry_columns].agg('nunique')
-    # temporary ineqaulity_notes columns for  isl_symmetry_columns
-    isl_symmetry_notes = [column + '_ineqaulity' for column in isl_symmetry_columns]
-    for column, column_note in zip(isl_symmetry_columns, isl_symmetry_notes):
-        isl_symmetry_df[column_note] = np.nan
-        # if fabrics are symmetric then number of unique values in groups should be equal to one 
-        mask_values_nonuniformity = isl_symmetry_df[column] == 1
-        # use current column name as value in column_note for rows where number of unique values exceeds one 
-        isl_symmetry_df[column_note].where(mask_values_nonuniformity, column.lower(), inplace=True)
+#     isl_symmetry_columns = ['Switch_quantity', 'Port_quantity', 'Bandwidth_Gbps']
+#     # drop fabric summary rows (rows with empty Fabric_label), group values for each Fabric_name
+#     # and find number of unique values in isl_symmetry_columns
+#     isl_symmetry_df = \
+#         isl_statistics_summary_df.dropna(subset=['Fabric_label']).groupby(by='Fabric_name')[isl_symmetry_columns].agg('nunique')
+#     # temporary ineqaulity_notes columns for  isl_symmetry_columns
+#     isl_symmetry_notes = [column + '_ineqaulity' for column in isl_symmetry_columns]
+#     for column, column_note in zip(isl_symmetry_columns, isl_symmetry_notes):
+#         isl_symmetry_df[column_note] = np.nan
+#         # if fabrics are symmetric then number of unique values in groups should be equal to one 
+#         mask_values_nonuniformity = isl_symmetry_df[column] == 1
+#         # use current column name as value in column_note for rows where number of unique values exceeds one 
+#         isl_symmetry_df[column_note].where(mask_values_nonuniformity, column.lower(), inplace=True)
         
-    # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
-    isl_symmetry_df = dfop.concatenate_columns(isl_symmetry_df, summary_column='Asymmetry_note', merge_columns=isl_symmetry_notes)
-    # drop columns with quantity of unique values
-    isl_symmetry_df.drop(columns=isl_symmetry_columns, inplace=True)
-    # add Asymmetry_note column to isl_statistics_summary_df
-    isl_statistics_summary_df = isl_statistics_summary_df.merge(isl_symmetry_df, how='left', on=['Fabric_name'])
+#     # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
+#     isl_symmetry_df = dfop.concatenate_columns(isl_symmetry_df, summary_column='Asymmetry_note', merge_columns=isl_symmetry_notes)
+#     # drop columns with quantity of unique values
+#     isl_symmetry_df.drop(columns=isl_symmetry_columns, inplace=True)
+#     # add Asymmetry_note column to isl_statistics_summary_df
+#     isl_statistics_summary_df = isl_statistics_summary_df.merge(isl_symmetry_df, how='left', on=['Fabric_name'])
     
-    return isl_statistics_summary_df
+#     return isl_statistics_summary_df
 
 
-def count_all_row(isl_statistics_summary_df):
-    """Function to count row with index All containing total values of isl_statistics_summary_df
-    for all fabrics"""
+# def count_all_row(isl_statistics_summary_df):
+#     """Function to count row with index All containing total values of isl_statistics_summary_df
+#     for all fabrics"""
     
-    # extract row containing total values for Fabric_name
-    mask_empty_fabric_label = isl_statistics_summary_df['Fabric_label'].isna()
-    isl_statistics_total_df = isl_statistics_summary_df.loc[mask_empty_fabric_label].copy()
-    # sum values
-    isl_statistics_total_df.loc['All']= isl_statistics_total_df.sum(numeric_only=True, axis=0)
-    # rename Fabric_name to All
-    isl_statistics_total_df.loc['All', 'Fabric_name'] = 'All'
+#     # extract row containing total values for Fabric_name
+#     mask_empty_fabric_label = isl_statistics_summary_df['Fabric_label'].isna()
+#     isl_statistics_total_df = isl_statistics_summary_df.loc[mask_empty_fabric_label].copy()
+#     # sum values
+#     isl_statistics_total_df.loc['All']= isl_statistics_total_df.sum(numeric_only=True, axis=0)
+#     # rename Fabric_name to All
+#     isl_statistics_total_df.loc['All', 'Fabric_name'] = 'All'
     
-    # drop all rows except 'All'
-    mask_fabric_name_all = isl_statistics_total_df['Fabric_name'] == 'All'
-    isl_statistics_total_df = isl_statistics_total_df.loc[mask_fabric_name_all].copy()
+#     # drop all rows except 'All'
+#     mask_fabric_name_all = isl_statistics_total_df['Fabric_name'] == 'All'
+#     isl_statistics_total_df = isl_statistics_total_df.loc[mask_fabric_name_all].copy()
     
-    # drop Assymetry_note column
-    isl_statistics_total_df.drop(columns=['Asymmetry_note'], inplace=True)
-    isl_statistics_total_df.reset_index(inplace=True, drop=True)
+#     # drop Assymetry_note column
+#     isl_statistics_total_df.drop(columns=['Asymmetry_note'], inplace=True)
+#     isl_statistics_total_df.reset_index(inplace=True, drop=True)
     
-    return isl_statistics_total_df
+#     return isl_statistics_total_df
     

@@ -172,6 +172,44 @@ def verify_symmetry_regarding_fabric_name(statistics_summary_df, symmetry_column
     return statistics_summary_df
 
 
+def verify_group_symmetry(statistics_df, symmetry_grp, symmetry_columns, summary_column='Asymmetry_note'):
+    """Function to verify if rows are symmetric in each symmetry_grp from
+    symmetry_columns values point of view. Function adds Assysmetric_note to statistics_df.
+    Column contains parameter name(s) for which symmetry condition is not fullfilled"""
+
+    # drop invalid fabric labels
+    mask_not_valid = statistics_df['Fabric_label'].isin(['x', '-'])
+    # drop fabric summary rows (rows with empty Fabric_label)
+    mask_fabric_label_notna = statistics_df['Fabric_label'].notna()
+    statistics_cp_df = statistics_df.loc[~mask_not_valid & mask_fabric_label_notna].copy()
+    
+    # find number of unique values in connection_symmetry_columns
+    symmetry_df = \
+        statistics_cp_df.groupby(by=symmetry_grp)[symmetry_columns].agg('nunique')
+
+    # temporary ineqaulity_notes columns for  connection_symmetry_columns
+    symmetry_notes = [column + '_inequality' for column in symmetry_columns]
+    for column, column_note in zip(symmetry_columns, symmetry_notes):
+        symmetry_df[column_note] = np.nan
+        # if fabrics are symmetric then number of unique values in groups should be equal to one 
+        # mask_values_nonuniformity = symmetry_df[column] == 1
+        mask_values_uniformity = symmetry_df[column].isin([0, 1])
+        # use current column name as value in column_note for rows where number of unique values exceeds one 
+        symmetry_df[column_note].where(mask_values_uniformity, column.lower(), inplace=True)
+        
+    # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
+    symmetry_df = concatenate_columns(symmetry_df, summary_column, 
+                                                 merge_columns=symmetry_notes)
+    # drop columns with quantity of unique values
+    symmetry_df.drop(columns=symmetry_columns, inplace=True)
+    # add Asymmetry_note column to statistics_df
+    statistics_df = statistics_df.merge(symmetry_df, how='left', on=symmetry_grp)
+    # clean notes for dropped fabrics
+    if mask_not_valid.any():
+        statistics_df.loc[mask_not_valid, summary_column] = np.nan
+    return statistics_df
+
+
 def count_group_members(df, group_columns, count_columns: dict):
     """
     Auxiliary function to count how many value instances are in a DataFrame group.
@@ -281,17 +319,22 @@ def find_mean_max_min(df, count_columns: dict, group_columns = ['Fabric_name', '
     return summary_df
 
 
-def summarize_statistics(statistics_df, count_columns, connection_symmetry_columns, sort_columns):
+def summarize_statistics(statistics_df, count_columns, connection_symmetry_columns, sort_columns, exclude_columns=None):
     """Function to summarize statistics by adding values in fabric_name and fabric_label, fabric_name,
     all fabrics"""
 
     count_columns = [column for column in statistics_df.columns if statistics_df[column].notna().any()]
+    if exclude_columns:
+        for column in exclude_columns:
+            if column in count_columns:
+                count_columns.remove(column)
     # summary_statistics for fabric_name and fabric_label, fabric_name
     statistics_summary_df = \
         count_summary(statistics_df, group_columns=['Fabric_name', 'Fabric_label'], count_columns=count_columns, fn=sum)
     # verify if fabrics are symmetrical from connection_symmetry_columns point of view
     statistics_summary_df = \
-        verify_symmetry_regarding_fabric_name(statistics_summary_df, connection_symmetry_columns)
+        verify_group_symmetry(statistics_summary_df, symmetry_grp=['Fabric_name'], symmetry_columns=connection_symmetry_columns)
+        # verify_symmetry_regarding_fabric_name(statistics_summary_df, connection_symmetry_columns)
     # total statistics for all fabrics
     statistics_total_df = count_all_row(statistics_summary_df)
     # concatenate all statistics in certain order

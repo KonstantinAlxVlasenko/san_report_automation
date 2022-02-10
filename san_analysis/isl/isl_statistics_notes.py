@@ -142,11 +142,24 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         
         return isl_statistics_df
     
+
+    def connection_pair_absent_note(isl_statistics_df):
+        """Function to verify if pair connection exist in another Fabric_label"""
+    
+        mask_connection_pair_absent = isl_statistics_df.groupby(by=['Fabric_name', 'switchPair_id', 'Connected_switchPair_id'])['switchWwn'].transform('count') < 2
+        isl_statistics_df.loc[mask_connection_pair_absent , 'Connection_pair_absence_note'] = 'connection_pair_absent'
+        isl_statistics_df['Asymmetry_note'].fillna(isl_statistics_df['Connection_pair_absence_note'], inplace=True)
+        isl_statistics_df.drop(columns=['Connection_pair_absence_note'], inplace=True)
+        return isl_statistics_df 
+
     # add notes to isl_statistics_df DataFrame
     isl_statistics_df = connection_note(isl_statistics_df)
     
     isl_statistics_df = nonuniformity_note(isl_statistics_df, isl_aggregated_modified_df)
     isl_statistics_df = speed_note(isl_statistics_df, pattern_dct)
+    isl_statistics_df = dfop.verify_group_symmetry(isl_statistics_df, symmetry_grp=['Fabric_name','switchPair_id', 'Connected_switchPair_id'], 
+                                                    symmetry_columns=['Logical_link_quantity', 'Physical_link_quantity', 'Port_quantity', 'Bandwidth_Gbps'])
+    isl_statistics_df = connection_pair_absent_note(isl_statistics_df)
     isl_statistics_df.fillna(np.nan, inplace=True)
 
     if (isl_statistics_df['XISL'] == 0).all():

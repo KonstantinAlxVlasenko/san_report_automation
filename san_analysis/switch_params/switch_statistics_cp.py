@@ -1,4 +1,4 @@
-"""TO_REMOVE Module to count switch statistics in SAN"""
+"""Module to count switch statistics in SAN"""
 
 
 import numpy as np
@@ -64,6 +64,10 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     switch_params_cp_df['Generation'].fillna('Uknown_Gen', inplace=True)
     switch_params_cp_df['SwitchMode'].fillna('Uknown_Mode', inplace=True)
 
+    mask_switch_pair_found = switch_params_cp_df.groupby(by=['Fabric_name', 'switchPair_id'])['switchPair_id'].transform('count') > 1
+    switch_params_cp_df['switchPaired'] = 'Unpaired_switch'
+    switch_params_cp_df.loc[mask_switch_pair_found, 'switchPaired'] = 'Paired_switch'
+
     switch_params_cp_df['Total'] = 'Total'
     return switch_params_cp_df
 
@@ -73,7 +77,7 @@ def count_switch_statistics(switch_params_cp_df):
     fabric_name, total san levels"""
 
     # count values for fabric_name and fabric_label level
-    count_columns = ['Total', 'ModelName', 'Generation', 'Trunking_lic', 'Fabric_Vision_lic', 
+    count_columns = ['Total', 'ModelName', 'Generation', 'switchPaired', 'Trunking_lic', 'Fabric_Vision_lic', 
                     'FC_Router_ON', 'LS_type', 'SwitchMode', 'Current_Switch_Policy_Status']
 
     fabric_switch_statistics_df = dfop.count_frequency(switch_params_cp_df, count_columns, 
@@ -98,7 +102,7 @@ def count_chassis_statistics(switch_params_cp_df):
     chassis_cp_df = switch_params_cp_df.drop_duplicates(subset=chassis_columns).copy()
     chassis_cp_df['Fabric_name'] = 'Total chassis'
     # count values for fabric_label level
-    chassis_stat_columns = ['Total', 'ModelName', 'Generation', 'Trunking_lic', 'Fabric_Vision_lic']
+    chassis_stat_columns = ['Total', 'ModelName', 'Generation', 'switchPaired', 'Trunking_lic', 'Fabric_Vision_lic']
     san_chassis_statistics_df = dfop.count_frequency(chassis_cp_df, chassis_stat_columns, 
                                                 group_columns=['Fabric_name', 'Fabric_label'],
                                                 margin_column_row=(False, False))
