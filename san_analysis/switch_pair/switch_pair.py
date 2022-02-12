@@ -67,6 +67,8 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, re
                         reset_flag = True
                         switch_pair_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df)
                         print('Switch pairs have been reset')
+                    else:
+                        reset_flag = False
                 else:
                     first_run = False
 

@@ -158,7 +158,6 @@ def verify_base_in_chassis(switch_params_aggregated_df):
     mask_base_in_chassis =  switch_params_aggregated_df['Base_switch_in_chassis'].str.contains('Yes')
     switch_params_aggregated_df['Base_switch_in_chassis'] = np.where(mask_base_in_chassis, 'Yes', pd.NA)
     switch_params_aggregated_df['Base_switch_in_chassis'].fillna(np.nan, inplace=True)
-
     return switch_params_aggregated_df
 
 

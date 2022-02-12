@@ -53,7 +53,9 @@ def find_zero_device_connected_enclosure_sw_pair(switch_pair_df):
         mask_enclosure_sw_notna = switch_pair_df[['switchName_pair_in_enclosure', 'switchWwn_pair_in_enclosure']].notna().all(axis=1)
         
         # fill switchName, switchWwn and pairing type for switches with no device connected and which are in Blade or Synergy enclosures
-        switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty & mask_enclosure_sw_notna, 'switchName_pair'] = switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty, 'switchName_pair_in_enclosure']
-        switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty & mask_enclosure_sw_notna, 'switchWwn_pair'] = switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty, 'switchWwn_pair_in_enclosure']
+        switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty & mask_enclosure_sw_notna, 'switchName_pair'] = \
+            switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty & mask_enclosure_sw_notna, 'switchName_pair_in_enclosure']
+        switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty & mask_enclosure_sw_notna, 'switchWwn_pair'] = \
+            switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty & mask_enclosure_sw_notna, 'switchWwn_pair_in_enclosure']
         switch_pair_df.loc[mask_zero_device_connected & mask_sw_pair_empty & mask_enclosure_sw_notna, 'Switch_pairing_type'] = 'enclosure'
     return switch_pair_df

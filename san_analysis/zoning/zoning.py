@@ -2,25 +2,20 @@
 
 import numpy as np
 import pandas as pd
-
-from .zoning_aggregation import verify_cfg_type, zoning_aggregated
-from .zoning_statistics import zonemember_statistics
-
-import utilities.dataframe_operations as dfop
 import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
 # import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
+
+from .report_zoning import zoning_report_main
+from .zoning_aggregation import verify_cfg_type, zoning_aggregated
+from .zoning_cfg_dashboard import cfg_dashborad
+from .zoning_alias_dashboard import alias_dashboard
+from .zoning_statistics import zonemember_statistics
+
 # import utilities.servicefile_operations as sfop
 # import utilities.filesystem_operations as fsop
 
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_miscellaneous import (status_info, verify_data,
-#                                              verify_force_run)
-from .zoning_alias_dashboard import alias_dashboard
-from .zoning_cfg_dashboard import cfg_dashborad
-from .report_zoning import zoning_report_main
-# from common_operations_table_report import dataframe_to_report
-# from common_operations_database import read_db, write_db
 
 
 def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
@@ -111,18 +106,6 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
 
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        # zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df, zonemember_statistics_df, \
-        #     alias_statistics_df, effective_cfg_statistics_df, zoning_report_df, alias_report_df, \
-        #         zoning_compare_report_df, unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df, \
-        #             zonemember_statistics_report_df, alias_statistics_report_df, effective_cfg_statistics_report_df \
-        #             = verify_data(report_constant_lst, data_names, *data_lst)
-
-        # data_lst = [zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df, zonemember_statistics_df, 
-        #             alias_statistics_df, effective_cfg_statistics_df, 
-        #             zoning_report_df, alias_report_df, zoning_compare_report_df, unzoned_device_report_df, 
-        #             no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df, 
-        #             alias_statistics_report_df, effective_cfg_statistics_report_df]
-
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df, *_ = data_lst
 

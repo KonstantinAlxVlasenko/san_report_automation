@@ -10,7 +10,6 @@ def drop_column_if_all_na(df, columns: list):
     """Function to drop columns if all values are nan"""
 
     clean_df = df.copy()
-
     if isinstance(columns, str):
         columns = [columns]
 

@@ -24,6 +24,7 @@ def find_nonzero_device_connected_switch_pair(switch_sr, sw_wwn_name_match_sr, p
     # find devices connected to the current switch
     mask_current_switch = portshow_devices_df['switchWwn'] == switch_sr['switchWwn']
     sw_current_devices_sr = portshow_devices_df.loc[mask_current_switch, 'Device_Host_Name']
+
     connected_device_number = sw_current_devices_sr.count()
         
     # list of fabric labels to verify (all fabric labels except fabric label of the switch being checked)
@@ -84,18 +85,37 @@ def find_nonzero_device_connected_switch_pair(switch_sr, sw_wwn_name_match_sr, p
             # if there are more then one fabric label to verify then add fabric label to paired switch name
             if len(verified_label_lst) > 1:
                 sw_pair_name_final_with_label_lst.append('(' + verified_label + ': ' + ', '.join(sw_pair_name_lst) + ')')
+    
+    # if more then one fabric_label to check
+    if len(max_device_match_number_lst) == 1:
+        match_statistics = [connected_device_number, max_device_match_number_lst[0], max_device_match_ratio_lst[0]]
+    elif len(max_device_match_number_lst) > 1:
+        match_statistics = [connected_device_number, ', '.join(map(str, max_device_match_number_lst)), ', '.join(map(str, max_device_match_ratio_lst))]
+    else:
+        match_statistics = [connected_device_number, None, None]
+
     if sw_pair_wwn_final_lst:
-        # if more then one fabric_label to check
-        if len(max_device_match_number_lst) == 1:
-            match_statistics = [connected_device_number, max_device_match_number_lst[0], max_device_match_ratio_lst[0]]
-        else:
-            match_statistics = [connected_device_number, ', '.join(map(str, max_device_match_number_lst)), ', '.join(map(str, max_device_match_ratio_lst))]
         # summary containing all results
         sw_pair_summary_lst = [sw_pairing_type_lst, 
-                               sw_pair_name_final_lst, sw_pair_wwn_final_lst, 
-                               sw_pair_name_final_with_label_lst, sw_pair_name_max_device_connected_lst, sw_pair_wwn_max_device_connected_lst]
+                                sw_pair_name_final_lst, sw_pair_wwn_final_lst, 
+                                sw_pair_name_final_with_label_lst, sw_pair_name_max_device_connected_lst, sw_pair_wwn_max_device_connected_lst]
         sw_pair_summary_lst = [', '.join(lst) if lst else np.nan for lst in sw_pair_summary_lst ]
         return pd.Series([*match_statistics, *sw_pair_summary_lst])
+    else:
+        return pd.Series([*match_statistics, *[None]*6])
+    
+    # if sw_pair_wwn_final_lst:
+    #     # if more then one fabric_label to check
+    #     if len(max_device_match_number_lst) == 1:
+    #         match_statistics = [connected_device_number, max_device_match_number_lst[0], max_device_match_ratio_lst[0]]
+    #     else:
+    #         match_statistics = [connected_device_number, ', '.join(map(str, max_device_match_number_lst)), ', '.join(map(str, max_device_match_ratio_lst))]
+    #     # summary containing all results
+    #     sw_pair_summary_lst = [sw_pairing_type_lst, 
+    #                            sw_pair_name_final_lst, sw_pair_wwn_final_lst, 
+    #                            sw_pair_name_final_with_label_lst, sw_pair_name_max_device_connected_lst, sw_pair_wwn_max_device_connected_lst]
+    #     sw_pair_summary_lst = [', '.join(lst) if lst else np.nan for lst in sw_pair_summary_lst ]
+    #     return pd.Series([*match_statistics, *sw_pair_summary_lst])
 
 
 def find_max_device_match_switch(sw_wwn_name_match_sr, sw_current_devices_sr, portshow_sw_candidates_df, min_device_number_match_ratio):

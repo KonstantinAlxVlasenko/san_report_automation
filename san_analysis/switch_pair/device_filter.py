@@ -19,7 +19,7 @@ def find_sw_npv_ag_connected_devices(switch_pair_df, portshow_aggregated_df, mer
     AG switchWwn identified based on AG switchPort Wwpn except first two symbols pairs(merge_column='oui_board_sn).
     VC and Cisco switchWwn retrived directly from device Wwnn (merge_column='NodeName').
     Parameter merge_column idetifies column in switch_pair_df which values used to filter 
-    AG switch, Cisco switch or VC module ports in in portshow_aggregated_df."""
+    AG switch, Cisco switch or VC module ports in portshow_aggregated_df."""
     
     mask_native = portshow_aggregated_df['switchMode'] == 'Native'
     portshow_cp_df = portshow_aggregated_df.loc[mask_native].copy()
@@ -42,9 +42,10 @@ def find_sw_npv_ag_connected_devices(switch_pair_df, portshow_aggregated_df, mer
     portshow_sw_df = portshow_cp_df.loc[mask_connected_wwn_oui].copy()
 
     # add switchWwn information to all devices within the same domain ID, Area ID (adding Wwnn of the switch where all devices directly connected)
-    portshow_cp_df = dfop.dataframe_fillna(portshow_cp_df, portshow_sw_df, join_lst=['Fabric_name', 'Fabric_label', 'Connected_Domain_Area_Id'], 
+    # slot and port match added due to same 'Connected_Domain_Area_Id' might have different port numbers
+    portshow_cp_df = dfop.dataframe_fillna(portshow_cp_df, portshow_sw_df, join_lst=['Fabric_name', 'Fabric_label', 'Connected_Domain_Area_Id', 'slot', 'port'], 
                                                                            filled_lst=['Connected_NPIV', 'Connected_switchWwn'])
-    # filter device ports only connecetd to the AG, VC and NPV switches from switch_pair_df
+    # filter device ports only connected to the AG, VC and NPV switches from switch_pair_df
     mask_devicetype_notna = portshow_cp_df['deviceType'].notna()
     mask_device_lib_srv_stor = ~portshow_cp_df['deviceType'].isin(['SWITCH', 'VC'])
     mask_connected_switchwwn_notna = portshow_cp_df['Connected_switchWwn'].notna()

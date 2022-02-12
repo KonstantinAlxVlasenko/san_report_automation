@@ -153,12 +153,25 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         zoned_ports_status_df = zoning_aggregated_df.loc[mask_effective, port_status_columns].copy()
         # drop duplicated alias memebers
         zoned_ports_status_df.drop_duplicates(subset=port_status_columns, inplace=True)
-        # each PortWwnn (device port) is counted only once. Nan values are not considered as duplicated
+        # each PortWwn (device port) is counted only once. Nan values are not considered as duplicated
         zoned_ports_status_df = \
             zoned_ports_status_df[(~zoned_ports_status_df[['Fabric_name', 'Fabric_label', 'PortName']].duplicated()) | zoned_ports_status_df['PortName'].isna()]
 
         zoned_ports_status_summary_df = dfop.count_frequency(zoned_ports_status_df, count_columns=['Fabric_device_status'])
         return zoned_ports_status_summary_df
+
+
+    def count_device_type(zoning_aggregated_df):
+        """"Function to count device types in zoning configuration (SRV, STORAGE, LIB etc)"""
+
+        device_type_columns = ['Fabric_name', 'Fabric_label', 'PortName', 'deviceType']
+        mask_effective = zoning_aggregated_df['cfg_type'] =='effective'
+        zoned_device_type_df = zoning_aggregated_df.loc[mask_effective, device_type_columns].copy()
+        # drop duplicated device_type
+        zoned_device_type_df.drop_duplicates(subset=device_type_columns, inplace=True)
+
+        zoned_device_type_summary_df = dfop.count_frequency(zoned_device_type_df, count_columns=['deviceType'])
+        return zoned_device_type_summary_df        
 
 
     def count_total_zoned_ports(zoning_aggregated_df):
@@ -174,7 +187,6 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         zoned_ports_total_df['Total_zoned_ports'] = 'Total_zoned_ports'
 
         zoned_ports_total_summary_df = dfop.count_frequency(zoned_ports_total_df, count_columns=['Total_zoned_ports'])
-
         return zoned_ports_total_summary_df
 
 
@@ -217,6 +229,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     zone_unused_summary = count_unused_zone(zonelevel_statistics_df)
     zoned_ports_total_summary_df = count_total_zoned_ports(zoning_aggregated_df)
     zoned_ports_status_summary_df = count_device_port_status(zoning_aggregated_df)
+    zoned_device_type_summary_df = count_device_type(zoning_aggregated_df)
     # count active and unzoned device ports in Fabric
     zoned_vs_total_ports_summary_df = \
         active_vs_configured_ports(portshow_zoned_aggregated_df, configuration_type='cfg_effective')
@@ -225,7 +238,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
     
     # merge all summary DataFrames into one
     df_lst = [zone_type_summary_df, zone_notes_summary_df, zone_unused_summary, 
-                zoned_ports_total_summary_df, zoned_ports_status_summary_df, 
+                zoned_ports_total_summary_df, zoned_ports_status_summary_df, zoned_device_type_summary_df,
                     zoned_vs_total_ports_summary_df, alias_vs_active_ports_per_zone_df, alias_ports_vs_zone_usage_df]
     active_cfg_statistics_df = merge_df(df_lst, fillna_index=4)
 

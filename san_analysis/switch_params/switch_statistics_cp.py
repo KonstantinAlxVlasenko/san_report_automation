@@ -30,9 +30,14 @@ def asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df):
     sw_gen = switch_params_cp_df['Generation'].unique().tolist()
     sw_role = switch_params_cp_df['SwitchMode'].unique().tolist()
 
-    fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_models, summary_column='Model_Asymmetry_note')
-    fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_gen, summary_column='Generation_Asymmetry_note')
-    fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_role, summary_column='Mode_Asymmetry_note')
+    # fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_models, summary_column='Model_Asymmetry_note')
+    # fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_gen, summary_column='Generation_Asymmetry_note')
+    # fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_role, summary_column='Mode_Asymmetry_note')
+
+    fabric_switch_statistics_df = dfop.verify_group_symmetry(fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_models, summary_column='Model_Asymmetry_note')
+    fabric_switch_statistics_df = dfop.verify_group_symmetry(fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_gen, summary_column='Generation_Asymmetry_note')
+    fabric_switch_statistics_df = dfop.verify_group_symmetry(fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_role, summary_column='Mode_Asymmetry_note')
+
 
     return fabric_switch_statistics_df
 

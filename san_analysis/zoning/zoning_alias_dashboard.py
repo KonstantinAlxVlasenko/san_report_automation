@@ -43,6 +43,16 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
         return ports_status_summary_df
 
 
+    def count_device_type(alias_aggregated_df):
+        """"Function to count device types in alias configuration (SRV, STORAGE, LIB etc)"""
+
+        device_type_columns = ['Fabric_name', 'Fabric_label', 'PortName', 'deviceType']
+        # drop duplicated device_type
+        alias_device_type_df = alias_aggregated_df.drop_duplicates(subset=device_type_columns).copy()
+        alias_device_type_summary_df = dfop.count_frequency(alias_device_type_df, count_columns=['deviceType'])
+        return alias_device_type_summary_df
+
+
     def count_wwn_type(alias_aggregated_df):
         """Function to count wwn type and wwnn_unpacked general staistics 
         (for alias configuration in general but not for each alias particularly)"""
@@ -106,6 +116,7 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
     # count values frequencies in alias aggregated_df
     alias_quantity_summary_df = count_alias_quantity(alias_aggregated_duplicates_free_df)
     ports_status_summary_df = count_device_port_status(alias_aggregated_df)
+    alias_device_type_summary_df = count_device_type(alias_aggregated_df)
     wwn_type_summary = count_wwn_type(alias_aggregated_df)
     # count total device ports vs device ports which have no aliases in Fabric
     active_vs_noalias_ports_summary_df = \
@@ -116,8 +127,8 @@ def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
     alias_port_statistics_df = count_alias_port_zone_statistics(alias_aggregated_df)
 
     # merge all statistics DataFrames
-    df_lst = [alias_quantity_summary_df, ports_status_summary_df, active_vs_noalias_ports_summary_df, wwn_type_summary, 
-                alias_wwnn_summary_df, alias_wwnn_unpacked_summary_df, alias_wwnp_duplicated_summary_df, 
+    df_lst = [alias_quantity_summary_df, ports_status_summary_df, alias_device_type_summary_df, active_vs_noalias_ports_summary_df, 
+                wwn_type_summary, alias_wwnn_summary_df, alias_wwnn_unpacked_summary_df, alias_wwnp_duplicated_summary_df, 
                 alias_duplicated_summary_df, alias_port_statistics_df]
     alias_statistics_df = merge_df(df_lst, fillna_index=7)
 

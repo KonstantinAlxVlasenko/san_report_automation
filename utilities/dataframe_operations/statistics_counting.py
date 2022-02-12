@@ -1,11 +1,10 @@
 """"""
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-
-from .value_processing import count_bandwidth
 from .value_presentation import concatenate_columns
+from .value_processing import count_bandwidth
 
 
 def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_qunatity_column: str, speed_column: str):
@@ -132,44 +131,44 @@ def concat_statistics(statistics_df, summary_df, total_df, sort_columns):
     return statistics_df
 
 
-# should be renamed to verify_symmetry verify_connection_symmetry
-def verify_symmetry_regarding_fabric_name(statistics_summary_df, symmetry_columns, summary_column='Asymmetry_note'):
-    """Function to verify if connections are symmetric in each Fabrics_name from values in
-    connection_symmetry_columns point of view. Function adds Assysmetric_note to statistics_summary_df.
-    Column contains parameter name(s) for which connection symmetry condition is not fullfilled"""
+# should be renamed to verify_symmetry verify_connection_symmetry TO_REMOVE replaced with verify_group_symmetry
+# def verify_symmetry_regarding_fabric_name(statistics_summary_df, symmetry_columns, summary_column='Asymmetry_note'):
+#     """Function to verify if connections are symmetric in each Fabrics_name from values in
+#     connection_symmetry_columns point of view. Function adds Assysmetric_note to statistics_summary_df.
+#     Column contains parameter name(s) for which connection symmetry condition is not fullfilled"""
 
-    # drop invalid fabric labels
-    mask_not_valid = statistics_summary_df['Fabric_label'].isin(['x', '-'])
-    # drop fabric summary rows (rows with empty Fabric_label)
-    mask_fabric_label_notna = statistics_summary_df['Fabric_label'].notna()
-    statistics_summary_cp_df = statistics_summary_df.loc[~mask_not_valid & mask_fabric_label_notna].copy()
+#     # drop invalid fabric labels
+#     mask_not_valid = statistics_summary_df['Fabric_label'].isin(['x', '-'])
+#     # drop fabric summary rows (rows with empty Fabric_label)
+#     mask_fabric_label_notna = statistics_summary_df['Fabric_label'].notna()
+#     statistics_summary_cp_df = statistics_summary_df.loc[~mask_not_valid & mask_fabric_label_notna].copy()
     
-    # find number of unique values in connection_symmetry_columns
-    connection_symmetry_df = \
-        statistics_summary_cp_df.groupby(by='Fabric_name')[symmetry_columns].agg('nunique')
+#     # find number of unique values in connection_symmetry_columns
+#     connection_symmetry_df = \
+#         statistics_summary_cp_df.groupby(by='Fabric_name')[symmetry_columns].agg('nunique')
 
-    # temporary ineqaulity_notes columns for  connection_symmetry_columns
-    connection_symmetry_notes = [column + '_inequality' for column in symmetry_columns]
-    for column, column_note in zip(symmetry_columns, connection_symmetry_notes):
-        connection_symmetry_df[column_note] = np.nan
-        # if fabrics are symmetric then number of unique values in groups should be equal to one 
-        # mask_values_nonuniformity = connection_symmetry_df[column] == 1
-        mask_values_nonuniformity = connection_symmetry_df[column].isin([0, 1])
-        # use current column name as value in column_note for rows where number of unique values exceeds one 
-        connection_symmetry_df[column_note].where(mask_values_nonuniformity, column.lower(), inplace=True)
+#     # temporary ineqaulity_notes columns for  connection_symmetry_columns
+#     connection_symmetry_notes = [column + '_inequality' for column in symmetry_columns]
+#     for column, column_note in zip(symmetry_columns, connection_symmetry_notes):
+#         connection_symmetry_df[column_note] = np.nan
+#         # if fabrics are symmetric then number of unique values in groups should be equal to one 
+#         # mask_values_nonuniformity = connection_symmetry_df[column] == 1
+#         mask_values_nonuniformity = connection_symmetry_df[column].isin([0, 1])
+#         # use current column name as value in column_note for rows where number of unique values exceeds one 
+#         connection_symmetry_df[column_note].where(mask_values_nonuniformity, column.lower(), inplace=True)
         
-    # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
-    connection_symmetry_df = concatenate_columns(connection_symmetry_df, summary_column, 
-                                                 merge_columns=connection_symmetry_notes)
-    # drop columns with quantity of unique values
-    connection_symmetry_df.drop(columns=symmetry_columns, inplace=True)
-    # add Asymmetry_note column to statistics_summary_df
-    statistics_summary_df = statistics_summary_df.merge(connection_symmetry_df, how='left', on=['Fabric_name'])
-    # clean notes for dropped fabrics
-    if mask_not_valid.any():
-        statistics_summary_df.loc[mask_not_valid, summary_column] = np.nan
+#     # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
+#     connection_symmetry_df = concatenate_columns(connection_symmetry_df, summary_column, 
+#                                                  merge_columns=connection_symmetry_notes)
+#     # drop columns with quantity of unique values
+#     connection_symmetry_df.drop(columns=symmetry_columns, inplace=True)
+#     # add Asymmetry_note column to statistics_summary_df
+#     statistics_summary_df = statistics_summary_df.merge(connection_symmetry_df, how='left', on=['Fabric_name'])
+#     # clean notes for dropped fabrics
+#     if mask_not_valid.any():
+#         statistics_summary_df.loc[mask_not_valid, summary_column] = np.nan
 
-    return statistics_summary_df
+#     return statistics_summary_df
 
 
 def verify_group_symmetry(statistics_df, symmetry_grp, symmetry_columns, summary_column='Asymmetry_note'):

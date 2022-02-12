@@ -8,9 +8,6 @@ import utilities.dataframe_operations as dfop
 sw_columns = ['Fabric_name', 'Fabric_label', 
                'chassis_name', 'SwitchName', 'switchWwn', 'switchPair_id']
 
-# sw_columns = ['Fabric_name', 'Fabric_label', 
-#                'chassis_name', 'SwitchName', 'switchWwn']
-
 
 def switch_connection_statistics_aggregated(switch_params_aggregated_df, isl_statistics_df, npiv_statistics_df, pattern_dct):
     """Main function to count switch connection statistics"""
@@ -46,15 +43,15 @@ def connection_statistics(df, connected_dev_columns, tag):
     # convert connection quantity to numeric type 
     switch_conn_df[connected_dev_columns[2:]] = switch_conn_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
 
-
     # summary rows are not changed and concatenated with connection statistics after calculation. 
     # Conneceted device (switch) name and it's wwn are dropped since connection statistics counted for entire switch
     summary_columns = [*sw_columns, *connected_dev_columns[2:]]
+    # summary for fabric_name and fabric_label level
     switch_conn_fabric_summary_df = df.loc[mask_fabric_summary, summary_columns].copy()
     switch_conn_fabric_summary_df[connected_dev_columns[2:]] = switch_conn_fabric_summary_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
     # verify if fabric A and B are symmetrical from Native ang AG connection point of view
     switch_conn_fabric_summary_df = dfop.verify_group_symmetry(switch_conn_fabric_summary_df, symmetry_grp=['Fabric_name'], symmetry_columns=connected_dev_columns[2:])
-    # sum up connections, links, ports and bandwidth for each switch
+    # sum up connections, links, ports and bandwidth for each switch (summary for switch level)
     switch_conn_total_df = switch_conn_df.groupby(sw_columns).agg('sum').reset_index()
     # check if swicth have similar connections in all fabric labels
     switch_conn_total_df = dfop.verify_group_symmetry(switch_conn_total_df, symmetry_grp=['Fabric_name', 'switchPair_id'], symmetry_columns=connected_dev_columns[2:])
@@ -68,12 +65,11 @@ def connection_statistics(df, connected_dev_columns, tag):
     if 'Switch_quantity' in switch_conn_total_df.columns:
         switch_conn_total_df['Switch_quantity'] = 1
     
-    # add unchanged summary to connection statistics DataFrame
+    # concatenate switch level with fabric_name and fabric_label summary
     switch_conn_df = pd.concat([switch_conn_total_df, switch_conn_fabric_summary_df])
     # rename columns with the Native or AG tag
     connected_dev_rename_dct = {k: tag + '_' + k for k in [*connected_dev_columns, 'Asymmetry_note'] if k != 'Switch_quantity'}
     switch_conn_df.rename(columns=connected_dev_rename_dct, inplace=True)
-    
     return switch_conn_df
     
 
