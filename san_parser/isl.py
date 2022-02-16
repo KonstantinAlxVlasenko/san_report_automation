@@ -26,7 +26,6 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
     # load data if they were saved on previos program execution iteration    
-    # data_lst = load_data(report_constant_lst, *data_names)
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
@@ -36,17 +35,10 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
     if force_run:    
         print('\nEXTRACTING INTERSWITCH CONNECTION INFORMATION (ISL, TRUNK, TRUNKAREA) ...\n')   
         
-        # # extract chassis parameters names from init file
-        # switch_columns = sfop.columns_import('switch', max_title, 'columns')
-        
         # number of switches to check
         switch_num = len(switch_params_df.index)   
      
         # data imported from init file to extract values from config file
-
-        # *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('isl', max_title)
-        # lsdb_params = sfop.columns_import('isl', max_title, 'lsdb_params')
-
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('isl', max_title)
         lsdb_params = dfop.list_from_dataframe(re_pattern_df, 'lsdb_params')
 
@@ -209,34 +201,19 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
             # if switch in Access Gateway mode then skip
             else:
                 meop.status_info('skip', max_title, len(info))        
-
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'isl_columns', 'trunk_columns', 'porttrunkarea_columns', 'lsdb_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst)
         isl_df, trunk_df, porttrunkarea_df, lsdb_df, *_ = data_lst    
-
-        # isl_df = dfop.list_to_dataframe(isl_lst, max_title,  sheet_title_import='isl')
-        # trunk_df = dfop.list_to_dataframe(trunk_lst, max_title,  sheet_title_import='isl', columns_title_import = 'trunk_columns')
-        # porttrunkarea_df = dfop.list_to_dataframe(porttrunkarea_lst, max_title,  sheet_title_import='isl', columns_title_import = 'porttrunkarea_columns')
-        # lsdb_df = dfop.list_to_dataframe(lsdb_lst, max_title,  sheet_title_import='isl', columns_title_import = 'lsdb_columns')
-        # # saving data to csv file
-        # data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
-        # # save_data(report_constant_lst, data_names, *data_lst)
-        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # isl_df, trunk_df, porttrunkarea_df, lsdb_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        # data_lst = [isl_df, trunk_df, porttrunkarea_df, lsdb_df]
-
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         isl_df, trunk_df, porttrunkarea_df, lsdb_df = data_lst
-
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
-    
     return isl_df, trunk_df, porttrunkarea_df, lsdb_df
 
 

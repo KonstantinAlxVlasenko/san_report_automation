@@ -24,7 +24,7 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
     *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
-    data_names = ['isl_aggregated', 'fcredge']
+    data_names = ['isl_aggregated', 'fcredge_aggregated']
 
     # data_names = ['isl_aggregated', 'isl_statistics', 'Межкоммутаторные_соединения', 'Межфабричные_соединения', 'Статистика_ISL']
 
@@ -58,13 +58,20 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
         print(info, end =" ")
 
         # get aggregated DataFrames
-        isl_aggregated_df, fcredge_df = \
+        isl_aggregated_df, fcredge_aggregated_df = \
             isl_aggregated(fabricshow_ag_labels_df, switch_params_aggregated_df, 
             isl_df, trunk_df, lsdb_df, fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, pattern_dct)
         
-        # isl_statistics_df = isl_statistics(isl_aggregated_df, pattern_dct, report_constant_lst)
-        # after finish display status
-        meop.status_info('ok', max_title, len(info))      
+        # verify missing switches
+        mask_switch_missing = isl_aggregated_df['Connected_SwitchName'].isna()
+        missing_switch_df =  isl_aggregated_df.loc[mask_switch_missing].drop_duplicates(subset=['Connected_switchWwn']).copy()
+
+        if missing_switch_df.empty:    
+            meop.status_info('ok', max_title, len(info))
+        else:
+            meop.status_info('warning', max_title, len(info))
+            missing_sw_num = missing_switch_df['Connected_switchWwn'].count()
+            print(f'\nWARNING!!! {missing_sw_num} switch {"config is" if missing_sw_num == 1 else "configs are"} missing!\n')
 
         # # partition aggregated DataFrame to required tables
         
@@ -83,7 +90,7 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
         # isl_statistics_report_df = isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_usage_dct)
 
         # create list with partitioned DataFrames
-        data_lst = [isl_aggregated_df, fcredge_df]
+        data_lst = [isl_aggregated_df, fcredge_aggregated_df]
 
         # data_lst = [isl_aggregated_df, isl_statistics_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
 
@@ -94,13 +101,13 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        isl_aggregated_df, fcredge_df, *_ = data_lst
+        isl_aggregated_df, fcredge_aggregated_df, *_ = data_lst
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
 
-    return isl_aggregated_df, fcredge_df
+    return isl_aggregated_df, fcredge_aggregated_df
 
 # TO_REMOVE moved to isl_sw_pairs
 # def isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_usage_dct):

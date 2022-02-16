@@ -45,6 +45,8 @@ def merge_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_m
     """Function to concatenate values in several columns (merge_columns) into summary_column 
     with separator. If drop flag is True all merged columns except summary column are dropped"""
     
+
+    df.reset_index(drop=True, inplace=True)
     merge_columns = [column for column in merge_columns if column in df.columns]
     if not merge_columns:
         return df

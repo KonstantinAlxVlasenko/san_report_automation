@@ -46,10 +46,11 @@ def asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df):
 def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     """Function to modify switch_params_aggregated_df to count statistics"""
 
-    #     # regular expression patterns
-    # *_, comp_dct = re_pattern_lst
     
-    switch_params_cp_df = switch_params_aggregated_df.copy()
+    mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
+    mask_not_vc = ~switch_params_aggregated_df['ModelName'].str.contains('virtual', case=False)
+    switch_params_cp_df = switch_params_aggregated_df.loc[mask_valid_fabric & mask_not_vc].copy()
+    
     # remove uninfomative values from switch DataFrame
     maps_clean_pattern = pattern_dct['maps_clean']
     switch_params_cp_df.replace(to_replace={maps_clean_pattern: np.nan} , regex=True, inplace=True)
@@ -74,6 +75,7 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     switch_params_cp_df.loc[mask_switch_pair_found, 'switchPaired'] = 'Paired_switch'
 
     switch_params_cp_df['Total'] = 'Total'
+
     return switch_params_cp_df
 
 
@@ -102,9 +104,11 @@ def count_switch_statistics(switch_params_cp_df):
 def count_chassis_statistics(switch_params_cp_df):
     """Function to count chassis statistics (physical only) for fabric_label, total san levels"""
 
+
     # filter unique chassis only across all fabrics
     chassis_columns = ['configname', 'chassis_name', 'chassis_wwn']
     chassis_cp_df = switch_params_cp_df.drop_duplicates(subset=chassis_columns).copy()
+
     chassis_cp_df['Fabric_name'] = 'Total chassis'
     # count values for fabric_label level
     chassis_stat_columns = ['Total', 'ModelName', 'Generation', 'switchPaired', 'Trunking_lic', 'Fabric_Vision_lic']

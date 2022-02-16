@@ -36,15 +36,8 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
-
-    # # unpacking DataFrames from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df, switches_report_df, fabric_report_df, \
-    #     switches_parameters_report_df, maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df  = data_lst
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['chassis_parameters', 'switch_parameters', 'switchshow_ports', 
@@ -78,35 +71,20 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         switch_params_aggregated_df = fill_device_location(switch_params_aggregated_df, blade_module_loc_df)
 
         # after finish display status
-        meop.status_info('ok', max_title, len(info))
-
-        # # current operation information string
-        # info = f'Counting switch statistics'
-        # print(info, end =" ") 
-        # fabric_switch_statistics_df = fabric_switch_statistics(switch_params_aggregated_df, pattern_dct)
-        # # after finish display status
-        # meop.status_info('ok', max_title, len(info))        
+        meop.status_info('ok', max_title, len(info))    
 
         # check if switch config files missing
-        mask_fabric = switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].notna().all(axis=1)
-        mask_no_config = switch_params_aggregated_df['chassis_name'].isna()
-        missing_configs_num = switch_params_aggregated_df.loc[mask_no_config]['Fabric_name'].count()
+        # mask_fabric = switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].notna().all(axis=1)
+        mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['-', 'x']).any(axis=1)
+        mask_no_config = switch_params_aggregated_df['configname'].isna()
+        missing_configs_num = switch_params_aggregated_df.loc[mask_valid_fabric & mask_no_config, 'switchWwn'].count()
         if missing_configs_num:
             info = f'{missing_configs_num} switch configuration{"s" if missing_configs_num > 1 else ""} MISSING'
             print(info, end =" ")
             meop.status_info('warning', max_title, len(info))
 
-        # switches_report_df, fabric_report_df, switches_parameters_report_df, \
-        #     maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = \
-        #         switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names)
-
         # create list with partitioned DataFrames
         data_lst = [report_columns_usage_dct, switch_params_aggregated_df]
-
-        # data_lst = [report_columns_usage_dct, switch_params_aggregated_df, fabric_switch_statistics_df,
-        #             switches_report_df, fabric_report_df, 
-        #             switches_parameters_report_df, maps_report_df, licenses_report_df,
-        #             global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
         # writing data to sql
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
     

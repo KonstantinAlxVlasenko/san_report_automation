@@ -52,7 +52,7 @@ def count_column_statistics(portshow_aggregated_df, column: str):
         portshow_cp_df.drop_duplicates(subset=['configname', 'chassis_name', 'chassis_wwn', 
                                                         'switchName', 'switchWwn', 'slot', 'port'], inplace=True)
     if column == 'license':
-        mask_not_licensed = portshow_cp_df['connection_details'].str.contains('no (?:pod|ports on demand) license', case=False)
+        mask_not_licensed = portshow_cp_df['connection_details'].str.contains('no (?:pod|(?:qflex )?ports on demand) license', case=False)
         portshow_cp_df['license'] = np.where(mask_not_licensed, 'Not_licensed', 'Licensed')
     elif column == 'speed':
         mask1 = portshow_cp_df['speed'] != '--'

@@ -44,7 +44,7 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
                             'switchshow_ports', 'switch_params_aggregated', 'maps_parameters', 'fdmi', 
                             'device_rename', 'report_columns_usage_upd', 'nscamshow', 
                             'nsshow', 'alias', 'blade_servers', 'fabric_labels', 'isl', 'isl_statistics',
-                            'blade_interconnect', 'synergy_interconnect']
+                            'blade_interconnect', 'synergy_interconnect', 'switch_pair']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  

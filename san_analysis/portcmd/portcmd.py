@@ -280,7 +280,9 @@ def device_names_per_port(portshow_aggregated_df):
     portshow_aggregated_df = dfop.merge_columns(portshow_aggregated_df, summary_column='Device_Host_Name_Port',
                                         merge_columns=['Device_Host_Name', 'Device_Port'],
                                         sep=' port ', drop_merge_columns=False)
-
+    # if no Device_Host_Name Device_Host_Name_Port column is not informative
+    mask_device_host_name_empty = portshow_aggregated_df['Device_Host_Name'].isna()
+    portshow_aggregated_df.loc[mask_device_host_name_empty, 'Device_Host_Name_Port'] = np.nan
     # create column with list containing all devices connected to the port
     switch_port_columns = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn','portIndex', 'slot', 'port']
     portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device', inplace=True)

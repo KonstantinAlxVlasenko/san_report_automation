@@ -9,8 +9,9 @@ from .switch_pair_verification import verify_switch_pair_match
 def assign_switch_pair_id(switch_pair_df):
     """Function to assighn switch pair Id based on sorted combination of switchWwn and switchWwn_paired"""
     
+    # switch_pair_df.reset_index(drop=True, inplace=True)
     # merge wwns of the paired swithes
-    switch_pair_df = dfop.merge_columns(switch_pair_df, 'switchPair_wwns', merge_columns=['switchWwn', 'switchWwn_pair'], drop_merge_columns=False)
+    switch_pair_df = dfop.merge_columns(switch_pair_df, summary_column='switchPair_wwns', merge_columns=['switchWwn', 'switchWwn_pair'], drop_merge_columns=False)
     # sort merged wwns in cells to have identical cell values for both of the paired rows
     dfop.sort_cell_values(switch_pair_df, 'switchPair_wwns')
     # numbering identical switch_pair_wwns

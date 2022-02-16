@@ -109,7 +109,7 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'], inplace=True)
 
     # generate combination of oui and switch main board seral number based on Connected port WWN
-    portshow_aggregated_df['oui_board_sn'] = portshow_aggregated_df.Connected_portWwn.str.slice(start = 6)
+    portshow_aggregated_df['oui_board_sn'] = portshow_aggregated_df.Connected_portWwn_switchshow_filled.str.slice(start = 6)
     switch_params_aggregated_df['oui_board_sn'] = switch_params_aggregated_df.switchWwn.str.slice(start = 6)
 
     # extract required columns from switch_params_aggregated_df

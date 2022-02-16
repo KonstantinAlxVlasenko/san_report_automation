@@ -45,7 +45,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
     if len(report_creation_info_lst) == 3:
         report_creation_info_lst.append(report_columns_usage_dct)
 
-    isl_aggregated_df, fcredge_df = \
+    isl_aggregated_df, fcredge_aggregated_df = \
         isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df, isl_df, trunk_df, lsdb_df, 
                             fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, report_creation_info_lst)
 
@@ -58,11 +58,9 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
 
     switch_pair_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)
 
-
-    exit()
     switch_params_aggregated_df = switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, report_creation_info_lst)
 
-    isl_aggregated_df, isl_statistics_df = isl_sw_pair_update(isl_aggregated_df, fcredge_df, switch_pair_df, report_creation_info_lst)
+    isl_aggregated_df, isl_statistics_df = isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df, report_creation_info_lst)
 
     portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_creation_info_lst)
 

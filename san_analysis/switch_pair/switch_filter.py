@@ -8,10 +8,11 @@ def create_sw_brocade_dataframe(switch_params_aggregated_df):
     """Function to filter Brocade swithes for which pair switch need to be found"""
     
     mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
+    mask_not_vc = ~switch_params_aggregated_df['ModelName'].str.contains('virtual', case=False)
     switch_columns = ['configname', 'Fabric_name', 'Fabric_label', 'Device_Location', 
                        'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 
                        'switchType', 'ModelName', 'switchMode', 'LS_type_report']
-    switch_pair_brocade_df = switch_params_aggregated_df.loc[mask_valid_fabric,switch_columns].copy()
+    switch_pair_brocade_df = switch_params_aggregated_df.loc[mask_valid_fabric & mask_not_vc, switch_columns].copy()
     return switch_pair_brocade_df
 
 

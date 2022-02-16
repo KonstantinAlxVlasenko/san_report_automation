@@ -9,7 +9,7 @@ import utilities.servicefile_operations as sfop
 from .isl_statistics import isl_statistics
 
 
-def isl_sw_pair_update(isl_aggregated_df, fcredge_df, switch_pair_df, report_creation_info_lst):
+def isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df, report_creation_info_lst):
     """Main function to add switch pair ID to ISL and IFR tables"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -20,7 +20,7 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_df, switch_pair_df, report_cre
     *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
-    data_names = ['isl_aggregated_upd', 'isl_statistics', 'fcredge_upd', 'Межкоммутаторные_соединения', 'Межфабричные_соединения', 'Статистика_ISL']
+    data_names = ['isl_aggregated_upd', 'isl_statistics', 'fcredge_aggregated_upd', 'Межкоммутаторные_соединения', 'Межфабричные_соединения', 'Статистика_ISL']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
@@ -30,7 +30,7 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_df, switch_pair_df, report_cre
     # list of data to analyze from report_info table
     analyzed_data_names = ['isl', 'trunk', 'fcredge', 'lsdb', 'sfpshow', 'portcfgshow', 
                             'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
-                            'maps_parameters', 'blade_interconnect', 'fabric_labels']
+                            'maps_parameters', 'blade_interconnect', 'fabric_labels', 'switch_pair']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
@@ -45,8 +45,8 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_df, switch_pair_df, report_cre
         print(info, end =" ")
 
         isl_aggregated_df = dfop.dataframe_join(isl_aggregated_df, switch_pair_df,  ['switchWwn', 'switchPair_id'], 1)
-        if not fcredge_df.empty:
-            fcredge_df = dfop.dataframe_join(fcredge_df, switch_pair_df,  ['switchWwn', 'switchPair_id'], 1)
+        if not fcredge_aggregated_df.empty:
+            fcredge_aggregated_df = dfop.dataframe_join(fcredge_aggregated_df, switch_pair_df,  ['switchWwn', 'switchPair_id'], 1)
 
         isl_statistics_df = isl_statistics(isl_aggregated_df, pattern_dct, report_constant_lst)
         # after finish display status
@@ -56,16 +56,16 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_df, switch_pair_df, report_cre
         isl_report_df = dfop.translate_values(isl_report_df, translate_dct={'Yes': 'Да', 'No': 'Нет'})
         isl_report_df = dfop.drop_column_if_all_na(isl_report_df, columns=['Идентификатор транка', 'Deskew', 'Master', 'Идентификатор IFL'])
         # check if IFL table required
-        if not fcredge_df.empty:
+        if not fcredge_aggregated_df.empty:
             # ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[3]], report_columns_usage_dct, max_title)
-            ifl_report_df = dfop.generate_report_dataframe(fcredge_df, report_headers_df, report_columns_usage_dct, data_names[4]) 
+            ifl_report_df = dfop.generate_report_dataframe(fcredge_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[4]) 
         else:
-            ifl_report_df = fcredge_df.copy()
+            ifl_report_df = fcredge_aggregated_df.copy()
 
         isl_statistics_report_df = isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_usage_dct)
 
         # create list with partitioned DataFrames
-        data_lst = [isl_aggregated_df, isl_statistics_df, fcredge_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
+        data_lst = [isl_aggregated_df, isl_statistics_df, fcredge_aggregated_df, isl_report_df, ifl_report_df, isl_statistics_report_df]
         # writing data to sql
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame

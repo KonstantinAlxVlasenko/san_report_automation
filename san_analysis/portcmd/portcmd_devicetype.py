@@ -10,18 +10,22 @@ import numpy as np
 import pandas as pd
 
 
-# import utilities.dataframe_operations as dfop
+import utilities.dataframe_operations as dfop
 # import utilities.database_operations as dbop
 # import utilities.data_structure_operations as dsop
 # import utilities.module_execution as meop
 # import utilities.servicefile_operations as sfop
 # import utilities.filesystem_operations as fsop
 
-def oui_join(portshow_aggregated_df, oui_df):
+def oui_join(portshow_aggregated_df, oui_df, switchshow_ports_df):
     """Function to add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)"""  
     
+    portshow_aggregated_df['Connected_portWwn_switchshow_filled'] = portshow_aggregated_df['Connected_portWwn']
+    switchshow_ports_df['Connected_portWwn_switchshow_filled'] = switchshow_ports_df['connected_portWwn'].str.lower()
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, switchshow_ports_df, join_lst=['switchWwn', 'slot', 'port'],
+                                                    filled_lst=['Connected_portWwn_switchshow_filled'])
     # extract oui from WWNp
-    portshow_aggregated_df['Connected_oui'] = portshow_aggregated_df.Connected_portWwn.str.slice(start = 6, stop = 14)
+    portshow_aggregated_df['Connected_oui'] = portshow_aggregated_df['Connected_portWwn_switchshow_filled'].str.slice(start = 6, stop = 14)
     # add device types from oui DataFrame
     oui_df.dropna(subset=['Connected_oui'], inplace=True)
     portshow_aggregated_df = portshow_aggregated_df.merge(oui_df, how = 'left', on = ['Connected_oui'])
@@ -42,9 +46,9 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
         #     return pd.Series(('BLADE_SRV', series['subtype'].split('|')[0]))
         # elif (synergy_hba_df['Connected_portWwn'] == series['Connected_portWwn']).any():
         #     return pd.Series(('SYNERGY_SRV', series['subtype'].split('|')[0]))
-        if (series['Connected_portWwn'] == blade_hba_df['portWwn']).any():
+        if (series['Connected_portWwn_switchshow_filled'] == blade_hba_df['portWwn']).any():
             return pd.Series(('SRV_BLADE', series['subtype'].split('|')[0]))
-        elif (series['Connected_portWwn'] == synergy_hba_df['Connected_portWwn']).any():
+        elif (series['Connected_portWwn_switchshow_filled'] == synergy_hba_df['Connected_portWwn']).any():
             return pd.Series(('SRV_SYNERGY', series['subtype'].split('|')[0]))
 
         # devices with strictly defined type and subtype
@@ -54,9 +58,9 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
         elif 'SRV|SWITCH' in series['type']:
             if series['Device_type'] in ['Physical Initiator', 'NPIV Initiator']:
                 return pd.Series(('SRV', series.subtype))
-            elif 'E-Port' in series['portType']:
+            elif series['portType'] in ['E-Port', 'EX-Port']:
                 return pd.Series(('SWITCH', series.subtype))
-            elif (series['Connected_portWwn'][6:] == switches_oui).any():
+            elif (series['Connected_portWwn_switchshow_filled'][6:] == switches_oui).any():
                 return pd.Series(('SWITCH', series.subtype))
             elif series['switchMode'] == 'Access Gateway Mode' and series['portType'] == 'N-Port':
                 return pd.Series(('SWITCH', 'AG'))
@@ -139,7 +143,7 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
                 ('E-Port' in series['portType'] or 'EX-Port' in series['portType']):
                 return pd.Series(('SWITCH', 'SWITCH'))
             # slave F-Port trunk ports have Online status but devices are on master port
-            elif pd.isna(series.Connected_portWwn) and series['portState'] == 'Online' \
+            elif pd.isna(series.Connected_portWwn_switchshow_filled) and series['portState'] == 'Online' \
                 and 'Trunk port' in series['portScn']:
                 return pd.Series((np.nan, np.nan))
             # when device_type is not defined, oui is not founded, 

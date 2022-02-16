@@ -238,6 +238,7 @@ def fcredge_portindex_join(switchshow_df, fcredge_df):
     switchshow_join_df = switchshow_df.rename(columns={'switchName': 'SwitchName'}).copy()
     # if Fabric Routing is ON
     if not fcredge_df.empty:
+        fcredge_df['slot'].fillna('0', inplace=True)
         # add portIndex to fcredge
         port_index_lst = ['configname', 'chassis_name', 'chassis_wwn', 
                           'SwitchName', 'switchWwn', 'slot', 'port', 'portIndex']

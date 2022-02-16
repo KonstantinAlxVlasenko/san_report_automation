@@ -34,7 +34,7 @@ def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, re
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['switch_params_aggregated', 'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
-                            'maps_parameters', 'blade_interconnect', 'fabric_labels', 'fabricshow_summary']
+                            'maps_parameters', 'blade_interconnect', 'fabric_labels', 'fabricshow_summary', 'switch_pair']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution
