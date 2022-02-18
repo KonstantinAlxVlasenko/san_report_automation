@@ -15,7 +15,6 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     # count statistics for columns
     stat_columns = ['portState', 'license', 'portPhys', 'speed', 'deviceType', 'Device_type', 'portType', 'zoning_enforcement']
     stat_lst = [count_column_statistics(portshow_aggregated_df, column) for column in stat_columns]
-    
     # merge all statistics DataFrames in aggregated DataFrame
     port_statistics_df = stat_lst[0].copy()
     for stat_df in stat_lst[1:]:
@@ -53,14 +52,15 @@ def count_column_statistics(portshow_aggregated_df, column: str):
                                                         'switchName', 'switchWwn', 'slot', 'port'], inplace=True)
     if column == 'license':
         mask_not_licensed = portshow_cp_df['connection_details'].str.contains('no (?:pod|(?:qflex )?ports on demand) license', case=False)
-        portshow_cp_df['license'] = np.where(mask_not_licensed, 'Not_licensed', 'Licensed')
+        mask_connection_detail_notna = portshow_cp_df['connection_details'].notna()
+        portshow_cp_df['license'] = np.where(mask_connection_detail_notna & mask_not_licensed, 'Not_licensed', 'Licensed')
     elif column == 'speed':
         mask1 = portshow_cp_df['speed'] != '--'
         # check rows with Online state ports only
         mask2 = portshow_cp_df['portState'] == 'Online'
         # get required columns
         portshow_cp_df = portshow_cp_df.loc[mask1 & mask2]
-    
+
     column_statistics_df = pd.crosstab(index= [portshow_cp_df.Fabric_name, portshow_cp_df.Fabric_label, 
                                                 portshow_cp_df.chassis_name,
                                                 portshow_cp_df.switchName, portshow_cp_df.switchWwn], 

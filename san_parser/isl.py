@@ -50,153 +50,15 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
         lsdb_lst = []
 
         # checking each switch for switch level parameters
-        for i, switch_params_sr in switch_params_df.iterrows(): 
+        for i, switch_params_sr in switch_params_df.iterrows():
 
-            switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
-                                'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
-            switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
-            ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False
-            
-            sshow_file, _, _, switch_index, switch_name, *_, switch_mode = switch_info_lst
-                        
             # current operation information string
-            info = f'[{i+1} of {switch_num}]: {switch_name} isl, trunk and trunk area ports. Switch mode: {switch_mode}'
-            print(info, end =" ")           
-            # search control dictionary. continue to check sshow_file until all parameters groups are found
-            collected = {'isl': False, 'trunk': False, 'trunkarea': False, 'lsdb': False}
+            info = f'[{i+1} of {switch_num}]: {switch_params_sr["SwitchName"]} isl, trunk and trunk area ports. Switch mode: {switch_params_sr["switchMode"]}'
+            print(info, end =" ")   
 
-            if switch_mode == 'Native':
-                with open(sshow_file, encoding='utf-8', errors='ignore') as file:
-                    # check file until all groups of parameters extracted
-                    while not all(collected.values()):
-                        line = file.readline()                        
-                        if not line:
-                            break
-                        # isl section start   
-                        # switchcmd_islshow_comp
-                        if re.search(pattern_dct['switchcmd_islshow'], line) and not collected['isl']:
-                            collected['isl'] = True
-                            if ls_mode_on:
-                                while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
-                                    line = file.readline()
-                                    if not line:
-                                        break                        
-                            # switchcmd_end_comp
-                            while not re.search(pattern_dct['switchcmd_end'], line):
-                                line = file.readline()
-                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                                # islshow_match
-                                if match_dct['islshow']:
-                                    isl_port = dsop.line_to_list(pattern_dct['islshow'], line, *switch_info_lst[:-1])
-                                    # portcfg parameters
-                                    if isl_port[-1]:
-                                        isl_port[-1] = isl_port[-1].replace(' ', ', ')
-                                    # appending list with only REQUIRED port info for the current loop iteration 
-                                    # to the list with all ISL port info
-                                    isl_lst.append(isl_port)
-                                if not line:
-                                    break                                
-                        # isl section end
-                        # trunk section start   
-                        # switchcmd_trunkshow_comp
-                        if re.search(pattern_dct['switchcmd_trunkshow'], line) and not collected['trunk']:
-                            collected['trunk'] = True
-                            if ls_mode_on:
-                                while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
-                                    line = file.readline()
-                                    if not line:
-                                        break                        
-                            # switchcmd_end_comp
-                            while not re.search(pattern_dct['switchcmd_end'], line):                             
-                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                                # trunkshow_match
-                                if match_dct['trunkshow']:
-                                    trunk_port = dsop.line_to_list(pattern_dct['trunkshow'], line, *switch_info_lst[:-1])
-                                    # if trunk line has trunk number then remove ":" from trunk number
-                                    if trunk_port[9]:
-                                        trunk_port[9] = trunk_port[9].strip(':')
-                                        trunk_num = trunk_port[9]
-                                    # if trunk line has no number then use number from previous line
-                                    else:
-                                        trunk_port[9] = trunk_num
-                                    # appending list with only REQUIRED trunk info for the current loop iteration 
-                                    # to the list with all trunk port info
-                                    trunk_lst.append(trunk_port)
-                                line = file.readline()
-                                if not line:
-                                    break                                
-                        # trunk section end
-                        # porttrunkarea section start
-                        # switchcmd_trunkarea_comp
-                        if re.search(pattern_dct['switchcmd_trunkarea'], line) and not collected['trunkarea']:
-                            collected['trunkarea'] = True
-                            if ls_mode_on:
-                                while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
-                                    line = file.readline()
-                                    if not line:
-                                        break
-                            # switchcmd_end_comp
-                            while not re.search(pattern_dct['switchcmd_end'], line):
-                                line = file.readline()
-                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                                # 'porttrunkarea_match'
-                                if match_dct['porttrunkarea']:
-                                    porttrunkarea_port_lst = dsop.line_to_list(pattern_dct['porttrunkarea'], line, *switch_info_lst[:6])
-                                    # for No_light ports port and slot numbers are '--'
-                                    if porttrunkarea_port_lst[11] == '--':
-                                        porttrunkarea_port_lst[10] = '--'
-                                    # if switch has no slots than slot number is 0
-                                    for idx in [6, 10]:                                   
-                                        if not porttrunkarea_port_lst[idx]:
-                                            porttrunkarea_port_lst[idx] = str(0)
-
-                                    porttrunkarea_lst.append(porttrunkarea_port_lst)                                                       
-                                if not line:
-                                    break                        
-                        # porttrunkarea section end
-                        # lsdb section start
-                        if re.search(pattern_dct['switchcmd_lsdbshow'], line) and not collected['lsdb']:
-                            # when section is found corresponding collected dict values changed to True
-                            collected['lsdb'] = True
-                            if ls_mode_on:
-                                while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
-                                    line = file.readline()
-                                    if not line:
-                                        break
-                            # switchcmd_end_comp
-                            while not re.search(pattern_dct['switchcmd_end'],line):  
-                                line = file.readline()
-                                if not line:
-                                    break
-                                # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                                # lsdb_domain section start
-                                if match_dct['lsdb_domain']:
-                                    # dictionary to store all DISCOVERED parameters
-                                    lsdb_param_dct = {}
-                                    # Domain ID described by this LSR. 
-                                    # A (self) keyword after the domain ID indicates that LSR describes the local switch.
-                                    domain_self_tag_lst = dsop.line_to_list(pattern_dct['lsdb_domain'], line)
-                                    # lsdb_link_comp
-                                    while not (re.search(pattern_dct['lsdb_link'],line) or re.search(pattern_dct['switchcmd_end'],line)):
-                                        line = file.readline()
-                                        if not line:
-                                            break
-                                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                                        # param extraction
-                                        if match_dct['lsdb_param']:
-                                            lsdb_name = match_dct['lsdb_param'].group(1).rstrip()
-                                            lsdb_value = match_dct['lsdb_param'].group(2).rstrip()
-                                            lsdb_param_dct[lsdb_name] = lsdb_value
-                                    # list with required params only in order
-                                    lsdb_param_lst = [lsdb_param_dct.get(param_name) for param_name in lsdb_params]
-                                # lsdb_domain section end
-                                if match_dct['lsdb_link']:
-                                    # extract link information
-                                    lsdb_link_lst = dsop.line_to_list(pattern_dct['lsdb_link'], line)
-                                    # add link information to the global list with current switch and lsdb information 
-                                    lsdb_lst.append([*switch_info_lst[:6], *domain_self_tag_lst,*lsdb_param_lst, *lsdb_link_lst])
-                        # lsdb section end
+            if switch_params_sr["switchMode"] == 'Native':
+                current_config_extract(isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst, pattern_dct, 
+                                        switch_params_sr, lsdb_params)
                 meop.status_info('ok', max_title, len(info))
             # if switch in Access Gateway mode then skip
             else:
@@ -218,3 +80,151 @@ def interswitch_connection_extract(switch_params_df, report_creation_info_lst):
 
 
 
+def current_config_extract(isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst, pattern_dct, 
+                            switch_params_sr, lsdb_params):
+    """Function to extract values from current switch confguration file. 
+    Returns list with extracted values"""
+
+
+    switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 
+                        'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
+    switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
+    ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False
+    
+    sshow_file, _, _, switch_index, switch_name, *_, switch_mode = switch_info_lst
+                     
+    # search control dictionary. continue to check sshow_file until all parameters groups are found
+    collected = {'isl': False, 'trunk': False, 'trunkarea': False, 'lsdb': False}
+
+    if switch_mode == 'Native':
+        with open(sshow_file, encoding='utf-8', errors='ignore') as file:
+            # check file until all groups of parameters extracted
+            while not all(collected.values()):
+                line = file.readline()                        
+                if not line:
+                    break
+                # isl section start   
+                # switchcmd_islshow_comp
+                if re.search(pattern_dct['switchcmd_islshow'], line) and not collected['isl']:
+                    collected['isl'] = True
+                    if ls_mode_on:
+                        while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+                            line = file.readline()
+                            if not line:
+                                break                        
+                    # switchcmd_end_comp
+                    while not re.search(pattern_dct['switchcmd_end'], line):
+                        line = file.readline()
+                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                        # islshow_match
+                        if match_dct['islshow']:
+                            isl_port = dsop.line_to_list(pattern_dct['islshow'], line, *switch_info_lst[:-1])
+                            # portcfg parameters
+                            if isl_port[-1]:
+                                isl_port[-1] = isl_port[-1].replace(' ', ', ')
+                            # appending list with only REQUIRED port info for the current loop iteration 
+                            # to the list with all ISL port info
+                            isl_lst.append(isl_port)
+                        if not line:
+                            break                                
+                # isl section end
+                # trunk section start   
+                # switchcmd_trunkshow_comp
+                if re.search(pattern_dct['switchcmd_trunkshow'], line) and not collected['trunk']:
+                    collected['trunk'] = True
+                    if ls_mode_on:
+                        while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+                            line = file.readline()
+                            if not line:
+                                break                        
+                    # switchcmd_end_comp
+                    while not re.search(pattern_dct['switchcmd_end'], line):                             
+                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                        # trunkshow_match
+                        if match_dct['trunkshow']:
+                            trunk_port = dsop.line_to_list(pattern_dct['trunkshow'], line, *switch_info_lst[:-1])
+                            # if trunk line has trunk number then remove ":" from trunk number
+                            if trunk_port[9]:
+                                trunk_port[9] = trunk_port[9].strip(':')
+                                trunk_num = trunk_port[9]
+                            # if trunk line has no number then use number from previous line
+                            else:
+                                trunk_port[9] = trunk_num
+                            # appending list with only REQUIRED trunk info for the current loop iteration 
+                            # to the list with all trunk port info
+                            trunk_lst.append(trunk_port)
+                        line = file.readline()
+                        if not line:
+                            break                                
+                # trunk section end
+                # porttrunkarea section start
+                # switchcmd_trunkarea_comp
+                if re.search(pattern_dct['switchcmd_trunkarea'], line) and not collected['trunkarea']:
+                    collected['trunkarea'] = True
+                    if ls_mode_on:
+                        while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+                            line = file.readline()
+                            if not line:
+                                break
+                    # switchcmd_end_comp
+                    while not re.search(pattern_dct['switchcmd_end'], line):
+                        line = file.readline()
+                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                        # 'porttrunkarea_match'
+                        if match_dct['porttrunkarea']:
+                            porttrunkarea_port_lst = dsop.line_to_list(pattern_dct['porttrunkarea'], line, *switch_info_lst[:6])
+                            # for No_light ports port and slot numbers are '--'
+                            if porttrunkarea_port_lst[11] == '--':
+                                porttrunkarea_port_lst[10] = '--'
+                            # if switch has no slots than slot number is 0
+                            for idx in [6, 10]:                                   
+                                if not porttrunkarea_port_lst[idx]:
+                                    porttrunkarea_port_lst[idx] = str(0)
+
+                            porttrunkarea_lst.append(porttrunkarea_port_lst)                                                       
+                        if not line:
+                            break                        
+                # porttrunkarea section end
+                # lsdb section start
+                if re.search(pattern_dct['switchcmd_lsdbshow'], line) and not collected['lsdb']:
+                    # when section is found corresponding collected dict values changed to True
+                    collected['lsdb'] = True
+                    if ls_mode_on:
+                        while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+                            line = file.readline()
+                            if not line:
+                                break
+                    # switchcmd_end_comp
+                    while not re.search(pattern_dct['switchcmd_end'],line):  
+                        line = file.readline()
+                        if not line:
+                            break
+                        # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                        # lsdb_domain section start
+                        if match_dct['lsdb_domain']:
+                            # dictionary to store all DISCOVERED parameters
+                            lsdb_param_dct = {}
+                            # Domain ID described by this LSR. 
+                            # A (self) keyword after the domain ID indicates that LSR describes the local switch.
+                            domain_self_tag_lst = dsop.line_to_list(pattern_dct['lsdb_domain'], line)
+                            # lsdb_link_comp
+                            while not (re.search(pattern_dct['lsdb_link'],line) or re.search(pattern_dct['switchcmd_end'],line)):
+                                line = file.readline()
+                                if not line:
+                                    break
+                                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                                # param extraction
+                                if match_dct['lsdb_param']:
+                                    lsdb_name = match_dct['lsdb_param'].group(1).rstrip()
+                                    lsdb_value = match_dct['lsdb_param'].group(2).rstrip()
+                                    lsdb_param_dct[lsdb_name] = lsdb_value
+                            # list with required params only in order
+                            lsdb_param_lst = [lsdb_param_dct.get(param_name) for param_name in lsdb_params]
+                        # lsdb_domain section end
+                        if match_dct['lsdb_link']:
+                            # extract link information
+                            lsdb_link_lst = dsop.line_to_list(pattern_dct['lsdb_link'], line)
+                            # add link information to the global list with current switch and lsdb information 
+                            lsdb_lst.append([*switch_info_lst[:6], *domain_self_tag_lst,*lsdb_param_lst, *lsdb_link_lst])
+                # lsdb section end

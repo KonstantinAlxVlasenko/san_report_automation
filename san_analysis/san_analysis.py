@@ -56,6 +56,8 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, report_creation_info_lst)
 
+    fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst)
+
     switch_pair_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)
 
     switch_params_aggregated_df = switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, report_creation_info_lst)
@@ -77,7 +79,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
 
     sensor_aggregated_df = sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info_lst)
 
-    fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst)
+    
 
     errdump_aggregated_df, raslog_counter_df = \
         errdump_analysis(errdump_df, switchshow_ports_df, switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)

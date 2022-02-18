@@ -57,7 +57,8 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_params_sr["SwitchName"]} fabric environment. Switch role: {switch_params_sr["switchRole"]}'
             print(info, end =" ")
-            current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct, 
+            if switch_params_sr["switchRole"] == 'Principal':
+                current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct, 
                                     switch_params_sr, ag_params)
 
             # switch_info_keys = ['configname', 'chassis_name', 'chassis_wwn', 
@@ -215,7 +216,7 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
             #                         break
             #             # ag_principal section end
             
-            if switch_params_sr["switchRole"] == 'Principal':  
+              
                 meop.status_info('ok', max_title, len(info))
             else:
                 meop.status_info('skip', max_title, len(info))

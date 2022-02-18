@@ -38,7 +38,7 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
     force_change_data_lst = [data_name for data_name in analyzed_data_names[1:] if report_steps_dct[data_name][1]]
     # flag to force change group name usage mode
     force_group_name_usage_update_flag = report_steps_dct['report_columns_usage_upd'][1]
-    
+
     # create DataFrame with devices required to change names
     device_rename_df = define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title, 
                                                     force_form_update_flag, force_change_data_lst, report_creation_info_lst)
@@ -79,6 +79,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
     # if device_rename_df DataFrame doesn't exist (1st iteration)
     # or force flag to change device_rename_df DataFrame is on 
     # or some related DataFrames was forcibly changed
+
     if device_rename_df is None or force_form_update_flag:
         print('\n')
         if force_change_data_lst:
@@ -86,7 +87,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
         reply = meop.reply_request('Do you want to CHANGE AUTO assigned device names? (y)es/(n)o: ')
         if reply == 'y':
             # if device_rename_df DataFrame doesn't exist (1st iteration)
-            if device_rename_df is None or device_rename_df.empty:
+            if device_rename_df is None:
                 # create new device rename DataFrame
                 manual_device_rename_df = create_device_rename_form(portshow_aggregated_df)
             else:
@@ -98,7 +99,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
                         return device_rename_df
                     else:
                         print('\n')
-                        
+                        reply = meop.reply_request('Do you want to RESET device rename schema? (y)es/(n)o: ')
                         if reply == 'y':
                             # create new device rename DataFrame
                             manual_device_rename_df = create_device_rename_form(portshow_aggregated_df)
@@ -131,10 +132,9 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
         else:
             # if don't change auto assigned names save empty device_rename_df DataFrame
             device_rename_df = empty_device_rename_df
-    else:
-        # check loaded device_rename_df DataFrame (if it's empty)
-        device_rename_df = dbop.verify_read_data(report_constant_lst, ['device_rename'], device_rename_df,  show_status=False)
-            
+    # else:
+    #     # check loaded device_rename_df DataFrame (if it's empty)
+    #     device_rename_df, = dbop.verify_read_data(report_constant_lst, ['device_rename'], device_rename_df,  show_status=False)
     return device_rename_df
 
 
