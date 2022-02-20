@@ -26,7 +26,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
@@ -51,8 +51,9 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
         # dictionary to collect fcr device data
         # first element of list is regular expression pattern name,
         # second - is the list to collect data, 
-        # third - is the index in line to which slice extracted list 
-        fcrdev_dct = {'fcrproxydev': ['switchcmd_fcrproxydevshow', fcrproxydev_lst, None], 'fcrphydev': ['switchcmd_fcrphydevshow', fcrphydev_lst, -3]}    
+        # third - is the index in line to which perform slicing on extracted list 
+        fcrdev_dct = {'fcrproxydev': ['switchcmd_fcrproxydevshow', fcrproxydev_lst, None], 
+                        'fcrphydev': ['switchcmd_fcrphydevshow', fcrphydev_lst, -3]}    
 
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('fcr', max_title)

@@ -24,7 +24,7 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     # when any data from data_lst was not saved (file not found) or
     # force extract flag is on then re-extract data from configuration files
@@ -44,10 +44,8 @@ def switch_params_extract(chassis_params_df, report_creation_info_lst):
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('switch', max_title)
         switch_params, switch_params_add = dfop.list_from_dataframe(re_pattern_df, 'switch_params', 'switch_params_add')
         
-        # chassis_params_fabric_lst [[chassis_params_sw1], [chassis_params_sw1]]
         # checking each chassis for switch level parameters
         for i, chassis_params_sr in chassis_params_df.iterrows():
-
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} switch parameters. Number of LS: {chassis_params_sr["Number_of_LS"]}'
             print(info, end =" ")

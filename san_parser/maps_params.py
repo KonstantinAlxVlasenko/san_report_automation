@@ -25,9 +25,9 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
     data_names = ['maps_parameters']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
-
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
+    # read data from database if they were saved on previos program execution iteration
+    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)    
     
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
@@ -42,8 +42,6 @@ def maps_params_extract(all_config_data, report_creation_info_lst):
         # collecting data for all switches during looping 
         maps_params_fabric_lst = []
         # data imported from init file to extract values from config file
-        # maps_params, maps_params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('maps', max_title)
-
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('maps', max_title)
         maps_params, maps_params_add = dfop.list_from_dataframe(re_pattern_df, 'maps_params', 'maps_params_add')
         

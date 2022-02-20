@@ -32,8 +32,7 @@ def connected_devices_extract(switch_params_df, report_entry_sr, report_creation
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 

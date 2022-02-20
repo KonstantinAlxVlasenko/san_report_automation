@@ -24,7 +24,7 @@ def chassis_params_extract(all_config_data, report_creation_info_lst):
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 

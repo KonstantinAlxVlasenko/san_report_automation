@@ -21,7 +21,6 @@ import utilities.filesystem_operations as fsop
 def synergy_system_extract(report_entry_sr, report_creation_info_lst):
     """Function to extract blade systems information"""
     
-
     # report_steps_dct contains current step desciption and force and export tags
     report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
     # report_constant_lst contains information: 
@@ -38,14 +37,9 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
-    # # unpacking from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst = data_lst
-
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
     force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
@@ -203,15 +197,10 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
             print(info, end =" ")
             meop.status_info('skip', max_title, len(info))
         data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
-        # save empty data to json file
-        # save_data(report_constant_lst, data_names, *data_lst)
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # synergy_module_aggregated_df, synergy_servers_aggregated_df = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        # data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
-
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         synergy_module_aggregated_df, synergy_servers_aggregated_df = data_lst
 

@@ -27,8 +27,7 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
@@ -44,19 +43,17 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
         # collecting data for all switches during looping
         fabricshow_lst = []
         ag_principal_lst = []    
+        
         # data imported from init file to extract values from config file
-        # *_, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('fabricshow', max_title)
-        # ag_params = sfop.columns_import('fabricshow', max_title, 'ag_params')
-
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('fabric', max_title)
         ag_params = dfop.list_from_dataframe(re_pattern_df, 'ag_params')          
         
         # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():        
-
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_params_sr["SwitchName"]} fabric environment. Switch role: {switch_params_sr["switchRole"]}'
             print(info, end =" ")
+
             if switch_params_sr["switchRole"] == 'Principal':
                 current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct, 
                                     switch_params_sr, ag_params)
@@ -220,7 +217,6 @@ def fabric_membership_extract(switch_params_df, report_creation_info_lst):
                 meop.status_info('ok', max_title, len(info))
             else:
                 meop.status_info('skip', max_title, len(info))
-
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fabric_columns', 'ag_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, fabricshow_lst, ag_principal_lst)

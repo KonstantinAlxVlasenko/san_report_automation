@@ -35,8 +35,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or
@@ -55,9 +54,6 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
         host_3par_comprehensive_lst = []
 
         # data imported from init file to extract values from config file
-        
-        # params, params_add, comp_keys, match_keys, comp_dct = sfop.data_extract_objects('3par', max_title)
-
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('3par', max_title)
         params, params_add = dfop.list_from_dataframe(re_pattern_df, 'system_params', 'system_params_add')
 
@@ -102,29 +98,15 @@ def storage_3par_extract(nsshow_df, nscamshow_df, report_entry_sr, report_creati
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'system_columns', 'port_columns', 'host_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
         system_3par_df, port_3par_df, host_3par_df, *_ = data_lst        
-
-        # system_3par_df = dfop.list_to_dataframe(system_3par_comprehensive_lst, max_title, sheet_title_import='3par')
-        # port_3par_df = dfop.list_to_dataframe(port_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='port_columns')
-        # host_3par_df = dfop.list_to_dataframe(host_3par_comprehensive_lst, max_title, sheet_title_import='3par', columns_title_import='host_columns')
-        # # saving data to csv file
-        # data_lst = [system_3par_df, port_3par_df, host_3par_df]
-        # # save_data(report_constant_lst, data_names, *data_lst)
-        
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        # system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst = verify_data(report_constant_lst, data_names, *data_lst)
-        # system_3par_df, port_3par_df, host_3par_df = verify_data(report_constant_lst, data_names, *data_lst)
-        # data_lst = [system_3par_df, port_3par_df, host_3par_df]
-
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
         system_3par_df, port_3par_df, host_3par_df = data_lst
-    
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
-
     return system_3par_df, port_3par_df, host_3par_df
 
 
