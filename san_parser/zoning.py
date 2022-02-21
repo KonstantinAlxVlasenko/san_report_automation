@@ -280,6 +280,3 @@ def current_config_extract(cfg_lst, zone_lst, peerzone_lst, alias_lst,
                         if not line:
                             break
                 # peerzone section end
-
-
-

@@ -65,9 +65,6 @@ def message_extract(errdump_aggregated_df, pattern_dct):
     """Function to parse errdump Message column into corresponding set of columns and label each message
     with extracted, copied or ignored tag"""
     
-    # regular expression patterns TO_REMOVE
-    # comp_keys, _, comp_dct = re_pattern_lst
-
     # list with regex pattern and columns values to be extracted to pairs
     extract_pattern_columns_lst = [
         [pattern_dct['port_idx_slot_number'], ['Message_portIndex', 'Message_portType', 'slot', 'port']],
@@ -83,8 +80,10 @@ def message_extract(errdump_aggregated_df, pattern_dct):
         [pattern_dct['slow_drain_device'], ['Condition','slot', 'port', 'Message_portIndex']],
         [pattern_dct['frame_detected'], ['Condition', 'tx_port', 'rx_port', 'sid', 'did']],
         [pattern_dct['els_unzoned_device'], ['Condition', 'Message_portIndex', 'did', 'sid', 'wwn']],
+        [pattern_dct['sfp_port_slot_number'], ['slot', 'port']],
+        [pattern_dct['sec_violation_login_failure'], ['Dashboard_category', 'Condition', 'IP_Address']],
+        [pattern_dct['sec_violation_unauthorized_host'], ['Dashboard_category', 'Condition', 'IP_Address']],
         ]        
-    
     # extract corresponding values if regex pattern applicable
     for pattern, extracted_columns in extract_pattern_columns_lst:
         # pattern contains groups but str.cotains used to identify mask
@@ -92,7 +91,11 @@ def message_extract(errdump_aggregated_df, pattern_dct):
         warnings.filterwarnings("ignore", 'This pattern has match groups')
         mask = errdump_aggregated_df['Message'].str.contains(pattern, regex=True)
         errdump_aggregated_df.loc[mask, extracted_columns] = errdump_aggregated_df.loc[mask, 'Message'].str.extract(pattern).values
-        
+    
+    # sec_violation_unauthorized_host contains tcp port number and need to be removed
+    mask_unauthorized_host = errdump_aggregated_df['Message'].str.contains(pattern_dct['sec_violation_unauthorized_host'], na=False)
+    errdump_aggregated_df.loc[mask_unauthorized_host, ['Message_portType', 'port']] = pd.Series([np.nan, np.nan])
+
     # add empty columns if they were not extracted
     extracted_columns = [column for _, columns in extract_pattern_columns_lst for column in columns]
     extracted_columns = list(set(extracted_columns))

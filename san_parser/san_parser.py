@@ -47,7 +47,6 @@ def system_configuration_extract(parsed_sshow_maps_lst, report_entry_sr, report_
     errdump_df = log_extract(chassis_params_df, report_creation_info_lst)
     # blade system configuration parsing
     blade_module_df, blade_servers_df, blade_vc_df = blade_system_extract(report_entry_sr, report_creation_info_lst)
-    exit()
     # synergy system configuration parsing
     synergy_module_df, synergy_servers_df = synergy_system_extract(report_entry_sr, report_creation_info_lst)
     # 3PAR storage system configuration download and parsing

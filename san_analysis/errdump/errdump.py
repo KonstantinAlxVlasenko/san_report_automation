@@ -41,15 +41,9 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
     
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
-    # # unpacking DataFrames from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # errdump_aggregated_df, raslog_counter_df, raslog_report_df = data_lst
-
     # list of data to analyze from report_info table
     analyzed_data_names = [ 'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
                             'maps_parameters', 'portshow_aggregated', 'fabric_labels']
@@ -119,7 +113,7 @@ def errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_
                            'Message_ID', 'Severity', 'Message_portIndex', 'Message_portType','slot', 'port',
                            'Condition', 'Dashboard_category', 'obj', 'Message_status',
                            'portIndex', 'Index_slot_port', 'portType', 'portState', 'speed',
-                           'tx_port', 'rx_port', 'sid', 'did', 'wwn',
+                           'tx_port', 'rx_port', 'sid', 'did', 'wwn', 'IP_Address',
                            'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'alias', 'deviceType']
     
     # group log messages by month, device and log message
@@ -158,7 +152,8 @@ def errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_
     
     # remove INFO Messages for report DataFrame
     mask_not_info = raslog_frequent_df['Severity'] != 'INFO'
-    raslog_frequent_df = raslog_frequent_df.loc[mask_not_info].copy()
+    mask_sec_violation = raslog_frequent_df['Dashboard_category'].str.contains('security violation', case=False)
+    raslog_frequent_df = raslog_frequent_df.loc[mask_not_info | mask_sec_violation].copy()
 
     raslog_frequent_df.reset_index(drop=True, inplace=True)    
     return raslog_counter_df, raslog_frequent_df
@@ -186,7 +181,7 @@ def errdump_filter(errdump_aggregated_df):
                            'config_collection_date', 'Message_portIndex', 'Message_portType',
                            'slot', 'port', 'Condition', 'Current_value', 'Dashboard_category',
                            'obj', 'Message_status', 'portIndex', 'Index_slot_port', 'portType', 'portState',
-                           'speed', 'tx_port', 'rx_port', 'sid', 'did', 'wwn',
+                           'speed', 'tx_port', 'rx_port', 'sid', 'did', 'wwn', 'IP_Address',
                            'Connected_portId', 'Connected_portWwn', 'Device_Host_Name_Port', 'alias', 'deviceType']
 
     errdump_filtered_df = errdump_filtered_df.reindex(columns=errdump_grp_columns)
