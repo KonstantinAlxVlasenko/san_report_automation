@@ -150,10 +150,11 @@ def errdump_statistics(errdump_aggregated_df, raslog_message_details_df, raslog_
     mask_frequent = raslog_counter_df['Quantity'] > 3
     raslog_frequent_df = raslog_counter_df.loc[mask_frequent].copy()
     
-    # remove INFO Messages for report DataFrame
+    # remove INFO Messages for report DataFrame except securitu violations messages
     mask_not_info = raslog_frequent_df['Severity'] != 'INFO'
-    mask_sec_violation = raslog_frequent_df['Dashboard_category'].str.contains('security violation', case=False)
-    raslog_frequent_df = raslog_frequent_df.loc[mask_not_info | mask_sec_violation].copy()
+    mask_sec_violation_condition = raslog_frequent_df['Condition'].str.contains('security violation', case=False, na=False)
+    mask_sec_violation_dashboard = raslog_frequent_df['Dashboard_category'].str.contains('security violation', case=False, na=False)
+    raslog_frequent_df = raslog_frequent_df.loc[mask_not_info | mask_sec_violation_condition | mask_sec_violation_dashboard].copy()
 
     raslog_frequent_df.reset_index(drop=True, inplace=True)    
     return raslog_counter_df, raslog_frequent_df

@@ -169,9 +169,12 @@ def verify_ls_type(switch_params_aggregated_df):
     mask_default = switch_params_aggregated_df['Default_Switch'] == 'Yes'
     mask_logical = switch_params_aggregated_df['Default_Switch'] == 'No'
     mask_non_ls_mode = switch_params_aggregated_df['LS_mode'] == 'OFF'
+    mask_empty_ip = switch_params_aggregated_df['Enet_IP_Addr'] == '0.0.0.0'
+    mask_front_domain = switch_params_aggregated_df['switchName'].str.contains('fcr_fd_\d+', case=False, na=False)
+    mask_translate_domain = switch_params_aggregated_df['switchName'].str.contains('fcr_xd_\d+', case=False, na=False)
     switch_params_aggregated_df['LS_type'] = \
-        np.select([mask_base, mask_default, mask_not_base & mask_logical, mask_non_ls_mode],
-                                            ['base', 'default', 'logical', 'physical'], default='unknown')
+        np.select([mask_base, mask_default, mask_not_base & mask_logical, mask_non_ls_mode, mask_empty_ip & mask_front_domain, mask_empty_ip & mask_translate_domain],
+                                            ['base', 'default', 'logical', 'physical', 'front_domain', 'translate_domain'], default='unknown')
     switch_params_aggregated_df['LS_type_report'] = switch_params_aggregated_df['LS_type']
     mask_router = switch_params_aggregated_df['FC_Router'] == 'ON'
     # add router if base switch in fc_routing mode

@@ -77,7 +77,8 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         # mask_fabric = switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].notna().all(axis=1)
         mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['-', 'x']).any(axis=1)
         mask_no_config = switch_params_aggregated_df['configname'].isna()
-        missing_configs_num = switch_params_aggregated_df.loc[mask_valid_fabric & mask_no_config, 'switchWwn'].count()
+        mask_no_fd_xd = switch_params_aggregated_df['Enet_IP_Addr'] != '0.0.0.0'
+        missing_configs_num = switch_params_aggregated_df.loc[mask_valid_fabric & mask_no_config & mask_no_fd_xd, 'switchWwn'].count()
         if missing_configs_num:
             info = f'{missing_configs_num} switch configuration{"s" if missing_configs_num > 1 else ""} MISSING'
             print(info, end =" ")
@@ -109,13 +110,14 @@ def fabric_clean(fabricshow_ag_labels_df):
     # (was not labeled during Fabric labeling procedure)
     # fabric_clean_df.dropna(subset=['Fabric_name', 'Fabric_label'], inplace = True)
 
-    # remove Front and Translate Domain switches
-    mask = fabric_clean_df.Enet_IP_Addr != '0.0.0.0'
-    fabric_clean_df = fabric_clean_df.loc[mask]
+    # # remove Front and Translate Domain switches
+    # mask = fabric_clean_df.Enet_IP_Addr != '0.0.0.0'
+    # fabric_clean_df = fabric_clean_df.loc[mask]
+
     # reset fabrics DataFrame index after droping switches
     fabric_clean_df.reset_index(inplace=True, drop=True)
     # extract required columns
-    fabric_clean_df = fabric_clean_df.loc[:, ['Fabric_name', 'Fabric_label', 'Worldwide_Name', 'Name', 'Enet_IP_Addr',	'SwitchMode']]
+    fabric_clean_df = fabric_clean_df.loc[:, ['Fabric_name', 'Fabric_label', 'Worldwide_Name', 'Domain_ID', 'Name', 'Enet_IP_Addr',	'SwitchMode']]
     # rename columns as in switch_params DataFrame
     fabric_clean_df.rename(columns={'Worldwide_Name': 'switchWwn', 'Name': 'switchName'}, inplace=True)
     return fabric_clean_df

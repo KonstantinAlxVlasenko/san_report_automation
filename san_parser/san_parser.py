@@ -37,7 +37,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, report_entry_sr, report_
     # inter switch connection parsing
     isl_df, trunk_df, porttrunkarea_df, lsdb_df = interswitch_connection_extract(switch_params_df, report_creation_info_lst)
     # fabric routing parsing
-    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = fcr_membership_extract(switch_params_df, report_creation_info_lst)
+    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df = fcr_membership_extract(switch_params_df, report_creation_info_lst)
     # zoning configuration parsing
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = \
         zoning_extract(switch_params_df, report_creation_info_lst)
@@ -59,7 +59,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, report_entry_sr, report_
                                     portshow_df, sfpshow_df, portcfgshow_df,
                                     fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df,
                                     isl_df, trunk_df, porttrunkarea_df, lsdb_df,
-                                    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df,
+                                    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df,
                                     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df,
                                     sensor_df, errdump_df,
                                     blade_module_df, blade_servers_df, blade_vc_df,

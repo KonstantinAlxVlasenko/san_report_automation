@@ -23,22 +23,49 @@ sw_pair_columns = ['Connected_device_number', 'Device_number_match', 'Device_mat
 
 
 
-def auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df):
+def auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df):
     """Function to find switch and VC module pairs automatically"""
 
     mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
     fabric_labels_lst = switch_params_aggregated_df.loc[mask_valid_fabric, 'Fabric_label'].unique().tolist()
 
-    switch_pair_brocade_df = search_brocade_pairs(switch_params_aggregated_df, portshow_aggregated_df, fabric_labels_lst)
+    # brocade switch pairs
+    switch_pair_brocade_df = search_brocade_pairs(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, fabric_labels_lst)
+    # translate domain, front domain pairs
+    switch_pair_fd_xd = search_fd_xd_pairs(switch_params_aggregated_df, fcr_xd_proxydev_df, fabric_labels_lst)
+    # vc and cisco pairs
     vc_cisco_pair_df = search_vc_cisco_pairs(portshow_aggregated_df, fabric_labels_lst)
     
-    switch_pair_df = pd.concat([switch_pair_brocade_df, vc_cisco_pair_df])
+    switch_pair_df = pd.concat([switch_pair_brocade_df, switch_pair_fd_xd, vc_cisco_pair_df])
     switch_pair_df = verify_switch_pair_match(switch_pair_df)
-
     return switch_pair_df
     
+def search_fd_xd_pairs(switch_params_aggregated_df, fcr_xd_proxydev_df, fabric_labels_lst):
+    """Function to find front domain and translate domain pairs.
+    1. Translate domain proxy device match.
+    2. Switchname match for front domains"""
+    
+    switch_pair_fd_xd = create_fd_xd_dataframe(switch_params_aggregated_df)
+    # series with wwn and switch name correspondance
+    sw_fd_xd_wwn_name_match_sr = create_wwn_name_match_series(switch_pair_fd_xd)
+    # translate domain switchType in device list DataFrame
+    fcr_xd_proxydev_df['switchType'] = 602
+    fcr_xd_proxydev_df['switchMode'] = 'Native'
 
-def search_brocade_pairs(switch_params_aggregated_df, portshow_aggregated_df, fabric_labels_lst):
+    # find translate domain pairs with highest proxy device match
+    switch_pair_fd_xd[sw_pair_columns] = switch_pair_fd_xd.apply(
+        lambda series: find_nonzero_device_connected_switch_pair(
+            series, sw_fd_xd_wwn_name_match_sr, fcr_xd_proxydev_df, 
+            fabric_labels_lst, sw_pair_columns, min_device_number_match_ratio, min_sw_name_match_ratio, proxy_only=True), 
+            axis=1)
+    # find switch pairs with highest switchName match for swithes without device connection (front domain)
+    switch_pair_fd_xd[sw_pair_columns[3:7]] = switch_pair_fd_xd.apply(
+        lambda series: find_zero_device_connected_switchname_match(series, switch_pair_fd_xd.copy(), sw_fd_xd_wwn_name_match_sr, 
+                                                                    sw_pair_columns, min_sw_name_match_ratio), axis=1)
+    return switch_pair_fd_xd
+
+
+def search_brocade_pairs(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, fabric_labels_lst):
     """Function to find pairs for Brocade switches. 
     1. Device match (both npiv and direct connect) for switches with collected configs.
     2. Enclosure match for switches with collected configs but without device (strorage, server, library) connection.
@@ -58,6 +85,8 @@ def search_brocade_pairs(switch_params_aggregated_df, portshow_aggregated_df, fa
             series, sw_brocade_wwn_name_match_sr, brocade_connected_devices_df, 
             fabric_labels_lst, sw_pair_columns, min_device_number_match_ratio, min_sw_name_match_ratio, npiv_only=False), 
             axis=1)
+
+
     # find switch pairs within the same enclosure
     switch_pair_brocade_df = find_enclosure_pair_switch(switch_pair_brocade_df)
     # add enclosure switch pair for switches without device connection 
@@ -92,7 +121,6 @@ def search_vc_cisco_pairs(portshow_aggregated_df, fabric_labels_lst):
     # find devices connected to VC and Cisco switches
     portshow_vc_cisco_devices_df = find_sw_npv_ag_connected_devices(vc_cisco_pair_df, portshow_aggregated_df, merge_column='NodeName')
     # find switch pairs with highest connected device match
-
     vc_cisco_pair_df[sw_pair_columns] = vc_cisco_pair_df.apply(
         lambda series: find_nonzero_device_connected_switch_pair(series, vc_cisco_wwn_name_match_sr, portshow_vc_cisco_devices_df, 
                                                                 fabric_labels_lst, sw_pair_columns, 

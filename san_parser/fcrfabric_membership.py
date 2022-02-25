@@ -22,7 +22,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
     *_, max_title = report_constant_lst
 
     # names to save data obtained after current module execution
-    data_names = ['fcrfabric', 'fcrproxydev', 'fcrphydev', 'lsan', 'fcredge', 'fcrresource']
+    data_names = ['fcrfabric', 'fcrproxydev', 'fcrphydev', 'lsan', 'fcredge', 'fcrresource', 'fcrxlateconfig']
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
@@ -47,6 +47,7 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
         lsan_lst = []
         fcredge_lst = []
         fcrresource_lst = []
+        fcrxlateconfig_lst = []
         
         # dictionary to collect fcr device data
         # first element of list is regular expression pattern name,
@@ -66,32 +67,32 @@ def fcr_membership_extract(switch_params_df, report_creation_info_lst):
             print(info, end =" ")
 
             if switch_params_sr["FC_Router"] == 'ON':
-                current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, pattern_dct, 
-                                        switch_params_sr, fcrresource_params)                                                            
+                current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, fcrxlateconfig_lst, 
+                                        pattern_dct, switch_params_sr, fcrresource_params)                                                            
                 meop.status_info('ok', max_title, len(info))
             else:
                 meop.status_info('skip', max_title, len(info))
 
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fcrfabric_columns', 'fcrproxydev_columns', 'fcrphydev_columns', 
-                                                                'lsan_columns', 'fcredge_columns', 'fcrresource_columns')
+                                                                'lsan_columns', 'fcredge_columns', 'fcrresource_columns', 'fcrxlateconfig_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst,
-                                                            lsan_lst, fcredge_lst, fcrresource_lst)
-        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, *_ = data_lst    
+                                                            lsan_lst, fcredge_lst, fcrresource_lst, fcrxlateconfig_lst)
+        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df, *_ = data_lst    
         # write data to sql db
         dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df = data_lst
+        fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
-    return fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df
+    return fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df
 
 
-def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, pattern_dct, 
-                            switch_params_sr, fcrresource_params):
+def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, fcrxlateconfig_lst, 
+                            pattern_dct, switch_params_sr, fcrresource_params):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
 
@@ -105,8 +106,8 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
 
     # search control dictionary. continue to check sshow_file until all parameters groups are found                       
     collected = {'fcrfabric': False, 'fcrproxydev': False, 'fcrphydev': False, 
-                    'lsanzone': False, 'fcredge': False, 'fcrresource': False} \
-        if switch_role == 'Principal' else {'fcredge': False, 'fcrresource': False}
+                    'lsanzone': False, 'fcredge': False, 'fcrresource': False, 'fcrxlateconfig': False} \
+        if switch_role == 'Principal' else {'fcredge': False, 'fcrresource': False, 'fcrxlateconfig': False}
     
     # check config of FC routers only 
     if fc_router == 'ON':
@@ -233,6 +234,26 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                         if not line:
                             break   
                 # fcredgeshow section end
+                
+                # fcrxlateconfig section start
+                if re.search(pattern_dct['switchcmd_fcrxlateconfig'], line) and not collected['fcrxlateconfig']:
+                    collected['fcrxlateconfig'] = True
+                    if ls_mode_on:
+                        while not re.search(fr'^BASE +SWITCH +CONTEXT *-- *FID: *{fid} *$',line):
+                            line = file.readline()
+                            if not line:
+                                break                      
+                    # switchcmd_end_comp
+                    while not re.search(pattern_dct['switchcmd_end'], line):
+                        line = file.readline()
+                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                        # fcrxlateconfig_match
+                        if match_dct['fcrxlateconfig']:
+                            fcrxlateconfig_lst.append(dsop.line_to_list(pattern_dct['fcrxlateconfig'], line, *fcrouter_info_lst))                                            
+                        if not line:
+                            break   
+                # fcrxlateconfig section end
+
                 # fcrresourceshow section start
                 if re.search(pattern_dct['switchcmd_fcrresourceshow'], line) and not collected['fcrresource']:
                     collected['fcrresource'] = True

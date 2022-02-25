@@ -14,6 +14,7 @@ from .sensor import sensor_analysis
 from .port_statistics import port_statistics_analysis
 from .errdump import errdump_analysis
 from .switch_pair import switch_pair_analysis
+from .fcr_xd_proxy_devices import fcr_xd_device_analysis
 
 
 def system_configuration_analysis(extracted_configuration_lst, report_creation_info_lst):
@@ -27,7 +28,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
                 portshow_df, sfpshow_df, portcfgshow_df,\
                     fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, \
                         isl_df, trunk_df, porttrunkarea_df, lsdb_df,\
-                            fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df,\
+                            fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df, \
                                 cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df,\
                                     sensor_df, errdump_df,\
                                         blade_module_df, blade_servers_df, blade_vc_df,\
@@ -41,6 +42,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
     blade_module_loc_df = blade_system_analysis(blade_module_df, synergy_module_df, report_creation_info_lst)
     report_columns_usage_dct, switch_params_aggregated_df, fabric_clean_df = \
             switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df, switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, report_creation_info_lst)
+
 
     if len(report_creation_info_lst) == 3:
         report_creation_info_lst.append(report_columns_usage_dct)
@@ -56,11 +58,19 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, report_creation_info_lst)
 
+    fcr_xd_proxydev_df = fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
+                                                fcrproxydev_df, fcrxlateconfig_df, report_creation_info_lst)
+    
+
     fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst)
 
-    switch_pair_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)
+    switch_pair_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, report_creation_info_lst)
+
+    exit()
 
     switch_params_aggregated_df = switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, report_creation_info_lst)
+
+
 
     isl_aggregated_df, isl_statistics_df = isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df, report_creation_info_lst)
 
@@ -69,6 +79,7 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
 
     portshow_npiv_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
                                                 isl_statistics_df, blade_module_loc_df, switch_pair_df, report_creation_info_lst)
+
 
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 

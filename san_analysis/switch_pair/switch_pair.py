@@ -16,7 +16,7 @@ from .switch_pair_verification import *
 from .switch_pair_correction import *
 
 
-def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst):
+def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, report_creation_info_lst):
     """Function to set switch pair IDs"""
 
     # report_steps_dct contains current step desciption and force and export tags
@@ -51,7 +51,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, re
         change_flag = False
         if switch_pair_df is None:
             first_run = True
-            switch_pair_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df)    
+            switch_pair_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df)    
         
         switch_pair_bckp_df = switch_pair_df.copy()
         
@@ -65,7 +65,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, re
                     reply = meop.reply_request(question, reply_options=['r', 'reset', 'm', 'modify'])
                     if reply in ['r', 'reset']:
                         reset_flag = True
-                        switch_pair_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df)
+                        switch_pair_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df)
                         print('Switch pairs have been reset')
                     else:
                         reset_flag = False

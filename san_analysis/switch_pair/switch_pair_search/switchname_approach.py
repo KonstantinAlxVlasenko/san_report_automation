@@ -2,14 +2,15 @@ from difflib import SequenceMatcher
 
 import numpy as np
 import pandas as pd
+import re
 
 
 def find_zero_device_connected_switchname_match(switch_sr, switch_pair_df, sw_wwn_name_match_sr, sw_pair_columns, min_sw_name_match_ratio):
     """Function to find highest match switchName for switches with no device connected"""
     
     sw_pairing_type = 'switch_name'
-    
-    if switch_sr['Connected_device_number'] != 0 or pd.notna(switch_sr['switchWwn_pair']):
+
+    if (switch_sr['Connected_device_number'] != 0 or pd.notna(switch_sr['switchWwn_pair'])):
         return pd.Series([switch_sr[column] for column in sw_pair_columns[3:7]])
     
     # list of fabric labels to verify (all fabric labels except fabric label of the switch being checked)
@@ -20,15 +21,16 @@ def find_zero_device_connected_switchname_match(switch_sr, switch_pair_df, sw_ww
     sw_pair_wwn_final_lst = []
     sw_pair_name_final_lst = []
     sw_pair_name_final_with_label_lst = []
-    
+
     for verified_label in verified_label_lst:
         # pair switch candidates in verified fabric label with zero device connected with the same switchType and switchMode
         mask_zero_device_connected = switch_pair_df['Connected_device_number'] == 0
+        mask_fd_xd = switch_pair_df['switchName'].str.contains('fcr_[fx]d_\d+', case=False, na=False)
         mask_same_fabric_name = switch_pair_df['Fabric_name'] == switch_sr['Fabric_name']
         mask_verified_label = switch_pair_df['Fabric_label'] == verified_label
         mask_same_sw_type_mode = (switch_pair_df[['switchType', 'switchMode']] == switch_sr[['switchType', 'switchMode']]).all(axis=1)
-        sw_candidates_name_lst = switch_pair_df.loc[mask_zero_device_connected & mask_same_fabric_name & mask_verified_label & mask_same_sw_type_mode, 'switchName'].tolist()
-        sw_candidates_wwn_lst = switch_pair_df.loc[mask_zero_device_connected & mask_same_fabric_name & mask_verified_label & mask_same_sw_type_mode, 'switchWwn'].tolist()
+        sw_candidates_name_lst = switch_pair_df.loc[(mask_zero_device_connected | mask_fd_xd) & mask_same_fabric_name & mask_verified_label & mask_same_sw_type_mode, 'switchName'].tolist()
+        sw_candidates_wwn_lst = switch_pair_df.loc[(mask_zero_device_connected | mask_fd_xd) & mask_same_fabric_name & mask_verified_label & mask_same_sw_type_mode, 'switchWwn'].tolist()
         if sw_candidates_wwn_lst:
             # find switches with highest switchName match
             sw_pair_name_lst, sw_pair_wwn_lst = find_max_switchname_match(switch_sr['switchName'], sw_candidates_name_lst, sw_candidates_wwn_lst, sw_wwn_name_match_sr, min_sw_name_match_ratio)
