@@ -48,7 +48,7 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
 
     
     mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
-    mask_not_vc = ~switch_params_aggregated_df['ModelName'].str.contains('virtual', case=False)
+    mask_not_vc = ~switch_params_aggregated_df['ModelName'].str.contains('virtual', case=False, na=False)
     switch_params_cp_df = switch_params_aggregated_df.loc[mask_valid_fabric & mask_not_vc].copy()
     
     # remove uninfomative values from switch DataFrame

@@ -156,7 +156,10 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
 
     switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
     licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+    licenses_report_df = dfop.drop_fd_xd_switch(licenses_report_df)
+    
     switches_parameters_report_df = dfop.drop_column_if_all_na(switches_parameters_report_df, 'FC-FC Маршрутизация')
+    switches_parameters_report_df = dfop.drop_fd_xd_switch(switches_parameters_report_df)
 
     # drop fabric_id if all have same value
     if fabric_report_df['Fabric ID'].dropna().nunique() == 1:

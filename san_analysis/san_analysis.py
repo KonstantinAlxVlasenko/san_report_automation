@@ -61,25 +61,18 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
     fcr_xd_proxydev_df = fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
                                                 fcrproxydev_df, fcrxlateconfig_df, report_creation_info_lst)
     
-
     fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst)
 
     switch_pair_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, report_creation_info_lst)
 
-    exit()
-
     switch_params_aggregated_df = switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, report_creation_info_lst)
-
-
 
     isl_aggregated_df, isl_statistics_df = isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df, report_creation_info_lst)
 
     portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df, report_creation_info_lst)
 
-
     portshow_npiv_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
                                                 isl_statistics_df, blade_module_loc_df, switch_pair_df, report_creation_info_lst)
-
 
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 
@@ -89,8 +82,6 @@ def system_configuration_analysis(extracted_configuration_lst, report_creation_i
                                                             portshow_aggregated_df, zoning_aggregated_df, report_creation_info_lst)
 
     sensor_aggregated_df = sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info_lst)
-
-    
 
     errdump_aggregated_df, raslog_counter_df = \
         errdump_analysis(errdump_df, switchshow_ports_df, switch_params_aggregated_df, portshow_aggregated_df, report_creation_info_lst)

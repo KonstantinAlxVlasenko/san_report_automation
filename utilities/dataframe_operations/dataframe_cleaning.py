@@ -137,3 +137,12 @@ def remove_value_from_string(df, removed_value: str, *args, sep=', '):
     return df
 
 
+def drop_fd_xd_switch(df):
+    """Function to remove FD and XD switches from DataFrame"""
+
+    ls_type_columns = [column for column in ['LS_type', 'Тип коммутатора'] if column in df.columns]
+
+    for ls_type_column in ls_type_columns:
+        mask_not_fd_xd = ~df[ls_type_column].isin(['front_domain', 'translate_domain'])
+        df = df.loc[mask_not_fd_xd].copy()
+    return df

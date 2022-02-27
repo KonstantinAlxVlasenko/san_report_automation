@@ -141,48 +141,52 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
     return switch_params_aggregated_df
 
 
-def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names):
-    """Function to create switch related report tables"""
+# def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names):
+#     """Function to create switch related report tables"""
 
-    switches_report_df, fabric_report_df,  \
-        switches_parameters_report_df, maps_report_df, licenses_report_df = \
-            dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_dct, *data_names[3:-2])
+#     switches_report_df, fabric_report_df,  \
+#         switches_parameters_report_df, maps_report_df, licenses_report_df = \
+#             dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_dct, *data_names[3:-2])
 
-    maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
+#     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
 
-    # global parameters are equal for all switches in one fabric thus checking Principal switches only
-    mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
-    mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
-    switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
-    global_fabric_parameters_report_df = dfop.generate_report_dataframe(switch_params_principal_df, report_headers_df, 
-                                                                report_columns_usage_dct, data_names[-2])
+#     # global parameters are equal for all switches in one fabric thus checking Principal switches only
+#     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
+#     mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
+#     switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
+#     global_fabric_parameters_report_df = dfop.generate_report_dataframe(switch_params_principal_df, report_headers_df, 
+#                                                                 report_columns_usage_dct, data_names[-2])
 
-    # drop rows with empty switch names columns
-    fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-    fabric_report_df = dfop.translate_values(fabric_report_df, report_headers_df, 'Коммутаторы_перевод')
-    fabric_report_df = dfop.drop_column_if_all_na(fabric_report_df, ['Примечение. Номер домена', 'Примечение. Время работы'])
+#     # drop rows with empty switch names columns
+#     fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+#     fabric_report_df = dfop.translate_values(fabric_report_df, report_headers_df, 'Коммутаторы_перевод')
+#     fabric_report_df = dfop.drop_column_if_all_na(fabric_report_df, ['Примечение. Номер домена', 'Примечение. Время работы'])
 
-    switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-    licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-    switches_parameters_report_df = dfop.drop_column_if_all_na(switches_parameters_report_df, 'FC-FC Маршрутизация')
+#     switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+#     print('\n!!!!!!!!!!!!!!')
+#     licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
+#     licenses_report_df = dfop.drop_fd_xd_switch(licenses_report_df)
+    
+#     switches_parameters_report_df = dfop.drop_column_if_all_na(switches_parameters_report_df, 'FC-FC Маршрутизация')
+#     switches_parameters_report_df = dfop.drop_fd_xd_switch(switches_parameters_report_df)
 
-    # drop fabric_id if all have same value
-    if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
-        fabric_report_df.drop(columns=['Fabric ID'], inplace=True)
-    # drop Fabric_Name (not Fabric_name) if column is empty
-    if fabric_report_df['Название фабрики'].isna().all():
-        fabric_report_df.drop(columns=['Название фабрики'], inplace=True)
+#     # drop fabric_id if all have same value
+#     if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
+#         fabric_report_df.drop(columns=['Fabric ID'], inplace=True)
+#     # drop Fabric_Name (not Fabric_name) if column is empty
+#     if fabric_report_df['Название фабрики'].isna().all():
+#         fabric_report_df.drop(columns=['Название фабрики'], inplace=True)
        
-    global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)
+#     global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)
 
-    # fabric switch statistics                                         
-    fabric_switch_statistics_report_df = dfop.translate_dataframe(fabric_switch_statistics_df, report_headers_df, 
-                                                            df_name='Статистика_коммутаторов_перевод')
-    # drop allna columns
-    fabric_switch_statistics_report_df.dropna(axis=1, how='all', inplace=True)
-    dfop.drop_zero(fabric_switch_statistics_report_df)
+#     # fabric switch statistics                                         
+#     fabric_switch_statistics_report_df = dfop.translate_dataframe(fabric_switch_statistics_df, report_headers_df, 
+#                                                             df_name='Статистика_коммутаторов_перевод')
+#     # drop allna columns
+#     fabric_switch_statistics_report_df.dropna(axis=1, how='all', inplace=True)
+#     dfop.drop_zero(fabric_switch_statistics_report_df)
 
-    return switches_report_df, fabric_report_df, switches_parameters_report_df, \
-                maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df
+#     return switches_report_df, fabric_report_df, switches_parameters_report_df, \
+#                 maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df
 
 
