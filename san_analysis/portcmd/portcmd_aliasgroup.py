@@ -95,8 +95,9 @@ def alias_wwnn_group(portshow_aggregated_df):
     portshow_alias_grp_df = portshow_aggregated_df.loc[portshow_aggregated_df.deviceType.isin(['STORAGE', 'LIB'])].copy()
     # aliases are required to define device group name
     portshow_alias_grp_df.dropna(subset = ['alias'], inplace = True)
-    # change alias case  
-    portshow_alias_grp_df.alias = portshow_alias_grp_df.alias.str.upper()
+    # change alias case
+    if portshow_alias_grp_df['alias'].notna().any():
+        portshow_alias_grp_df.alias = portshow_alias_grp_df.alias.str.upper()
 
     # columns required to find name for group of wwns based on alias 
     alias_grp_lst = ['NodeName', 'alias', 'deviceType']
@@ -160,7 +161,8 @@ def alias_serial_group(portshow_aggregated_df):
     # aliases are required to define device group name
     portshow_alias_grp_df.dropna(subset = ['alias'], inplace = True)
     # change alias case  
-    portshow_alias_grp_df.alias = portshow_alias_grp_df.alias.str.upper()
+    if portshow_alias_grp_df['alias'].notna().any():
+        portshow_alias_grp_df.alias = portshow_alias_grp_df.alias.str.upper()
     # columns required to find name for group of serials based on alias
     alias_serial_lst = ['Device_SN', 'alias', 'deviceType']
     # mask to filter libraries

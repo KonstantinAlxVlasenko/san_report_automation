@@ -140,8 +140,11 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
             portshow_aggregated_df.loc[mask_ag, 'Device_type'].str.replace('NPIV', 'Physical')
 
     # add aliases to portshow_aggregated_df
-    portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 
+    if not alias_wwnp_df.empty:
+        portshow_aggregated_df = portshow_aggregated_df.merge(alias_wwnp_df, how = 'left', 
                                                           on = ['Fabric_name', 'Fabric_label', 'PortName'])
+    else:
+        portshow_aggregated_df['alias'] = np.nan
 
     # add Unknown(initiator/target) tag for all F-port and N-port for which Device_type is not found
     mask_device_type_na = portshow_aggregated_df['Device_type'].isna()

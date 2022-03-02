@@ -33,9 +33,10 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     zonemember_stat_notes_df.drop(columns=['STORAGE_LIB'], inplace=True)
 
     # find storage models columns if they exist (should be at least one storage in fabric)
-    storage_model_columns = [column for column in columns_lst if 'storage' in column.lower()]
-    if len(storage_model_columns) > 1:
-        storage_model_columns.remove('STORAGE')
+    storage_model_columns = [column for column in columns_lst if 'storage' in column.lower() and not column.lower() in ['storage', 'storage unique name']]
+    # if len(storage_model_columns) > 1:
+    #     storage_model_columns.remove('STORAGE')
+    #     storage_model_columns.remove('STORAGE Unique name')
 
     """
     Explicitly exclude replication zones (considered to be correct and presence of different storage models
@@ -82,6 +83,10 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
 
     # add pair_zone_note
     mask_device_connection = zonemember_stat_notes_df['All_devices_multiple_fabric_label_connection'] == 'Yes'
+    
+    if not 'zone_paired' in zonemember_stat_notes_df.columns:
+        zonemember_stat_notes_df['zone_paired'] = np.nan
+    
     mask_no_pair_zone = zonemember_stat_notes_df['zone_paired'].isna()
     # valid zones
     invalid_zone_tags = ['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators']

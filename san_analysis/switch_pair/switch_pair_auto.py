@@ -46,6 +46,8 @@ def search_fd_xd_pairs(switch_params_aggregated_df, fcr_xd_proxydev_df, fabric_l
     2. Switchname match for front domains"""
     
     switch_pair_fd_xd = create_fd_xd_dataframe(switch_params_aggregated_df)
+    if switch_pair_fd_xd.empty:
+        return switch_pair_fd_xd
     # series with wwn and switch name correspondance
     sw_fd_xd_wwn_name_match_sr = create_wwn_name_match_series(switch_pair_fd_xd)
     # translate domain switchType in device list DataFrame

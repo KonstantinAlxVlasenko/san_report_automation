@@ -74,6 +74,10 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     switch_params_cp_df['switchPaired'] = 'Unpaired_switch'
     switch_params_cp_df.loc[mask_switch_pair_found, 'switchPaired'] = 'Paired_switch'
 
+    # add config collection tag to date
+    mask_date_notna = switch_params_cp_df['config_collection_date_ymd'].notna()
+    switch_params_cp_df.loc[mask_date_notna, 'config_collection_date_ymd'] = 'Config date ' + switch_params_cp_df.loc[mask_date_notna, 'config_collection_date_ymd'].astype(str)
+
     switch_params_cp_df['Total'] = 'Total'
 
     return switch_params_cp_df
@@ -85,7 +89,7 @@ def count_switch_statistics(switch_params_cp_df):
 
     # count values for fabric_name and fabric_label level
     count_columns = ['Total', 'ModelName', 'Generation', 'switchPaired', 'Trunking_lic', 'Fabric_Vision_lic', 
-                    'FC_Router_ON', 'LS_type', 'SwitchMode', 'Current_Switch_Policy_Status']
+                    'FC_Router_ON', 'LS_type', 'SwitchMode', 'Current_Switch_Policy_Status', 'config_collection_date_ymd']
 
     fabric_switch_statistics_df = dfop.count_frequency(switch_params_cp_df, count_columns, 
                                                 group_columns=['Fabric_name', 'Fabric_label'],
@@ -111,7 +115,7 @@ def count_chassis_statistics(switch_params_cp_df):
 
     chassis_cp_df['Fabric_name'] = 'Total chassis'
     # count values for fabric_label level
-    chassis_stat_columns = ['Total', 'ModelName', 'Generation', 'switchPaired', 'Trunking_lic', 'Fabric_Vision_lic']
+    chassis_stat_columns = ['Total', 'ModelName', 'Generation', 'switchPaired', 'Trunking_lic', 'Fabric_Vision_lic', 'config_collection_date_ymd']
     san_chassis_statistics_df = dfop.count_frequency(chassis_cp_df, chassis_stat_columns, 
                                                 group_columns=['Fabric_name', 'Fabric_label'],
                                                 margin_column_row=(False, False))

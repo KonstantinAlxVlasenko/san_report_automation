@@ -41,11 +41,10 @@ def concatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', 
     return df
 
 
-def merge_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
+def merge_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True, sort_summary=False):
     """Function to concatenate values in several columns (merge_columns) into summary_column 
     with separator. If drop flag is True all merged columns except summary column are dropped"""
     
-
     df.reset_index(drop=True, inplace=True)
     merge_columns = [column for column in merge_columns if column in df.columns]
     if not merge_columns:
@@ -55,6 +54,9 @@ def merge_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_m
     if drop_merge_columns:
         drop_columns = [column for column in merge_columns if column != summary_column]
         df.drop(columns=drop_columns, inplace=True)
+
+    if sort_summary:
+        sort_cell_values(df, summary_column, sep=sep)
     return df
 
 

@@ -17,6 +17,9 @@ import utilities.dataframe_operations as dfop
 def alias_dashboard(alias_aggregated_df, portshow_zoned_aggregated_df):
     """Function to count alias statistics"""
 
+    if alias_aggregated_df.empty:
+        return pd.DataFrame()
+
     zonemember_columns = ['Fabric_name', 'Fabric_label', 'zone_member']
     mask_zonemember_duplicates_free = alias_aggregated_df['zonemember_duplicates_free'].isna()
     alias_aggregated_duplicates_free_df = alias_aggregated_df.loc[~mask_zonemember_duplicates_free].copy()

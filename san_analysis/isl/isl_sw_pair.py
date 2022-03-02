@@ -92,7 +92,7 @@ def isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_u
         #                                 'Статистика_ISL_перевод_ru', init_file = 'san_automation_info.xlsx')
         isl_statistics_df_report_df = isl_statistics_df.copy()
         # identify columns to drop and drop columns
-        drop_columns = ['switchWwn', 'Connected_switchWwn', 'sort_column_1', 'sort_column_2']
+        drop_columns = ['switchWwn', 'Connected_switchWwn', 'sort_column_1', 'sort_column_2', 'Connection_ID']
         if not chassis_column_usage:
             drop_columns.append('chassis_name')
         drop_columns = [column for column in drop_columns if column in isl_statistics_df.columns]

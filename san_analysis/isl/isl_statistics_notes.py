@@ -150,15 +150,35 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         isl_statistics_df.loc[mask_connection_pair_absent , 'Connection_pair_absence_note'] = 'connection_pair_absent'
         isl_statistics_df['Asymmetry_note'].fillna(isl_statistics_df['Connection_pair_absence_note'], inplace=True)
         isl_statistics_df.drop(columns=['Connection_pair_absence_note'], inplace=True)
-        return isl_statistics_df 
+        return isl_statistics_df
+
+    def single_connection_asymmetry_note(isl_statistics_df):
+        """Function to verify if connection is symmetric from both switches point of view.
+        Connection might be not symmetric if isl configuration in files mismatch.
+        It happens if changes were made between supportsave collection"""
+    
+        # connection ID is IDs of both switches
+        isl_statistics_df['switchPair_id_str'] = isl_statistics_df['switchPair_id'].astype(int).astype(str)
+        isl_statistics_df['Connected_switchPair_id_str'] = isl_statistics_df['Connected_switchPair_id'].astype(int).astype(str)
+        isl_statistics_df = dfop.merge_columns(isl_statistics_df, summary_column='Connection_ID', 
+                                                                        merge_columns=['switchPair_id_str', 'Connected_switchPair_id_str'],
+                                                                        sort_summary=True)
+        # verify link and port quantity mismatch
+        isl_statistics_df = dfop.verify_group_symmetry(isl_statistics_df, symmetry_grp=['Fabric_name', 'Fabric_label', 'Connection_ID'], 
+                                                    symmetry_columns=[ 'Logical_link_quantity', 'Physical_link_quantity', 'Port_quantity', 'Bandwidth_Gbps'], 
+                                                    summary_column='Single_connection_asymmetry_note')
+        return isl_statistics_df
+
 
     # add notes to isl_statistics_df DataFrame
     isl_statistics_df = connection_note(isl_statistics_df)
     
     isl_statistics_df = nonuniformity_note(isl_statistics_df, isl_aggregated_modified_df)
     isl_statistics_df = speed_note(isl_statistics_df, pattern_dct)
+    # add pair connection asymmetry note
     isl_statistics_df = dfop.verify_group_symmetry(isl_statistics_df, symmetry_grp=['Fabric_name','switchPair_id', 'Connected_switchPair_id'], 
                                                     symmetry_columns=['Logical_link_quantity', 'Physical_link_quantity', 'Port_quantity', 'Bandwidth_Gbps'])
+    isl_statistics_df = single_connection_asymmetry_note(isl_statistics_df)
     isl_statistics_df = connection_pair_absent_note(isl_statistics_df)
     isl_statistics_df.fillna(np.nan, inplace=True)
 
