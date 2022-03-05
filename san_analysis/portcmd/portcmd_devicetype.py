@@ -144,7 +144,7 @@ def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
                 return pd.Series(('SWITCH', 'SWITCH'))
             # slave F-Port trunk ports have Online status but devices are on master port
             elif pd.isna(series.Connected_portWwn_switchshow_filled) and series['portState'] == 'Online' \
-                and 'Trunk port' in series['portScn']:
+                and 'Trunk port' in series['portScn_details']:
                 return pd.Series((np.nan, np.nan))
             # when device_type is not defined, oui is not founded, 
             # and link is not slave AG or ISL but port is Online then device class is UNKNOWN
