@@ -17,11 +17,13 @@ def write_database(report_constant_lst, report_steps_dct, data_names, *args):
     Args are comma separated DataFrames to save.
     """
 
-    if len(report_constant_lst) == 3:
-        customer_name, _, db_dir, max_title, _ = report_constant_lst
-    else:
-        customer_name, _, db_dir, max_title, *_ = report_constant_lst
+    # if len(report_constant_lst) == 3:
+    #     customer_name, _, db_dir, max_title, _ = report_constant_lst
+    # else:
+    #     customer_name, _, db_dir, max_title, *_ = report_constant_lst
 
+    customer_name, _, db_dir, max_title, *_ = report_constant_lst
+    
     for data_name, data_exported in zip(data_names, args):
 
         db_type = report_steps_dct[data_name][2]

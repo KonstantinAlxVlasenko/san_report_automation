@@ -173,7 +173,7 @@ def current_config_extract(maps_params_fabric_lst, pattern_dct,
             if not line:
                 break
             # logical switch index section start
-            if re.search(r'^[= ]*AMS/MAPS *Data *Switch *(\d+)[= ]*$', line):
+            if re.search(pattern_dct['switch_index'], line):  # r'[= ]*AMS/MAPS *Data *Switch *(\d+)[= ]*$'
                 # when section is found corresponding collected dict values changed to True
                 collected['switch_index'] = True
                 match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}

@@ -14,9 +14,9 @@ import utilities.dataframe_operations as dfop
 
 def main():
 
-    report_entry_sr, report_creation_info_lst, project_steps_df, software_path_df = san_init.service_initialization()
+    report_entry_sr, report_creation_info_lst, project_steps_df, software_path_sr = san_init.service_initialization()
 
-    parsed_sshow_maps_lst = san_init.switch_config_preprocessing(report_entry_sr, report_creation_info_lst, software_path_df)
+    parsed_sshow_maps_lst = san_init.switch_config_preprocessing(report_entry_sr, report_creation_info_lst, software_path_sr)
 
     extracted_configuration_lst = san_parser.system_configuration_extract(parsed_sshow_maps_lst, report_entry_sr, report_creation_info_lst)
 

@@ -115,7 +115,11 @@ def verify_sddq_reserve(switch_params_aggregated_df, pattern_dct):
         maps_clean_pattern = pattern_dct['maps_clean']
         switch_params_aggregated_df['Quarantined_Ports_clean'] = switch_params_aggregated_df['Quarantined_Ports']
         # switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={'None|N/A|(No FV lic)|^ +$': np.nan} , regex=True, inplace=True)
-        switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={maps_clean_pattern: np.nan}, regex=True, inplace=True)
+        
+
+        if switch_params_aggregated_df['Quarantined_Ports_clean'].notna().any():
+            switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={maps_clean_pattern: np.nan}, regex=True, inplace=True)
+        # check after replacement
         if switch_params_aggregated_df['Quarantined_Ports_clean'].notna().any():
             # count sddq port quantity
             switch_params_aggregated_df['SDDQ_switch_quantity'] = \

@@ -3,12 +3,12 @@
 
 import re
 
-
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
+
 # import utilities.filesystem_operations as fsop
 
 
@@ -140,7 +140,7 @@ def current_config_extract(portshow_lst, pattern_dct,
                                     continue
                                 # two or three param_names with single num value
                                 elif match_dct['portshow_err_stats']:
-                                    matched_values_lst = dsop.line_to_list(pattern_dct['portphys_and_portscn'], line)
+                                    matched_values_lst = dsop.line_to_list(pattern_dct['portshow_err_stats'], line)
                                     for k, v in zip(matched_values_lst[::2], matched_values_lst[1::2]):
                                             portcmd_dct[k] = v
                                     continue

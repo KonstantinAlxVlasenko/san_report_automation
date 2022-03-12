@@ -15,13 +15,15 @@ import utilities.module_execution as meop
 
 
 # SAN Toolbox.exe path
-santoolbox_path = os.path.normpath(r"C:\\Program Files\\SAN Toolbox - Reloaded\\SAN Toolbox.exe")
+# santoolbox_path = os.path.normpath(r"C:\\Program Files\\SAN Toolbox - Reloaded\\SAN Toolbox.exe")
 
-def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_to_move_parsed_others, software_path_df, max_title):    
-    """
-    Check through unparsed list for configuration data sets for each switch.  
-    Unparsed list format  [[unparsed sshow, (unparsed ams_maps, unparsed amps_maps ...)], []]
-    """
+def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_to_move_parsed_others, software_path_sr, max_title):    
+    """Check through unparsed list for configuration data sets for each switch.  
+    Unparsed list format  [[unparsed sshow, (unparsed ams_maps, unparsed amps_maps ...)], []]"""
+    
+    santoolbox_path = software_path_sr['santoolbox']
+
+
     # list to save parsed configuration data files with full path
     parsed_files_lst = []
     # list to save parsed configuration data files names
@@ -43,7 +45,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         print(f'[{i+1} of {config_set_num}]: {switchname}. Number of configs: {ams_maps_config_num+1} ...')
         
         # calling santoolbox_parser function which parses SHOW_SYS file with SANToolbox
-        parsed_sshow_file = santoolbox_parser(switch_files_to_parse_lst[0], path_to_move_parsed_sshow, max_title)
+        parsed_sshow_file = santoolbox_parser(switch_files_to_parse_lst[0], path_to_move_parsed_sshow, santoolbox_path, max_title)
         parsed_sshow_filename = os.path.basename(parsed_sshow_file)
         
         # tmp lists to save parsed AMS_MAPS_LOG filenames and filepaths
@@ -52,7 +54,11 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         if ams_maps_config_num > 0:
             for ams_maps_config in switch_files_to_parse_lst[1]:
                 # calling santoolbox_parser function which parses AMS_MAPS_LOG file with SANToolbox
-                parsed_amsmaps_file = santoolbox_parser(ams_maps_config, path_to_move_parsed_others, max_title)
+                
+                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+                # print(ams_maps_config, path_to_move_parsed_others, max_title)
+
+                parsed_amsmaps_file = santoolbox_parser(ams_maps_config, path_to_move_parsed_others, santoolbox_path, max_title)
                 # append filenames and filepaths to tmp lists
                 ams_maps_files_lst_tmp.append(parsed_amsmaps_file)
                 ams_maps_filenames_lst_tmp.append(os.path.basename(parsed_amsmaps_file))
@@ -75,10 +81,9 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     return parsed_files_lst, parsed_filenames_lst
 
 
-def santoolbox_parser(file, path_to_move_parsed_data, max_title):
-    """
-    Function to process unparsed ".SSHOW_SYS.txt.gz" and  "AMS_MAPS_LOG.txt.gz" files with SANToolbox.
-    """  
+def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title):
+    """Function to process unparsed ".SSHOW_SYS.txt.gz" and  "AMS_MAPS_LOG.txt.gz" files with SANToolbox."""
+
     # split filepath to directory and filename
     filedir, filename = os.path.split(file)
     if filename.endswith(".SSHOW_SYS.txt.gz"):
@@ -92,6 +97,10 @@ def santoolbox_parser(file, path_to_move_parsed_data, max_title):
     elif filename.endswith('AMS_MAPS_LOG.txt.gz'):     
         ending1 = 'AMS_MAPS_LOG.txt.gz'
         ending2 = 'AMS_MAPS_LOG.txt.gz.txt'
+        option = 'd'
+    elif filename.endswith('AMS_MAPS_LOG.tar.gz'):     
+        ending1 = 'AMS_MAPS_LOG.tar.gz'
+        ending2 = 'AMS_MAPS_LOG.tar.gz.txt'
         option = 'd'
     
     # information string

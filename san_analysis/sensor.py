@@ -43,7 +43,6 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info
 
         # aggregated DataFrames
         sensor_aggregated_df = sensor_aggregation(sensor_df, switch_params_aggregated_df)
-
         # after finish display status
         meop.status_info('ok', max_title, len(info))
         # report tables

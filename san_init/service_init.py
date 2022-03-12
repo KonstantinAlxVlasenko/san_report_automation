@@ -12,6 +12,7 @@ import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
+import os
 
 
 def service_initialization():
@@ -41,13 +42,15 @@ def service_initialization():
                             report_entry_sr['database_folder'], 
                             max_title]    
 
-    project_steps_df, report_headers_df, software_path_df, report_steps_dct = import_service_dataframes(max_title)
+    project_steps_df, report_headers_df, software_path_sr, report_steps_dct = import_service_dataframes(max_title)
 
 
     report_creation_info_lst = [report_constant_lst, report_steps_dct, report_headers_df]
-    # future replace to [report_entry_sr, project_steps_df, report_headers_df, max_title]
-
-    return report_entry_sr, report_creation_info_lst, project_steps_df, software_path_df
+    
+    # future replace
+    # project_constants_lst = [report_entry_sr, report_steps_dct, max_title, report_headers_df], software_path_sr
+    
+    return report_entry_sr, report_creation_info_lst, project_steps_df, software_path_sr
 
 
 def import_service_dataframes(max_title):
@@ -57,13 +60,16 @@ def import_service_dataframes(max_title):
     print(f'\n\nPREREQUISITES 1. IMPORTING STEPS AND TABLES RELATED INFORMATION\n')
 
     project_steps_df = sfop.dataframe_import('service_tables', max_title, init_file = 'report_info.xlsx')
+    if not 'force_run' in project_steps_df.columns:
+        project_steps_df['force_run'] =  project_steps_df['force_extract']
+    
     # replace all nan values with 0 and all notna values (except 0) with 1
-    project_steps_df.fillna({'export_to_excel': 0, 'force_extract': 0}, inplace=True)
-    for column in ['export_to_excel', 'force_extract']: 
+    project_steps_df.fillna({'export_to_excel': 0, 'force_extract': 0, 'force_run': 0}, inplace=True)
+    for column in ['export_to_excel', 'force_extract', 'force_run']: 
         mask_force_run = project_steps_df[column].notna() & ~project_steps_df[column].isin([0, '0'])
         project_steps_df.loc[mask_force_run, column] = 1
 
-    numeric_columns = ['export_to_excel', 'force_extract', 'sort_weight']
+    numeric_columns = ['export_to_excel', 'force_extract', 'force_run', 'sort_weight']
     project_steps_df[numeric_columns] = project_steps_df[numeric_columns].apply(pd.to_numeric, errors='ignore')
 
     # print(project_steps_df[numeric_columns])
@@ -82,18 +88,26 @@ def import_service_dataframes(max_title):
     else:
         meop.status_info('off', max_title, len(info))
 
-    
-    # print(project_steps_df.loc[mask_report_type, numeric_columns])
-    # exit()
-
-    report_steps_dct = dfop.dct_from_dataframe(project_steps_df, 'keys', 'export_to_excel', 'force_extract', 'report_type', 'step_info', 'description')
+    report_steps_dct = dfop.dct_from_dataframe(project_steps_df, 'keys', 'export_to_excel', 'force_run', 'report_type', 'step_info', 'description')
 
     # Data_frame with report columns
     report_headers_df = sfop.dataframe_import('customer_report', max_title)
     # software path
     software_path_df = sfop.dataframe_import('software', max_title, init_file = 'report_info.xlsx')
+    software_path_df['path'] = software_path_df.apply(lambda series: software_path(series), axis=1)
+    software_path_sr = dfop.series_from_dataframe(software_path_df, index_column='name', value_column='path')
+    
+    return project_steps_df, report_headers_df, software_path_sr, report_steps_dct
 
-    return project_steps_df, report_headers_df, software_path_df, report_steps_dct
+
+def software_path(series):
+    """Function to find software pathes for san_toolbox and s3mft"""
+    
+    sw_path = os.path.join(series['directory'], series['file'])
+    sw_path = os.path.normpath(sw_path)
+    return sw_path
+
+
 
 
 def import_titles_and_folders(max_title):
@@ -105,12 +119,16 @@ def import_titles_and_folders(max_title):
     report_entry_df = sfop.dataframe_import('report', max_title, 'report_info.xlsx', display_status=False)
     report_entry_sr = dfop.series_from_dataframe(report_entry_df, index_column='name', value_column='value')
 
+    
+    # fields which shouldn't be empty
     entry_lst = ('customer_name', 'project_title', 'project_folder', 'supportsave_folder')
-    empty_entry_lst = [entry for entry in  entry_lst if pd.isna(entry)]
+    empty_entry_lst = [entry for entry in  entry_lst if pd.isna(report_entry_sr[entry])]
+
     if empty_entry_lst:
-        print(f"{', '.join(empty_entry_lst)} {'is' if len(empty_entry_lst)>1 else 'are'} not defined in report_info file.")
+        print(f"{', '.join(empty_entry_lst)} {'are' if len(empty_entry_lst)>1 else 'is'} not defined in the report_info file.")
         exit()
     
+    report_entry_sr['project_title'] = report_entry_sr['project_title'].replace(' ', '_')
     return report_entry_sr
     
     

@@ -25,7 +25,7 @@ def portcfg_sfp_extract(switch_params_df, report_creation_info_lst):
     # service step information
     print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
 
-    # load data if they were saved on previos program execution iteration    
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
     
     # when any data from data_lst was not saved (file not found) or 
@@ -98,7 +98,7 @@ def current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
             if not line:
                 break
             # sfpshow section start
-            if re.search(r'^(SWITCHCMD )?(/fabos/cliexec/)?sfpshow +-all *: *$', line) and not collected['sfpshow']:
+            if re.search(pattern_dct['switchcmd_sfpshow'], line) and not collected['sfpshow']:  #r'^(SWITCHCMD )?(/fabos/cliexec/)?sfpshow +-all *: *$'
                 collected['sfpshow'] = True
                 if ls_mode_on:
                     while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):

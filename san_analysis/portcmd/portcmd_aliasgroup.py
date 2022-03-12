@@ -198,6 +198,7 @@ def find_grp_name(aliases):
 
 def get_longest_common_subseq(data):
     """Auxiliary function for find_grp_name function"""
+    
     substr = []
     if len(data) > 1 and len(data[0]) > 0:
         for i in range(len(data[0])):

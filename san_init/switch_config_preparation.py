@@ -13,7 +13,7 @@ import utilities.servicefile_operations as sfop
 from .santoolbox_parser import santoolbox_process
 
 
-def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, software_path_df):
+def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, software_path_sr):
     
     report_constant_lst, report_steps_dct, _ = report_creation_info_lst
     *_, max_title = report_constant_lst
@@ -33,11 +33,8 @@ def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, softw
     unparsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['sshow', 'ams_maps'], unparsed_sshow_maps_lst)
     # returns list with parsed data
     parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst = santoolbox_process(unparsed_sshow_maps_lst, 
-                                                                                parsed_sshow_folder, parsed_other_folder, software_path_df, max_title)
+                                                                                parsed_sshow_folder, parsed_other_folder, software_path_sr, max_title)
     # export parsed config filenames to DataFrame and saves it to excel file
-    
-    # parsed_sshow_maps_df = dfop.list_to_dataframe(parsed_sshow_maps_filename_lst, max_title, 
-    #                                             columns=['chassis_name', 'sshow', 'ams_maps'])
     parsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['chassis_name', 'sshow', 'ams_maps'], parsed_sshow_maps_filename_lst)
                                     
     # save files list to database and excel file
@@ -101,7 +98,7 @@ def create_files_list_to_parse(ssave_path, max_title):
                     sshow_prev_size = sshow_file_size
                     filename_size.append(len(file))
 
-            elif file.endswith("AMS_MAPS_LOG.txt.gz"):
+            elif file.endswith("AMS_MAPS_LOG.txt.gz") or file.endswith("AMS_MAPS_LOG.tar.gz"):
                 ams_maps_num += 1
                 ams_maps_file_path = os.path.normpath(os.path.join(root, file))
                 ams_maps_files_lst_tmp.append(ams_maps_file_path)
