@@ -16,15 +16,19 @@ import utilities.servicefile_operations as sfop
 
 
 
-def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_creation_info_lst):
+def devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst):
     """Main function to rename devices"""
 
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+    report_steps_dct, max_title, data_dependency_df, _, _, report_columns_usage_sr, *_ = project_constants_lst
+
+
 
     analyzed_data_names = ['device_rename', 'device_rename_form', 'portshow_aggregated', 'portcmd', 'switchshow_ports', 
                             'switch_params_aggregated', 'switch_parameters', 'chassis_parameters', 
@@ -41,7 +45,7 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
 
     # create DataFrame with devices required to change names
     device_rename_df = define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title, 
-                                                    force_form_update_flag, force_change_data_lst, report_creation_info_lst)
+                                                    force_form_update_flag, force_change_data_lst, project_constants_lst)
     # current operation information string
     info = f'Applying device rename schema'
     print(info, end =" ")
@@ -56,21 +60,25 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, report_
         meop.status_info('skip', max_title, len(info))
 
     # check if device Group_Name should be used in report tables (alias group name)
-    group_name_usage(report_columns_usage_dct, device_rename_df, max_title, force_group_name_usage_update_flag)
+    group_name_usage(report_columns_usage_sr, device_rename_df, max_title, force_group_name_usage_update_flag)
 
     return portshow_aggregated_df, device_rename_df
 
 
 def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title, 
-                                force_form_update_flag, force_change_data_lst, report_creation_info_lst):
+                                force_form_update_flag, force_change_data_lst, project_constants_lst):
     """
     Function to define (create new, return previously saved or return empty) 
     device_rename_df DataFrame to apply device rename schema
     """
 
-    report_constant_lst, *_ = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # report_constant_lst, *_ = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+    _, max_title, *_ = project_constants_lst
+
+
 
     device_rename_columns = ['Fabric_name', 'Device_Host_Name', 'Group_Name', 
                                 'deviceType', 'deviceSubtype', 'Device_Host_Name_rename']
@@ -115,7 +123,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
             if not manual_device_rename_df.empty:
                 # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
                 sheet_title = 'device_rename_form'
-                file_path = dfop.dataframe_to_excel(manual_device_rename_df, sheet_title, report_creation_info_lst, force_flag = True)
+                file_path = dfop.dataframe_to_excel(manual_device_rename_df, sheet_title, project_constants_lst, force_flag = True)
                 file_name = os.path.basename(file_path)
                 file_directory = os.path.dirname(file_path)
                 print(f"\nTo rename devices put new names into the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")
@@ -236,7 +244,7 @@ def device_rename(portshow_aggregated_df, device_rename_df):
     return portshow_aggregated_df
 
 
-def group_name_usage(report_columns_usage_dct, device_rename_df, max_title, force_group_name_usage_update_flag):
+def group_name_usage(report_columns_usage_sr, device_rename_df, max_title, force_group_name_usage_update_flag):
     """
     Function to determine if device alias Group_Name column required in report tables.
     Value (True or False) written to the dictonary so no need to return value.
@@ -246,23 +254,23 @@ def group_name_usage(report_columns_usage_dct, device_rename_df, max_title, forc
 
     # if all devices were renamed and force flag is off column is dropped from report tables 
     if device_rename_df['Device_Host_Name_rename'].notna().all() and not force_group_name_usage_update_flag:
-        report_columns_usage_dct['group_name_usage'] = False
+        report_columns_usage_sr['group_name_usage'] = False
         print(info, end =" ")
         meop.status_info('off', max_title, len(info))
-    # if no information in report_columns_usage_dct or force flag is on or any device keep old name
+    # if no information in report_columns_usage_sr or force flag is on or any device keep old name
     # ask user input 
-    elif report_columns_usage_dct.get('group_name_usage') is None or \
+    elif report_columns_usage_sr.get('group_name_usage') is None or \
             force_group_name_usage_update_flag or \
                 device_rename_df['Device_Host_Name_rename'].isna().any():
         print('\n')
         reply = meop.reply_request('Do you want to use Alias Group Device names? (y)es/(n)o: ')
         print('\n')
         if reply == 'y':
-            report_columns_usage_dct['group_name_usage'] = True
+            report_columns_usage_sr['group_name_usage'] = True
             print(info, end =" ")
             meop.status_info('on', max_title, len(info))
         else:
-            report_columns_usage_dct['group_name_usage'] = False
+            report_columns_usage_sr['group_name_usage'] = False
             print(info, end =" ")
             meop.status_info('off', max_title, len(info))
 

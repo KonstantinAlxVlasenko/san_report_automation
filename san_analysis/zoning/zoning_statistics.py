@@ -20,7 +20,7 @@ import utilities.dataframe_operations as dfop
 
 invalid_zone_tags = ['no_initiator', 'no_target', 'no_target, no_initiator', 'no_target, several_initiators']
 
-def zonemember_statistics(zoning_aggregated_df, report_data_lst):
+def zonemember_statistics(zoning_aggregated_df):
     """Main function to create zonemembers statistics"""
 
     zoning_modified_df, zoning_duplicated_df, zoning_pairs_df, zoning_absorbed_df = modify_zoning(zoning_aggregated_df)

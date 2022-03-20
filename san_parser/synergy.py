@@ -18,31 +18,33 @@ import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
 
 
-def synergy_system_extract(report_entry_sr, report_creation_info_lst):
+def synergy_system_extract(project_constants_lst):
     """Function to extract blade systems information"""
     
-    # report_steps_dct contains current step desciption and force and export tags
-    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # report_constant_lst contains information: 
-    # customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # # report_constant_lst contains information: 
+    # # customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
 
-    if pd.notna(report_entry_sr['synergy_meddler_folder']):
-        synergy_folder = os.path.normpath(report_entry_sr['synergy_meddler_folder'])
+    project_steps_df, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
+
+    if pd.notna(report_requisites_sr['synergy_meddler_folder']):
+        synergy_folder = os.path.normpath(report_requisites_sr['synergy_meddler_folder'])
     else:
         synergy_folder = None
 
     # names to save data obtained after current module execution
     data_names = ['synergy_interconnect', 'synergy_servers']
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
 
     # read data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
-    
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
+
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
     if force_run:
 
         # lists to store only REQUIRED infromation
@@ -198,15 +200,15 @@ def synergy_system_extract(report_entry_sr, report_creation_info_lst):
             meop.status_info('skip', max_title, len(info))
         data_lst = [synergy_module_aggregated_df, synergy_servers_aggregated_df]
         # write data to sql db
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(project_constants_lst, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         synergy_module_aggregated_df, synergy_servers_aggregated_df = data_lst
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return synergy_module_aggregated_df, synergy_servers_aggregated_df
 
 

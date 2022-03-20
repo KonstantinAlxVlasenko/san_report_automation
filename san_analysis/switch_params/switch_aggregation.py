@@ -78,9 +78,9 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     # Check number of Fabric_names. 
     # If there is only one Fabric_name then no need to use Fabric_name column in report Dataframes
     fabric_name_usage = True if switch_params_aggregated_df.Fabric_name.nunique() > 1 else False
-    report_columns_usage_dct = pd.Series([fabric_name_usage, chassis_column_usage], 
+    report_columns_usage_sr = pd.Series([fabric_name_usage, chassis_column_usage], 
                                             index=['fabric_name_usage', 'chassis_info_usage'], name='usage')
-    return switch_params_aggregated_df, report_columns_usage_dct
+    return switch_params_aggregated_df, report_columns_usage_sr
 
 
 def ag_switch_info(switch_params_aggregated_df, ag_principal_df):

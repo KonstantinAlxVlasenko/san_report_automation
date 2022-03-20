@@ -22,7 +22,7 @@ import utilities.dataframe_operations as dfop
 
 def zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
                         cfg_df, zone_df, alias_df, cfg_effective_df, 
-                        fcrfabric_df, lsan_df, peerzone_df, report_data_lst):
+                        fcrfabric_df, lsan_df, peerzone_df):
     """
     Main aggregation function. 
     Combines set of zoning DataFrames into aggregated zoning configuration DataFrame.

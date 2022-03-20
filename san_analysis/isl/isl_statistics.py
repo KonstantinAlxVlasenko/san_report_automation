@@ -13,7 +13,7 @@ isl_group_columns = ['Fabric_name', 'Fabric_label',
                      'switchPair_id', 'Connected_switchPair_id']
 
 
-def isl_statistics(isl_aggregated_df, pattern_dct, report_data_lst):
+def isl_statistics(isl_aggregated_df, pattern_dct):
     """Main function to count ISL statistics"""
     
     # isl_statistics_df = isl_aggregated_df[['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 'SwitchName', 'switchWwn']].copy()
@@ -32,9 +32,8 @@ def isl_statistics(isl_aggregated_df, pattern_dct, report_data_lst):
         # verify if Trunking licence installed on both switches of connection
         isl_statistics_df = verify_trunking_lic(isl_aggregated_modified_df, isl_statistics_df)
         # count switches connection statistics for Fabric_lable and Fabric_name levels
-        isl_statistics_summary_df = isl_statistics_summary(isl_statistics_df, report_data_lst)
+        isl_statistics_summary_df = isl_statistics_summary(isl_statistics_df)
         # verify if fabrics are symmetric
-        # isl_statistics_summary_df = verify_isl_symmetry(isl_statistics_summary_df) REMOVE
         isl_statistics_summary_df = dfop.verify_group_symmetry(isl_statistics_summary_df, symmetry_grp=['Fabric_name'], symmetry_columns=['Switch_quantity', 'Port_quantity', 'Bandwidth_Gbps'])
         # add notes to isl_statistics_df if any violations present
         isl_statistics_df = add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, pattern_dct)
@@ -239,7 +238,7 @@ def sort_isl(isl_statistics_df):
     return isl_statistics_df
     
 
-def isl_statistics_summary(isl_statistics_df, report_data_lst):
+def isl_statistics_summary(isl_statistics_df):
     """Function to count ISL statistics summary for fabric_label and fabric_name levels.
     Total Bandwidwidth counts for link. Others statistics for ports (for both switches of ISL link)"""
 

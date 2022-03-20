@@ -11,25 +11,28 @@ import utilities.servicefile_operations as sfop
 from .switch_statistics_cp import fabric_switch_statistics
 
 
-def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, report_creation_info_lst):
+def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, project_constants_lst):
     """Main function add switch pair id information to switch parameters DataFrame"""
     
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
+
 
     # names to save data obtained after current module execution
     data_names = ['switch_params_aggregated_upd', 'fabric_switch_statistics', 
                     'Коммутаторы', 'Фабрика', 'Параметры_коммутаторов', 'MAPS', 'Лицензии', 
                     'Глобальные_параметры_фабрики', 'Статистика_коммутаторов']
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
 
 
     # list of data to analyze from report_info table
@@ -38,7 +41,7 @@ def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, re
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
         
@@ -64,7 +67,7 @@ def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, re
 
         switches_report_df, fabric_report_df, switches_parameters_report_df, \
             maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df = \
-                switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names)
+                switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_sr, data_names)
 
         # create list with partitioned DataFrames
         data_lst = [switch_params_aggregated_df, fabric_switch_statistics_df,
@@ -72,16 +75,16 @@ def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, re
                     switches_parameters_report_df, maps_report_df, licenses_report_df,
                     global_fabric_parameters_report_df, fabric_switch_statistics_report_df]
         # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
+        dbop.write_database(project_constants_lst, data_names, *data_lst)
     
     else:
         # verify if loaded data is empty and replace information string with empty DataFrame
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         switch_params_aggregated_df, *_ = data_lst
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
 
     return switch_params_aggregated_df
 
@@ -131,12 +134,12 @@ def add_notes(switch_params_aggregated_df):
     return switch_params_aggregated_df
 
 
-def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names):
+def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_sr, data_names):
     """Function to create switch related report tables"""
 
     switches_report_df, fabric_report_df,  \
         switches_parameters_report_df, maps_report_df, licenses_report_df = \
-            dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_dct, *data_names[2:-2])
+            dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names[2:-2])
 
     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
 
@@ -145,7 +148,7 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
     mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
     switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
     global_fabric_parameters_report_df = dfop.generate_report_dataframe(switch_params_principal_df, report_headers_df, 
-                                                                report_columns_usage_dct, data_names[-2])
+                                                                report_columns_usage_sr, data_names[-2])
 
     # drop rows with empty switch names columns
     fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)

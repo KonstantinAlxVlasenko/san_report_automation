@@ -16,13 +16,8 @@ import utilities.dataframe_operations as dfop
 # import utilities.filesystem_operations as fsop
 
 
-# from common_operations_dataframe_presentation import (
-#     drop_equal_columns, drop_zero, generate_report_dataframe,
-#     remove_duplicates_from_column, translate_dataframe, translate_values)
-
-
 def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
-                            device_connection_statistics_df, data_names, report_headers_df, report_columns_usage_dct):
+                            device_connection_statistics_df, data_names, report_headers_df, report_columns_usage_sr):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
     add_columns_lst = ['FW_Recommeneded', 'Driver_Recommeneded', 'FW_Supported', 'HW_Supported']
@@ -31,7 +26,7 @@ def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df
     # partition aggregated DataFrame to required tables
     servers_report_df, storage_report_df, library_report_df, hba_report_df, \
         storage_connection_df,  library_connection_df, server_connection_df = \
-        dfop.generate_report_dataframe(portshow_aggregated_df, report_headers_df, report_columns_usage_dct, *data_names)
+        dfop.generate_report_dataframe(portshow_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names)
 
     # clean and sort DataFrames
     # device report
@@ -39,7 +34,7 @@ def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df
     hba_report_df = _clean_dataframe(hba_report_df, 'srv', duplicates = ['Идентификатор порта WWPN'])
     hba_report_df = device_name_duplicates_free_column(hba_report_df)
     storage_report_df = _clean_dataframe(storage_report_df, 'stor')
-    storage_report_df = _multi_fabric(storage_report_df, report_columns_usage_dct)
+    storage_report_df = _multi_fabric(storage_report_df, report_columns_usage_sr)
     library_report_df = _clean_dataframe(library_report_df, 'lib')
     # device connection reports
     storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean=True)
@@ -129,7 +124,7 @@ def _clean_dataframe(df, mask_type,
     return df
 
 
-def _multi_fabric(df, report_columns_usage_dct):
+def _multi_fabric(df, report_columns_usage_sr):
     """
     Function to check if device ports connected to different Fabrics.
     For example, main Fabric and replication Fabric.
@@ -140,7 +135,7 @@ def _multi_fabric(df, report_columns_usage_dct):
     if not 'Имя устройства' in df_columns:
         return df
 
-    if report_columns_usage_dct['fabric_name_usage'] and not df['Имя устройства'].is_unique:
+    if report_columns_usage_sr['fabric_name_usage'] and not df['Имя устройства'].is_unique:
         df['Фабрика'].fillna('nan', inplace=True)
         # if severeal aliases for one wwnp then combine all into one alias
         identical_values = {k: 'first' for k in df.columns[2:]}

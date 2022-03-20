@@ -13,40 +13,45 @@ from .data_stucture_converting import dct_from_dataframe
 
 
 # saving DataFrame to excel file
-def dataframe_to_excel(data_frame, sheet_title, report_creation_info_lst, 
+def dataframe_to_excel(data_frame, sheet_title, project_constants_lst, 
                         current_date=str(date.today()), force_flag = False, freeze_column='A'):
     """Check if excel file exists, write DataFrame, create or update table of contents,
     change DataFrame text and presentation format."""
     
-    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    customer_name, report_path, _, max_title = report_constant_lst
+    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # customer_name, report_path, _, max_title = report_constant_lst
+
+    project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
+
 
     data_frame = data_frame.apply(pd.to_numeric, errors='ignore')
     
-    # report_steps_dct for each data_name contains: export_to_excel flag, 
-    # force_extract flag, report_type, step_info, data_description
-    if report_steps_dct.get(sheet_title):
-        export_flag, _, report_type, _, df_decription = report_steps_dct.get(sheet_title)
-    else:
-        info = f'DataFrame {sheet_title}'
-        print(info, end =" ")
-        status_info('unknown', max_title, len(info))
-        export_flag, report_type = 1, 'unknown'
-        df_decription = '-'
+    # # report_steps_dct for each data_name contains: export_to_excel flag, 
+    # # force_extract flag, report_type, step_info, data_description
+    # if report_steps_dct.get(sheet_title):
+    #     export_flag, _, report_type, _, df_decription = report_steps_dct.get(sheet_title)
+    # else:
+    #     info = f'DataFrame {sheet_title}'
+    #     print(info, end =" ")
+    #     status_info('unknown', max_title, len(info))
+    #     export_flag, report_type = 1, 'unknown'
+    #     df_decription = '-'
+
+    report_type, export_flag, df_decription = project_steps_df.loc[sheet_title, ['report_type', 'export_to_excel', 'description']].values
 
     # check DataFrame report type to save
     if report_type == 'report':
-        report_mark = 'SAN_Assessment_Tables'
+        report_mark = report_requisites_sr['project_title'] + '_tables'
     else:
         report_mark = report_type
           
     # construct excel filename
-    file_name = customer_name + '_' + report_mark + '_' + current_date + '.xlsx'
+    file_name = report_requisites_sr['customer_name'] + '_' + report_mark + '_' + current_date + '.xlsx'
 
     # information string
     info = f'Exporting {sheet_title} table to {report_mark} file'
     print(info, end =" ")
-    file_path = os.path.join(report_path, file_name)
+    file_path = os.path.join(report_requisites_sr['today_report_folder'], file_name)
     
     # save DataFrame to excel file if export_to_excel trigger is ON
     # and DataFrame is not empty
@@ -77,7 +82,8 @@ def dataframe_to_excel(data_frame, sheet_title, report_creation_info_lst,
         return file_path        
     else:
         # if save key is on but DataFrame empty
-        if report_steps_dct[sheet_title][0] and data_frame.empty:
+        # if report_steps_dct[sheet_title][0] and data_frame.empty:
+        if project_steps_df.loc[sheet_title, 'export_to_excel'] and data_frame.empty:
             status_info('no data', max_title, len(info))
         else:            
             status_info('skip', max_title, len(info))
@@ -219,12 +225,15 @@ def create_hyperlink(ws, at_cell, sheet_name, cell_ref='A1', display_name=None):
     ws[at_cell].font =  openpyxl.styles.fonts.Font(u='single', color=openpyxl.styles.colors.BLUE)
 
 
-def report_format_completion(project_steps_df, report_creation_info_lst, current_date=str(date.today())):
+def report_format_completion(project_constants_lst, current_date=str(date.today())):
     """Function to reorder sheets and items in table of contents"""
 
-    report_constant_lst, *_ = report_creation_info_lst
-    customer_name, report_path, _, max_title = report_constant_lst
-    report_mark = 'SAN_Assessment_Tables'
+    # report_constant_lst, *_ = report_creation_info_lst
+    # customer_name, report_path, _, max_title = report_constant_lst
+    # report_mark = 'SAN_Assessment_Tables'
+
+
+    project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
     
     # verify if any report DataFrame need to be saved
     mask_report = project_steps_df['report_type'] == 'report'
@@ -237,10 +246,10 @@ def report_format_completion(project_steps_df, report_creation_info_lst, current
         print(info, end =" ")
 
         # weights for sorting sheets and contents
-        weight_dct = dct_from_dataframe(project_steps_df, 'keys', 'sort_weight')
+        # weight_dct = dct_from_dataframe(project_steps_df, 'keys', 'sort_weight')
         # construct excel filename
-        file_name = customer_name + '_' + report_mark + '_' + current_date + '.xlsx'
-        file_path = os.path.join(report_path, file_name)
+        file_name = report_requisites_sr['customer_name'] + '_' + report_requisites_sr['project_title'] + '_tables_' + current_date + '.xlsx'
+        file_path = os.path.join(report_requisites_sr['today_report_folder'], file_name)
         try:
             with pd.ExcelWriter(file_path, mode='a', if_sheet_exists= 'replace', engine='openpyxl') as writer: 
                 # open report
@@ -248,10 +257,15 @@ def report_format_completion(project_steps_df, report_creation_info_lst, current
                 writer.book = workbook
                 writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets)
                 # sort sheets
-                workbook._sheets.sort(key=lambda ws: weight_dct[ws.title])
+                
+                # workbook._sheets.sort(key=lambda ws: weight_dct[ws.title])
+
+                workbook._sheets.sort(key=lambda ws: project_steps_df.loc[ws.title, 'sort_weight'])
                 # sort content items
                 content_df = pd.read_excel(writer, sheet_name='Содержание')
-                content_df.sort_values(by=['Закладка'], key=lambda menu_sr: menu_sr.replace(weight_dct), inplace=True)
+                # content_df.sort_values(by=['Закладка'], key=lambda menu_sr: menu_sr.replace(weight_dct), inplace=True)
+
+                content_df.sort_values(by=['Закладка'], key=lambda menu_sr: project_steps_df.loc[menu_sr, 'sort_weight'], inplace=True)
                 # write content to report file
                 content_df.to_excel(writer, sheet_name='Содержание', index = False)
                 # create hyperlinks for contetnts

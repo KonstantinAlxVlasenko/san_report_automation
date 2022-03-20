@@ -13,36 +13,28 @@ import utilities.servicefile_operations as sfop
 
 from .errdump_aggregation import errdump_aggregated
 
-# from common_operations_dataframe import dataframe_fillna
-# from common_operations_dataframe_presentation import generate_report_dataframe
-# from common_operations_filesystem import load_data, save_data
-# from common_operations_table_report import dataframe_to_report
-
-# from common_operations_miscellaneous import (status_info, verify_data,
-#                                              verify_force_run)
-# from common_operations_servicefile import data_extract_objects, dataframe_import
-# from common_operations_database import read_db, write_db
-
 
 
 def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df, 
-                portshow_aggregated_df, report_creation_info_lst):
+                portshow_aggregated_df, project_constants_lst):
     """Main function to get most frequently appeared log messages"""
     
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
 
     # names to save data obtained after current module execution
     data_names = ['errdump_aggregated', 'raslog_counter', 'Журнал']
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
     
     # list of data to analyze from report_info table
     analyzed_data_names = [ 'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
@@ -50,12 +42,10 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
         # data imported from init file (regular expression patterns) to extract values from data columns
-        # re_pattern list contains comp_keys, match_keys, comp_dct    
-        # _, _, *re_pattern_lst = sfop.data_extract_objects('raslog', max_title)
         pattern_dct, _ = sfop.regex_pattern_import('raslog_split', max_title)
         raslog_message_details_df = sfop.dataframe_import('raslog_details', max_title)
         raslog_message_id_details_df = sfop.dataframe_import('raslog_id_details', max_title, columns=['Message_ID', 'Details', 'Recommended_action'])
@@ -72,26 +62,19 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
         # after finish display status
         meop.status_info('ok', max_title, len(info))      
         # partition aggregated DataFrame to required tables
-        raslog_report_df = raslog_report(raslog_frequent_df, data_names, report_headers_df, report_columns_usage_dct)
+        raslog_report_df = raslog_report(raslog_frequent_df, data_names, report_headers_df, report_columns_usage_sr)
 
         # create list with partitioned DataFrames
         data_lst = [errdump_aggregated_df, raslog_counter_df, raslog_report_df]
-        # saving data to json or csv file
-        # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
+        dbop.write_database(project_constants_lst, data_names, *data_lst)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        # errdump_aggregated_df, raslog_counter_df, raslog_report_df = \
-        #     dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        # data_lst = [errdump_aggregated_df, raslog_counter_df, raslog_report_df]
-
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         errdump_aggregated_df, raslog_counter_df, *_ = data_lst
-
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return errdump_aggregated_df, raslog_counter_df
 
 
@@ -202,21 +185,21 @@ def errdump_filter(errdump_aggregated_df):
     return errdump_filtered_df
 
 
-def raslog_report(raslog_frequent_df, data_names, report_headers_df, report_columns_usage_dct):
+def raslog_report(raslog_frequent_df, data_names, report_headers_df, report_columns_usage_sr):
     """Function to check if it is required to use chassis_name columns. RASLog sometimes uses it's own
     chname not equal to switchname or chassis name thus it's better to keep default chassis names
     for visibility even if it was allowed to drop chassiss_name column before"""
 
-    # make copy of default report_columns_usage_dct in order to avoid change it
-    report_columns_usage_upd_dct = report_columns_usage_dct.copy()
-    chassis_column_usage = report_columns_usage_upd_dct['chassis_info_usage']
+    # make copy of default report_columns_usage_sr in order to avoid change it
+    report_columns_usage_upd_sr = report_columns_usage_sr.copy()
+    chassis_column_usage = report_columns_usage_upd_sr['chassis_info_usage']
     # if chassis_name column to be dropped
     if not chassis_column_usage:
         # if all switchnames and chassis names are not identical
         if not all(raslog_frequent_df.chassis_name == raslog_frequent_df.switchName):
             # change keep chassis_name column tag to True 
-            report_columns_usage_upd_dct['chassis_info_usage'] = True
+            report_columns_usage_upd_sr['chassis_info_usage'] = True
 
-    raslog_report_df = dfop.generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_dct, data_names[2])
+    raslog_report_df = dfop.generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_sr, data_names[2])
     raslog_report_df.dropna(axis=1, how = 'all', inplace=True)
     return raslog_report_df

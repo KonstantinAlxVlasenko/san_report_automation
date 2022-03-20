@@ -13,25 +13,27 @@ import utilities.module_execution as meop
 from .port_statistics_aggregation import port_statisctics_aggregated
 
 
-def port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst):
+def port_statistics_analysis(portshow_aggregated_df, project_constants_lst):
     """Main function to count Fabrics statistics"""
 
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
 
     # names to save data obtained after current module execution
     data_names = ['port_statistics', 'Статистика_портов']
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     
     # load data if they were saved on previos program execution iteration
     # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
     
     # # unpacking DataFrames from the loaded list with data
     # # pylint: disable=unbalanced-tuple-unpacking
@@ -43,7 +45,7 @@ def port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst):
             'alias', 'blade_servers', 'fabric_labels']
 
     # chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
         # current operation information string
@@ -60,14 +62,14 @@ def port_statistics_analysis(portshow_aggregated_df, report_creation_info_lst):
         # saving data to json or csv file
         # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)      
+        dbop.write_database(project_constants_lst, data_names, *data_lst)      
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         port_statistics_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return port_statistics_df
 
 

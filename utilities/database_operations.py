@@ -11,24 +11,17 @@ import pandas as pd
 from utilities.module_execution import status_info
 
 
-def write_database(report_constant_lst, report_steps_dct, data_names, *args):
-    """
-    Function to write table data to SQL database.
-    Args are comma separated DataFrames to save.
-    """
+def write_database(project_constants_lst, data_names, *args):
+    """Function to write table data to SQL database.
+    Args are comma separated DataFrames to save."""
 
-    # if len(report_constant_lst) == 3:
-    #     customer_name, _, db_dir, max_title, _ = report_constant_lst
-    # else:
-    #     customer_name, _, db_dir, max_title, *_ = report_constant_lst
+    project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
 
-    customer_name, _, db_dir, max_title, *_ = report_constant_lst
-    
     for data_name, data_exported in zip(data_names, args):
-
-        db_type = report_steps_dct[data_name][2]
-        db_name = customer_name + '_' + db_type + '_database.db'
-        db_path = os.path.join(db_dir, db_name)
+        # db_type = report_steps_dct[data_name][2]
+        db_type = project_steps_df.loc[data_name, 'report_type']
+        db_name = report_requisites_sr['customer_name'] + '_' + db_type + '_database.db'
+        db_path = os.path.join(report_requisites_sr['database_folder'], db_name)
 
         info = f'Writing {data_name} to {db_type} database'
         print(info, end=" ")
@@ -119,16 +112,19 @@ def write_sql(db_path, data_name, df, max_title, info):
                 exit()
             
 
-def read_database(report_constant_lst, report_steps_dct, *args):
+def read_database(project_constants_lst, *args):
     """Function to read data from SQL.
     Args are comma separated DataFrames names.
     Returns list of loaded DataFrames or None if no data found.
     """
 
-    if len(report_constant_lst) == 3:
-        customer_name, _, db_dir, max_title, _ = report_constant_lst
-    else:
-        customer_name, _, db_dir, max_title, *_ = report_constant_lst
+
+    project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
+
+    # if len(report_constant_lst) == 3:
+    #     customer_name, _, db_dir, max_title, _ = report_constant_lst
+    # else:
+    #     customer_name, _, db_dir, max_title, *_ = report_constant_lst
 
     # list to store loaded data
     data_imported = []
@@ -136,9 +132,11 @@ def read_database(report_constant_lst, report_steps_dct, *args):
 
     for data_name in args:
 
-        db_type = report_steps_dct[data_name][2]
-        db_name = customer_name + '_' + db_type + '_database.db'
-        db_path = os.path.join(db_dir, db_name)
+        # db_type = report_steps_dct[data_name][2]
+
+        db_type = project_steps_df.loc[data_name, 'report_type']
+        db_name = report_requisites_sr['customer_name'] + '_' + db_type + '_database.db'
+        db_path = os.path.join(report_requisites_sr['database_folder'], db_name)
         conn = sqlite3.connect(db_path)
 
         info = f'Reading {data_name} from {db_type} database'
@@ -162,7 +160,7 @@ def read_database(report_constant_lst, report_steps_dct, *args):
     return data_imported
 
 
-def verify_read_data(report_constant_lst, data_names, *args,  show_status=True):
+def verify_read_data(max_title, data_names, *args,  show_status=True):
     """
     Function to verify if loaded DataFrame or Series contains 'NO DATA FOUND' information string.
     If yes then data converted to empty DataFrame otherwise remains unchanged.
@@ -170,7 +168,7 @@ def verify_read_data(report_constant_lst, data_names, *args,  show_status=True):
     for the current SAN (fcr, ag, porttrunkarea) 
     """
 
-    *_, max_title = report_constant_lst
+    # *_, max_title = report_constant_lst
     
     # list to store verified data
     verified_data_lst = []

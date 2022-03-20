@@ -21,45 +21,46 @@ from .zoning_statistics import zonemember_statistics
 def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
                             cfg_df, zone_df, alias_df, cfg_effective_df, 
                             fcrfabric_df, lsan_df, peerzone_df, 
-                            report_creation_info_lst):
+                            project_constants_lst):
     """Main function to analyze zoning configuration"""
         
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
 
-    # names to save data obtained after current module execution
-    data_names = ['zoning_aggregated', 'alias_aggregated', 'portshow_zoned_aggregated', 
-                    'zonemember_statistics', 'alias_statistics', 'effective_cfg_statistics', 
-                    'Зонирование', 'Псевдонимы', 'Зонирование_AB', 'Порты_не_в_зонах', 'Порты_без_псевдономов', 
-                    'Отсутствуют_в_сети', 'Статистика_зон', 'Статистика_псевдонимов', 'Статистика_конфигурации']
-    # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
+
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'zoning_analysis_out', 'zoning_analysis_in')
+
     
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
+    # data_names = ['zoning_aggregated', 'alias_aggregated', 'portshow_zoned_aggregated', 
+    #                 'zonemember_statistics', 'alias_statistics', 'effective_cfg_statistics', 
+    #                 'Зонирование', 'Псевдонимы', 'Зонирование_AB', 'Порты_не_в_зонах', 'Порты_без_псевдономов', 
+    #                 'Отсутствуют_в_сети', 'Статистика_зон', 'Статистика_псевдонимов', 'Статистика_конфигурации']
+    
+    
+    # service step information
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
+    
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
 
-    # # unpacking DataFrames from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # zoning_aggregated_df, alias_aggregated_df, zonemember_statistics_df, \
-    #     portshow_zoned_aggregated_df, alias_statistics_df, effective_cfg_statistics_df, zoning_report_df, alias_report_df, \
-    #         zoning_compare_report_df, unzoned_device_report_df, no_alias_device_report_df, zoning_absent_device_report_df,\
-    #             zonemember_statistics_report_df,  alias_statistics_report_df, effective_cfg_statistics_report_df = data_lst
+    # # list of data to analyze from report_info table
+    # analyzed_data_names = ['cfg', 'cfg_effective', 'zone', 'alias', 'switch_params_aggregated', 
+    #                         'switch_parameters', 'switchshow_ports', 'chassis_parameters', 
+    #                         'portshow_aggregated', 'device_rename', 'report_columns_usage_upd', 
+    #                         'portcmd', 'fdmi', 'nscamshow', 'nsshow', 'blade_servers', 'fabric_labels']
 
-    # list of data to analyze from report_info table
-    analyzed_data_names = ['cfg', 'cfg_effective', 'zone', 'alias', 'switch_params_aggregated', 
-                            'switch_parameters', 'switchshow_ports', 'chassis_parameters', 
-                            'portshow_aggregated', 'device_rename', 'report_columns_usage_upd', 
-                            'portcmd', 'fdmi', 'nscamshow', 'nsshow', 'blade_servers', 'fabric_labels']
 
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data  
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
         # current operation information string
@@ -69,11 +70,11 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
         # aggregated DataFrames
         zoning_aggregated_df, alias_aggregated_df \
             = zoning_aggregated(switch_params_aggregated_df, portshow_aggregated_df, 
-                                    cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, report_constant_lst)
+                                    cfg_df, zone_df, alias_df, cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df)
 
         # create comprehensive statistics DataFrame with Fabric summaries and
         # zones statistics DataFrame without summaries  
-        zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df, report_constant_lst)
+        zonemember_statistics_df, zonemember_zonelevel_stat_df = zonemember_statistics(zoning_aggregated_df)
         # add zoning statistics notes, zone duplicates and zone pairs to zoning aggregated DataFrame
         zoning_aggregated_df = statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_stat_df)
         # check all fabric devices (Wwnp) for usage in zoning configuration
@@ -91,7 +92,7 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
                 zonemember_statistics_report_df, alias_statistics_report_df, effective_cfg_statistics_report_df = \
                     zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df, 
                                         zonemember_statistics_df, alias_statistics_df, effective_cfg_statistics_df, 
-                                        data_names, report_headers_df, report_columns_usage_dct)
+                                        data_names, report_headers_df, report_columns_usage_sr)
 
         # create list with partitioned DataFrames
         data_lst = [zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df, 
@@ -99,21 +100,17 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
                     zoning_report_df, alias_report_df, zoning_compare_report_df, unzoned_device_report_df, 
                     no_alias_device_report_df, zoning_absent_device_report_df, zonemember_statistics_report_df, 
                     alias_statistics_report_df, effective_cfg_statistics_report_df]
-        # saving data to json or csv file
-        # save_data(report_constant_lst, data_names, *data_lst)
-        # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
 
+        # writing data to sql
+        dbop.write_database(project_constants_lst, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df, *_ = data_lst
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
-
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df
 
 

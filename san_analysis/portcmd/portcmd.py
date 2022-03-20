@@ -22,78 +22,64 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                             blade_servers_df, blade_vc_df, 
                             synergy_module_df, synergy_servers_df, 
                             system_3par_df, port_3par_df, 
-                            report_creation_info_lst):
+                            project_constants_lst):
     """Main function to add connected devices information to portshow DataFrame"""
 
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
 
-    # names to save data obtained after current module execution
-    data_names = [
-        'portshow_aggregated', 'storage_connection_statistics', 'device_connection_statistics', 
-        'device_rename', 'report_columns_usage_upd', 
-        'Серверы', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
-        'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 
-        'Статистика_массивов', 'Статистика_устройств'
-        ]
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
+
+
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'portcmd_analysis_out', 'portcmd_analysis_in')
+
+    # # names to save data obtained after current module execution
+    # data_names = [
+    #     'portshow_aggregated', 'storage_connection_statistics', 'device_connection_statistics', 
+    #     'device_rename', 'report_columns_usage_upd', 
+    #     'Серверы', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
+    #     'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 
+    #     'Статистика_массивов', 'Статистика_устройств'
+    #     ]
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
 
-    # report_columns_usage_bckp = report_columns_usage_dct
-    
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
     
     # flag to forcible save portshow_aggregated_df if required
     portshow_force_flag = False
     
     device_rename_df = data_lst[3]
     if not device_rename_df is None:
-        device_rename_df, = dbop.verify_read_data(report_constant_lst, ['device_rename'], device_rename_df)
+        device_rename_df, = dbop.verify_read_data(max_title, ['device_rename'], device_rename_df)
 
     nsshow_unsplit_df = pd.DataFrame()
 
-    # on the first iteration report_columns_usage_upd is None 
-    # so use report_columns_usage backup from report_creation_info_lst
-    
-    # if not report_columns_usage_dct.empty:
-    #     report_columns_usage_dct = report_columns_usage_bckp
+    # # list of data to analyze from report_info table
+    # analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
+    #                         'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 
+    #                         'nsshow', 'alias', 'blade_servers', 'synergy_servers', 'fabric_labels', 'isl', 
+    #                         'trunk', 'isl_aggregated', 'Параметры_SFP', 'portshow_sfp_aggregated']
 
-    # if report_columns_usage_dct is None:
-    #     report_columns_usage_dct = report_columns_usage_bckp
-
-    # if report_columns_usage_dct.empty:
-    #     report_columns_usage_dct = report_columns_usage_bckp
-
-    # list of data to analyze from report_info table
-    analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
-                            'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 
-                            'nsshow', 'alias', 'blade_servers', 'synergy_servers', 'fabric_labels', 'isl', 
-                            'trunk', 'isl_aggregated', 'Параметры_SFP', 'portshow_sfp_aggregated']
-
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data  
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
         # import data with switch models, firmware and etc
         switch_models_df = sfop.dataframe_import('switch_models', max_title)
         # data imported from init file (regular expression patterns) to extract values from data columns
         pattern_dct, *_ = sfop.regex_pattern_import('ns_split', max_title)
-
-        # TO_REMOVE
-        # re_pattern list contains comp_keys, match_keys, comp_dct    
-        # _, _, *re_pattern_lst = sfop.data_extract_objects('nameserver', max_title)
-
     
         oui_df = sfop.dataframe_import('oui', max_title, columns=['Connected_oui', 'type', 'subtype'])
-
         # current operation information string
         info = f'Generating connected devices table'
         print(info, end =" ") 
@@ -114,10 +100,10 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         # if new switch founded
         portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag = \
             warning_notification(portshow_aggregated_df, switch_params_aggregated_df, 
-            nsshow_unsplit_df, expected_ag_links_df, report_steps_dct, max_title)        
+            nsshow_unsplit_df, expected_ag_links_df, project_steps_df, max_title)        
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
-            devicename_correction_main(portshow_aggregated_df, device_rename_df, report_creation_info_lst)
+            devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst)
         # merge 'Device_Host_Name' and 'Device_port', create column with all Device_Host_Name for port each port
         portshow_aggregated_df = device_names_per_port(portshow_aggregated_df)
         # count Device_Host_Name instances for fabric_label, label and total in fabric
@@ -136,27 +122,27 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                 storage_connection_statistics_report_df, device_connection_statistics_report_df  = \
                     portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
                                             device_connection_statistics_df, data_names[5:-2], 
-                                            report_headers_df, report_columns_usage_dct)
+                                            report_headers_df, report_columns_usage_sr)
         # create list with partitioned DataFrames
         data_lst = [
             portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
-            device_rename_df, report_columns_usage_dct, 
+            device_rename_df, report_columns_usage_sr, 
             servers_report_df, storage_report_df, library_report_df, hba_report_df, 
             storage_connection_df, library_connection_df, server_connection_df, 
             storage_connection_statistics_report_df, device_connection_statistics_report_df
             ]
 
         # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
+        dbop.write_database(project_constants_lst, data_names, *data_lst)
         # save data to service file if it's required
-        dfop.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', report_creation_info_lst, force_flag = nsshow_unsplit_force_flag)
-        dfop.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', report_creation_info_lst, force_flag = expected_ag_links_force_flag)
+        dfop.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', project_constants_lst, force_flag = nsshow_unsplit_force_flag)
+        dfop.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', project_constants_lst, force_flag = expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         portshow_aggregated_df, *_ = data_lst
         # add report_columns_usage_sr to report_creation_info_lst
-        report_creation_info_lst[3] = data_lst[4]
+        project_constants_lst[5] = data_lst[4]
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
@@ -164,7 +150,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         if data_name == 'portshow_aggregated':
             force_flag = portshow_force_flag
         if data_name != 'report_columns_usage_upd':
-            dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst, force_flag=force_flag)
+            dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
     return portshow_aggregated_df
 
 
@@ -203,7 +189,7 @@ def device_ports_per_group(portshow_aggregated_df):
     return portshow_aggregated_df
 
 
-def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, expected_ag_links_df, report_steps_dct, max_title):
+def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, expected_ag_links_df, project_steps_df, max_title):
     """Function to show WARNING notification if any deviceType is UNKNOWN,
     if any PortSymb or NodeSymb was not parsed or if new switch founded which was
     not previously discovered"""
@@ -213,9 +199,9 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
     nsshow_unsplit_force_flag = False
     expected_ag_links_force_flag = False
 
-    portshow_export_flag, *_ = report_steps_dct['portshow_aggregated']
-    nsshow_unsplit_export_flag, *_ = report_steps_dct['nsshow_unsplit']
-    expected_ag_links_export_flag, *_ = report_steps_dct['expected_ag_links']
+    portshow_export_flag = project_steps_df.loc['portshow_aggregated', 'export_to_excel']
+    nsshow_unsplit_export_flag = project_steps_df.loc['nsshow_unsplit', 'export_to_excel']
+    expected_ag_links_export_flag = project_steps_df.loc['expected_ag_links', 'export_to_excel']
 
     # warning if UKNOWN device class present
     if (portshow_aggregated_df['deviceType'] == 'UNKNOWN').any():

@@ -11,30 +11,32 @@ import utilities.module_execution as meop
 # import utilities.filesystem_operations as fsop
 
 
-def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info_lst):
+def sensor_analysis(sensor_df, switch_params_aggregated_df, project_constants_lst):
     """Main function to analyze zoning configuration"""
         
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
 
     # names to save data obtained after current module execution
     data_names = ['sensor_aggregated', 'Датчики']
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
     
     # list of data to analyze from report_info table
     analyzed_data_names = ['switch_params_aggregated', 'fabric_labels', 'sensor']
 
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
         # current operation information string
@@ -46,21 +48,21 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, report_creation_info
         # after finish display status
         meop.status_info('ok', max_title, len(info))
         # report tables
-        sensor_report_df = sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names)
+        sensor_report_df = sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_sr, data_names)
         # create list with partitioned DataFrames
         data_lst = [sensor_aggregated_df, sensor_report_df]
         # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst) 
+        dbop.write_database(project_constants_lst, data_names, *data_lst) 
 
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         sensor_aggregated_df, *_ = data_lst
 
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
 
     return sensor_aggregated_df
 
@@ -95,11 +97,11 @@ def sensor_aggregation(sensor_df, switch_params_aggregated_df):
     return sensor_aggregated_df
 
 
-def sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names):
+def sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_sr, data_names):
     """Function to create report Datafrmae from sensor_aggregated_df 
     (slice and reorder columns, translate values in columns)"""
 
-    sensor_report_df = dfop.generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    sensor_report_df = dfop.generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[1])
     sensor_report_df = dfop.translate_values(sensor_report_df, report_headers_df, data_names[1], 
                                         translated_columns = ['Type', 'Status', 'Value', 'Unit'])
     return sensor_report_df

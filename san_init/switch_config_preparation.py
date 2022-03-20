@@ -13,14 +13,17 @@ import utilities.servicefile_operations as sfop
 from .santoolbox_parser import santoolbox_process
 
 
-def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, software_path_sr):
+def switch_config_preprocessing(project_constants_lst, software_path_sr):
     
-    report_constant_lst, report_steps_dct, _ = report_creation_info_lst
-    *_, max_title = report_constant_lst
 
-    ssave_folder = report_entry_sr['supportsave_folder']
-    parsed_sshow_folder = report_entry_sr['parsed_sshow_folder']
-    parsed_other_folder = report_entry_sr['parsed_other_folder']
+    _, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
+
+    # report_constant_lst, report_steps_dct, _ = report_creation_info_lst
+    # *_, max_title = report_constant_lst
+
+    ssave_folder = report_requisites_sr['supportsave_folder']
+    parsed_sshow_folder = report_requisites_sr['parsed_sshow_folder']
+    parsed_other_folder = report_requisites_sr['parsed_other_folder']
 
 
     # check for switches unparsed configuration data
@@ -44,11 +47,10 @@ def switch_config_preprocessing(report_entry_sr, report_creation_info_lst, softw
         df['ams_maps'] = df['ams_maps'].astype('str')
         df['ams_maps'] = df['ams_maps'].str.strip('[]()')
 
-    dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
+    dbop.write_database(project_constants_lst, data_names, *data_lst)
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)    
-
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)    
     return parsed_sshow_maps_lst
 
 

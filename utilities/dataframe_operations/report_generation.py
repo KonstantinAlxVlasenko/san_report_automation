@@ -70,7 +70,7 @@ def translate_dataframe(df, headers_df, df_name, translated_columns=None):
     return translated_df
 
 
-def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct) -> list:
+def header_cleanup(report_headers_df, header_name: str, report_columns_usage_sr) -> list:
     """Function to get DataFrame header from report_headers_df and drop excessive columns
     if they are not required"""
 
@@ -90,7 +90,7 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct
     # verify if any header titles need to be dropped
     dropped_columns = []
     for usage_flag, column in column_usage_flags:
-        if not report_columns_usage_dct.get(usage_flag):
+        if not report_columns_usage_sr.get(usage_flag):
             dropped_columns.extend(column)
     if dropped_columns:
         mask_dropped_columns = header_sr.isin(dropped_columns)
@@ -98,14 +98,14 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_dct
     return header_sr.tolist()
 
 
-def statistics_report(statistics_df, report_headers_df, df_name, report_columns_usage_dct, drop_columns=None):
+def statistics_report(statistics_df, report_headers_df, df_name, report_columns_usage_sr, drop_columns=None):
     """Function to create report table out of statistics_df DataFrame"""
 
     statistics_report_df = pd.DataFrame()
     if not drop_columns:
         drop_columns = []
     if not statistics_df.empty:
-        chassis_column_usage = report_columns_usage_dct.get('chassis_info_usage')
+        chassis_column_usage = report_columns_usage_sr.get('chassis_info_usage')
         statistics_report_df = statistics_df.copy()
         # identify columns to drop and drop columns
         if not chassis_column_usage:

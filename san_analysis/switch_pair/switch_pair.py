@@ -16,29 +16,31 @@ from .switch_pair_verification import *
 from .switch_pair_correction import *
 
 
-def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, report_creation_info_lst):
+def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, project_constants_lst):
     """Function to set switch pair IDs"""
 
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+    project_steps_df, max_title, data_dependency_df, *_ = project_constants_lst
 
     # names to save data obtained after current module execution
     data_names = ['switch_pair', 'sw_wwn_occurrence_stats']
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     # read data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
     # unpacking DataFrames from the loaded list with data
     switch_pair_df, _ = data_lst
     # list of data to analyze from report_info table
     analyzed_data_names = ['switch_params_aggregated', 'portshow_aggregated']
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution  
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title, analyzed_data_names)
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title, analyzed_data_names)
 
     if force_run:             
         print('\nSETTING UP SWITCH PAIRS  ...\n')
@@ -77,7 +79,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
                     switch_pair_df = dfop.move_column(switch_pair_df, cols_to_move='switchWwn_pair_MANUAL', ref_col='switchWwn_pair') 
                     # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
                     sheet_title = 'switch_pair_manual'
-                    file_path = dfop.dataframe_to_excel(switch_pair_df, sheet_title, report_creation_info_lst, force_flag=True)
+                    file_path = dfop.dataframe_to_excel(switch_pair_df, sheet_title, project_constants_lst, force_flag=True)
                     file_name = os.path.basename(file_path)
                     file_directory = os.path.dirname(file_path)
                     print(f"\nPut REQUIRED to be changed switch wwn to switchWwn_pair_MANUAL column of the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")
@@ -118,14 +120,14 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
         # create list with partitioned DataFrames
         data_lst = [switch_pair_df, sw_wwn_occurrence_stats_df]
         # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(project_constants_lst, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         switch_pair_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
 
     return switch_pair_df 
 

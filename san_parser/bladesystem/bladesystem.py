@@ -13,31 +13,33 @@ import utilities.servicefile_operations as sfop
 from .bladesystem_extract_fn import *
 
 
-def blade_system_extract(report_entry_sr, report_creation_info_lst):
+def blade_system_extract(project_constants_lst):
     """Function to extract blade systems information"""
 
-    # report_steps_dct contains current step desciption and force and export tags
-    report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # report_constant_lst contains information: 
-    # customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
+    # # report_constant_lst contains information: 
+    # # customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
 
-    if pd.notna(report_entry_sr['blade_showall_folder']):
-        blade_folder = os.path.normpath(report_entry_sr['blade_showall_folder'])
+    project_steps_df, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
+
+    if pd.notna(report_requisites_sr['blade_showall_folder']):
+        blade_folder = os.path.normpath(report_requisites_sr['blade_showall_folder'])
     else:
         blade_folder = None
 
     # names to save data obtained after current module execution
     data_names = ['blade_interconnect', 'blade_servers', 'blade_vc']
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
 
     # read data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
 
     # when any data from data_lst was not saved (file not found) or 
     # force extract flag is on then re-extract data from configuration files  
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, max_title)
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
     
     if force_run: 
         # lists to store only REQUIRED infromation
@@ -92,16 +94,16 @@ def blade_system_extract(report_entry_sr, report_creation_info_lst):
         data_lst = dfop.list_to_dataframe(headers_lst, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
         blade_module_df, blade_servers_df, blade_vc_df, *_ = data_lst 
         # save_data(report_constant_lst, data_names, *data_lst)
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)  
+        dbop.write_database(project_constants_lst, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         blade_module_df, blade_servers_df, blade_vc_df = data_lst
         
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return blade_module_df, blade_servers_df, blade_vc_df
 
 

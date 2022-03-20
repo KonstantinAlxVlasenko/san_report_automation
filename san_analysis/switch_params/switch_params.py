@@ -15,15 +15,18 @@ from .switch_statistics import fabric_switch_statistics
 
 
 def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df, 
-                                switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, report_creation_info_lst):
+                                switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, project_constants_lst):
     """Main function to create aggregated switch parameters table and report tables"""
     
-    # report_steps_dct contains current step desciption and force and export tags
-    # report_headers_df contains column titles, 
-    # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    report_constant_lst, report_steps_dct, report_headers_df = report_creation_info_lst
-    # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    *_, max_title = report_constant_lst
+    # # report_steps_dct contains current step desciption and force and export tags
+    # # report_headers_df contains column titles, 
+    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
+    # report_constant_lst, report_steps_dct, report_headers_df = report_creation_info_lst
+    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
+    # *_, max_title = report_constant_lst
+
+
+    project_steps_df, max_title, data_dependency_df, *_ = project_constants_lst
 
     # names to save data obtained after current module execution
     data_names = ['report_columns_usage', 'switch_params_aggregated']
@@ -34,10 +37,10 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
 
 
     # service step information
-    print(f'\n\n{report_steps_dct[data_names[0]][3]}\n')
+    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     
     # reade data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(report_constant_lst, report_steps_dct, *data_names)
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
 
     # list of data to analyze from report_info table
     analyzed_data_names = ['chassis_parameters', 'switch_parameters', 'switchshow_ports', 
@@ -47,7 +50,7 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
     fabric_clean_df = fabric_clean(fabricshow_ag_labels_df)
     # force run when any data from data_lst was not saved (file not found) or 
     # procedure execution explicitly requested for output data or data used during fn execution
-    force_run = meop.verify_force_run(data_names, data_lst, report_steps_dct, 
+    force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
 
@@ -61,11 +64,11 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         print(info, end =" ") 
 
         # create aggregated table by joining DataFrames
-        switch_params_aggregated_df, report_columns_usage_dct = \
+        switch_params_aggregated_df, report_columns_usage_sr = \
             switch_param_aggregation(fabric_clean_df, chassis_params_df, \
                 switch_params_df, maps_params_df, switch_models_df, ag_principal_df, pattern_dct)
 
-        report_creation_info_lst.append(report_columns_usage_dct)
+        project_constants_lst.append(report_columns_usage_sr)
 
         # add 'Device_Location for Blade chassis switches
         switch_params_aggregated_df = fill_device_location(switch_params_aggregated_df, blade_module_loc_df)
@@ -85,20 +88,17 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
             meop.status_info('warning', max_title, len(info))
 
         # create list with partitioned DataFrames
-        data_lst = [report_columns_usage_dct, switch_params_aggregated_df]
+        data_lst = [report_columns_usage_sr, switch_params_aggregated_df]
         # writing data to sql
-        dbop.write_database(report_constant_lst, report_steps_dct, data_names, *data_lst)
-    
+        dbop.write_database(project_constants_lst, data_names, *data_lst)
     else:
         # verify if loaded data is empty and replace information string with empty DataFrame
-        data_lst = dbop.verify_read_data(report_constant_lst, data_names, *data_lst)
-        report_columns_usage_dct, switch_params_aggregated_df, *_ = data_lst
-
+        data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
+        report_columns_usage_sr, switch_params_aggregated_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names[1:], data_lst[1:]):
-        dfop.dataframe_to_excel(data_frame, data_name, report_creation_info_lst)
-
-    return report_columns_usage_dct, switch_params_aggregated_df, fabric_clean_df
+        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+    return report_columns_usage_sr, switch_params_aggregated_df, fabric_clean_df
 
 
 def fabric_clean(fabricshow_ag_labels_df):
@@ -141,12 +141,12 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
     return switch_params_aggregated_df
 
 
-# def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_dct, data_names):
+# def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_sr, data_names):
 #     """Function to create switch related report tables"""
 
 #     switches_report_df, fabric_report_df,  \
 #         switches_parameters_report_df, maps_report_df, licenses_report_df = \
-#             dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_dct, *data_names[3:-2])
+#             dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names[3:-2])
 
 #     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
 
@@ -155,7 +155,7 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
 #     mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
 #     switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
 #     global_fabric_parameters_report_df = dfop.generate_report_dataframe(switch_params_principal_df, report_headers_df, 
-#                                                                 report_columns_usage_dct, data_names[-2])
+#                                                                 report_columns_usage_sr, data_names[-2])
 
 #     # drop rows with empty switch names columns
 #     fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)

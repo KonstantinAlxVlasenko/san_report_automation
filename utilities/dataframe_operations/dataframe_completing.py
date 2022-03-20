@@ -5,10 +5,10 @@
 # import pandas as pd
 
 
-def dataframe_join(left_df, right_df, columns_lst, columns_join_index = None):
+def dataframe_join(left_df, right_df, columns_lst, columns_join_index=None):
     """
     Auxiliary function to add information from right DataFrame to left DataFrame
-    for both parts of left DataFrame (with and w/o _Connecetd suffix columns).
+    for both parts of left DataFrame (with and w/o _Conneceted suffix columns).
     Function take as parameters left and right DataFrames, list with names in right DataFrame and 
     index. Join is performed on columns up to index 
     """

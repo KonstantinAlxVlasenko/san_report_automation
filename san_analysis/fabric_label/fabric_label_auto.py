@@ -13,19 +13,14 @@ import utilities.dataframe_operations as dfop
 # import utilities.servicefile_operations as sfop
 # import utilities.filesystem_operations as fsop
 
-# from pandas.core import series
-
-# from common_operations_table_report import dataframe_to_report
-
 # auxiliary global variables for auto_fabrics_labeling function
 # variables changed globally each time function called
 fabric_bb = False
 fabric_num = 0
 fabric_label = False
-# called = False
 
 
-def auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, report_creation_info_lst):
+def auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, project_constants_lst):
     """Function to auto label fabrics  in fabricshow_df DataFrame"""
 
     # ls_type, customer defined fabric name, xisl usage mode
@@ -33,7 +28,7 @@ def auto_fabrics_labeling(switchshow_ports_df, switch_params_df, fabricshow_df, 
     # counts statistics for port type (F-port, E-port) and port state (Online) for each switch in fabricshow
     fabricshow_porttype_state_df = fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow_df)
     # saving DataFrame to Excel if manual labeling required
-    dfop.dataframe_to_excel(fabricshow_porttype_state_df, 'fabricshow_statistics', report_creation_info_lst, force_flag=True)
+    dfop.dataframe_to_excel(fabricshow_porttype_state_df, 'fabricshow_statistics', project_constants_lst, force_flag=True)
     # removing front domain and translate domain switches from DataFrame
     fabricshow_porttype_state_df = fabricshow_porttype_state_df.loc[fabricshow_porttype_state_df.Enet_IP_Addr != '0.0.0.0']
     # dividing fabricshow_porttype_state_df into groups. One group for each fabric
@@ -139,13 +134,6 @@ def fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow
     
     # concatenating port_type port_state DataFrames by rightjoin
     porttype_state_df = port_type_df.merge(port_state_df, how='right', on = ['chassis_name', 'switchName', 'switchWwn'])
-
-    # TO REMOVE same opearation implemented below with merged DataFrame
-    # # fill None values with 0
-    # porttype_state_df.fillna(0, inplace=True)
-    # # converting all values to integer
-    # porttype_state_df = porttype_state_df.astype('int64', errors = 'ignore')
-
     # sorting index
     porttype_state_df.sort_index(inplace=True)
     # concatenate with ls info
@@ -160,11 +148,9 @@ def fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow
     fabricshow_porttype_state_df[non_object_columns]  = fabricshow_porttype_state_df[non_object_columns].fillna(0)
     # converting all values to integer
     fabricshow_porttype_state_df[non_object_columns] = fabricshow_porttype_state_df[non_object_columns].astype('int64', errors='ignore')
-
     # columns contains object type and required to fillna with 'unknown'
     object_columns =['Fabric_Name', 'LS_type']
     fabricshow_porttype_state_df[object_columns]  = fabricshow_porttype_state_df[object_columns].fillna('unknown')
-    
     return fabricshow_porttype_state_df
 
 
@@ -191,7 +177,6 @@ def fabricshow_summary(group):
     fabric_name = ', '.join(set(group.Fabric_Name.tolist()))
     # column names for Series
     columns_names = ['Total_switch', 'Domain_IDs', 'Switch_names', 'Device_ports', 'Online_ports', 'LS_type', 'Fabric_Name']    
-    
     return pd.Series([switch_nums, domain_ids, names, device_sum, online_sum, ls_type, fabric_name], index= columns_names)
 
 
@@ -206,59 +191,6 @@ def _auto_fabrics_labeling(row):
     global fabric_num # Number of current Edge Fabric 
     global fabric_label # if True then label A has been already assigned and current fabric should get B label
     
-    # TO_REMOVE call variable is not required anymore
-    # # apply method calls function on first row two times
-    # # flag to check if function has been already called 
-    # global called
-    # # bug was fixed so no need in call variable no more. left temporary. should be removed after checking
-    # called = True
-    
-    # # called function flag is on
-    # if called:
-    #     # Online ports present in the fabric
-    #     if row.loc['Online_ports'] != 0:
-    #         # Backbone fabric
-    #         if row.loc['FC_Route'] == 'ON':
-    #             fabric_num_current = 'BB'
-    #             # first BB fabric row
-    #             if not fabric_bb:
-    #                 # label A assigned
-    #                 fabric_label_current = 'A'
-    #                 fabric_bb = True
-    #             # second BB fabric row
-    #             else:
-    #                 # label B assigned
-    #                 fabric_label_current = 'B'
-    #         # Edge fabrics
-    #         else:
-    #             # second and more Edge fabric row
-    #             if fabric_num:
-    #                 fabric_num_current = 'san' + str(fabric_num)
-    #                 # if before 'A' label has been assigned
-    #                 if fabric_label:
-    #                     fabric_label = False
-    #                     fabric_label_current = 'B'
-    #                     fabric_num += 1
-    #                 # if before 'B' label has been assigned
-    #                 else:
-    #                     fabric_label_current = 'A'
-    #                     fabric_label = True
-    #             # first Edge fabric row
-    #             else:
-    #                 fabric_num += 1
-    #                 fabric_label_current = 'A'
-    #                 fabric_label = True
-    #                 fabric_num_current = 'san' + str(fabric_num)
-    #     # if there are no Online ports in Fabric labels are not assigned
-    #     else:
-    #         fabric_num_current = None
-    #         fabric_label_current = None
-    #     return [fabric_num_current, fabric_label_current]
-    # # called function flag is off
-    # # first time function is called do nothing
-    # else:
-    #     called = True  
-
     # Online ports present in the fabric
     if row.loc['Online_ports'] != 0:
         # Backbone fabric
