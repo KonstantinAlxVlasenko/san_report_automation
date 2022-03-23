@@ -16,30 +16,18 @@ def connected_devices_extract(switch_params_df, project_constants_lst):
     """Function to extract connected devices information
     (fdmi, nsshow, nscamshow)"""
            
-    # # report_steps_dct contains current step desciption and force and export tags
-    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # # report_constant_lst contains information: 
-    # # customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-
-
-    project_steps_df, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
-
-    if pd.notna(report_requisites_sr['nsshow_dedicated_folder']):
-        nsshow_folder = os.path.normpath(report_requisites_sr['nsshow_dedicated_folder'])
-    else:
-        nsshow_folder = None
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, report_requisites_sr, *_ = project_constants_lst
     
-    # names to save data obtained after current module execution
-    data_names = ['fdmi', 'nsshow', 'nscamshow', 'nsshow_dedicated', 'nsportshow']
+    # data titles obtained after module execution
+    data_names = dfop.list_from_dataframe(io_data_names_df, 'nameserver_collection')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
-    # when any data from data_lst was not saved (file not found) or 
-    # force extract flag is on then re-extract data from configuration files  
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output data  
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
     
     if force_run:      
@@ -76,6 +64,8 @@ def connected_devices_extract(switch_params_df, project_constants_lst):
                                     fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add)                    
             meop.status_info('ok', max_title, len(info))
         
+        nsshow_folder = report_requisites_sr['nsshow_dedicated_folder']
+
         # check files in dedicated nsshow folder
         if nsshow_folder:
             print('\nEXTRACTING NAMESERVER INFORMATION FROM DEDICATED FILES ...\n')

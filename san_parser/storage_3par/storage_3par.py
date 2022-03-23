@@ -18,34 +18,21 @@ from .storage_3par_download import configs_download
 def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, software_path_sr):
     """Function to extract 3PAR storage information"""
     
-    # # report_steps_dct contains current step desciption and force and export tags
-    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # # report_constant_lst contains information: 
-    # # customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, report_requisites_sr, *_ = project_constants_lst
 
-    project_steps_df, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
-
-    if pd.notna(report_requisites_sr['3par_inserv_folder']):
-        local_3par_folder = os.path.normpath(report_requisites_sr['3par_inserv_folder'])
-    else:
-        local_3par_folder = None
-    project_folder = os.path.normpath(report_requisites_sr['project_folder'])
-
-    # names to save data obtained after current module execution
-    data_names = ['system_3par', 'port_3par', 'host_3par']
+    # data titles obtained after module execution
+    data_names = dfop.list_from_dataframe(io_data_names_df, 'storage_3par_collection')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
-    # when any data from data_lst was not saved (file not found) or
-    # force extract flag is on then re-extract data from configuration files
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output data
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
     
-    if force_run:    
-
+    if force_run:
         # lists to store only REQUIRED infromation
         # collecting data for all systems during looping
         # list containing system parameters
@@ -69,7 +56,9 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
             print('\n')
             # find configuration files to parse (download from STATs, local folder or use configurations
             # downloaded on previous iterations)
-            configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, pattern_dct, report_creation_info_lst)
+            configs_3par_lst = configs_download(ns_3par_df, pattern_dct, project_constants_lst, software_path_sr)
+
+            # configs_3par_lst = configs_download(ns_3par_df, project_folder, local_3par_folder, pattern_dct, report_creation_info_lst)
 
             if configs_3par_lst:
                 print('\nEXTRACTING 3PAR STORAGE INFORMATION ...\n')   

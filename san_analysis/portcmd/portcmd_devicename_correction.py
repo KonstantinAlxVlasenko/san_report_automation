@@ -19,29 +19,21 @@ import utilities.servicefile_operations as sfop
 def devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst):
     """Main function to rename devices"""
 
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
+    project_steps_df, max_title, io_data_names_df, _, _, report_columns_usage_sr, *_ = project_constants_lst
 
-    report_steps_dct, max_title, data_dependency_df, _, _, report_columns_usage_sr, *_ = project_constants_lst
-
-
-
-    analyzed_data_names = ['device_rename', 'device_rename_form', 'portshow_aggregated', 'portcmd', 'switchshow_ports', 
-                            'switch_params_aggregated', 'switch_parameters', 'chassis_parameters', 
-                            'fdmi', 'nscamshow', 'nsshow', 'alias', 'blade_servers', 'synergy_servers', 'system_3par', 'fabric_labels']
-
-    
+    analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'devicename_correction_analysis_in')
     
     # check if portshow_aggregated DataFrame is changed or 'device_rename' force flag is on
-    force_form_update_flag = any([report_steps_dct[data_name][1] for data_name in analyzed_data_names])
-    # list of related DataFrame names requested to change 
-    force_change_data_lst = [data_name for data_name in analyzed_data_names[1:] if report_steps_dct[data_name][1]]
+    force_form_update_flag = any([project_steps_df.loc[data_name, 'force_run'] for data_name in analyzed_data_names])
+    # force_form_update_flag = any([report_steps_dct[data_name][1] for data_name in analyzed_data_names])
+    
+    # list of related DataFrame names requested to change
+    force_change_data_lst = [data_name for data_name in analyzed_data_names[1:] if project_steps_df.loc[data_name, 'force_run']]
+    # force_change_data_lst = [data_name for data_name in analyzed_data_names[1:] if report_steps_dct[data_name][1]]
+    
     # flag to force change group name usage mode
-    force_group_name_usage_update_flag = report_steps_dct['report_columns_usage_upd'][1]
+    force_group_name_usage_update_flag = project_steps_df.loc['report_columns_usage_upd', 'force_run']
+    # force_group_name_usage_update_flag = report_steps_dct['report_columns_usage_upd'][1]
 
     # create DataFrame with devices required to change names
     device_rename_df = define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title, 

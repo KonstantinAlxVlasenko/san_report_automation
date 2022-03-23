@@ -14,24 +14,13 @@ import utilities.filesystem_operations as fsop
 def zoning_extract(switch_params_df, project_constants_lst):
     """Function to extract zoning information"""
 
-    # # report_steps_dct contains current step desciption and force and export tags
-    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # # report_constant_lst contains information: 
-    # # customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-
     # imported project constants required for module execution
     project_steps_df, max_title, io_data_names_df, *_ = project_constants_lst
 
     # data titles obtained after module execution
-    data_names = dfop.list_from_dataframe(io_data_names_df, 'zoning_collection_out')
-    
-    # data_names = ['cfg', 'zone', 'alias', 'cfg_effective', 'zone_effective', 'peerzone' , 'peerzone_effective']
-    
-    
+    data_names = dfop.list_from_dataframe(io_data_names_df, 'zoning_collection')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     

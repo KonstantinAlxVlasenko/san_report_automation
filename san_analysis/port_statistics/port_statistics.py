@@ -16,35 +16,20 @@ from .port_statistics_aggregation import port_statisctics_aggregated
 def port_statistics_analysis(portshow_aggregated_df, project_constants_lst):
     """Main function to count Fabrics statistics"""
 
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
+    
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'port_statistics_analysis_out', 'port_statistics_analysis_in')
 
-    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
-
-    # names to save data obtained after current module execution
-    data_names = ['port_statistics', 'Статистика_портов']
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-    
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
-    # reade data from database if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
-    
-    # # unpacking DataFrames from the loaded list with data
-    # # pylint: disable=unbalanced-tuple-unpacking
-    # fabric_statistics_df, fabric_statistics_report_df = data_lst
 
-    # list of data to analyze from report_info table
-    analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 'portshow_aggregated',
-        'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 'nsshow', 
-            'alias', 'blade_servers', 'fabric_labels']
-
-    # chassis_column_usage = report_columns_usage_dct['chassis_info_usage']
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data  
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:

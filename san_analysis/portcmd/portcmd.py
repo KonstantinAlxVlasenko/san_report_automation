@@ -25,33 +25,15 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                             project_constants_lst):
     """Main function to add connected devices information to portshow DataFrame"""
 
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-
     # imported project constants required for module execution
     project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
-
 
     # data titles obtained after module execution (output data)
     # data titles which module is dependent on (input data)
     data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'portcmd_analysis_out', 'portcmd_analysis_in')
-
-    # # names to save data obtained after current module execution
-    # data_names = [
-    #     'portshow_aggregated', 'storage_connection_statistics', 'device_connection_statistics', 
-    #     'device_rename', 'report_columns_usage_upd', 
-    #     'Серверы', 'Массивы', 'Библиотеки', 'Микрокоды_HBA', 
-    #     'Подключение_массивов', 'Подключение_библиотек', 'Подключение_серверов', 
-    #     'Статистика_массивов', 'Статистика_устройств'
-    #     ]
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-
-    # reade data from database if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
     # flag to forcible save portshow_aggregated_df if required
@@ -62,12 +44,6 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         device_rename_df, = dbop.verify_read_data(max_title, ['device_rename'], device_rename_df)
 
     nsshow_unsplit_df = pd.DataFrame()
-
-    # # list of data to analyze from report_info table
-    # analyzed_data_names = ['portcmd', 'switchshow_ports', 'switch_params_aggregated', 
-    #                         'switch_parameters', 'chassis_parameters', 'fdmi', 'nscamshow', 
-    #                         'nsshow', 'alias', 'blade_servers', 'synergy_servers', 'fabric_labels', 'isl', 
-    #                         'trunk', 'isl_aggregated', 'Параметры_SFP', 'portshow_sfp_aggregated']
 
     # force run when any output data from data_lst is not found in database or 
     # procedure execution explicitly requested (force_run flag is on) for any output or input data  

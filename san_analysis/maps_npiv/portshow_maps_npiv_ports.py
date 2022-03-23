@@ -27,28 +27,32 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
     # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
     # *_, max_title = report_constant_lst
     
-    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
 
-    # names to save data obtained after current module execution
-    data_names = ['MAPS_ports', 'NPIV_ports', 'NPIV_statistics', 'Connection_statistics', 'blade_module_loc',
-                    'MAPS_порты', 'NPIV_порты', 'Статистика_NPIV', 'Статистика_соединений', 'Blade_шасси']
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'maps_npiv_ports_analysis_out', 'maps_npiv_ports_analysis_in')
+
+    # # names to save data obtained after current module execution
+    # data_names = ['MAPS_ports', 'NPIV_ports', 'NPIV_statistics', 'Connection_statistics', 'blade_module_loc',
+    #                 'MAPS_порты', 'NPIV_порты', 'Статистика_NPIV', 'Статистика_соединений', 'Blade_шасси']
+    
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     
-    # load data if they were saved on previos program execution iteration
-    # data_lst = load_data(report_constant_lst, *data_names)
     # reade data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
 
-    # list of data to analyze from report_info table
-    analyzed_data_names = ['portshow_aggregated', 'portshow_sfp_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
-                            'switchshow_ports', 'switch_params_aggregated', 'maps_parameters', 'fdmi', 
-                            'device_rename', 'report_columns_usage_upd', 'nscamshow', 
-                            'nsshow', 'alias', 'blade_servers', 'fabric_labels', 'isl', 'isl_statistics',
-                            'blade_interconnect', 'synergy_interconnect', 'switch_pair']
+    # # list of data to analyze from report_info table
+    # analyzed_data_names = ['portshow_aggregated', 'portshow_sfp_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
+    #                         'switchshow_ports', 'switch_params_aggregated', 'maps_parameters', 'fdmi', 
+    #                         'device_rename', 'report_columns_usage_upd', 'nscamshow', 
+    #                         'nsshow', 'alias', 'blade_servers', 'fabric_labels', 'isl', 'isl_statistics',
+    #                         'blade_interconnect', 'synergy_interconnect', 'switch_pair']
 
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data    
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title, analyzed_data_names)
 
     if force_run:

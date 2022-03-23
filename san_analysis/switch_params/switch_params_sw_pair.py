@@ -14,33 +14,19 @@ from .switch_statistics_cp import fabric_switch_statistics
 def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, project_constants_lst):
     """Main function add switch pair id information to switch parameters DataFrame"""
     
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
 
-    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
-
-
-    # names to save data obtained after current module execution
-    data_names = ['switch_params_aggregated_upd', 'fabric_switch_statistics', 
-                    'Коммутаторы', 'Фабрика', 'Параметры_коммутаторов', 'MAPS', 'Лицензии', 
-                    'Глобальные_параметры_фабрики', 'Статистика_коммутаторов']
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'switch_params_sw_pair_analysis_out', 'switch_params_sw_pair_analysis_in')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-    
-    # reade data from database if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
 
-
-    # list of data to analyze from report_info table
-    analyzed_data_names = ['switch_params_aggregated', 'chassis_parameters', 'switch_parameters', 'switchshow_ports', 
-                            'maps_parameters', 'blade_interconnect', 'fabric_labels', 'fabricshow_summary', 'switch_pair']
-
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data  
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
@@ -56,7 +42,7 @@ def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, pr
         switch_params_aggregated_df = add_notes(switch_params_aggregated_df)
         # after finish display status
         meop.status_info('ok', max_title, len(info))
-
+        
         # current operation information string
         info = f'Counting switch statistics'
         print(info, end =" ") 

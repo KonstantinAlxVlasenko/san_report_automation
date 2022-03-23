@@ -18,53 +18,34 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
                                 project_constants_lst):
     """Main function to add porterr, transceiver and portcfg information to portshow DataFrame"""
     
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-
-    project_steps_df, max_title, data_dependency_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
     
     portshow_sfp_force_flag = False
     portshow_sfp_export_flag = project_steps_df.loc['portshow_sfp_aggregated', 'export_to_excel']
 
-    # names to save data obtained after current module execution
-    data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов',
-                    'porterr_link_reset', 'porterr_crc_good_eof', 'porterr_fec', 'porterr_pcs_blk', 
-                    'porterr_link_failure', 'porterr_discard', 'porterr_enc_crc_bad_os', 'porterr_bad_eof']
-
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'port_err_sfp_cfg_analysis_out', 'port_err_sfp_cfg_analysis_in')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-    # reade data from database if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
-    # list of data to analyze from report_info table
-    analyzed_data_names = ['portshow_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
-                            'switchshow_ports', 'switch_params_aggregated', 'fdmi', 
-                            'device_rename', 'report_columns_usage_upd', 'nscamshow', 
-                            'nsshow', 'alias', 'blade_servers', 'fabric_labels']
 
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data    
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title, analyzed_data_names)
 
     if force_run:
-
         # import transeivers information from file
         sfp_model_df = sfop.dataframe_import('sfp_models', max_title)        
         # current operation information string
         info = f'Updating connected devices table and searching NPIV links'
         print(info, end =" ") 
         # add sfpshow, transceiver information and portcfg to aggregated portcmd DataFrame
-
         portshow_sfp_aggregated_df = port_complete(portshow_aggregated_df, sfpshow_df, sfp_model_df, portcfgshow_df)
-        # portshow_npiv_df = npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df)
-        # maps_ports_df = maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, re_pattern_lst)
-
         # link_reset_df, crc_good_eof_df, fec_df, pcs_blk_df, link_failure_df, discard_df, enc_crc_df, bad_eof_df, bad_os_df = port_error_filter(portshow_sfp_aggregated_df)
         filtered_error_lst = port_error_filter(portshow_sfp_aggregated_df)
-
         # after finish display status
         meop.status_info('ok', max_title, len(info))
 
@@ -98,7 +79,6 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
         if data_name == 'portshow_sfp_aggregated':
             force_flag = portshow_sfp_force_flag
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
-
     return portshow_sfp_aggregated_df
 
 

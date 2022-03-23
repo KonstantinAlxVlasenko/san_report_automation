@@ -14,24 +14,18 @@ import utilities.filesystem_operations as fsop
 def portcfg_sfp_extract(switch_params_df, project_constants_lst):
     """Function to extract switch port information"""
     
-    # # report_steps_dct contains current step desciption and force and export tags
-    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # # report_constant_lst contains information: 
-    # # customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-
-    project_steps_df, max_title, data_dependency_df, *_ = project_constants_lst
-
-    # names to save data obtained after current module execution
-    data_names = ['sfpshow', 'portcfgshow']
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, *_ = project_constants_lst
+    
+    # data titles obtained after module execution
+    data_names = dfop.list_from_dataframe(io_data_names_df, 'port_sfp_cfg_collection')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
-    # when any data from data_lst was not saved (file not found) or 
-    # force extract flag is on then re-extract data from configuration files  
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output data 
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
 
     if force_run:    

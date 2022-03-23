@@ -21,29 +21,19 @@ import utilities.filesystem_operations as fsop
 def synergy_system_extract(project_constants_lst):
     """Function to extract blade systems information"""
     
-    # # report_steps_dct contains current step desciption and force and export tags
-    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # # report_constant_lst contains information: 
-    # # customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, report_requisites_sr, *_ = project_constants_lst
+    synergy_folder = report_requisites_sr['synergy_meddler_folder']
 
-    project_steps_df, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
-
-    if pd.notna(report_requisites_sr['synergy_meddler_folder']):
-        synergy_folder = os.path.normpath(report_requisites_sr['synergy_meddler_folder'])
-    else:
-        synergy_folder = None
-
-    # names to save data obtained after current module execution
-    data_names = ['synergy_interconnect', 'synergy_servers']
+    # data titles obtained after module execution
+    data_names = dfop.list_from_dataframe(io_data_names_df, 'synergy_collection')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
 
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output data
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
     if force_run:
 
@@ -82,6 +72,8 @@ def synergy_system_extract(project_constants_lst):
         synergy_module_aggregated_df = pd.DataFrame(columns=synergy_module_columns)
         synergy_servers_aggregated_df = pd.DataFrame(columns=synergy_server_columns)
 
+        
+        
         if synergy_folder:    
             print('\nEXTRACTING SYNERGY SYSTEM INFORMATION ...\n')   
             

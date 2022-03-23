@@ -111,6 +111,15 @@ def import_requisites(max_title):
         exit()
     
     report_requisites_sr['project_title'] = report_requisites_sr['project_title'].replace(' ', '_')
+
+    # normpath all folders in requisites and check if they exist
+    for index, _ in report_requisites_sr.items():
+        if 'folder' in index:
+            if pd.notna(report_requisites_sr[index]):
+                report_requisites_sr[index] = os.path.normpath(report_requisites_sr[index])
+                fsop.check_valid_path(report_requisites_sr[index])
+            else:
+                report_requisites_sr[index] = None
     return report_requisites_sr
     
 

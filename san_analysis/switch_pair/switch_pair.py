@@ -19,27 +19,20 @@ from .switch_pair_correction import *
 def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, project_constants_lst):
     """Function to set switch pair IDs"""
 
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, *_ = project_constants_lst
 
-    project_steps_df, max_title, data_dependency_df, *_ = project_constants_lst
-
-    # names to save data obtained after current module execution
-    data_names = ['switch_pair', 'sw_wwn_occurrence_stats']
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'switch_pair_analysis_out', 'switch_pair_analysis_in')
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
-    # unpacking DataFrames from the loaded list with data
     switch_pair_df, _ = data_lst
-    # list of data to analyze from report_info table
-    analyzed_data_names = ['switch_params_aggregated', 'portshow_aggregated']
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
+    
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data   
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title, analyzed_data_names)
 
     if force_run:             

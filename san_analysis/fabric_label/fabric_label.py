@@ -12,33 +12,23 @@ from .fabric_label_auto import auto_fabrics_labeling
 from .fabric_label_manual import manual_fabrics_labeling
 
 
-def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, project_constants_lst):
+def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, project_constants_lst, current_date=str(date.today())):
     """Function to set Fabric labels"""
 
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # customer_name, report_path, *_, max_title = report_constant_lst
+    # imported project constants required for module execution
+    project_steps_df, max_title, io_data_names_df, report_requisites_sr, *_ = project_constants_lst
 
-    project_steps_df, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
-
-    # names to save data obtained after current module execution
-    data_names = ['fabric_labels', 'fabricshow_summary']
+    # data titles obtained after module execution (output data)
+    # data titles which module is dependent on (input data)
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'fabric_label_analysis_out', 'fabric_label_analysis_in')    
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-
     # reade data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
+    _, fabricshow_summary_df = data_lst
 
-    # unpacking DataFrames from the loaded list with data
-    fabricshow_ag_labels_df, fabricshow_summary_df = data_lst
-
-    # list of data to analyze from report_info table
-    analyzed_data_names = []
-    # force run when any data from data_lst was not saved (file not found) or 
-    # procedure execution explicitly requested for output data or data used during fn execution  
+    # force run when any output data from data_lst is not found in database or 
+    # procedure execution explicitly requested (force_run flag is on) for any output or input data 
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title, analyzed_data_names)
 
     if force_run:             
@@ -50,11 +40,12 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
             fabricshow_summary_df = fabricshow_summary_automatic_df.copy()
 
         # display automatic fabric labeling
-        info_labels = ['Fabric_name', 'Fabric_label', 'chassis_name', 'Principal_switch_name', 'Fabric_ID', 
-                    'FC_Route', 'Total_switch', 'Domain_IDs', 'Switch_names', 'Device_ports', 'Online_ports', 'LS_type', 'Fabric_Name']
+        info_labels = ['Fabric_name', 'Fabric_label', 'chassis_name', 'Principal_switch_name', 
+                        'Fabric_ID', 'FC_Route', 'Total_switch', 'Domain_IDs', 'Switch_names', 
+                        'Device_ports', 'Online_ports', 'LS_type', 'Fabric_Name']
         # service file name for detailed information
-        current_date = str(date.today())
-        file_name = report_requisites_sr['customer_name'] + '_' + report_steps_dct['fabricshow_summary'][2] + '_' + current_date + '.xlsx' 
+        # current_date = str(date.today()) # remove. rellocated to default fn parameters
+        file_name = report_requisites_sr['customer_name'] + '_' + project_steps_df.loc['fabricshow_summary', 'report_type'] + '_' + current_date + '.xlsx' 
         print('\nCurrent fabrics labeling\n')
         # set option to show all columns
         with pd.option_context('display.max_columns', None, 'display.expand_frame_repr', False):

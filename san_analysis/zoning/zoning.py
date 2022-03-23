@@ -23,13 +23,6 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
                             fcrfabric_df, lsan_df, peerzone_df, 
                             project_constants_lst):
     """Main function to analyze zoning configuration"""
-        
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
 
     # imported project constants required for module execution
     project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
@@ -37,26 +30,10 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
     # data titles obtained after module execution (output data)
     # data titles which module is dependent on (input data)
     data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'zoning_analysis_out', 'zoning_analysis_in')
-
-    
-    # data_names = ['zoning_aggregated', 'alias_aggregated', 'portshow_zoned_aggregated', 
-    #                 'zonemember_statistics', 'alias_statistics', 'effective_cfg_statistics', 
-    #                 'Зонирование', 'Псевдонимы', 'Зонирование_AB', 'Порты_не_в_зонах', 'Порты_без_псевдономов', 
-    #                 'Отсутствуют_в_сети', 'Статистика_зон', 'Статистика_псевдонимов', 'Статистика_конфигурации']
-    
-    
     # service step information
     print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
-    
-    # reade data from database if they were saved on previos program execution iteration
+    # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
-
-    # # list of data to analyze from report_info table
-    # analyzed_data_names = ['cfg', 'cfg_effective', 'zone', 'alias', 'switch_params_aggregated', 
-    #                         'switch_parameters', 'switchshow_ports', 'chassis_parameters', 
-    #                         'portshow_aggregated', 'device_rename', 'report_columns_usage_upd', 
-    #                         'portcmd', 'fdmi', 'nscamshow', 'nsshow', 'blade_servers', 'fabric_labels']
-
 
     # force run when any output data from data_lst is not found in database or 
     # procedure execution explicitly requested (force_run flag is on) for any output or input data  
