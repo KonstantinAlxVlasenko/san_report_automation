@@ -60,7 +60,7 @@ def prior_preparation(portshow_aggregated_df):
     
     mask_complete = mask_fabric_name_label & mask_switch_native & mask_not_switch_vc & mask_devicetype & mask_valid_fabric
     columns_lst = ['Fabric_name', 'deviceType',	'Device_Location', 'deviceSubtype', 'Device_Host_Name', 
-                   'Fabric_label', 'speed', 'Virtual_Channel', 'switchWwn', 'switchType' , 'slot']
+                   'Fabric_label', 'speed', 'Virtual_Channel', 'switchWwn', 'switchType' , 'switchClass', 'slot']
     portshow_aggregated_modified_df = portshow_aggregated_df.loc[mask_complete, columns_lst].copy()
     
     # assign 'unknown' tag for na Device_Location for grouping and crosstab operations

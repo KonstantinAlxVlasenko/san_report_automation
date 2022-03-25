@@ -16,11 +16,12 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_params_aggregated_df['boot.ipa'].fillna(switch_params_aggregated_df['Enet_IP_Addr'], inplace=True)
     switch_params_aggregated_df['switchMode'].fillna(switch_params_aggregated_df['SwitchMode'], inplace=True)
 
-    # complete f_s DataFrame with information from chassis_params DataFrame
+    # complete DataFrame with information from chassis_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(chassis_params_df, how = 'left', on=['configname', 'chassis_name', 'chassis_wwn'])
     switch_params_aggregated_df['config_collection_date_ymd'] =  pd.to_datetime(switch_params_aggregated_df['config_collection_date']).dt.date
-
+    # add AG and VC switch information from principal switch
     switch_params_aggregated_df = ag_switch_info(switch_params_aggregated_df, ag_principal_df)
+    
     # # add chassis wwn in case if chassis_wwn missing
     # switch_params_aggregated_df['chassis_wwn'].fillna(switch_params_aggregated_df['boot.licid'], inplace=True)
     
@@ -28,10 +29,10 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_params_aggregated_df = verify_ls_type(switch_params_aggregated_df)
     switch_params_aggregated_df = verify_base_in_chassis(switch_params_aggregated_df)
 
-    # convert switch_index in f_s_c and maps_params DataFrames to same type
+    # convert switch_index to the same type
     maps_params_df.switch_index = maps_params_df.switch_index.astype('float64', errors='ignore')
     switch_params_aggregated_df.switch_index = switch_params_aggregated_df.switch_index.astype('float64', errors='ignore')
-    # complete f_s_c DataFrame with information from maps_params DataFrame
+    # complete DataFrame with information from maps_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(maps_params_df, how = 'left', on = ['configname', 'chassis_name', 'switch_index'])
     # count sddq ports and verify if sddq limit has been reached
     switch_params_aggregated_df = verify_sddq_reserve(switch_params_aggregated_df, pattern_dct)
@@ -42,7 +43,7 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     # remove fractional part from switchType
     switch_params_aggregated_df.switchType = np.floor(switch_params_aggregated_df.switchType)
     switch_models_df.switchType = switch_models_df.switchType.astype('float64', errors='ignore')
-    # complete f_s_c_m DataFrame with information from switch_models DataFrame
+    # complete DataFrame with information from switch_models DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(switch_models_df, how='left', on='switchType')
     # create column with switch models (hpe or brocade model)
     switch_params_aggregated_df['ModelName'] = switch_params_aggregated_df['HPE_modelName']
@@ -59,7 +60,6 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
         switch_params_aggregated_df[lic_check] = \
             switch_params_aggregated_df.loc[switch_params_aggregated_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)
         switch_params_aggregated_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
-
 
     # check if chassis_name and switch_name columns are equal
     # if yes then no need to use chassis information in tables
