@@ -37,10 +37,9 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_params_aggregated_df = verify_sddq_reserve(switch_params_aggregated_df, pattern_dct)
     # maps.activePolicy is in configshow,  Active_policy is in AMS_MAPS file. 
     switch_params_aggregated_df['maps.activePolicy'].fillna(switch_params_aggregated_df['Active_policy'], inplace=True)
-    # convert switchType in f_s_c_m and switch_models DataFrames to same type
-    # convert f_s_c_m_df.switchType from string to float
+    # convert switchType to the same type
     switch_params_aggregated_df.switchType = switch_params_aggregated_df.switchType.astype('float64', errors='ignore')
-    # remove fractional part from f_s_c_m_df.switchType
+    # remove fractional part from switchType
     switch_params_aggregated_df.switchType = np.floor(switch_params_aggregated_df.switchType)
     switch_models_df.switchType = switch_models_df.switchType.astype('float64', errors='ignore')
     # complete f_s_c_m DataFrame with information from switch_models DataFrame
@@ -50,11 +49,7 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_params_aggregated_df['ModelName'].replace(to_replace={'-': np.nan}, inplace=True)
     switch_params_aggregated_df['ModelName'].fillna(switch_params_aggregated_df['Brocade_modelName'], inplace=True)
     # sorting DataFrame
-    switch_params_aggregated_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchType', 'chassis_name', 'switch_index'], \
-        ascending=[True, True, False, True, True], inplace=True)
-    # reset index values
-    switch_params_aggregated_df.reset_index(inplace=True, drop=True)
-
+    sort_switches(switch_params_aggregated_df)
     # add empty column FOS suuported to fill manually 
     switch_params_aggregated_df['FW_Supported'] = pd.Series()
 
@@ -81,6 +76,24 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     report_columns_usage_sr = pd.Series([fabric_name_usage, chassis_column_usage], 
                                             index=['fabric_name_usage', 'chassis_info_usage'], name='usage')
     return switch_params_aggregated_df, report_columns_usage_sr
+
+
+def sort_switches(switch_params_aggregated_df):
+    """Function to sort switches"""
+
+    # create sort_weights based on switch class. unassigned class have maximimum weight
+    switch_params_aggregated_df['switchClass_weight'] = switch_params_aggregated_df['switchClass']
+    switchClass_weight_dct = {'DIR': 1, 'ENTP': 2, 'MID': 3, 'ENTRY': 4, 'EMB': 5, 'EXT': 6}
+    mask_assigned_switch_class = switch_params_aggregated_df['switchClass'].isin(switchClass_weight_dct.keys())
+    switch_params_aggregated_df.loc[~mask_assigned_switch_class, 'switchClass_weight'] = np.nan
+    switch_params_aggregated_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
+    switch_params_aggregated_df['switchClass_weight'].fillna(7, inplace=True)
+    switch_params_aggregated_df.sort_values(by=['Fabric_name', 'Fabric_label', 
+                                                'switchClass_weight', 'switchType', 
+                                                'chassis_name', 'switch_index'], \
+                                            ascending=[True, True, True, False, True, True], inplace=True)
+    # reset index values
+    switch_params_aggregated_df.reset_index(inplace=True, drop=True)
 
 
 def ag_switch_info(switch_params_aggregated_df, ag_principal_df):

@@ -19,6 +19,7 @@ def service_initialization():
     start_max_title = 60
     # get report entry values from report file
     report_requisites_sr = import_requisites(start_max_title)
+
     # find longest file_name for display status purposes
     max_title = find_max_title(report_requisites_sr['supportsave_folder'])
 
@@ -29,6 +30,7 @@ def service_initialization():
 
     # create folders in SAN Assessment project folder and add it to the report_entry_sr
     create_service_folders(report_requisites_sr, max_title)
+
     project_steps_df, io_data_names_df, report_headers_df, software_path_sr = import_service_dataframes(max_title)
     project_constants_lst = [project_steps_df, max_title, io_data_names_df, report_requisites_sr, report_headers_df]
     return project_constants_lst, software_path_sr
@@ -100,7 +102,9 @@ def import_requisites(max_title):
     customer_name, project_title, hardware configuration files folders"""
 
     report_requisites_df = sfop.dataframe_import('report_requisites', max_title, 'report_info.xlsx', display_status=False)
+
     report_requisites_sr = dfop.series_from_dataframe(report_requisites_df, index_column='name', value_column='value')
+
 
     # fields which shouldn't be empty
     entry_lst = ('customer_name', 'project_title', 'project_folder', 'supportsave_folder')

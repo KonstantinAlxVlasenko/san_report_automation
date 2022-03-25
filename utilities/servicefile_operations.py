@@ -54,7 +54,7 @@ def columns_import(sheet_title, max_title, *args,
 
 
 def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', 
-                        columns = None, index_name = None, header = 0, display_status=True):
+                        columns=None, index_name=None, header=2, display_status=True):
     """Function to import dataframe from exel file"""
 
     warnings.filterwarnings('ignore', category=UserWarning, module="openpyxl")
@@ -84,29 +84,6 @@ def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xl
         if display_status:
             status_info('ok', max_title, len(info))
     return dataframe
-
-# TO_REMOVE fn replaced with regex_pattern_import
-# def data_extract_objects(sheet_title, max_title, param_columns = True):
-#     """Function imports parameters names and regex tepmplates
-#     to extract required data from configuration files   
-#     """
-    
-#     if param_columns:
-#         # imports keys to extract switch parameters from tmp dictionary
-#         params_names, params_add_names = columns_import(sheet_title, max_title, 'params', 'params_add')
-#     else:
-#         params_names, params_add_names = None, None
-#     # imports base names for compile and match templates and creates corresonding names
-#     keys = columns_import(sheet_title, max_title, 're_names')
-#     comp_keys = [key for key in keys]
-#     match_keys = [key for key in keys]
-#     # imports string for regular expressions
-#     comp_values = columns_import(sheet_title,  max_title, 'comp_values')
-#     # creates regular expressions
-#     comp_values_re = [re.compile(fr"{element}", re.IGNORECASE) for element in comp_values]
-#     # creates dictionary with regular expressions  
-#     comp_dct = dict(zip(comp_keys, comp_values_re))
-#     return params_names, params_add_names, comp_keys, match_keys, comp_dct
 
 
 def regex_pattern_import(sheet_title, max_title):

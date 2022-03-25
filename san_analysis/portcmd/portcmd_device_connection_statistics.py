@@ -22,7 +22,8 @@ def device_connection_statistics(portshow_aggregated_df):
     portshow_aggregated_modified_df, fabric_labels_lst = prior_preparation(portshow_aggregated_df)
     portshow_vc_unique_df, portshow_switch_unique_df, portshow_slot_unique_df, portshow_port_speed_unique_df = unique_values(portshow_aggregated_modified_df)
     # count statistcics for ports quantity, ports speed, ports vc and device unique vc statistics for each device
-    device_connection_statistics_df = count_device_connection_statistics(portshow_aggregated_modified_df, portshow_vc_unique_df, portshow_switch_unique_df, portshow_slot_unique_df, portshow_port_speed_unique_df)
+    device_connection_statistics_df = count_device_connection_statistics(portshow_aggregated_modified_df, portshow_vc_unique_df, portshow_switch_unique_df, 
+                                                                            portshow_slot_unique_df, portshow_port_speed_unique_df)
     # add device bandwidth in each Fabric_label
     device_connection_statistics_df = count_device_bandwidth(device_connection_statistics_df, portshow_aggregated_modified_df)
     # add notes
@@ -74,9 +75,13 @@ def prior_preparation(portshow_aggregated_df):
         device_port_quantity_str + portshow_aggregated_modified_df['Fabric_label']
     
     # director or switch connection tag
-    portshow_aggregated_modified_df['switchType'] = portshow_aggregated_modified_df['switchType'].astype('float64').astype('int64')
-    director_type = [42, 62, 77, 120, 121, 165, 166]
-    mask_director = portshow_aggregated_modified_df['switchType'].isin(director_type)
+    
+    # TO_REMOVE mask director implemente throught the switch Class
+    # portshow_aggregated_modified_df['switchType'] = portshow_aggregated_modified_df['switchType'].astype('float64').astype('int64')
+    # director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
+    # mask_director = portshow_aggregated_modified_df['switchType'].isin(director_type)
+    
+    mask_director = portshow_aggregated_modified_df['switchClass'] == 'DIR'
     portshow_aggregated_modified_df['switchType'] = np.where(mask_director, director_str , switch_str)
     portshow_aggregated_modified_df['switchType'] = portshow_aggregated_modified_df['Fabric_label'] + '_' + portshow_aggregated_modified_df['switchType']
     
@@ -127,7 +132,8 @@ def unique_values(portshow_modified_df):
     return portshow_vc_unique_df, portshow_switch_unique_df, portshow_slot_unique_df, portshow_port_speed_unique_df
 
 
-def count_device_connection_statistics(portshow_aggregated_modified_df, portshow_vc_unique_df, portshow_switch_unique_df, portshow_slot_unique_df, portshow_port_speed_unique_df):
+def count_device_connection_statistics(portshow_aggregated_modified_df, portshow_vc_unique_df, 
+                                        portshow_switch_unique_df, portshow_slot_unique_df, portshow_port_speed_unique_df):
     """Function to count ports quantity, ports speed, ports vc and device unique vc statistics for each device"""
 
     device_connection_statistics_df = pd.DataFrame()

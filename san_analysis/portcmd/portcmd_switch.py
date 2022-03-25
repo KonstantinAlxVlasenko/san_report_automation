@@ -30,15 +30,14 @@ def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_ag
     portshow_aggregated_df = portshow_aggregated_df.merge(switchparams_join_df, how = 'left', on = switchparams_lst[:5])
 
     # add switch Generation based on chassis wwn
-    switch_generation_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switchType', 'Generation', 'HPE_modelName']
+    switch_generation_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switchType', 'Generation', 'HPE_modelName', 'switchClass']
     switch_generation_df = switch_params_aggregated_df.loc[:, switch_generation_lst].copy()
-    switch_generation_df.drop_duplicates(subset = switch_generation_lst[:3], inplace = True)
-    portshow_aggregated_df = portshow_aggregated_df.merge(switch_generation_df, how = 'left', on = switch_generation_lst[:3])
+    switch_generation_df.drop_duplicates(subset=switch_generation_lst[:3], inplace=True)
+    portshow_aggregated_df = portshow_aggregated_df.merge(switch_generation_df, how='left', on=switch_generation_lst[:3])
 
     # join Domain_ID and PortIndex columns
     mask_notna = portshow_aggregated_df[['fabric.domain', 'portIndex']].notna().all(axis=1)
     portshow_aggregated_df.loc[mask_notna, 'Domain_Index'] = portshow_aggregated_df['fabric.domain'] + ',' + portshow_aggregated_df['portIndex']
-
     return portshow_aggregated_df
 
 
