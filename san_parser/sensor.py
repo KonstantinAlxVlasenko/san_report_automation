@@ -90,11 +90,9 @@ def current_config_extract(sensor_lst, pattern_dct, chassis_params_sr):
                 while not re.search(pattern_dct['switchcmd_end'], line):
                     line = file.readline()
                     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # islshow_match
+                    # sensorshow_match
                     if match_dct['sensor']:
                         sensor_reading = dsop.line_to_list(pattern_dct['sensor'], line, *chassis_info_lst)
-                        # appending list with only REQUIRED port info for the current loop iteration 
-                        # to the list with all ISL port info
                         sensor_lst.append(sensor_reading)
                     if not line:
                         break                                

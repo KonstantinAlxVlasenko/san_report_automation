@@ -107,51 +107,20 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
                         # dictionary with match names as keys and match result of current line with all imported regular expressions as values
                         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}                           
                         # 'switch_configall_match' pattern #0
-                        if match_dct['switch_configall']:
-                            switch_params_dct[match_dct['switch_configall'].group(1).rstrip()] = match_dct['switch_configall'].group(3).rstrip()              
+                        if match_dct['configshowall_param']:
+                            switch_params_dct[match_dct['configshowall_param'].group(1).rstrip()] = match_dct['configshowall_param'].group(3).rstrip()              
                         if not line:
                             break
                 # config section end
                 # switchshow section start
-                if re.search(r'^(SWITCHCMD /fabos/bin/)?switchshow *:$', line) and not collected['switchshow']:
+                if re.search(pattern_dct['switchcmd_switchshow'], line) and not collected['switchshow']:
                     collected['switchshow'] = True
-                    if ls_mode_on:
-                        while not re.search(fr'^CURRENT CONTEXT -- {i} *, \d+$',line):
-                            line = file.readline()
-                            if not line:
-                                break
-                    while not re.search(r'^real [\w.]+$',line):
-                        line = file.readline()
-                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                        # 'switch_switchshow_match' pattern #1
-                        if match_dct['switch_switchshow']:
-                            switch_params_dct[match_dct['switch_switchshow'].group(1).rstrip()] = match_dct['switch_switchshow'].group(2).rstrip()
-                        # 'ls_attr_match' pattern #2
-                        if match_dct['ls_attr']:
-                            ls_attr = pattern_dct['ls_attr'].findall(line)[0]
-                            for k, v in zip(ls_attr[::2], ls_attr[1::2]):
-                                switch_params_dct[k] = v
-                        # 'switchshow_portinfo_match' pattern #3 
-                        if match_dct['switchshow_portinfo']:
-                            switchinfo_lst = [sshow_file, chassis_name, chassis_wwn, str(i), 
-                                                switch_params_dct.get('switchName', None), 
-                                                switch_params_dct.get('switchWwn', None), 
-                                                switch_params_dct.get('switchState', None), 
-                                                switch_params_dct.get('switchMode', None)
-                                                ]
-                            switchshow_port_lst = dsop.line_to_list(pattern_dct['switchshow_portinfo'], line, *switchinfo_lst)
-                            # if switch has no slots than slot number is 0
-                            if not switchshow_port_lst[9]:
-                                switchshow_port_lst[9] = str(0)
-                            switchshow_ports_lst.append(switchshow_port_lst)
-                                                
-                        if not line:
-                            break                        
+                    switchshow_section(switch_params_dct, switchshow_ports_lst, ls_mode_on, chassis_info_lst, pattern_dct, line, file, i)                    
                 # switchshow section end
                 
         # additional values which need to be added to the switch params dictionary 
         # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
-        # values axtracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
+        # values extracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
         switch_params_values = (sshow_file, chassis_name, chassis_wwn, str(i), ls_mode)
 
         if switch_params_dct:
@@ -166,3 +135,37 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
             switch_params_current_lst = []
     return switch_params_current_lst
 
+
+def switchshow_section(switch_params_dct, switchshow_ports_lst, 
+                        ls_mode_on, chassis_info_lst, pattern_dct, 
+                        line, file, i):
+    """Function to extract switch parameters and switch port information from switchshow section"""
+
+    if ls_mode_on:
+        while not re.search(fr'^CURRENT CONTEXT -- {i} *, \d+$',line):
+            line = file.readline()
+            if not line:
+                break
+    while not re.search(pattern_dct['switchcmd_end'],line):
+        line = file.readline()
+        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+        # 'switch_switchshow_match' pattern #1
+        if match_dct['switchshow_param']:
+            switch_params_dct[match_dct['switchshow_param'].group(1).rstrip()] = match_dct['switchshow_param'].group(2).rstrip()
+        # 'ls_attr_match' pattern #2
+        if match_dct['ls_attr']:
+            ls_attr = pattern_dct['ls_attr'].findall(line)[0]
+            for k, v in zip(ls_attr[::2], ls_attr[1::2]):
+                switch_params_dct[k] = v
+        # 'switchshow_portinfo_match' pattern #3 
+        if match_dct['switchshow_portinfo']:
+            switchinfo_lst = [*chassis_info_lst, str(i), 
+                                switch_params_dct.get('switchName'), switch_params_dct.get('switchWwn'), 
+                                switch_params_dct.get('switchState'), switch_params_dct.get('switchMode')]
+            switchshow_port_lst = dsop.line_to_list(pattern_dct['switchshow_portinfo'], line, *switchinfo_lst)
+            # if switch has no slots than slot number is 0
+            if not switchshow_port_lst[9]:
+                switchshow_port_lst[9] = str(0)
+            switchshow_ports_lst.append(switchshow_port_lst)                      
+        if not line:
+            break  

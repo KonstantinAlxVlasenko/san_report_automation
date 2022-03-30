@@ -62,7 +62,6 @@ def maps_params_extract(all_config_data, project_constants_lst):
                     maps_params_lst = current_config_extract(maps_params_fabric_lst, pattern_dct, 
                                                             switch_name, sshow_file, ams_maps_file, 
                                                             maps_params, maps_params_add)
-
                     if dsop.list_is_empty(maps_params_lst):
                         meop.status_info('no data', max_title, len(info))
                     else:
@@ -94,15 +93,11 @@ def current_config_extract(maps_params_fabric_lst, pattern_dct,
     Returns list with extracted values"""
 
 
-    # search control dictionary. continue to check sshow_file until all parameters groups are found
+    # search control dictionary. continue to check file until all parameters groups are found
     collected = {'switch_index': False, 'global_dash': False}
-    # dictionary to store all DISCOVERED switch parameters
-    # collecting data only for the logical switch in current loop
+    # dictionary to store all DISCOVERED parameters
     maps_params_dct = {}
     
-    # info = ' '*16+f'{os.path.basename(ams_maps_file)} processing'
-    # print(info, end =" ")
-
     with open(ams_maps_file, encoding='utf-8', errors='ignore') as file:
         # check file until all groups of parameters extracted
         while not all(collected.values()):
@@ -110,7 +105,7 @@ def current_config_extract(maps_params_fabric_lst, pattern_dct,
             if not line:
                 break
             # logical switch index section start
-            if re.search(pattern_dct['switch_index'], line):  # r'[= ]*AMS/MAPS *Data *Switch *(\d+)[= ]*$'
+            if re.search(pattern_dct['switch_index'], line):
                 # when section is found corresponding collected dict values changed to True
                 collected['switch_index'] = True
                 match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
@@ -118,19 +113,18 @@ def current_config_extract(maps_params_fabric_lst, pattern_dct,
                 switch_index = match_dct['switch_index'].group(1)
             # logical switch index section end
             # global dashboard section start
-            if re.search(r'^[- ]*MAPS +Global +Monitoring +Configuration[ -]*$', line):
+            if re.search(pattern_dct['global_dashborad_header'], line):
                 collected['global_dash'] = True
-                while not re.search(r'^[- ]*NM +Data[- ]*$',line):
+                while not re.search(pattern_dct['maps_end'],line):
                     line = file.readline()
                     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
                     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # match_keys ['switch_index_match', 'dashboard_match', 'report_match', 'no_lic_match'] 
                     # 'dashboard_match' pattern #1
-                    if match_dct['dashborad']:
-                        maps_params_dct[match_dct['dashborad'].group(1).rstrip()] = match_dct['dashborad'].group(2)                            
+                    if match_dct['dashborad_param']:
+                        maps_params_dct[match_dct['dashborad_param'].group(1).rstrip()] = match_dct['dashborad_param'].group(2)                            
                     # 'report_match' pattern #2
-                    if match_dct['report']:
-                        maps_params_dct[match_dct['report'].group(1).rstrip()] = match_dct['report'].group(2)
+                    if match_dct['summary_report']:
+                        maps_params_dct[match_dct['summary_report'].group(1).rstrip()] = match_dct['summary_report'].group(2)
                     # 'no Fabric lic match' pattern #3
                     if match_dct['no_lic']:
                         for maps_param in maps_params[6:23]:
