@@ -76,7 +76,7 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
 
     chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
     chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
-    sshow_file, chassis_name, chassis_wwn = chassis_info_lst
+    sshow_file, *_ = chassis_info_lst
 
     # when num of logical switches is 0 or None than mode is Non-VF otherwise VF
     ls_mode_on = (True if not chassis_params_sr["Number_of_LS"] in ['0', None] else False)
@@ -121,7 +121,7 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
         # additional values which need to be added to the switch params dictionary 
         # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
         # values extracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
-        switch_params_values = (sshow_file, chassis_name, chassis_wwn, str(i), ls_mode)
+        switch_params_values = (*chassis_info_lst, str(i), ls_mode)
 
         if switch_params_dct:
             # adding additional parameters and values to the switch_params_switch_dct
@@ -141,11 +141,8 @@ def switchshow_section(switch_params_dct, switchshow_ports_lst,
                         line, file, i):
     """Function to extract switch parameters and switch port information from switchshow section"""
 
-    if ls_mode_on:
-        while not re.search(fr'^CURRENT CONTEXT -- {i} *, \d+$',line):
-            line = file.readline()
-            if not line:
-                break
+    meop.goto_switch_context(ls_mode_on, line, file, i)
+    
     while not re.search(pattern_dct['switchcmd_end'],line):
         line = file.readline()
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}

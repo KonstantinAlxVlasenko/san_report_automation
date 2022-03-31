@@ -54,10 +54,6 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         if ams_maps_config_num > 0:
             for ams_maps_config in switch_files_to_parse_lst[1]:
                 # calling santoolbox_parser function which parses AMS_MAPS_LOG file with SANToolbox
-                
-                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-                # print(ams_maps_config, path_to_move_parsed_others, max_title)
-
                 parsed_amsmaps_file = santoolbox_parser(ams_maps_config, path_to_move_parsed_others, santoolbox_path, max_title)
                 # append filenames and filepaths to tmp lists
                 ams_maps_files_lst_tmp.append(parsed_amsmaps_file)

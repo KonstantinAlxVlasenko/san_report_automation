@@ -14,8 +14,7 @@ from utilities.module_execution import status_info
 def columns_import(sheet_title, max_title, *args, 
                     init_file = 'san_automation_info.xlsx', display_status=True):
     """Function to import corresponding columns from init file.
-    Can import several columns.
-    """
+    Can import several columns."""
 
     # file to store all required data to process configuratin files
     # default init_file  is 'san_automation_info.xlsx'

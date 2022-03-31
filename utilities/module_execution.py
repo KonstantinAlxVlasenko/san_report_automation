@@ -2,6 +2,7 @@
 checking if each step is required to run"""
 
 
+import re
 from functools import wraps
 
 
@@ -136,6 +137,16 @@ def verify_force_run(data_names, data_lst, project_steps_df, max_title, analyzed
         force_run = True
     return force_run
 
+
+def goto_switch_context(ls_mode_on, line, file, switch_index):
+    """Function to move cursor to the switch_index context 
+    within section of the corresponding command if Logical switch mode is ON"""
+
+    if ls_mode_on:
+        while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
+            line = file.readline()
+            if not line:
+                break      
 
 
 
