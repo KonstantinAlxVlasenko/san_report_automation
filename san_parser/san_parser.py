@@ -1,20 +1,14 @@
 """Main module to extract data from switch, blade system, synergy system, 3PAR configuration files"""
 
-from .chassis_params import chassis_params_extract
-from .maps_params import maps_params_extract
-from .switch_params import switch_params_extract
-from .fabric_membership import fabric_membership_extract
-from .portcmd import portcmd_extract
-from .portcfg_sfp import portcfg_sfp_extract
-from .nameserver import connected_devices_extract
-from .isl import interswitch_connection_extract
-from .fcrfabric_membership import fcr_membership_extract
-from .zoning import zoning_extract
-from .sensor import sensor_extract
-from .log import log_extract
-from .bladesystem import blade_system_extract
-from .synergy import synergy_system_extract
+from .bladesystem import blade_system_extract, synergy_system_extract
+from .fabric_routing import (fabric_membership_extract, fcr_membership_extract,
+                             interswitch_connection_extract)
+from .fabric_services import connected_devices_extract, zoning_extract
 from .storage_3par import storage_3par_extract
+from .switch_monitoring import log_extract, sensor_extract
+from .switch_params import (chassis_params_extract, maps_params_extract,
+                            switch_params_extract)
+from .switch_ports import portcfg_sfp_extract, portcmd_extract
 
 
 def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, software_path_sr):
@@ -37,7 +31,8 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
     # inter switch connection parsing
     isl_df, trunk_df, porttrunkarea_df, lsdb_df = interswitch_connection_extract(switch_params_df, project_constants_lst)
     # fabric routing parsing
-    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df = fcr_membership_extract(switch_params_df, project_constants_lst)
+    fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df = \
+        fcr_membership_extract(switch_params_df, project_constants_lst)
     # zoning configuration parsing
     cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = \
         zoning_extract(switch_params_df, project_constants_lst)

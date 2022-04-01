@@ -10,7 +10,7 @@ import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-from .bladesystem_extract_fn import *
+from .bladesystem_sections import *
 
 
 def blade_system_extract(project_constants_lst):

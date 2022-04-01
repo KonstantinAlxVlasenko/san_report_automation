@@ -94,7 +94,7 @@ def current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
             if not line:
                 break
             # sfpshow section start
-            if re.search(pattern_dct['switchcmd_sfpshow'], line) and not collected['sfpshow']:  #r'^(SWITCHCMD )?(/fabos/cliexec/)?sfpshow +-all *: *$'
+            if re.search(pattern_dct['switchcmd_sfpshow'], line) and not collected['sfpshow']:
                 collected['sfpshow'] = True
                 if ls_mode_on:
                     while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):

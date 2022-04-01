@@ -113,7 +113,7 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
                             break
                 # config section end
                 # switchshow section start
-                if re.search(pattern_dct['switchcmd_switchshow'], line) and not collected['switchshow']:
+                elif re.search(pattern_dct['switchcmd_switchshow'], line) and not collected['switchshow']:
                     collected['switchshow'] = True
                     switchshow_section(switch_params_dct, switchshow_ports_lst, ls_mode_on, chassis_info_lst, pattern_dct, line, file, i)                    
                 # switchshow section end
