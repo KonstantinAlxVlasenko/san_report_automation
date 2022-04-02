@@ -1,10 +1,12 @@
+"""Module with functions to extract portshow, porloginshow and portstatshow information from sshow file"""
+
 
 import re
 
 import utilities.data_structure_operations as dsop
 
 
-def port_fc_portcmd_section(portshow_lst, pattern_dct, 
+def port_fc_portcmd_section_extract(portshow_lst, pattern_dct, 
                             chassis_info_lst, portcmd_params, portcmd_params_add,
                             line, file):
 
@@ -26,11 +28,11 @@ def port_fc_portcmd_section(portshow_lst, pattern_dct,
     # portshow section start pattern #1
     if match_dct['portshow_port_index']:
         port_index = match_dct['portshow_port_index'].group(1)
-        line = portshow_section(portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, pattern_dct, line, file)
+        line = portshow_section_extract(portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, pattern_dct, line, file)
     # portshow section end
     # portlogin section start                                      
     if re.match(fr'^portloginshow +{int(port_index)}$', line):
-        line = portlogin_section(portid_wwn_lst, portcmd_dct, connected_wwn_lst, port_index, 
+        line = portlogin_section_extract(portid_wwn_lst, portcmd_dct, connected_wwn_lst, port_index, 
                             pattern_dct, line, file)
     # portlogin section end
     while not re.match(fr'^portstatsshow +{int(port_index)}$', line):
@@ -39,7 +41,7 @@ def port_fc_portcmd_section(portshow_lst, pattern_dct,
             break
     # portstatsshow section start
     if re.match(fr'^portstatsshow +{int(port_index)}$', line):
-        line = portstats_section(portcmd_dct, port_index, pattern_dct, line, file)
+        line = portstats_section_extract(portcmd_dct, port_index, pattern_dct, line, file)
     # portstatsshow section end       
 
     portphys_portscn_details = [value if value else None for value in portphys_portscn_details]
@@ -55,7 +57,7 @@ def port_fc_portcmd_section(portshow_lst, pattern_dct,
     return line
 
 
-def portshow_section(portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, 
+def portshow_section_extract(portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, 
                         pattern_dct, line, file):
     """Function to extract portshow information for the current port_index"""
 
@@ -101,7 +103,7 @@ def portshow_section(portcmd_dct, connected_wwn_lst, portphys_portscn_details, p
     return line
 
 
-def portlogin_section(portid_wwn_lst, portcmd_dct, connected_wwn_lst, port_index, 
+def portlogin_section_extract(portid_wwn_lst, portcmd_dct, connected_wwn_lst, port_index, 
                         pattern_dct, line, file):
     """Function to extract portloginshow information for the current port_index"""
 
@@ -128,7 +130,7 @@ def portlogin_section(portid_wwn_lst, portcmd_dct, connected_wwn_lst, port_index
     return line
 
 
-def portstats_section(portcmd_dct, port_index, pattern_dct, line, file):
+def portstats_section_extract(portcmd_dct, port_index, pattern_dct, line, file):
     """Function to extract portstats information for the current port_index"""
 
     while not re.search(fr'^(portstats64show|portcamshow) +{int(port_index)}$', line):

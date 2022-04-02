@@ -114,7 +114,7 @@ def fabricshow_section(fabricshow_lst, ls_mode_on, principal_switch_lst, pattern
                        line, file, switch_index):
     """Function to extract fabricshow information from sshow file"""
 
-    meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
 
     while not re.search(pattern_dct['switchcmd_end'],line):
         line = file.readline()
@@ -131,7 +131,7 @@ def agshow_section(ag_principal_lst, ag_params, ls_mode_on, principal_switch_lst
                        line, file, switch_index):
     """Function to extract agshow information from principal switch sshow file"""
 
-    meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
 
     while not re.search(pattern_dct['switchcmd_end'], line):
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}

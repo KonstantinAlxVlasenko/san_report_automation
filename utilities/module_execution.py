@@ -146,7 +146,8 @@ def goto_switch_context(ls_mode_on, line, file, switch_index):
         while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
             line = file.readline()
             if not line:
-                break      
+                break
+    return line      
 
 
 

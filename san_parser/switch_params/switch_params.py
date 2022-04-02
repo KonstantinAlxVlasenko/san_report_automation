@@ -141,7 +141,7 @@ def switchshow_section(switch_params_dct, switchshow_ports_lst,
                         line, file, i):
     """Function to extract switch parameters and switch port information from switchshow section"""
 
-    meop.goto_switch_context(ls_mode_on, line, file, i)
+    line = meop.goto_switch_context(ls_mode_on, line, file, i)
     
     while not re.search(pattern_dct['switchcmd_end'],line):
         line = file.readline()

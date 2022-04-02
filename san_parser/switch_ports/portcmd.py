@@ -9,7 +9,7 @@ import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 # import utilities.filesystem_operations as fsop
-from .portcmd_sections import port_fc_portcmd_section
+from .portcmd_sections import port_fc_portcmd_section_extract
 
 
 def portcmd_extract(chassis_params_df, project_constants_lst):
@@ -73,7 +73,7 @@ def current_config_extract(portshow_lst, pattern_dct,
 
     chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
     chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
-    sshow_file, chassis_name, _ = chassis_info_lst            
+    sshow_file, *_ = chassis_info_lst            
     
     # search control dictionary. continue to check sshow_file until all parameters groups are found
     collected = {'portshow': False}
@@ -96,7 +96,7 @@ def current_config_extract(portshow_lst, pattern_dct,
                     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                     # portFcPortCmdShow section start
                     if match_dct['slot_port_number']:
-                        line = port_fc_portcmd_section(portshow_lst, pattern_dct, chassis_info_lst, 
+                        line = port_fc_portcmd_section_extract(portshow_lst, pattern_dct, chassis_info_lst, 
                                                         portcmd_params, portcmd_params_add, line, file)
                     # portFcPortCmdShow section end
             # sshow_port section end
