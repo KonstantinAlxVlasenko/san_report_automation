@@ -100,7 +100,7 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
             if re.search(pattern_dct['switchcmd_configshow'], line) and not collected['configshow']:
                 # when section is found corresponding collected dict values changed to True
                 collected['configshow'] = True
-                configshow_section(chassis_params_dct, snmp_target_set, syslog_set, tz_lst, 
+                line = configshow_section_extract(chassis_params_dct, snmp_target_set, syslog_set, tz_lst, 
                                     pattern_dct, line, file)
             # uptime section start
             elif re.search(pattern_dct['switchcmd_uptime'], line):
@@ -225,8 +225,8 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
     return chassis_params_lst
 
 
-def configshow_section(chassis_params_dct, snmp_target_set, syslog_set, tz_lst, 
-                        pattern_dct, line, file):
+def configshow_section_extract(chassis_params_dct, snmp_target_set, syslog_set, tz_lst, 
+                                pattern_dct, line, file):
     """Function to extract chassis parameters from configshow section"""
 
     while not re.search(pattern_dct['switchcmd_configshow_end'],line):
@@ -249,3 +249,4 @@ def configshow_section(chassis_params_dct, snmp_target_set, syslog_set, tz_lst,
             tz_lst.append(match_dct['tz'].group(2))                                             
         if not line:
             break
+    return line

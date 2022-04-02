@@ -99,22 +99,21 @@ def current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct,
                 if re.search(pattern_dct['switchcmd_fabricshow'], line):
                     # when section is found corresponding collected dict values changed to True
                     collected['fabricshow'] = True
-                    fabricshow_section(fabricshow_lst, ls_mode_on, principal_switch_lst, pattern_dct,
-                       line, file, switch_index)
+                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line = fabricshow_section_extract(fabricshow_lst, pattern_dct, principal_switch_lst, line, file)
                 # fabricshow section end
                 # ag_principal section start
                 elif re.search(pattern_dct['switchcmd_agshow'], line):
                     collected['ag_principal'] = True
-                    agshow_section(ag_principal_lst, ag_params, ls_mode_on, principal_switch_lst, pattern_dct,
-                                    line, file, switch_index)
+                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line = agshow_section_extract(ag_principal_lst, pattern_dct, principal_switch_lst, ag_params, line, file)
                 # ag_principal section end
 
 
-def fabricshow_section(fabricshow_lst, ls_mode_on, principal_switch_lst, pattern_dct,
-                       line, file, switch_index):
+def fabricshow_section_extract(fabricshow_lst, pattern_dct, 
+                                principal_switch_lst, 
+                                line, file):
     """Function to extract fabricshow information from sshow file"""
-
-    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
 
     while not re.search(pattern_dct['switchcmd_end'],line):
         line = file.readline()
@@ -125,13 +124,13 @@ def fabricshow_section(fabricshow_lst, ls_mode_on, principal_switch_lst, pattern
             fabricshow_lst.append(dsop.line_to_list(pattern_dct['fabricshow'], line, *principal_switch_lst))                                      
         if not line:
             break
+    return line
 
 
-def agshow_section(ag_principal_lst, ag_params, ls_mode_on, principal_switch_lst, pattern_dct,
-                       line, file, switch_index):
+def agshow_section_extract(ag_principal_lst, pattern_dct, 
+                            principal_switch_lst, ag_params,  
+                            line, file):
     """Function to extract agshow information from principal switch sshow file"""
-
-    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
 
     while not re.search(pattern_dct['switchcmd_end'], line):
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
@@ -229,4 +228,5 @@ def agshow_section(ag_principal_lst, ag_params, ls_mode_on, principal_switch_lst
             line = file.readline()
         if not line:
             break
+    return line
 

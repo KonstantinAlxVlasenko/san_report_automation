@@ -115,7 +115,8 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
                 # switchshow section start
                 elif re.search(pattern_dct['switchcmd_switchshow'], line) and not collected['switchshow']:
                     collected['switchshow'] = True
-                    switchshow_section(switch_params_dct, switchshow_ports_lst, ls_mode_on, chassis_info_lst, pattern_dct, line, file, i)                    
+                    line = meop.goto_switch_context(ls_mode_on, line, file, i)
+                    line = switchshow_section(switch_params_dct, switchshow_ports_lst, pattern_dct, chassis_info_lst, line, file, i)                    
                 # switchshow section end
                 
         # additional values which need to be added to the switch params dictionary 
@@ -136,13 +137,11 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
     return switch_params_current_lst
 
 
-def switchshow_section(switch_params_dct, switchshow_ports_lst, 
-                        ls_mode_on, chassis_info_lst, pattern_dct, 
-                        line, file, i):
+def switchshow_section(switch_params_dct, switchshow_ports_lst, pattern_dct, 
+                        chassis_info_lst, 
+                        line, file, switch_index):
     """Function to extract switch parameters and switch port information from switchshow section"""
 
-    line = meop.goto_switch_context(ls_mode_on, line, file, i)
-    
     while not re.search(pattern_dct['switchcmd_end'],line):
         line = file.readline()
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
@@ -156,7 +155,7 @@ def switchshow_section(switch_params_dct, switchshow_ports_lst,
                 switch_params_dct[k] = v
         # 'switchshow_portinfo_match' pattern #3 
         if match_dct['switchshow_portinfo']:
-            switchinfo_lst = [*chassis_info_lst, str(i), 
+            switchinfo_lst = [*chassis_info_lst, str(switch_index), 
                                 switch_params_dct.get('switchName'), switch_params_dct.get('switchWwn'), 
                                 switch_params_dct.get('switchState'), switch_params_dct.get('switchMode')]
             switchshow_port_lst = dsop.line_to_list(pattern_dct['switchshow_portinfo'], line, *switchinfo_lst)
@@ -165,4 +164,5 @@ def switchshow_section(switch_params_dct, switchshow_ports_lst,
                 switchshow_port_lst[9] = str(0)
             switchshow_ports_lst.append(switchshow_port_lst)                      
         if not line:
-            break  
+            break
+    return line  

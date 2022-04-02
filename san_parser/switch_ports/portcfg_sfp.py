@@ -74,7 +74,6 @@ def portcfg_sfp_extract(switch_params_df, project_constants_lst):
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-    exit()
     return sfpshow_df, portcfgshow_df
 
 
