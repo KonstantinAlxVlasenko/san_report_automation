@@ -1,4 +1,4 @@
-"""Module to extract connected devices information"""
+"""Module to extract connected devices information (fdmishow, nsshow, nscamshow, nsportshow)"""
 
 import os
 import re
@@ -10,6 +10,11 @@ import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
+
+from .nameserver_sections import (fdmi_section_extract,
+                                  nsportshow_section_extract,
+                                  nsshow_section_extract,
+                                  parse_nsshow_dedicated)
 
 
 def connected_devices_extract(switch_params_df, project_constants_lst):
@@ -109,38 +114,6 @@ def connected_devices_extract(switch_params_df, project_constants_lst):
     return fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df
 
 
-def parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, pattern_dct, nsshow_params, nsshow_params_add):
-    """Function to extract NameSerevr information from dedicated file"""               
-    
-    with open(nsshow_file, encoding='utf-8', errors='ignore') as file:
-        line = file.readline()
-        while line:
-            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-            # port_pid_match
-            if match_dct['port_pid']:
-                # dictionary to store all DISCOVERED switch ports information
-                nsshow_port_dct = {}
-                # current connected device wwnp
-                pid = dsop.line_to_list(pattern_dct['port_pid'], line)
-                # move cursor to one line down to get inside while loop
-                line = file.readline()                                
-                # pid_switchcmd_end_comp
-                while not re.search(pattern_dct['port_pid'], line):
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # nsshow_port_match
-                    if match_dct['fdmi_port']:
-                        nsshow_port_dct[match_dct['fdmi_port'].group(1).rstrip()] = match_dct['fdmi_port'].group(2).rstrip()
-                    line = file.readline()
-                    if not line:
-                        break
-                # adding additional parameters and values to the fdmi_dct
-                dsop.update_dct(nsshow_params_add[6:], pid, nsshow_port_dct)               
-                # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
-                nsshow_dedicated_lst.append([nsshow_port_dct.get(nsshow_param) for nsshow_param in nsshow_params])
-            else:
-                line = file.readline()
-
-
 def current_config_extract(fdmi_lst, nsshow_dct, nsportshow_lst, pattern_dct, 
                             switch_params_sr,
                             fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add):
@@ -166,63 +139,17 @@ def current_config_extract(fdmi_lst, nsshow_dct, nsportshow_lst, pattern_dct,
             if not line:
                 break
             # fdmi section start   
-            # switchcmd_fdmishow_comp
             if re.search(pattern_dct['switchcmd_fdmishow'], line) and not collected['fdmi']:
                 collected['fdmi'] = True
-                if ls_mode_on:
-                    while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
-                        line = file.readline()
-                        if not line:
-                            break                        
-                # local_database_comp
-                while not re.search(pattern_dct['local_database'], line):
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # wwnp_match
-                    if match_dct['wwpn']:
-                        # dictionary to store all DISCOVERED switch ports information
-                        # collecting data only for the logical switch in current loop
-                        fdmi_dct = {}
-                        # switch_info and current connected device wwnp
-                        switch_wwnp = dsop.line_to_list(pattern_dct['wwpn'], line, *switch_info_lst[:6])
-                        # move cursor to one line down to get inside while loop
-                        line = file.readline()                                
-                        # wwnp_local_comp
-                        while not re.search(pattern_dct['wwpn_local'], line):
-                            line = file.readline()
-                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                            # fdmi_port_match
-                            if match_dct['fdmi_port']:
-                                fdmi_dct[match_dct['fdmi_port'].group(1).rstrip()] = match_dct['fdmi_port'].group(2).rstrip()                                       
-                            if not line:
-                                break
-                        # adding additional parameters and values to the fdmi_dct
-                        dsop.update_dct(fdmi_params_add, switch_wwnp, fdmi_dct)               
-                        # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
-                        fdmi_lst.append([fdmi_dct.get(param, None) for param in fdmi_params])
-                    else:
-                        line = file.readline()
-                    if not line:
-                        break                                
+                line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                line = fdmi_section_extract(fdmi_lst, pattern_dct, switch_info_lst, 
+                                            fdmi_params, fdmi_params_add, line, file)
             # fdmi section end
             # ns_portshow section start   
-            # switchcmd_nsportshow_comp
             if re.search(pattern_dct['switchcmd_nsportshow'], line) and not collected['nsportshow']:
                 collected['nsportshow'] = True
-                if ls_mode_on:
-                    while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
-                        line = file.readline()
-                        if not line:
-                            break                        
-                # switchcmd_end_comp
-                while not re.search(pattern_dct['switchcmd_end'], line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # islshow_match
-                    if match_dct['ns_portshow']:
-                        port_enforcement = dsop.line_to_list(pattern_dct['ns_portshow'], line, *switch_info_lst[:6])
-                        nsportshow_lst.append(port_enforcement)
-                    if not line:
-                        break                                
+                line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                line = nsportshow_section_extract(nsportshow_lst, pattern_dct, switch_info_lst, line, file)                                                   
             # ns_portshow section end      
             # only switches in Native mode have Name Server service started 
             if switch_mode == 'Native':
@@ -233,41 +160,9 @@ def current_config_extract(fdmi_lst, nsshow_dct, nsportshow_lst, pattern_dct,
                     # switchcmd_nsshow_comp, switchcmd_nscamshow_comp
                     if re.search(pattern_dct[ns_pattern_name], line) and not collected[nsshow_type]:
                         collected[nsshow_type] = True
-                        if ls_mode_on:
-                            while not re.search(fr'^CURRENT CONTEXT -- {switch_index} *, \d+$',line):
-                                line = file.readline()
-                                if not line:
-                                    break                        
-                        # switchcmd_end_comp
-                        while not re.search(pattern_dct['switchcmd_end'], line):
-                            # line = file.readline()
-                            match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                            # port_pid__match
-                            if match_dct['port_pid']:
-                                # dictionary to store all DISCOVERED switch ports information
-                                # collecting data only for the logical switch in current loop
-                                nsshow_port_dct = {}
-                                # switch_info and current connected device wwnp
-                                switch_pid = dsop.line_to_list(pattern_dct['port_pid'], line, *switch_info_lst[:6])
-                                # move cursor to one line down to get inside while loop
-                                line = file.readline()                                
-                                # pid_switchcmd_end_comp
-                                while not re.search(pattern_dct['pid_switchcmd_end'], line):
-                                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                                    # nsshow_port_match
-                                    if match_dct['fdmi_port']:
-                                        nsshow_port_dct[match_dct['fdmi_port'].group(1).rstrip()] = match_dct['fdmi_port'].group(2).rstrip()
-                                    line = file.readline()
-                                    if not line:
-                                        break
-                                        
-                                # adding additional parameters and values to the fdmi_dct
-                                dsop.update_dct(nsshow_params_add, switch_pid, nsshow_port_dct)               
-                                # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
-                                ns_lst.append([nsshow_port_dct.get(nsshow_param, None) for nsshow_param in nsshow_params])
-                            else:
-                                line = file.readline()
-                            if not line:
-                                break                                
+                        line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                        line = nsshow_section_extract(ns_lst, pattern_dct, switch_info_lst, 
+                                                        nsshow_params, nsshow_params_add, line, file)
                 # nsshow section end
+
 
