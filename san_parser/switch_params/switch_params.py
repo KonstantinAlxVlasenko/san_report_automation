@@ -116,7 +116,7 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
                 elif re.search(pattern_dct['switchcmd_switchshow'], line) and not collected['switchshow']:
                     collected['switchshow'] = True
                     line = meop.goto_switch_context(ls_mode_on, line, file, i)
-                    line = switchshow_section(switch_params_dct, switchshow_ports_lst, pattern_dct, chassis_info_lst, line, file, i)                    
+                    line = switchshow_section_extract(switch_params_dct, switchshow_ports_lst, pattern_dct, chassis_info_lst, line, file, i)                    
                 # switchshow section end
                 
         # additional values which need to be added to the switch params dictionary 
@@ -137,7 +137,7 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
     return switch_params_current_lst
 
 
-def switchshow_section(switch_params_dct, switchshow_ports_lst, pattern_dct, 
+def switchshow_section_extract(switch_params_dct, switchshow_ports_lst, pattern_dct, 
                         chassis_info_lst, 
                         line, file, switch_index):
     """Function to extract switch parameters and switch port information from switchshow section"""

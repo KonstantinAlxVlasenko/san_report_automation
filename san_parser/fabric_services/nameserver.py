@@ -3,8 +3,8 @@
 import os
 import re
 
-import pandas as pd
-import utilities.data_structure_operations as dsop
+# import pandas as pd
+# import utilities.data_structure_operations as dsop
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
@@ -14,7 +14,7 @@ import utilities.servicefile_operations as sfop
 from .nameserver_sections import (fdmi_section_extract,
                                   nsportshow_section_extract,
                                   nsshow_section_extract,
-                                  parse_nsshow_dedicated)
+                                  nsshow_file_extract)
 
 
 def connected_devices_extract(switch_params_df, project_constants_lst):
@@ -51,7 +51,7 @@ def connected_devices_extract(switch_params_df, project_constants_lst):
         # lists with local Name Server (NS) information 
         nsshow_lst = []
         nscamshow_lst = []
-        nsshow_dedicated_lst = []
+        nsshow_manual_lst = []
         # list with zoning enforcement
         nsportshow_lst = []
         
@@ -69,37 +69,21 @@ def connected_devices_extract(switch_params_df, project_constants_lst):
                                     fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add)                    
             meop.status_info('ok', max_title, len(info))
         
-        nsshow_folder = report_requisites_sr['nsshow_dedicated_folder']
+        nsshow_folder = report_requisites_sr['switch_nsshow_folder']
 
         # check files in dedicated nsshow folder
         if nsshow_folder:
             print('\nEXTRACTING NAMESERVER INFORMATION FROM DEDICATED FILES ...\n')
+            
             # collects files in folder with txt extension
             txt_files = fsop.find_files(nsshow_folder, max_title, filename_extension='txt')
             log_files = fsop.find_files(nsshow_folder, max_title, filename_extension='log')
             nsshow_files_lst = txt_files + log_files
-            # number of files to check
-            configs_num = len(nsshow_files_lst)  
-            if configs_num:
-                for i, nsshow_file in enumerate(nsshow_files_lst):       
-                    # file name with extension
-                    filename_wext = os.path.basename(nsshow_file)
-                    # remove extension from filename
-                    filename, _ = os.path.splitext(filename_wext)
-                    # current operation information string
-                    info = f'[{i+1} of {configs_num}]: {filename} dedicated nsshow config.'
-                    print(info, end =" ")
-                    prev_nsshow_dedicated_lst = nsshow_dedicated_lst.copy()
-                    # parse nsshow information from current file
-                    parse_nsshow_dedicated(nsshow_file, nsshow_dedicated_lst, pattern_dct, nsshow_params, nsshow_params_add)
-                    if prev_nsshow_dedicated_lst != nsshow_dedicated_lst:
-                        meop.status_info('ok', max_title, len(info))
-                    else:
-                        meop.status_info('empty', max_title, len(info))
-        
+            nsshow_manual_files_extract(nsshow_files_lst, nsshow_manual_lst, pattern_dct,
+                                    nsshow_params, nsshow_params_add, max_title)
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fdmi_columns', 'nsshow_columns', 'nsshow_columns', 'nsshow_columns', 'nsportshow_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, fdmi_lst, nsshow_lst, nscamshow_lst, nsshow_dedicated_lst, nsportshow_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, fdmi_lst, nsshow_lst, nscamshow_lst, nsshow_manual_lst, nsportshow_lst)
         fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, *_ = data_lst          
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
@@ -166,3 +150,25 @@ def current_config_extract(fdmi_lst, nsshow_dct, nsportshow_lst, pattern_dct,
                 # nsshow section end
 
 
+def nsshow_manual_files_extract(nsshow_files_lst, nsshow_manual_lst, pattern_dct,
+                            nsshow_params, nsshow_params_add, max_title):
+    """Function to check NameServer files collected manually and extract values from them."""
+    
+    # number of files to check
+    configs_num = len(nsshow_files_lst)  
+    if configs_num:
+        for i, nsshow_file in enumerate(nsshow_files_lst):       
+            # file name with extension
+            filename_wext = os.path.basename(nsshow_file)
+            # remove extension from filename
+            filename, _ = os.path.splitext(filename_wext)
+            # current operation information string
+            info = f'[{i+1} of {configs_num}]: {filename} dedicated nsshow config.'
+            print(info, end =" ")
+            prev_nsshow_dedicated_lst = nsshow_manual_lst.copy()
+            # parse nsshow information from current file
+            nsshow_file_extract(nsshow_file, nsshow_manual_lst, pattern_dct, nsshow_params, nsshow_params_add)
+            if prev_nsshow_dedicated_lst != nsshow_manual_lst:
+                meop.status_info('ok', max_title, len(info))
+            else:
+                meop.status_info('empty', max_title, len(info))
