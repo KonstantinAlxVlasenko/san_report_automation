@@ -80,7 +80,6 @@ def zoning_extract(switch_params_df, project_constants_lst):
     return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df
 
 
-
 def current_config_extract(cfg_lst, zone_lst, peerzone_lst, alias_lst, 
                             cfg_effective_lst, zone_effective_lst, peerzone_effective_lst, pattern_dct, 
                             switch_params_sr):
@@ -91,9 +90,7 @@ def current_config_extract(cfg_lst, zone_lst, peerzone_lst, alias_lst,
                         'SwitchName', 'switchWwn', 'switchRole', 'Fabric_ID', 'FC_Router', 'switchMode']
     switch_info_lst = [switch_params_sr[key] for key in switch_info_keys]
     ls_mode_on = True if switch_params_sr['LS_mode'] == 'ON' else False
-
     sshow_file, *_, switch_index, switch_name, _, switch_role = switch_info_lst[:7]
-    
     collected = {'cfgshow': False, 'peerzone': False}
     
     # check config of Principal switch only 
