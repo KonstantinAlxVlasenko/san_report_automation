@@ -108,7 +108,7 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
                         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}                           
                         # 'switch_configall_match' pattern #0
                         if match_dct['configshowall_param']:
-                            switch_params_dct[match_dct['configshowall_param'].group(1).rstrip()] = match_dct['configshowall_param'].group(3).rstrip()              
+                            switch_params_dct[match_dct['configshowall_param'].group(1).rstrip()] = match_dct['configshowall_param'].group(2).rstrip()              
                         if not line:
                             break
                 # config section end

@@ -5,6 +5,8 @@ checking if each step is required to run"""
 import re
 from functools import wraps
 
+import utilities.data_structure_operations as dsop
+
 
 def status_info(status, max_title, len_info_string, shift=0):
     """Function to print current operation status ('OK', 'SKIP', 'FAIL')"""
@@ -16,6 +18,15 @@ def status_info(status, max_title, len_info_string, shift=0):
     # space between current operation information and status of its execution filled with dots
     print(status.rjust(str_length - len_info_string, '.'))
     return status
+
+
+def show_collection_status(collected_lst, max_title, len_info_string):
+    """Function to show collection status after data extraction to collected_lst"""
+
+    if dsop.list_is_empty(collected_lst):
+        status_info('no data', max_title, len_info_string)
+    else:
+        status_info('ok', max_title, len_info_string)
 
 
 def display_status(info, max_title):
@@ -147,7 +158,10 @@ def goto_switch_context(ls_mode_on, line, file, switch_index):
             line = file.readline()
             if not line:
                 break
-    return line      
+    return line
+
+
+      
 
 
 

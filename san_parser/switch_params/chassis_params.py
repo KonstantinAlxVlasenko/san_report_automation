@@ -49,10 +49,12 @@ def chassis_params_extract(all_config_data, project_constants_lst):
             print(info, end =" ")
             chassis_params_lst = current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_dct, 
                                                                 switch_config_data, chassis_params, chassis_params_add)
-            if dsop.list_is_empty(chassis_params_lst):
-                meop.status_info('no data', max_title, len(info))
-            else:
-                meop.status_info('ok', max_title, len(info))
+            meop.show_collection_status(chassis_params_lst, max_title, len(info))
+            
+            # if dsop.list_is_empty(chassis_params_lst):
+            #     meop.status_info('no data', max_title, len(info))
+            # else:
+            #     meop.status_info('ok', max_title, len(info))
 
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'chassis_columns', 'chassis_slot_columns')
@@ -80,6 +82,7 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
     # search control dictionary. continue to check sshow_file until all parameters groups are found
     collected = {'configshow': False, 'uptime_cpu': False, 'flash': False, 'memory': False, 
                     'dhcp': False, 'licenses': False, 'vf_id': False, 'slotshow': False}
+    director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
     # dictionary to store all DISCOVERED chassis parameters
     # collecting data only for the chassis in current loop
     chassis_params_dct = {}
@@ -201,6 +204,16 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
                     if not line:
                         break                                
             # slot_status section end
+            # director control section start
+            # if switch is not director it doesn't contain chassiscmd_slotshow pattern
+            # to avoid complete check of sshow file    
+            elif re.search(pattern_dct['switch_type'], line):
+                switch_type = re.match(pattern_dct['switch_type'], line).group(1).strip()
+                switch_type = int(switch_type)
+                if not switch_type in director_type:
+                    collected['slotshow'] = True
+            # director control section end                                         
+
                                    
     # additional values which need to be added to the chassis params dictionary
     # chassis_params_add order (configname, ams_maps_log, chassis_name, snmp_server, syslog_server, timezone_h:m, uptime, cpu_average_load, memory_usage, flash_usage, licenses)
@@ -219,7 +232,7 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
             chassis_params_dct[chassis_param_add] = chassis_param_value
     # creating list with REQUIRED chassis parameters for the current switch
     # if no value in the chassis_params_dct for the parameter then None is added
-    chassis_params_lst = [chassis_params_dct.get(chassis_param, None) for chassis_param in chassis_params]  
+    chassis_params_lst = [chassis_params_dct.get(chassis_param) for chassis_param in chassis_params]  
     # appending this list to the list of all switches chassis_params_fabric_lst
     chassis_params_fabric_lst.append(chassis_params_lst)
     return chassis_params_lst
@@ -235,7 +248,7 @@ def configshow_section_extract(chassis_params_dct, snmp_target_set, syslog_set, 
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()} 
         # 'chassis_param_match' pattern #0
         if match_dct['chassis_param']:
-            chassis_params_dct[match_dct['chassis_param'].group(1).rstrip()] = match_dct['chassis_param'].group(3)                            
+            chassis_params_dct[match_dct['chassis_param'].group(1).rstrip()] = match_dct['chassis_param'].group(2)                            
         # for snmp and syslog data addresses are added to the coreesponding sets to avoid duplicates
         # 'snmp_target_match' pattern #1
         if match_dct['snmp_target'] and match_dct['snmp_target'].group(2) != '0.0.0.0':

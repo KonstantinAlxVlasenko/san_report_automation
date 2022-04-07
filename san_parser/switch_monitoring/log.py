@@ -9,6 +9,7 @@ import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
+import utilities.regular_expression_operations as reop
 
 
 def log_extract(chassis_params_df, project_constants_lst):
@@ -46,8 +47,10 @@ def log_extract(chassis_params_df, project_constants_lst):
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} switch logs'
             print(info, end =" ")
             
-            current_config_extract(errdump_lst, pattern_dct, chassis_params_sr)
-            meop.status_info('ok', max_title, len(info))
+            sw_errdump_lst = current_config_extract(errdump_lst, pattern_dct, chassis_params_sr)
+            meop.show_collection_status(sw_errdump_lst, max_title, len(info))
+            
+            # meop.status_info('ok', max_title, len(info))
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'errdump_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, errdump_lst)
@@ -71,7 +74,7 @@ def current_config_extract(errdump_lst, pattern_dct, chassis_params_sr):
     chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
     chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
 
-    sshow_file, chassis_name, _ = chassis_info_lst
+    sshow_file, *_ = chassis_info_lst
 
     # search control dictionary. continue to check sshow_file until all parameters groups are found
     collected = {'errdump': False}
@@ -83,22 +86,9 @@ def current_config_extract(errdump_lst, pattern_dct, chassis_params_sr):
             if not line:
                 break
             # errdump section start
-            # errdump_start_comp
             if re.search(pattern_dct['errdump_start'], line) and not collected['errdump']:
                 # when section is found corresponding collected dict values changed to True
                 collected['errdump'] = True
-                # switchcmd_end_comp
-                while not re.search(pattern_dct['switchcmd_end'], line):
-                    line = file.readline()
-                    if not line:
-                        break
-                    # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # errdump_message_match
-                    if match_dct['errdump_message']:
-                        error_message = dsop.line_to_list(pattern_dct['errdump_message'], line, *chassis_info_lst)
-                        # append current value to the list of values 
-                        errdump_lst.append(error_message)
-                    if not line:
-                        break                                
+                line, sw_errdump_lst = reop.lines_extract(errdump_lst, pattern_dct, 'errdump_message', chassis_info_lst, line, file, save_local=True)
             # errdump section end
+    return sw_errdump_lst

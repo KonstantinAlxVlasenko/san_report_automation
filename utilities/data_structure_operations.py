@@ -1,5 +1,7 @@
 """Module to perform manipulations with data structures except DataFrames and Series"""
 
+import re
+
 
 def line_to_list(re_object, line, *args):
     """
@@ -30,5 +32,6 @@ def update_dct(keys, values, dct, char = ', '):
 
 def list_is_empty(lst):
     """Function to check if nested list is empty. None considered to be empty value"""
-
     return all(map(list_is_empty, lst)) if isinstance(lst, list) else True if lst is None else False
+
+

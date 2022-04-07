@@ -9,6 +9,7 @@ import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 import utilities.filesystem_operations as fsop
+import utilities.regular_expression_operations as reop
 
 
 def sensor_extract(chassis_params_df, project_constants_lst):
@@ -46,8 +47,8 @@ def sensor_extract(chassis_params_df, project_constants_lst):
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} sensor readings'
             print(info, end =" ")  
 
-            current_config_extract(sensor_lst, pattern_dct, chassis_params_sr)
-            meop.status_info('ok', max_title, len(info))      
+            sw_sensor_lst = current_config_extract(sensor_lst, pattern_dct, chassis_params_sr)
+            meop.show_collection_status(sw_sensor_lst, max_title, len(info))     
     
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'sensor_columns')
@@ -71,7 +72,7 @@ def current_config_extract(sensor_lst, pattern_dct, chassis_params_sr):
 
     chassis_info_keys = ['configname', 'chassis_name', 'chassis_wwn']
     chassis_info_lst = [chassis_params_sr[key] for key in chassis_info_keys]
-    sshow_file, chassis_name, _ = chassis_info_lst
+    sshow_file, *_ = chassis_info_lst
                            
     # search control dictionary. continue to check sshow_file until all parameters groups are found
     collected = {'sensor': False}
@@ -83,17 +84,8 @@ def current_config_extract(sensor_lst, pattern_dct, chassis_params_sr):
             if not line:
                 break
             # sensor section start   
-            # switchcmd_sensorshow_comp
             if re.search(pattern_dct['switchcmd_sensorhow'], line) and not collected['sensor']:
-                collected['sensor'] = True                      
-                # switchcmd_end_comp
-                while not re.search(pattern_dct['switchcmd_end'], line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # sensorshow_match
-                    if match_dct['sensor']:
-                        sensor_reading = dsop.line_to_list(pattern_dct['sensor'], line, *chassis_info_lst)
-                        sensor_lst.append(sensor_reading)
-                    if not line:
-                        break                                
+                collected['sensor'] = True
+                line, sw_sensor_lst = reop.lines_extract(sensor_lst, pattern_dct, 'sensor', chassis_info_lst, line, file, save_local=True)                                                 
             # sensor section end
+    return sw_sensor_lst

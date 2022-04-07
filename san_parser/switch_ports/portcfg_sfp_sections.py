@@ -1,4 +1,4 @@
-"""Module with functions to extract portcfgshow and sfpshow information for the switch context from sshow file"""
+"""Module with functions to extract portcfgshow and sfpshow information for the switch context from the sshow file"""
 
 
 import re
