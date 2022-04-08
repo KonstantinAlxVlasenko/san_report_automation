@@ -136,15 +136,13 @@ def current_config_extract(maps_params_fabric_lst, pattern_dct,
     # additional values which need to be added to the chassis params dictionary
     # chassis_params_add order (configname, ams_maps_config, chassis_name, switch_index)
     # values axtracted in manual mode. if change values order change keys order in init.xlsx "maps_params_add" column
-    maps_params_values = (sshow_file, ams_maps_file, switch_name, switch_index)
+    maps_params_add_constants = (sshow_file, ams_maps_file, switch_name, switch_index)
     
-    # adding additional parameters and values to the chassis_params_switch_dct
-    for maps_param_add, maps_param_value in zip(maps_params_add,  maps_params_values):
-            maps_params_dct[maps_param_add] = maps_param_value
-
+    # adding additional parameters and values to the parameters dct
+    dsop.update_dct(maps_params_add, maps_params_add_constants, maps_params_dct)
     # creating list with REQUIRED maps parameters for the current switch
     # if no value in the maps_params_dct for the parameter then None is added
-    maps_params_lst = [maps_params_dct.get(maps_param, None) for maps_param in maps_params]  
+    maps_params_lst = [maps_params_dct.get(maps_param) for maps_param in maps_params]  
     # and appending this list to the list of all switches maps_params_fabric_lst
     maps_params_fabric_lst.append(maps_params_lst)
     return maps_params_lst

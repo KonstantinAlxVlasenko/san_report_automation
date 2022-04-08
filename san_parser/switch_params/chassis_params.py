@@ -197,7 +197,6 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
                 while not re.search(pattern_dct['switchcmd_end'], line):
                     line = file.readline()
                     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # islshow_match
                     if match_dct['slot_status']:
                         slot_status_line = dsop.line_to_list(pattern_dct['slot_status'], line, sshow_file, switch_name)
                         slot_status_lst.append(slot_status_line)
@@ -220,11 +219,11 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
     # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
     vf_id_lst = list(vf_id_set)
     vf_id_lst.sort()
-    chassis_params_values = (sshow_file, ams_maps_file, switch_name, vf_id_lst, snmp_target_set, 
+    chassis_params_add_constants = (sshow_file, ams_maps_file, switch_name, vf_id_lst, snmp_target_set, 
                                 syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
     
     # adding additional parameters and values to the chassis_params_switch_dct
-    for chassis_param_add, chassis_param_value in zip(chassis_params_add,  chassis_params_values):
+    for chassis_param_add, chassis_param_value in zip(chassis_params_add,  chassis_params_add_constants):
         if chassis_param_value:                
             if not isinstance(chassis_param_value, str):
                 s = ':' if chassis_param_add == 'timezone_h:m' else ', '

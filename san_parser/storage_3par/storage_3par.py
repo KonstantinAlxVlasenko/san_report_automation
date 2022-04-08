@@ -3,7 +3,6 @@ extract configuaration information from downloaded and local files"""
 
 
 import os
-import re
 
 import pandas as pd
 import utilities.data_structure_operations as dsop
@@ -13,6 +12,7 @@ import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 
 from .storage_3par_download import configs_download
+from .storage_3par_extract import storage_params_extract
 
 
 def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, software_path_sr):
@@ -44,7 +44,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
 
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('3par', max_title)
-        params, params_add = dfop.list_from_dataframe(re_pattern_df, 'system_params', 'system_params_add')
+        system_params, system_params_add = dfop.list_from_dataframe(re_pattern_df, 'system_params', 'system_params_add')
 
         # verify if 3par systems registered in fabric NameServer
         ns_3par_df = verify_ns_3par(nsshow_df, nscamshow_df, pattern_dct)
@@ -71,7 +71,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
                     # current operation information string
                     info = f'[{i+1} of {configs_num}]: {configname} system'
                     print(info, end =" ")
-                    showsys_lst, port_lst, host_lst = parse_config(config_3par, params, params_add, pattern_dct)
+                    showsys_lst, port_lst, host_lst = storage_params_extract(config_3par, system_params, system_params_add, pattern_dct)
                     system_3par_comprehensive_lst.extend(showsys_lst)
                     port_3par_comprehensive_lst.extend(port_lst)
                     host_3par_comprehensive_lst.extend(host_lst)
@@ -125,93 +125,6 @@ def verify_ns_3par(nsshow_df, nscamshow_df, pattern_dct):
     return ns_3par_df
 
 
-def parse_config(config_3par, params, params_add, pattern_dct):
-    """Function to parse 3PAR config file""" 
-
-    # file name
-    configname = os.path.basename(config_3par)
-    # search control dictionary. continue to check file until all parameters groups are found
-    collected = {'system': False, 'ip': False, 'port': False, 'host': False}
-
-    # initialize structures to store collected data for current storage
-    # dictionary to store all DISCOVERED parameters
-    showsys_dct = {}
-    showsys_lst = []
-    # if lists remains empty after file parsing than status_info shows NO_DATA for current file
-    port_lst = []
-    host_lst = []
-    # Storage IP address
-    ip_addr = None
-    
-    with open(config_3par, encoding='utf-8', errors='ignore') as file:
-        # check file until all groups of parameters extracted
-        while not all(collected.values()):
-            line = file.readline()
-            if not line:
-                break
-            # showsys section start
-            if re.search(pattern_dct['showsys_header'], line) and not collected['system']:
-                collected['system'] = True
-                # while not reach empty line
-                while not re.search(pattern_dct['section_end'],line):
-                    line = file.readline()
-                    # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # name_value_pair_match
-                    if match_dct['parameter_value_pair']:
-                        result = match_dct['parameter_value_pair']
-                        showsys_dct[result.group(1).strip()] = result.group(2).strip()  
-                    if not line:
-                        break
-            # showsys section end
-            # port section start
-            elif re.search(pattern_dct['showport_header'], line) and not collected['port']:
-                collected['port'] = True
-                while not re.search(pattern_dct['section_end'], line):
-                    # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # port_line_match
-                    if match_dct['port_line']:
-                        port_line = dsop.line_to_list(pattern_dct['port_line'], line, configname)
-                        port_lst.append(port_line)
-                    line = file.readline()
-                    if not line:
-                        break
-            # port section end
-            # host section start
-            elif re.search(pattern_dct['showhost_header'], line) and not collected['host']:
-                collected['host'] = True
-                while not re.search(pattern_dct['section_end'], line):
-                    # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # port_line_match
-                    if match_dct['host_line']:
-                        host_line = dsop.line_to_list(pattern_dct['host_line'], line, configname)
-                        host_lst.append(host_line)
-                    line = file.readline()
-                    if not line:
-                        break
-            # host section end
-            # ip_address section start
-            elif re.search(pattern_dct['ip_address'], line) and not collected['ip']:
-                collected['ip'] = True
-                ip_addr = re.search(pattern_dct['ip_address'], line).group(1)
-            # ip_address section end
-
-    # additional values which need to be added to the switch params dictionary 
-    # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
-    # values axtracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
-    showsys_values = (configname, ip_addr)
-
-    if showsys_dct:
-        # adding additional parameters and values to the parameters dct
-        dsop.update_dct(params_add, showsys_values, showsys_dct)                                                
-        # creating list with REQUIRED parameters for the current system.
-        # if no value in the dct for the parameter then None is added 
-        # and appending this list to the list of all systems     
-        showsys_lst.append([showsys_dct.get(param) for param in params])
-
-    return showsys_lst, port_lst, host_lst
 
 
 

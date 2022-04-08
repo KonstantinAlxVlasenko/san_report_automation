@@ -2,6 +2,7 @@
 
 import re
 import utilities.data_structure_operations as dsop
+import utilities.regular_expression_operations as reop
 
 
 def blade_enclosure_section(pattern_dct, file, enclosure_params):
@@ -112,25 +113,48 @@ def interconnect_module_section(module_comprehensive_lst, pattern_dct,
             module_slot = module.group(1)
             # interconnect module type (Ethernet, FC)
             module_type = module.group(2).rstrip()
+            # line = file.readline()
+            # # module_section_end_comp
+            # while not re.search(pattern_dct['module_section_end'], line):
+            #     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+            #     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+            #     # name_value_pair_match
+            #     if match_dct['name_value_pair']:
+            #         result = match_dct['name_value_pair']
+            #         name = result.group(1).strip()
+            #         value = result.group(2).strip()
+            #         # if value is empty string use None
+            #         if value == '':
+            #             value = None
+            #         module_dct[name] = value
+            #         line = file.readline()
+            #     else:
+            #         line = file.readline()
+            #         if not line:
+            #             break
+
             line = file.readline()
-            # module_section_end_comp
-            while not re.search(pattern_dct['module_section_end'], line):
-                # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                # name_value_pair_match
-                if match_dct['name_value_pair']:
-                    result = match_dct['name_value_pair']
-                    name = result.group(1).strip()
-                    value = result.group(2).strip()
-                    # if value is empty string use None
-                    if value == '':
-                        value = None
-                    module_dct[name] = value
-                    line = file.readline()
-                else:
-                    line = file.readline()
-                    if not line:
-                        break
+            line = reop.key_value_extract(module_dct, pattern_dct, 
+                                            line, file, 
+                                            extract_pattern_name='name_value_pair', stop_pattern_name='module_section_end', 
+                                            first_line_skip=False) 
+
+            # while not re.search(pattern_dct['module_section_end'], line):
+            #     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+            #     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+            #     # name_value_pair_match
+            #     if match_dct['name_value_pair']:
+            #         result = match_dct['name_value_pair']
+            #         name = result.group(1).strip()
+            #         value = result.group(2).strip()
+            #         # if value is empty string use None
+            #         if value == '':
+            #             value = None
+            #         module_dct[name] = value
+            #     line = file.readline()
+            #     if not line:
+            #         break
+
             # creating list with REQUIRED interconnect module information only
             module_lst = [module_dct.get(param) for param in module_params]
             # add current module information to list containing all modules infromation

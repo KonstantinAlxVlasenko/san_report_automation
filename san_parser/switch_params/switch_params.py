@@ -122,11 +122,11 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
         # additional values which need to be added to the switch params dictionary 
         # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
         # values extracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
-        switch_params_values = (*chassis_info_lst, str(i), ls_mode)
+        switch_params_add_constants = (*chassis_info_lst, str(i), ls_mode)
 
         if switch_params_dct:
             # adding additional parameters and values to the switch_params_switch_dct
-            dsop.update_dct(switch_params_add, switch_params_values, switch_params_dct)                                                
+            dsop.update_dct(switch_params_add, switch_params_add_constants, switch_params_dct)                                                
             # creating list with REQUIRED chassis parameters for the current switch.
             # if no value in the switch_params_dct for the parameter then None is added
             switch_params_current_lst = [switch_params_dct.get(switch_param, None) for switch_param in switch_params]

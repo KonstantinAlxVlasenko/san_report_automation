@@ -86,6 +86,7 @@ def current_config_extract(sensor_lst, pattern_dct, chassis_params_sr):
             # sensor section start   
             if re.search(pattern_dct['switchcmd_sensorhow'], line) and not collected['sensor']:
                 collected['sensor'] = True
-                line, sw_sensor_lst = reop.lines_extract(sensor_lst, pattern_dct, 'sensor', chassis_info_lst, line, file, save_local=True)                                                 
+                line, sw_sensor_lst = reop.lines_extract(sensor_lst, pattern_dct, chassis_info_lst, 
+                                                            line, file, 'sensor',  save_local=True)                                                 
             # sensor section end
     return sw_sensor_lst
