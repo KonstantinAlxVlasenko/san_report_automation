@@ -18,6 +18,8 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
 
     # complete DataFrame with information from chassis_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(chassis_params_df, how = 'left', on=['configname', 'chassis_name', 'chassis_wwn'])
+    switch_params_aggregated_df = dfop.concatenate_columns(switch_params_aggregated_df, summary_column='timezone_hm', 
+                                                            merge_columns=['timezone_h', 'timezone_m'], sep=':', drop_merge_columns=False)
     switch_params_aggregated_df['config_collection_date_ymd'] =  pd.to_datetime(switch_params_aggregated_df['config_collection_date']).dt.date
     # add AG and VC switch information from principal switch
     switch_params_aggregated_df = ag_switch_info(switch_params_aggregated_df, ag_principal_df)

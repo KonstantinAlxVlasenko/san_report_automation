@@ -8,6 +8,7 @@ import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
+import utilities.regular_expression_operations as reop
 
 
 def switch_params_extract(chassis_params_df, project_constants_lst):
@@ -48,11 +49,8 @@ def switch_params_extract(chassis_params_df, project_constants_lst):
             print(info, end =" ")
             switch_params_current_lst = current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct, 
                                                                 chassis_params_sr, switch_params, switch_params_add)       
-            if dsop.list_is_empty(switch_params_current_lst):
-                meop.status_info('no data', max_title, len(info))
-            else:
-                meop.status_info('ok', max_title, len(info))                                
-
+            meop.show_collection_status(switch_params_current_lst, max_title, len(info))
+                               
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'switch_columns', 'switchshow_portinfo_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, switch_params_lst, switchshow_ports_lst)
@@ -101,27 +99,23 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
                 if re.search(fr'^\[Switch Configuration Begin *: *{i}\]$', line) and not collected['configshow']:
                     # when section is found corresponding collected dict values changed to True
                     collected['configshow'] = True
-                    
-                    while not re.search(fr'^\[Switch Configuration End : {i}\]$',line):
-                        line = file.readline()
-                        # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}                           
-                        # 'switch_configall_match' pattern #0
-                        if match_dct['configshowall_param']:
-                            switch_params_dct[match_dct['configshowall_param'].group(1).rstrip()] = match_dct['configshowall_param'].group(2).rstrip()              
-                        if not line:
-                            break
-                # config section end
+                    # add pattern depending on current switch_index
+                    pattern_dct['switch_configshow_end'] = re.compile(fr'^\[Switch Configuration End : {i}\]$', re.IGNORECASE)
+                    line = reop.extract_key_value_from_line(switch_params_dct, pattern_dct,  
+                                                            line, file, 
+                                                            extract_pattern_name='switch_configshow_param', 
+                                                            stop_pattern_name='switch_configshow_end')
+                # configshow section end
                 # switchshow section start
                 elif re.search(pattern_dct['switchcmd_switchshow'], line) and not collected['switchshow']:
                     collected['switchshow'] = True
-                    line = meop.goto_switch_context(ls_mode_on, line, file, i)
-                    line = switchshow_section_extract(switch_params_dct, switchshow_ports_lst, pattern_dct, chassis_info_lst, line, file, i)                    
+                    line = reop.goto_switch_context(ls_mode_on, line, file, i)
+                    line = switchshow_section_extract(switch_params_dct, switchshow_ports_lst, pattern_dct, 
+                                                        chassis_info_lst, line, file, i)                    
                 # switchshow section end
                 
         # additional values which need to be added to the switch params dictionary 
         # switch_params_add order ('configname', 'chassis_name', 'switch_index', 'ls_mode')
-        # values extracted in manual mode. if change values order change keys order in init.xlsx switch tab "params_add" column
         switch_params_add_constants = (*chassis_info_lst, str(i), ls_mode)
 
         if switch_params_dct:
@@ -129,7 +123,7 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
             dsop.update_dct(switch_params_add, switch_params_add_constants, switch_params_dct)                                                
             # creating list with REQUIRED chassis parameters for the current switch.
             # if no value in the switch_params_dct for the parameter then None is added
-            switch_params_current_lst = [switch_params_dct.get(switch_param, None) for switch_param in switch_params]
+            switch_params_current_lst = [switch_params_dct.get(switch_param) for switch_param in switch_params]
             # and appending this list to the list of all switches switch_params_fabric_lst            
             switch_params_lst.append(switch_params_current_lst)
         else:
@@ -138,8 +132,8 @@ def current_config_extract(switch_params_lst, switchshow_ports_lst, pattern_dct,
 
 
 def switchshow_section_extract(switch_params_dct, switchshow_ports_lst, pattern_dct, 
-                        chassis_info_lst, 
-                        line, file, switch_index):
+                                chassis_info_lst, 
+                                line, file, switch_index):
     """Function to extract switch parameters and switch port information from switchshow section"""
 
     while not re.search(pattern_dct['switchcmd_end'],line):

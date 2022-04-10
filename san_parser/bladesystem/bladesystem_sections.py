@@ -134,7 +134,7 @@ def interconnect_module_section(module_comprehensive_lst, pattern_dct,
             #             break
 
             line = file.readline()
-            line = reop.key_value_extract(module_dct, pattern_dct, 
+            line = reop.extract_key_value_from_line(module_dct, pattern_dct, 
                                             line, file, 
                                             extract_pattern_name='name_value_pair', stop_pattern_name='module_section_end', 
                                             first_line_skip=False) 

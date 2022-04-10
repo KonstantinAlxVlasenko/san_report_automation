@@ -136,8 +136,9 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                         if re.search(pattern_dct[switchcmd_pattern_name], line) and not collected[fcrdev_type]:
                             collected[fcrdev_type] = True                                    
                             line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                            line = reop.lines_extract(fcrdev_lst, pattern_dct, fcrouter_info_lst, 
-                                                        line, file, fcrdev_type)
+                            line = reop.extract_list_from_line(fcrdev_lst, pattern_dct, 
+                                                                line, file, fcrdev_type, 
+                                                                line_add_values=fcrouter_info_lst)
                     # fcrdevshow section end
                     # lsanzoneshow section start
                     if re.search(pattern_dct['switchcmd_lsanzoneshow'], line) and not collected['lsanzone']:
@@ -151,13 +152,17 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                 if re.search(pattern_dct['switchcmd_fcredgeshow'], line) and not collected['fcredge']:
                     collected['fcredge'] = True
                     line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                    line = reop.lines_extract(fcredge_lst, pattern_dct, fcrouter_info_lst, line, file, 'fcredgeshow')
+                    line = reop.extract_list_from_line(fcredge_lst, pattern_dct, 
+                                                        line, file, 'fcredgeshow',
+                                                        line_add_values=fcrouter_info_lst)
                 # fcredgeshow section end
                 # fcrxlateconfig section start
                 if re.search(pattern_dct['switchcmd_fcrxlateconfig'], line) and not collected['fcrxlateconfig']:
                     collected['fcrxlateconfig'] = True
                     line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                    line = reop.lines_extract(fcrxlateconfig_lst, pattern_dct, fcrouter_info_lst, line, file, 'fcrxlateconfig')
+                    line = reop.extract_list_from_line(fcrxlateconfig_lst, pattern_dct, 
+                                                        line, file, 'fcrxlateconfig',
+                                                        line_add_values=fcrouter_info_lst)
                 # fcrxlateconfig section end
                 # fcrresourceshow section start
                 if re.search(pattern_dct['switchcmd_fcrresourceshow'], line) and not collected['fcrresource']:

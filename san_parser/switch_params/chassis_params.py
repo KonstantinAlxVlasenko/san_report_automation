@@ -8,6 +8,8 @@ import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
+import utilities.regular_expression_operations as reop
+from itertools import chain
 
 
 def chassis_params_extract(all_config_data, project_constants_lst):
@@ -47,15 +49,10 @@ def chassis_params_extract(all_config_data, project_constants_lst):
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} chassis parameters'
             print(info, end =" ")
-            chassis_params_lst = current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_dct, 
+            chassis_params_current_lst = current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_dct, 
                                                                 switch_config_data, chassis_params, chassis_params_add)
-            meop.show_collection_status(chassis_params_lst, max_title, len(info))
-            
-            # if dsop.list_is_empty(chassis_params_lst):
-            #     meop.status_info('no data', max_title, len(info))
-            # else:
-            #     meop.status_info('ok', max_title, len(info))
-
+            meop.show_collection_status(chassis_params_current_lst, max_title, len(info))
+        
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'chassis_columns', 'chassis_slot_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, chassis_params_fabric_lst, slot_status_lst)
@@ -86,12 +83,12 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
     # dictionary to store all DISCOVERED chassis parameters
     # collecting data only for the chassis in current loop
     chassis_params_dct = {}
-    # sets and list to store parameters which could be joined in one group 
-    snmp_target_set = set()
-    syslog_set = set()
-    tz_lst = []
-    licenses = []
-    vf_id_set = set()
+    # lists to store parameters
+    snmp_target_lst = list()
+    syslog_lst = list()
+    license_lst = list()
+    vf_id_lst = list()
+    uptime, cpu_load, memory, flash = ('not found',)*4
 
     with open(sshow_file, encoding='utf-8', errors='ignore') as file:
         # check file until all groups of parameters extracted
@@ -103,37 +100,25 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
             if re.search(pattern_dct['switchcmd_configshow'], line) and not collected['configshow']:
                 # when section is found corresponding collected dict values changed to True
                 collected['configshow'] = True
-                line = configshow_section_extract(chassis_params_dct, snmp_target_set, syslog_set, tz_lst, 
-                                    pattern_dct, line, file)
+                line = configshow_section_extract(chassis_params_dct, snmp_target_lst, syslog_lst, tz_lst, 
+                                                    pattern_dct, line, file)
             # uptime section start
             elif re.search(pattern_dct['switchcmd_uptime'], line):
                 collected['uptime_cpu'] = True
-                uptime = None
-                cpu_load = None
-                while not re.search(pattern_dct['switchcmd_end'],line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # 'uptime_cpu_match' pattern #4 
-                    if match_dct['uptime_cpu']:
-                        uptime = match_dct['uptime_cpu'].group(1)
-                        if not uptime:
-                            uptime = '0'
-                        cpu_load = match_dct['uptime_cpu'].group(2)
-                    if not line:
-                        break
+                uptime_cpu_load_lst = []
+                line = reop.extract_list_from_line(uptime_cpu_load_lst, pattern_dct, line, file, 
+                                                    extract_pattern_name='uptime_cpu')
+                # uptime_cpu_load_lst is nested list
+                uptime, cpu_load, *_ = chain.from_iterable(uptime_cpu_load_lst)
+                if not uptime:
+                    uptime = '0'
             # uptime section end
             # memory section start
             elif re.search(pattern_dct['chassiscmd_meminfo'], line):
                 collected['memory'] = True
                 memory_dct = {}
-                while not re.search(pattern_dct['switchcmd_end'],line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # 'memory_match' pattern #5                    
-                    if match_dct['memory']:
-                        memory_dct[match_dct['memory'].group(1)] = match_dct['memory'].group(2)
-                    if not line:
-                        break
+                line = reop.extract_key_value_from_line(memory_dct, pattern_dct, line, file, 
+                                                        extract_pattern_name='memory')
                 # free_mem + buffers > 5% from total memory
                 # memory usage < 95% 
                 memory = round((1 - (int(memory_dct['MemFree']) + int(memory_dct['Buffers']))/int(memory_dct['MemTotal']))*100)
@@ -142,66 +127,37 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
             # flash section start
             elif re.search(pattern_dct['chassiscmd_flash'], line):
                 collected['flash'] = True
-                flash = None
-                while not re.search(pattern_dct['switchcmd_end'],line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # 'flash_match' pattern #6                    
-                    if match_dct['flash']:
-                        flash = match_dct['flash'].group(1)
-                    if not line:
-                        break
+                flash_lst = []
+                line = reop.extract_value_from_line(flash_lst, pattern_dct, line, file, 
+                                                    extract_pattern_name='flash')
+                flash, *_ = flash_lst
             # flash section end
             # ipaddrshow section start
             elif re.search(pattern_dct['switchcmd_ipaddrshow'], line):
                 collected['dhcp'] = True
-                while not re.search(pattern_dct['switchcmd_end'],line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # 'dhcp_match' pattern #7
-                    if match_dct['dhcp']:
-                        chassis_params_dct[match_dct['dhcp'].group(1).rstrip()] = match_dct['dhcp'].group(2)                                                      
-                    if not line:
-                        break  
+                line = reop.extract_key_value_from_line(chassis_params_dct, pattern_dct, line, file, 
+                                                        extract_pattern_name='dhcp')
             # ipaddrshow section end
             # licenses section start
             elif re.search(pattern_dct['chassiscmd_licenseshow'], line):
                 collected['licenses'] = True
-                while not re.search(pattern_dct['switchcmd_end'],line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # 'licenses_match' pattern #8
-                    if match_dct['licence']:
-                        licenses.append(match_dct['licence'].group(1))
-                    elif re.match('^No licenses installed.$', line):
-                        licenses = 'No licenses installed'                                                                            
-                    if not line:
-                        break  
+                line = reop.extract_value_from_line(license_lst, pattern_dct, line, file,
+                                                    extract_pattern_name='license',
+                                                    stop_pattern_name='chassiscmd_licenseshow_end')
             # licenses section end
             # LS indexes identification start
             elif re.search(pattern_dct['section_fabric'], line):
                 collected['vf_id'] = True
-                while not re.search(pattern_dct['switchcmd_dom'], line):       
-                    if re.search(pattern_dct['current_context'], line):
-                        id = re.match(pattern_dct['current_context'], line).group(1)
-                        vf_id_set.add(id)
-                        line = file.readline()
-                    else:
-                        line = file.readline()
-                        if not line:
-                            break
+                line = reop.extract_value_from_line(vf_id_lst, pattern_dct, line, file,                 
+                                                    extract_pattern_name='current_context', 
+                                                    stop_pattern_name='switchcmd_dom')
             # LS indexes identification end
             # slot_status section start   
             elif re.search(pattern_dct['chassiscmd_slotshow'], line) and not collected['slotshow']:
-                collected['slotshow'] = True                      
-                while not re.search(pattern_dct['switchcmd_end'], line):
-                    line = file.readline()
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    if match_dct['slot_status']:
-                        slot_status_line = dsop.line_to_list(pattern_dct['slot_status'], line, sshow_file, switch_name)
-                        slot_status_lst.append(slot_status_line)
-                    if not line:
-                        break                                
+                collected['slotshow'] = True
+                line = reop.extract_list_from_line(slot_status_lst, pattern_dct,  
+                                                    line, file, 
+                                                    extract_pattern_name='slot_status', line_add_values=[sshow_file, switch_name])
             # slot_status section end
             # director control section start
             # if switch is not director it doesn't contain chassiscmd_slotshow pattern
@@ -213,31 +169,24 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
                     collected['slotshow'] = True
             # director control section end                                         
 
-                                   
     # additional values which need to be added to the chassis params dictionary
-    # chassis_params_add order (configname, ams_maps_log, chassis_name, snmp_server, syslog_server, timezone_h:m, uptime, cpu_average_load, memory_usage, flash_usage, licenses)
-    # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
-    vf_id_lst = list(vf_id_set)
-    vf_id_lst.sort()
-    chassis_params_add_constants = (sshow_file, ams_maps_file, switch_name, vf_id_lst, snmp_target_set, 
-                                syslog_set, tz_lst, uptime, cpu_load, memory, flash, licenses)
+    vf_id_lst = sorted(set(vf_id_lst))
+    snmp_target_lst = sorted(set(snmp_target_lst))
+    syslog_lst = sorted(set(syslog_lst))
     
+    chassis_params_add_constants = (sshow_file, ams_maps_file, switch_name, vf_id_lst, snmp_target_lst, 
+                                syslog_lst, uptime, cpu_load, memory, flash, license_lst)
     # adding additional parameters and values to the chassis_params_switch_dct
-    for chassis_param_add, chassis_param_value in zip(chassis_params_add,  chassis_params_add_constants):
-        if chassis_param_value:                
-            if not isinstance(chassis_param_value, str):
-                s = ':' if chassis_param_add == 'timezone_h:m' else ', '
-                chassis_param_value = f'{s}'.join(chassis_param_value)
-            chassis_params_dct[chassis_param_add] = chassis_param_value
-    # creating list with REQUIRED chassis parameters for the current switch
-    # if no value in the chassis_params_dct for the parameter then None is added
-    chassis_params_lst = [chassis_params_dct.get(chassis_param) for chassis_param in chassis_params]  
-    # appending this list to the list of all switches chassis_params_fabric_lst
-    chassis_params_fabric_lst.append(chassis_params_lst)
-    return chassis_params_lst
+    dsop.update_dct(chassis_params_add, chassis_params_add_constants, chassis_params_dct)                                                
+    # creating list with REQUIRED chassis parameters for the current switch.
+    # if no value in the switch_params_dct for the parameter then None is added
+    chassis_params_current_lst = [chassis_params_dct.get(chassis_param) for chassis_param in chassis_params]
+    # and appending this list to the list of all switches switch_params_fabric_lst            
+    chassis_params_fabric_lst.append(chassis_params_current_lst)
+    return chassis_params_current_lst
 
 
-def configshow_section_extract(chassis_params_dct, snmp_target_set, syslog_set, tz_lst, 
+def configshow_section_extract(chassis_params_dct, snmp_target_lst, syslog_lst, tz_lst, 
                                 pattern_dct, line, file):
     """Function to extract chassis parameters from configshow section"""
 
@@ -247,18 +196,14 @@ def configshow_section_extract(chassis_params_dct, snmp_target_set, syslog_set, 
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()} 
         # 'chassis_param_match' pattern #0
         if match_dct['chassis_param']:
-            chassis_params_dct[match_dct['chassis_param'].group(1).rstrip()] = match_dct['chassis_param'].group(2)                            
+            chassis_params_dct[match_dct['chassis_param'].group(1).rstrip()] = match_dct['chassis_param'].group(2).rstrip()                            
         # for snmp and syslog data addresses are added to the coreesponding sets to avoid duplicates
         # 'snmp_target_match' pattern #1
         if match_dct['snmp_target'] and match_dct['snmp_target'].group(2) != '0.0.0.0':
-            snmp_target_set.add(match_dct['snmp_target'].group(2))
+            snmp_target_lst.append(match_dct['snmp_target'].group(2))
         # 'syslog_match' pattern #2
         if match_dct['syslog']:
-            syslog_set.add(match_dct['syslog'].group(2))
-        # for timezone extracted data added to the list for later concatenation
-        # 'tz_match' pattern #3
-        if match_dct['tz']:
-            tz_lst.append(match_dct['tz'].group(2))                                             
+            syslog_lst.append(match_dct['syslog'].group(2))                                         
         if not line:
             break
     return line

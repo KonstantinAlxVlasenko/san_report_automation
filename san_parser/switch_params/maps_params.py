@@ -59,13 +59,10 @@ def maps_params_extract(all_config_data, project_constants_lst):
                     info = ' '*16+f'{os.path.basename(ams_maps_file)} processing'
                     print(info, end =" ")
 
-                    maps_params_lst = current_config_extract(maps_params_fabric_lst, pattern_dct, 
+                    maps_params_current_lst = current_config_extract(maps_params_fabric_lst, pattern_dct, 
                                                             switch_name, sshow_file, ams_maps_file, 
                                                             maps_params, maps_params_add)
-                    if dsop.list_is_empty(maps_params_lst):
-                        meop.status_info('no data', max_title, len(info))
-                    else:
-                        meop.status_info('ok', max_title, len(info))
+                    meop.show_collection_status(maps_params_current_lst, max_title, len(info))
             else:
                 info = ' '*16+'No AMS_MAPS configuration found.'
                 print(info, end =" ")

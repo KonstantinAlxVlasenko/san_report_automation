@@ -89,7 +89,7 @@ def current_config_extract(errdump_lst, pattern_dct, chassis_params_sr):
             if re.search(pattern_dct['errdump_start'], line) and not collected['errdump']:
                 # when section is found corresponding collected dict values changed to True
                 collected['errdump'] = True
-                line, sw_errdump_lst = reop.lines_extract(errdump_lst, pattern_dct, chassis_info_lst, 
-                                                            line, file, 'errdump_message', save_local=True)
+                line, sw_errdump_lst = reop.extract_list_from_line(errdump_lst, pattern_dct, 
+                                                            line, file, 'errdump_message', save_local=True, line_add_values=chassis_info_lst)
             # errdump section end
     return sw_errdump_lst

@@ -34,27 +34,27 @@ def storage_params_extract(config_3par, system_params, system_params_add, patter
             # showsys section start
             if re.search(pattern_dct['showsys_header'], line) and not collected['system']:
                 collected['system'] = True
-                line = reop.key_value_extract(showsys_dct, pattern_dct, line, file, 
+                line = reop.extract_key_value_from_line(showsys_dct, pattern_dct, line, file, 
                                                 extract_pattern_name='parameter_value_pair', 
                                                 stop_pattern_name='section_end')
             # showsys section end
             # port section start
             elif re.search(pattern_dct['showport_header'], line) and not collected['port']:
                 collected['port'] = True
-                line = reop.lines_extract(port_lst, pattern_dct, configname, 
+                line = reop.extract_list_from_line(port_lst, pattern_dct, 
                                             line, file, 
                                             extract_pattern_name= 'port_line', 
                                             stop_pattern_name='section_end', 
-                                            first_line_skip=False)
+                                            first_line_skip=False, line_add_values=configname)
             # port section end
             # host section start
             elif re.search(pattern_dct['showhost_header'], line) and not collected['host']:
                 collected['host'] = True
-                line = reop.lines_extract(host_lst, pattern_dct, configname, 
+                line = reop.extract_list_from_line(host_lst, pattern_dct, 
                                             line, file, 
                                             extract_pattern_name= 'host_line', 
                                             stop_pattern_name='section_end', 
-                                            first_line_skip=False)
+                                            first_line_skip=False, line_add_values=configname)
             # host section end
             # ip_address section start
             elif re.search(pattern_dct['ip_address'], line) and not collected['ip']:
