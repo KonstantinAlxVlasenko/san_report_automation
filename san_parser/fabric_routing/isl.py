@@ -8,11 +8,10 @@ import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.regular_expression_operations as reop
 import utilities.servicefile_operations as sfop
 
-from .isl_sections import (islshow_section_extract, lsdbshow_section_extract,
-                           porttrunkarea_section_extract,
-                           trunkshow_section_extract)
+from .isl_sections import lsdbshow_section_extract
 
 
 def interswitch_connection_extract(switch_params_df, project_constants_lst):
@@ -56,9 +55,9 @@ def interswitch_connection_extract(switch_params_df, project_constants_lst):
             print(info, end =" ")   
 
             if switch_params_sr["switchMode"] == 'Native':
-                current_config_extract(isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst, pattern_dct, 
+                sw_isl_lst = current_config_extract(isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst, pattern_dct, 
                                         switch_params_sr, lsdb_params)
-                meop.status_info('ok', max_title, len(info))
+                meop.show_collection_status(sw_isl_lst, max_title, len(info))
             # if switch in Access Gateway mode then skip
             else:
                 meop.status_info('skip', max_title, len(info))        
@@ -66,6 +65,7 @@ def interswitch_connection_extract(switch_params_df, project_constants_lst):
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'isl_columns', 'trunk_columns', 'porttrunkarea_columns', 'lsdb_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst)
         isl_df, trunk_df, porttrunkarea_df, lsdb_df, *_ = data_lst    
+        fill_missing_values(isl_df, trunk_df, porttrunkarea_df)
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
     # verify if loaded data is empty after first iteration and replace information string with empty list
@@ -102,25 +102,50 @@ def current_config_extract(isl_lst, trunk_lst, porttrunkarea_lst, lsdb_lst, patt
                 # isl section start   
                 if re.search(pattern_dct['switchcmd_islshow'], line) and not collected['isl']:
                     collected['isl'] = True
-                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line = islshow_section_extract(isl_lst, pattern_dct, switch_info_lst, line, file)                              
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line, sw_isl_lst = reop.extract_list_from_line(isl_lst, pattern_dct, line, file, 
+                                                                    extract_pattern_name='islshow', 
+                                                                    save_local=True, line_add_values=switch_info_lst[:-1])                               
                 # isl section end
                 # trunk section start   
                 # switchcmd_trunkshow_comp
-                if re.search(pattern_dct['switchcmd_trunkshow'], line) and not collected['trunk']:
+                elif re.search(pattern_dct['switchcmd_trunkshow'], line) and not collected['trunk']:
                     collected['trunk'] = True
-                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line = trunkshow_section_extract(trunk_lst, pattern_dct, switch_info_lst, line, file)
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line = reop.extract_list_from_line(trunk_lst, pattern_dct, line, file, 
+                                                        extract_pattern_name='trunkshow', 
+                                                        first_line_skip=False, line_add_values=switch_info_lst[:-1])
                 # trunk section end
                 # porttrunkarea section start
-                if re.search(pattern_dct['switchcmd_trunkarea'], line) and not collected['trunkarea']:
+                elif re.search(pattern_dct['switchcmd_trunkarea'], line) and not collected['trunkarea']:
                     collected['trunkarea'] = True
-                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line = porttrunkarea_section_extract(porttrunkarea_lst, pattern_dct, switch_info_lst, line, file)
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line = reop.extract_list_from_line(porttrunkarea_lst, pattern_dct, line, file, 
+                                                        extract_pattern_name='porttrunkarea', 
+                                                        line_add_values=switch_info_lst[:6])
                 # porttrunkarea section end
                 # lsdb section start
-                if re.search(pattern_dct['switchcmd_lsdbshow'], line) and not collected['lsdb']:
+                elif re.search(pattern_dct['switchcmd_lsdbshow'], line) and not collected['lsdb']:
                     collected['lsdb'] = True
-                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
                     line = lsdbshow_section_extract(lsdb_lst, pattern_dct, switch_info_lst, lsdb_params, line, file)
                 # lsdb section end
+    return sw_isl_lst
+
+
+def fill_missing_values(isl_df, trunk_df, porttrunkarea_df):
+    """Function to fill missing values in dataframes:
+    slot for ENTP, MID and ENTRY switches,
+    trunking group number for slave trunk links"""
+
+    # fill missing trunk values with previous master trunk number
+    trunk_df['Trunking_GroupNumber'].fillna(method='ffill', inplace=True)
+    if isl_df['Parameters'].notna().any():
+        isl_df['Parameters'] = isl_df['Parameters'].str.replace(' +', ', ', regex=True)
+
+    mask_master_port_absent = porttrunkarea_df['Master_port'] == '--'
+    porttrunkarea_df.loc[mask_master_port_absent, 'Master_slot'] = '--'
+    for slot_column, port_column in [('Master_slot', 'Master_port'), ('slot', 'port')]:
+        mask_port_notna = porttrunkarea_df[port_column].str.contains('\d+', regex=True)
+        mask_slot_na = porttrunkarea_df[slot_column].isna()
+        porttrunkarea_df.loc[mask_slot_na & mask_port_notna, slot_column] = '0'

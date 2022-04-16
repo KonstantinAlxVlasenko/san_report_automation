@@ -11,6 +11,9 @@ def sfpshow_section_extract(sfpshow_lst, pattern_dct,
                             line, file):
     """Function to extract sfpshow information for the current context from the config file"""
     
+    # sfpshow for current switch
+    sw_sfpshow_lst = []
+
     while not re.search(pattern_dct['switchcmd_end'],line):
         line = file.readline()
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
@@ -48,7 +51,6 @@ def sfpshow_section_extract(sfpshow_lst, pattern_dct,
                     sfpshow_dct[match_dct['sfp_info'].group(1).rstrip()] = match_dct['sfp_info'].group(2).rstrip()                                        
                 if not line:
                     break
-                
             # additional values which need to be added to the dictionary with all DISCOVERED parameters during current loop iteration
             # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column                                   
             sfpshow_port_values = [*switch_info_lst, slot_num, port_num]                                       
@@ -56,7 +58,8 @@ def sfpshow_section_extract(sfpshow_lst, pattern_dct,
             dsop.update_dct(sfp_params_add, sfpshow_port_values, sfpshow_dct)               
             # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
             sfpshow_lst.append([sfpshow_dct.get(param) for param in sfp_params])
-    return line
+            sw_sfpshow_lst.append([sfpshow_dct.get(param) for param in sfp_params[6:]])
+    return line, sw_sfpshow_lst
 
 
 def portcfgshow_section_extract(portcfgshow_dct, pattern_dct,

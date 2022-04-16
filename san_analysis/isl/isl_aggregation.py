@@ -17,6 +17,7 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     fabric_clean_df = fabric_clean(fabric_labels_df)
     # add switchnames to trunk and fcredge DataFrames
     isl_df, trunk_df, fcredge_df = switchname_join(fabric_clean_df, isl_df, trunk_df, fcredge_df)
+
     # add portIndex to IFL
     fcredge_df = fcredge_portindex_join(switchshow_df, fcredge_df)
     # number IFL links

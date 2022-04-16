@@ -8,6 +8,7 @@ import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.regular_expression_operations as reop
 import utilities.servicefile_operations as sfop
 
 from .portcfg_sfp_sections import (portcfgshow_section_extract,
@@ -51,10 +52,9 @@ def portcfg_sfp_extract(switch_params_df, project_constants_lst):
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_params_sr["SwitchName"]} ports sfp and cfg'
             print(info, end =" ")                      
-            current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
+            sw_sfpshow_lst = current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
                                     switch_params_sr, sfp_params, sfp_params_add, portcfg_params)                     
-            meop.status_info('ok', max_title, len(info))
-
+            meop.show_collection_status(sw_sfpshow_lst, max_title, len(info))
         # after check all config files create list of lists from dictionary. 
         # each nested list contains portcfg information for one port
         for portcfg_param in portcfg_params:
@@ -99,16 +99,17 @@ def current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
             # sfpshow section start
             if re.search(pattern_dct['switchcmd_sfpshow'], line) and not collected['sfpshow']:
                 collected['sfpshow'] = True
-                line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                line = sfpshow_section_extract(sfpshow_lst, pattern_dct, 
+                line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                line, sw_sfpshow_lst = sfpshow_section_extract(sfpshow_lst, pattern_dct, 
                                                 switch_info_lst, sfp_params, sfp_params_add, 
                                                 line, file)
             # sfpshow section end
             # portcfgshow section start
             if re.search(pattern_dct['switchcmd_portcfgshow'], line) and not collected['portcfgshow']:
                 collected['portcfgshow'] = True
-                line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
                 line = portcfgshow_section_extract(portcfgshow_dct, pattern_dct, 
                                                     switch_info_lst, portcfg_params, 
                                                     line, file)
             # portcfgshow section end
+    return sw_sfpshow_lst

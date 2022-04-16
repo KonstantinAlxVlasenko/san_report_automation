@@ -37,8 +37,7 @@ def sensor_extract(chassis_params_df, project_constants_lst):
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('sensor', max_title)
 
-        # lists to store only REQUIRED infromation
-        # collecting data for all switches ports during looping
+        # nested list(s) to store required values of the module in defined order for all switches in SAN
         sensor_lst = []
 
         # checking each chassis for switch level parameters

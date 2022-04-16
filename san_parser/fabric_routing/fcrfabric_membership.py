@@ -41,8 +41,7 @@ def fcr_membership_extract(switch_params_df, project_constants_lst):
         # number of switches to check
         switch_num = len(switch_params_df.index)
            
-        # lists to store only REQUIRED switch parameters
-        # collecting data for all switches during looping
+        # nested list(s) to store required values of the module in defined order for all switches in SAN
         fcrfabric_lst = []
         fcrproxydev_lst = []
         fcrphydev_lst = []
@@ -68,9 +67,9 @@ def fcr_membership_extract(switch_params_df, project_constants_lst):
             print(info, end =" ")
 
             if switch_params_sr["FC_Router"] == 'ON':
-                current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, fcrxlateconfig_lst, 
-                                        pattern_dct, switch_params_sr, fcrresource_params)                                                            
-                meop.status_info('ok', max_title, len(info))
+                sw_fcredge_lst = current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, fcrxlateconfig_lst, 
+                                                        pattern_dct, switch_params_sr, fcrresource_params)                                                            
+                meop.show_collection_status(sw_fcredge_lst, max_title, len(info))
             else:
                 meop.status_info('skip', max_title, len(info))
 
@@ -137,7 +136,7 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                             collected[fcrdev_type] = True                                    
                             line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
                             line = reop.extract_list_from_line(fcrdev_lst, pattern_dct, 
-                                                                line, file, fcrdev_type, 
+                                                                line, file, extract_pattern_name=fcrdev_type, 
                                                                 line_add_values=fcrouter_info_lst)
                     # fcrdevshow section end
                     # lsanzoneshow section start
@@ -152,16 +151,16 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                 if re.search(pattern_dct['switchcmd_fcredgeshow'], line) and not collected['fcredge']:
                     collected['fcredge'] = True
                     line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                    line = reop.extract_list_from_line(fcredge_lst, pattern_dct, 
-                                                        line, file, 'fcredgeshow',
-                                                        line_add_values=fcrouter_info_lst)
+                    line, sw_fcredge_lst = reop.extract_list_from_line(fcredge_lst, pattern_dct, 
+                                                        line, file, extract_pattern_name='fcredgeshow',
+                                                        save_local=True, line_add_values=fcrouter_info_lst)
                 # fcredgeshow section end
                 # fcrxlateconfig section start
                 if re.search(pattern_dct['switchcmd_fcrxlateconfig'], line) and not collected['fcrxlateconfig']:
                     collected['fcrxlateconfig'] = True
                     line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
                     line = reop.extract_list_from_line(fcrxlateconfig_lst, pattern_dct, 
-                                                        line, file, 'fcrxlateconfig',
+                                                        line, file, extract_pattern_name='fcrxlateconfig',
                                                         line_add_values=fcrouter_info_lst)
                 # fcrxlateconfig section end
                 # fcrresourceshow section start
@@ -172,5 +171,6 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                                                             fcrouter_info_lst, fcrresource_params,
                                                             line, file)
                 # fcrresourceshow section end
+    return sw_fcredge_lst
 
 

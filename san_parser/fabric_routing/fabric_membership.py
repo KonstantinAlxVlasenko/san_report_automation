@@ -7,9 +7,10 @@ import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.regular_expression_operations as reop
 import utilities.servicefile_operations as sfop
 
-from .fabric_sections import agshow_section_extract, fabricshow_section_extract
+from .fabric_sections import agshow_section_extract
 
 
 def fabric_membership_extract(switch_params_df, project_constants_lst):
@@ -51,9 +52,9 @@ def fabric_membership_extract(switch_params_df, project_constants_lst):
             print(info, end =" ")
 
             if switch_params_sr["switchRole"] == 'Principal':
-                current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct, 
-                                    switch_params_sr, ag_params)
-                meop.status_info('ok', max_title, len(info))
+                sw_fabricshow_lst = current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct, 
+                                                                        switch_params_sr, ag_params)
+                meop.show_collection_status(sw_fabricshow_lst, max_title, len(info))
             else:
                 meop.status_info('skip', max_title, len(info))
         # convert list to DataFrame
@@ -101,12 +102,16 @@ def current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct,
                 if re.search(pattern_dct['switchcmd_fabricshow'], line):
                     # when section is found corresponding collected dict values changed to True
                     collected['fabricshow'] = True
-                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line = fabricshow_section_extract(fabricshow_lst, pattern_dct, principal_switch_lst, line, file)
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line, sw_fabricshow_lst = reop.extract_list_from_line(fabricshow_lst, pattern_dct, line, file, 
+                                                                                        extract_pattern_name='fabricshow', 
+                                                                                        save_local=True, line_add_values=principal_switch_lst)
                 # fabricshow section end
                 # ag_principal section start
                 elif re.search(pattern_dct['switchcmd_agshow'], line):
                     collected['ag_principal'] = True
-                    line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
                     line = agshow_section_extract(ag_principal_lst, pattern_dct, principal_switch_lst, ag_params, line, file)
                 # ag_principal section end
+
+    return sw_fabricshow_lst

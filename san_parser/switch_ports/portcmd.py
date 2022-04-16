@@ -47,9 +47,9 @@ def portcmd_extract(chassis_params_df, project_constants_lst):
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} switch portshow, portloginshow and statsshow'
             print(info, end =" ")
             # if chassis_params_sr["chassis_name"] == 's1bchwcmn05-fcsw1':
-            current_config_extract(portshow_lst, pattern_dct, 
+            sw_portcmd_lst = current_config_extract(portshow_lst, pattern_dct, 
                             chassis_params_sr, portcmd_params, portcmd_params_add)                  
-            meop.status_info('ok', max_title, len(info))
+            meop.show_collection_status(sw_portcmd_lst, max_title, len(info))
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'portcmd_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, portshow_lst)
@@ -77,7 +77,7 @@ def current_config_extract(portshow_lst, pattern_dct,
     
     # search control dictionary. continue to check sshow_file until all parameters groups are found
     collected = {'portshow': False}
-    
+
     with open(sshow_file, encoding='utf-8', errors='ignore') as file:
         # check file until all groups of parameters extracted
         while not all(collected.values()):
@@ -96,7 +96,8 @@ def current_config_extract(portshow_lst, pattern_dct,
                     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                     # portFcPortCmdShow section start
                     if match_dct['slot_port_number']:
-                        line = port_fc_portcmd_section_extract(portshow_lst, pattern_dct, chassis_info_lst, 
+                        line, sw_portcmd_lst = port_fc_portcmd_section_extract(portshow_lst, pattern_dct, chassis_info_lst, 
                                                         portcmd_params, portcmd_params_add, line, file)
                     # portFcPortCmdShow section end
             # sshow_port section end
+    return sw_portcmd_lst

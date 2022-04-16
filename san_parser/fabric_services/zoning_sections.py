@@ -13,7 +13,9 @@ def regular_zoning_section_extract(cfg_lst, zone_lst, alias_lst, cfg_effective_l
     # control flag to check if Effective configuration line passed
     effective = False
     # set to collect Defined configuration names 
-    defined_configs_set = set()  
+    defined_configs_set = set()
+    # list with zone names wihout principal sw details to  check if any zone is present
+    sw_zone_lst = []  
     # switchcmd_end_comp
     while not re.search(pattern_dct['switchcmd_end'], line):                               
         # dictionary with match names as keys and match result of current line with all imported regular expressions as values
@@ -59,6 +61,7 @@ def regular_zoning_section_extract(cfg_lst, zone_lst, alias_lst, cfg_effective_l
                     # for Defined configuration add zones to zone_lst
                     if not effective: 
                         zone_lst.append([*principal_switch_lst, zone_name, member])
+                        sw_zone_lst.append([zone_name, member])
                     # for Effective configuration add zones to zone_effective_lst
                     elif effective:
                         zone_effective_lst.append([*principal_switch_lst, zone_name, member])
@@ -70,6 +73,7 @@ def regular_zoning_section_extract(cfg_lst, zone_lst, alias_lst, cfg_effective_l
                     # for Defined configuration add zones to zone_lst
                     if not effective:
                         zone_lst.append([*principal_switch_lst, zone_name, member.rstrip(';')])
+                        sw_zone_lst.append([zone_name, member.rstrip(';')])
                     # for Effective configuration add zones to zone_effective_lst
                     elif effective:
                         zone_effective_lst.append([*principal_switch_lst, zone_name, member.rstrip(';')])
@@ -100,7 +104,7 @@ def regular_zoning_section_extract(cfg_lst, zone_lst, alias_lst, cfg_effective_l
             line = file.readline()                                           
         if not line:
             break
-    return line
+    return line, sw_zone_lst
 
 
 def peer_zoning_section_extract(peerzone_lst, peerzone_effective_lst, pattern_dct,

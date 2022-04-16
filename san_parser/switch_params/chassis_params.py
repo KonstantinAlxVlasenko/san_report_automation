@@ -11,6 +11,7 @@ import utilities.servicefile_operations as sfop
 import utilities.regular_expression_operations as reop
 from itertools import chain
 
+director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
 
 def chassis_params_extract(all_config_data, project_constants_lst):
     """Function to extract chassis parameters"""
@@ -35,7 +36,7 @@ def chassis_params_extract(all_config_data, project_constants_lst):
         switch_num = len(all_config_data)    
         # list to store only REQUIRED chassis parameters
         # collecting data for all chassis during looping 
-        chassis_params_fabric_lst = []
+        chassis_params_lst = []
         slot_status_lst = []
 
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('chassis', max_title)
@@ -49,27 +50,27 @@ def chassis_params_extract(all_config_data, project_constants_lst):
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} chassis parameters'
             print(info, end =" ")
-            chassis_params_current_lst = current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_dct, 
+            collection_status_control_lst = current_config_extract(chassis_params_lst, slot_status_lst, pattern_dct, 
                                                                 switch_config_data, chassis_params, chassis_params_add)
-            meop.show_collection_status(chassis_params_current_lst, max_title, len(info))
+            meop.show_collection_status(collection_status_control_lst, max_title, len(info))
         
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'chassis_columns', 'chassis_slot_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, chassis_params_fabric_lst, slot_status_lst)
-        chassis_params_fabric_df, *_ = data_lst
+        data_lst = dfop.list_to_dataframe(headers_lst, chassis_params_lst, slot_status_lst)
+        chassis_params_df, *_ = data_lst
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)     
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
-        chassis_params_fabric_df, *_ = data_lst
+        chassis_params_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-    return chassis_params_fabric_df
+    return chassis_params_df
 
 
-def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_dct, 
+def current_config_extract(chassis_params_lst, slot_status_lst, pattern_dct, 
                             switch_config_data, chassis_params, chassis_params_add):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
@@ -79,9 +80,9 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
     # search control dictionary. continue to check sshow_file until all parameters groups are found
     collected = {'configshow': False, 'uptime_cpu': False, 'flash': False, 'memory': False, 
                     'dhcp': False, 'licenses': False, 'vf_id': False, 'slotshow': False}
-    director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
+    
     # dictionary to store all DISCOVERED chassis parameters
-    # collecting data only for the chassis in current loop
+    # collecting data only for the chassis in the current loop
     chassis_params_dct = {}
     # lists to store parameters
     snmp_target_lst = list()
@@ -98,9 +99,8 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
                 break
             # configshow section start
             if re.search(pattern_dct['switchcmd_configshow'], line) and not collected['configshow']:
-                # when section is found corresponding collected dict values changed to True
                 collected['configshow'] = True
-                line = configshow_section_extract(chassis_params_dct, snmp_target_lst, syslog_lst, tz_lst, 
+                line = configshow_section_extract(chassis_params_dct, snmp_target_lst, syslog_lst, 
                                                     pattern_dct, line, file)
             # uptime section start
             elif re.search(pattern_dct['switchcmd_uptime'], line):
@@ -169,24 +169,25 @@ def current_config_extract(chassis_params_fabric_lst, slot_status_lst, pattern_d
                     collected['slotshow'] = True
             # director control section end                                         
 
-    # additional values which need to be added to the chassis params dictionary
+    # list to show collection status
+    collection_status_control_lst = [chassis_params_dct.get(chassis_param) for chassis_param in chassis_params]
+
+    # remove duplicates from list
     vf_id_lst = sorted(set(vf_id_lst))
     snmp_target_lst = sorted(set(snmp_target_lst))
     syslog_lst = sorted(set(syslog_lst))
-    
+    # additional values which need to be added to the chassis params dictionary
     chassis_params_add_constants = (sshow_file, ams_maps_file, switch_name, vf_id_lst, snmp_target_lst, 
-                                syslog_lst, uptime, cpu_load, memory, flash, license_lst)
+                                    syslog_lst, uptime, cpu_load, memory, flash, license_lst)
     # adding additional parameters and values to the chassis_params_switch_dct
     dsop.update_dct(chassis_params_add, chassis_params_add_constants, chassis_params_dct)                                                
-    # creating list with REQUIRED chassis parameters for the current switch.
+    # creating list with REQUIRED chassis parameters for the current chassis.
     # if no value in the switch_params_dct for the parameter then None is added
-    chassis_params_current_lst = [chassis_params_dct.get(chassis_param) for chassis_param in chassis_params]
-    # and appending this list to the list of all switches switch_params_fabric_lst            
-    chassis_params_fabric_lst.append(chassis_params_current_lst)
-    return chassis_params_current_lst
+    chassis_params_lst.append([chassis_params_dct.get(chassis_param) for chassis_param in chassis_params])
+    return collection_status_control_lst
 
 
-def configshow_section_extract(chassis_params_dct, snmp_target_lst, syslog_lst, tz_lst, 
+def configshow_section_extract(chassis_params_dct, snmp_target_lst, syslog_lst, 
                                 pattern_dct, line, file):
     """Function to extract chassis parameters from configshow section"""
 
@@ -197,7 +198,6 @@ def configshow_section_extract(chassis_params_dct, snmp_target_lst, syslog_lst, 
         # 'chassis_param_match' pattern #0
         if match_dct['chassis_param']:
             chassis_params_dct[match_dct['chassis_param'].group(1).rstrip()] = match_dct['chassis_param'].group(2).rstrip()                            
-        # for snmp and syslog data addresses are added to the coreesponding sets to avoid duplicates
         # 'snmp_target_match' pattern #1
         if match_dct['snmp_target'] and match_dct['snmp_target'].group(2) != '0.0.0.0':
             snmp_target_lst.append(match_dct['snmp_target'].group(2))

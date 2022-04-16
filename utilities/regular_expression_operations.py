@@ -44,12 +44,12 @@ def extract_list_from_line(global_filled_lst, pattern_dct,
                 extracted_line_lst = dsop.line_to_list(pattern_dct[extract_pattern_name], line, line_add_values)
             global_filled_lst.append(extracted_line_lst)
             if save_local:
-                local_filled_lst.append(extracted_line_lst)                                            
+                local_filled_lst.append(dsop.line_to_list(pattern_dct[extract_pattern_name], line))                                            
         if not first_line_skip:
             line = file.readline()
         if not line:
             break
-    return line, local_filled_lst if save_local else line
+    return (line, local_filled_lst) if save_local else line
 
 
 def extract_key_value_from_line(global_filled_dct, pattern_dct,  
@@ -86,7 +86,7 @@ def extract_key_value_from_line(global_filled_dct, pattern_dct,
             line = file.readline()
         if not line:
             break
-    return line, local_filled_dct if save_local else line
+    return (line, local_filled_dct) if save_local else line
 
 
 def extract_value_from_line(global_filled_lst, pattern_dct, 
@@ -117,4 +117,4 @@ def extract_value_from_line(global_filled_lst, pattern_dct,
             line = file.readline()
         if not line:
             break
-    return line, local_filled_lst if save_local else line
+    return (line, local_filled_lst) if save_local else line

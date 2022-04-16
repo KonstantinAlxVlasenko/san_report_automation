@@ -36,7 +36,7 @@ def maps_params_extract(all_config_data, project_constants_lst):
         switch_num = len(all_config_data)    
         # list to store only REQUIRED parameters
         # collecting data for all switches during looping 
-        maps_params_fabric_lst = []
+        maps_params_lst = []
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('maps', max_title)
         maps_params, maps_params_add = dfop.list_from_dataframe(re_pattern_df, 'maps_params', 'maps_params_add')
@@ -59,36 +59,35 @@ def maps_params_extract(all_config_data, project_constants_lst):
                     info = ' '*16+f'{os.path.basename(ams_maps_file)} processing'
                     print(info, end =" ")
 
-                    maps_params_current_lst = current_config_extract(maps_params_fabric_lst, pattern_dct, 
+                    collection_status_control_lst = current_config_extract(maps_params_lst, pattern_dct, 
                                                             switch_name, sshow_file, ams_maps_file, 
                                                             maps_params, maps_params_add)
-                    meop.show_collection_status(maps_params_current_lst, max_title, len(info))
+                    meop.show_collection_status(collection_status_control_lst, max_title, len(info))
             else:
                 info = ' '*16+'No AMS_MAPS configuration found.'
                 print(info, end =" ")
                 meop.status_info('skip', max_title, len(info))
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'maps_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, maps_params_fabric_lst)
-        maps_params_fabric_df, *_ = data_lst
+        data_lst = dfop.list_to_dataframe(headers_lst, maps_params_lst)
+        maps_params_df, *_ = data_lst
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)    
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
-        maps_params_fabric_df, *_ = data_lst
+        maps_params_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-    return maps_params_fabric_df
+    return maps_params_df
 
 
-def current_config_extract(maps_params_fabric_lst, pattern_dct, 
+def current_config_extract(maps_params_lst, pattern_dct, 
                             switch_name, sshow_file, ams_maps_file,
                             maps_params, maps_params_add):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
-
 
     # search control dictionary. continue to check file until all parameters groups are found
     collected = {'switch_index': False, 'global_dash': False}
@@ -112,24 +111,30 @@ def current_config_extract(maps_params_fabric_lst, pattern_dct,
             # global dashboard section start
             if re.search(pattern_dct['global_dashborad_header'], line):
                 collected['global_dash'] = True
-                while not re.search(pattern_dct['maps_end'],line):
-                    line = file.readline()
-                    # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                    match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                    # 'dashboard_match' pattern #1
-                    if match_dct['dashborad_param']:
-                        maps_params_dct[match_dct['dashborad_param'].group(1).rstrip()] = match_dct['dashborad_param'].group(2)                            
-                    # 'report_match' pattern #2
-                    if match_dct['summary_report']:
-                        maps_params_dct[match_dct['summary_report'].group(1).rstrip()] = match_dct['summary_report'].group(2)
-                    # 'no Fabric lic match' pattern #3
-                    if match_dct['no_lic']:
-                        for maps_param in maps_params[6:23]:
-                            maps_params_dct[maps_param] = 'No FV lic'                                         
-                    if not line:
-                        break
+                line = global_dash_section_extract(maps_params_dct, pattern_dct, line, file, maps_params)
+                
+                # while not re.search(pattern_dct['maps_end'],line):
+                #     line = file.readline()
+                #     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+                #     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+                #     # 'dashboard_match' pattern #1
+                #     if match_dct['dashborad_param']:
+                #         maps_params_dct[match_dct['dashborad_param'].group(1).rstrip()] = match_dct['dashborad_param'].group(2)                            
+                #     # 'report_match' pattern #2
+                #     if match_dct['summary_report']:
+                #         maps_params_dct[match_dct['summary_report'].group(1).rstrip()] = match_dct['summary_report'].group(2)
+                #     # 'no Fabric lic match' pattern #3
+                #     if match_dct['no_lic']:
+                #         for maps_param in maps_params[6:23]:
+                #             maps_params_dct[maps_param] = 'No FV lic'                                         
+                #     if not line:
+                #         break
+            
             # global dashboard section end
                 
+    # list to show collection status
+    collection_status_control_lst = [maps_params_dct.get(maps_param) for maps_param in maps_params]
+    
     # additional values which need to be added to the chassis params dictionary
     # chassis_params_add order (configname, ams_maps_config, chassis_name, switch_index)
     # values axtracted in manual mode. if change values order change keys order in init.xlsx "maps_params_add" column
@@ -139,7 +144,26 @@ def current_config_extract(maps_params_fabric_lst, pattern_dct,
     dsop.update_dct(maps_params_add, maps_params_add_constants, maps_params_dct)
     # creating list with REQUIRED maps parameters for the current switch
     # if no value in the maps_params_dct for the parameter then None is added
-    maps_params_lst = [maps_params_dct.get(maps_param) for maps_param in maps_params]  
-    # and appending this list to the list of all switches maps_params_fabric_lst
-    maps_params_fabric_lst.append(maps_params_lst)
-    return maps_params_lst
+    maps_params_lst.append([maps_params_dct.get(maps_param) for maps_param in maps_params])  
+    return collection_status_control_lst
+
+
+def global_dash_section_extract(maps_params_dct, pattern_dct, line, file, maps_params):
+
+    while not re.search(pattern_dct['maps_end'],line):
+        line = file.readline()
+        # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+        match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+        # 'dashboard_match' pattern #1
+        if match_dct['dashborad_param']:
+            maps_params_dct[match_dct['dashborad_param'].group(1).rstrip()] = match_dct['dashborad_param'].group(2)                            
+        # 'report_match' pattern #2
+        if match_dct['summary_report']:
+            maps_params_dct[match_dct['summary_report'].group(1).rstrip()] = match_dct['summary_report'].group(2)
+        # 'no Fabric lic match' pattern #3
+        if match_dct['no_lic']:
+            for maps_param in maps_params[6:23]:
+                maps_params_dct[maps_param] = 'No FV lic'                                         
+        if not line:
+            break
+    return line

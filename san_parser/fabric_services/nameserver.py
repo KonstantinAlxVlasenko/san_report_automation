@@ -10,11 +10,11 @@ import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
+import utilities.regular_expression_operations as reop
 
-from .nameserver_sections import (fdmi_section_extract,
-                                  nsportshow_section_extract,
-                                  nsshow_section_extract,
-                                  nsshow_file_extract)
+
+from .nameserver_sections import (nsshow_file_extract,
+                                  san_device_ports_section_extract)
 
 
 def connected_devices_extract(switch_params_df, project_constants_lst):
@@ -43,34 +43,27 @@ def connected_devices_extract(switch_params_df, project_constants_lst):
      
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('ns_fdmi', max_title)
-        fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add = dfop.list_from_dataframe(re_pattern_df, 'fdmi_params', 'fdmi_params_add', 
-                                                                                                        'nsshow_params', 'nsshow_params_add')
-        # lists to store only REQUIRED infromation
-        # collecting data for all switches ports during looping
+        fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add = \
+            dfop.list_from_dataframe(re_pattern_df, 'fdmi_params', 'fdmi_params_add', 'nsshow_params', 'nsshow_params_add')
+        # san fdmishow information
         fdmi_lst = []
-        # lists with local Name Server (NS) information 
+        # lists with local amd fabric Name Server (NS) information in san 
         nsshow_lst = []
         nscamshow_lst = []
         nsshow_manual_lst = []
-        # list with zoning enforcement
+        # list with zoning enforcement information (HARD WWN,  HARD PORT, etc) in san
         nsportshow_lst = []
         
-        # dictionary with required to collect nsshow data
-        # first element of list is regular expression pattern number, second - list to collect data
-        nsshow_dct = {'nsshow': ['switchcmd_nsshow', nsshow_lst], 'nscamshow': ['switchcmd_nscamshow', nscamshow_lst]}
-        
-        # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():       
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_params_sr["SwitchName"]} connected devices'
             print(info, end =" ")
-            current_config_extract(fdmi_lst, nsshow_dct, nsportshow_lst, pattern_dct, 
+            sw_fdmi_lst = current_config_extract(fdmi_lst, nsshow_lst, nscamshow_lst, nsportshow_lst, pattern_dct, 
                                     switch_params_sr,
-                                    fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add)                    
-            meop.status_info('ok', max_title, len(info))
+                                    fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add)                   
+            meop.show_collection_status(sw_fdmi_lst, max_title, len(info))
         
         nsshow_folder = report_requisites_sr['switch_nsshow_folder']
-
         # check files in dedicated nsshow folder
         if nsshow_folder:
             print('\nEXTRACTING NAMESERVER INFORMATION FROM DEDICATED FILES ...\n')
@@ -98,8 +91,8 @@ def connected_devices_extract(switch_params_df, project_constants_lst):
     return fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df
 
 
-def current_config_extract(fdmi_lst, nsshow_dct, nsportshow_lst, pattern_dct, 
-                            switch_params_sr,
+def current_config_extract(fdmi_lst, nsshow_lst, nscamshow_lst, nsportshow_lst, 
+                            pattern_dct, switch_params_sr,
                             fdmi_params, fdmi_params_add, nsshow_params, nsshow_params_add):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
@@ -125,29 +118,41 @@ def current_config_extract(fdmi_lst, nsshow_dct, nsportshow_lst, pattern_dct,
             # fdmi section start   
             if re.search(pattern_dct['switchcmd_fdmishow'], line) and not collected['fdmi']:
                 collected['fdmi'] = True
-                line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                line = fdmi_section_extract(fdmi_lst, pattern_dct, switch_info_lst, 
-                                            fdmi_params, fdmi_params_add, line, file)
+                line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                line, sw_fdmi_lst = san_device_ports_section_extract(fdmi_lst, pattern_dct, line, file, 
+                                                                        switch_info_lst, fdmi_params, fdmi_params_add,
+                                                                        device_start_pattern_name='wwpn', 
+                                                                        device_stop_pattern_name='wwpn_local',
+                                                                        cmd_stop_pattern_name='local_database')
             # fdmi section end
-            # ns_portshow section start   
-            if re.search(pattern_dct['switchcmd_nsportshow'], line) and not collected['nsportshow']:
+            # ns_portshow section start (zoning_enforcement information (HARD WWN,  HARD PORT, etc)) 
+            elif re.search(pattern_dct['switchcmd_nsportshow'], line) and not collected['nsportshow']:
                 collected['nsportshow'] = True
-                line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                line = nsportshow_section_extract(nsportshow_lst, pattern_dct, switch_info_lst, line, file)                                                   
+                line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                line, sw_nsportshow_lst = reop.extract_list_from_line(nsportshow_lst, pattern_dct, line, file, 
+                                                                        extract_pattern_name='ns_portshow', 
+                                                                        save_local=True, line_add_values=switch_info_lst[:6])                                               
             # ns_portshow section end      
-            # only switches in Native mode have Name Server service started 
+            # only switches in Native mode runing Name Server service 
             if switch_mode == 'Native':
-                # nsshow section start (nsshow_type: nsshow, nscamshow)                 
-                for nsshow_type in nsshow_dct.keys():
-                    # unpacking re number and list to save REQUIRED params
-                    ns_pattern_name, ns_lst = nsshow_dct[nsshow_type]
-                    # switchcmd_nsshow_comp, switchcmd_nscamshow_comp
-                    if re.search(pattern_dct[ns_pattern_name], line) and not collected[nsshow_type]:
-                        collected[nsshow_type] = True
-                        line = meop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                        line = nsshow_section_extract(ns_lst, pattern_dct, switch_info_lst, 
-                                                        nsshow_params, nsshow_params_add, line, file)
+                # nsshow section start
+                if re.search(pattern_dct['switchcmd_nsshow'], line) and not collected['nsshow']:
+                    collected['nsshow'] = True
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line, sw_nsshow_lst = san_device_ports_section_extract(nsshow_lst, pattern_dct, line, file, 
+                                                                            switch_info_lst, nsshow_params, nsshow_params_add,
+                                                                            device_start_pattern_name='port_pid', 
+                                                                            device_stop_pattern_name='pid_switchcmd_end')
+                # nscamshow section start
+                elif re.search(pattern_dct['switchcmd_nscamshow'], line) and not collected['nscamshow']:
+                    collected['nscamshow'] = True
+                    line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
+                    line, sw_nscamshow_lst = san_device_ports_section_extract(nscamshow_lst, pattern_dct, line, file, 
+                                                                                switch_info_lst, nsshow_params, nsshow_params_add,
+                                                                                device_start_pattern_name='port_pid', 
+                                                                                device_stop_pattern_name='pid_switchcmd_end')
                 # nsshow section end
+    return sw_fdmi_lst
 
 
 def nsshow_manual_files_extract(nsshow_files_lst, nsshow_manual_lst, pattern_dct,

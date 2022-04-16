@@ -10,6 +10,8 @@ def port_fc_portcmd_section_extract(portshow_lst, pattern_dct,
                             chassis_info_lst, portcmd_params, portcmd_params_add,
                             line, file):
 
+    # list to store port information of the current switch to show collection status 
+    sw_portcmd_lst = []
     # dictionary to store all DISCOVERED parameters
     # collecting data only for the chassis in current loop
     portcmd_dct = {}
@@ -54,7 +56,9 @@ def port_fc_portcmd_section_extract(portshow_lst, pattern_dct,
         dsop.update_dct(portcmd_params_add, chassis_slot_port_values, portcmd_dct)
         # adding data to the REQUIRED list for each device connected to the port 
         portshow_lst.append([portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params])
-    return line
+        # for current switch chassis information removed
+        sw_portcmd_lst.append([portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params[3:]])
+    return line, sw_portcmd_lst
 
 
 def portshow_section_extract(portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, 
