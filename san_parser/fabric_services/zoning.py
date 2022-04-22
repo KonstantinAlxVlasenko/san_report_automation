@@ -41,13 +41,13 @@ def zoning_extract(switch_params_df, project_constants_lst):
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('zoning', max_title) 
         
         # nested list(s) to store required values of the module in defined order for all switches in SAN
-        cfg_lst = []
-        zone_lst = []
-        alias_lst = []
-        cfg_effective_lst = []
-        zone_effective_lst = []
-        peerzone_effective_lst = []
-        peerzone_lst = []
+        san_cfg_lst = []
+        san_zone_lst = []
+        san_alias_lst = []
+        san_cfg_effective_lst = []
+        san_zone_effective_lst = []
+        san_peerzone_effective_lst = []
+        san_peerzone_lst = []
 
         # checking each switch for switch level parameters
         for i, switch_params_sr in switch_params_df.iterrows():       
@@ -56,9 +56,9 @@ def zoning_extract(switch_params_df, project_constants_lst):
             print(info, end =" ")
 
             if switch_params_sr["switchRole"] == 'Principal':
-                sw_zone_lst = current_config_extract(cfg_lst, zone_lst, peerzone_lst, alias_lst, 
-                                        cfg_effective_lst, zone_effective_lst, peerzone_effective_lst, 
-                                        pattern_dct, switch_params_sr)
+                sw_zone_lst = current_config_extract(san_cfg_lst, san_zone_lst, san_peerzone_lst, san_alias_lst, 
+                                                        san_cfg_effective_lst, san_zone_effective_lst, san_peerzone_effective_lst, 
+                                                        pattern_dct, switch_params_sr)
                 meop.show_collection_status(sw_zone_lst, max_title, len(info))
             else:
                 meop.status_info('skip', max_title, len(info))
@@ -66,9 +66,9 @@ def zoning_extract(switch_params_df, project_constants_lst):
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'cfg_columns', 'zone_columns', 'alias_columns',
                                                                 'cfg_effective_columns', 'zone_effective_columns',
                                                                 'peerzone_columns', 'peerzone_effective_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, cfg_lst, zone_lst, alias_lst, 
-                                                        cfg_effective_lst, zone_effective_lst,
-                                                        peerzone_lst, peerzone_effective_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_cfg_lst, san_zone_lst, san_alias_lst, 
+                                                        san_cfg_effective_lst, san_zone_effective_lst,
+                                                        san_peerzone_lst, san_peerzone_effective_lst)
         cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df, *_ = data_lst
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
@@ -82,9 +82,9 @@ def zoning_extract(switch_params_df, project_constants_lst):
     return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df
 
 
-def current_config_extract(cfg_lst, zone_lst, peerzone_lst, alias_lst, 
-                            cfg_effective_lst, zone_effective_lst, peerzone_effective_lst, pattern_dct, 
-                            switch_params_sr):
+def current_config_extract(san_cfg_lst, san_zone_lst, san_peerzone_lst, san_alias_lst, 
+                            san_cfg_effective_lst, san_zone_effective_lst, san_peerzone_effective_lst, 
+                            pattern_dct, switch_params_sr):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
 
@@ -111,17 +111,16 @@ def current_config_extract(cfg_lst, zone_lst, peerzone_lst, alias_lst,
                 if re.search(pattern_dct['switchcmd_cfgshow'], line) and not collected['cfgshow']:
                     collected['cfgshow'] = True
                     line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line, sw_zone_lst = regular_zoning_section_extract(cfg_lst, zone_lst, alias_lst, 
-                                                            cfg_effective_lst, zone_effective_lst, pattern_dct,
-                                                            principal_switch_lst, 
-                                                            line, file) 
+                    line, sw_zone_lst = regular_zoning_section_extract(san_cfg_lst, san_zone_lst, san_alias_lst, 
+                                                                        san_cfg_effective_lst, san_zone_effective_lst, pattern_dct,
+                                                                        principal_switch_lst, line, file) 
                 # cfgshow section end
                 # peerzone section start
                 elif re.search(pattern_dct['switchcmd_peerzone'], line) and not collected['peerzone']:
                     # when section is found corresponding collected dict values changed to True
                     collected['peerzone'] = True
                     line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line = peer_zoning_section_extract(peerzone_lst, peerzone_effective_lst, pattern_dct,
+                    line = peer_zoning_section_extract(san_peerzone_lst, san_peerzone_effective_lst, pattern_dct,
                                                         principal_switch_lst, line, file)
                 # peerzone section end
     return sw_zone_lst

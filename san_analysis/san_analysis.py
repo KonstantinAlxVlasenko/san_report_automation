@@ -22,7 +22,7 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
     save data to database and report file"""
 
 
-    chassis_params_df, maps_params_df, \
+    chassis_params_df, slot_status_df, maps_params_df, \
         switch_params_df, switchshow_ports_df,\
             fabricshow_df, ag_principal_df, \
                 portshow_df, sfpshow_df, portcfgshow_df,\

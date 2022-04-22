@@ -6,7 +6,7 @@ import utilities.data_structure_operations as dsop
 import utilities.regular_expression_operations as reop
 
 
-def lsdbshow_section_extract(lsdb_lst, pattern_dct, switch_info_lst, lsdb_params, line, file):
+def lsdbshow_section_extract(san_lsdb_lst, pattern_dct, switch_info_lst, lsdb_params, line, file):
     """Function to extract lsdbshow (link cost) information for the current context from the config file"""
 
     while not re.search(pattern_dct['switchcmd_end'],line):  
@@ -29,7 +29,7 @@ def lsdbshow_section_extract(lsdb_lst, pattern_dct, switch_info_lst, lsdb_params
             # extract link information
             lsdb_link_lst = dsop.line_to_list(pattern_dct['lsdb_link'], line)
             # add link information to the global list with current switch and lsdb information 
-            lsdb_lst.append([*switch_info_lst[:6], *domain_self_tag_lst,*lsdb_param_lst, *lsdb_link_lst])
+            san_lsdb_lst.append([*switch_info_lst[:6], *domain_self_tag_lst,*lsdb_param_lst, *lsdb_link_lst])
             line = file.readline()
         else:
             line = file.readline()

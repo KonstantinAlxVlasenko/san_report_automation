@@ -2,7 +2,6 @@
 checking if each step is required to run"""
 
 
-import re
 from functools import wraps
 
 import utilities.data_structure_operations as dsop
@@ -27,6 +26,18 @@ def show_collection_status(collected_lst, max_title, len_info_string):
         status_info('no data', max_title, len_info_string)
     else:
         status_info('ok', max_title, len_info_string)
+
+
+def show_module_info(project_steps_df, data_names, data_name_id=0):
+    """Function to show module title from project_steps_df"""
+
+    print(f'\n\n{project_steps_df.loc[data_names[data_name_id], "module_info"]}\n')
+
+
+def show_step_info(project_steps_df, data_names, data_name_id=0):
+    """Function to show step information of the module from project_steps_df"""
+
+    print(f'\n{project_steps_df.loc[data_names[data_name_id], "step_info"]}\n')
 
 
 def display_status(info, max_title):

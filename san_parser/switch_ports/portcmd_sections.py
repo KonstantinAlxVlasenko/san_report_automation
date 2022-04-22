@@ -6,15 +6,15 @@ import re
 import utilities.data_structure_operations as dsop
 
 
-def port_fc_portcmd_section_extract(portshow_lst, pattern_dct, 
-                            chassis_info_lst, portcmd_params, portcmd_params_add,
-                            line, file):
+def port_fc_portcmd_section_extract(san_portshow_lst, pattern_dct, 
+                                    chassis_info_lst, portcmd_params, portcmd_params_add,
+                                    line, file):
 
     # list to store port information of the current switch to show collection status 
     sw_portcmd_lst = []
     # dictionary to store all DISCOVERED parameters
     # collecting data only for the chassis in current loop
-    portcmd_dct = {}
+    sw_portcmd_dct = {}
     portphys_portscn_details = []
     # connected devices wwns in portshow section
     connected_wwn_lst = []
@@ -30,11 +30,11 @@ def port_fc_portcmd_section_extract(portshow_lst, pattern_dct,
     # portshow section start pattern #1
     if match_dct['portshow_port_index']:
         port_index = match_dct['portshow_port_index'].group(1)
-        line = portshow_section_extract(portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, pattern_dct, line, file)
+        line = portshow_section_extract(sw_portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, pattern_dct, line, file)
     # portshow section end
     # portlogin section start                                      
     if re.match(fr'^portloginshow +{int(port_index)}$', line):
-        line = portlogin_section_extract(portid_wwn_lst, portcmd_dct, connected_wwn_lst, port_index, 
+        line = portlogin_section_extract(portid_wwn_lst, sw_portcmd_dct, connected_wwn_lst, port_index, 
                             pattern_dct, line, file)
     # portlogin section end
     while not re.match(fr'^portstatsshow +{int(port_index)}$', line):
@@ -43,7 +43,7 @@ def port_fc_portcmd_section_extract(portshow_lst, pattern_dct,
             break
     # portstatsshow section start
     if re.match(fr'^portstatsshow +{int(port_index)}$', line):
-        line = portstats_section_extract(portcmd_dct, port_index, pattern_dct, line, file)
+        line = portstats_section_extract(sw_portcmd_dct, port_index, pattern_dct, line, file)
     # portstatsshow section end       
 
     portphys_portscn_details = [value if value else None for value in portphys_portscn_details]
@@ -53,15 +53,15 @@ def port_fc_portcmd_section_extract(portshow_lst, pattern_dct,
     for port_id, connected_wwn in portid_wwn_lst:                            
         chassis_slot_port_values = [*chassis_info_lst, port_index, *slot_port_lst, port_id, connected_wwn, *portphys_portscn_details]
         # adding or changing data from chassis_slot_port_values to the DISCOVERED dictionary
-        dsop.update_dct(portcmd_params_add, chassis_slot_port_values, portcmd_dct)
+        dsop.update_dct(portcmd_params_add, chassis_slot_port_values, sw_portcmd_dct)
         # adding data to the REQUIRED list for each device connected to the port 
-        portshow_lst.append([portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params])
+        san_portshow_lst.append([sw_portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params])
         # for current switch chassis information removed
-        sw_portcmd_lst.append([portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params[3:]])
+        sw_portcmd_lst.append([sw_portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params[3:]])
     return line, sw_portcmd_lst
 
 
-def portshow_section_extract(portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, 
+def portshow_section_extract(sw_portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, 
                         pattern_dct, line, file):
     """Function to extract portshow information for the current port_index"""
 
@@ -72,7 +72,7 @@ def portshow_section_extract(portcmd_dct, connected_wwn_lst, portphys_portscn_de
         if match_dct['portphys_and_portscn']:
             matched_values_lst = dsop.line_to_list(pattern_dct['portphys_and_portscn'], line)
             for k, v in zip(matched_values_lst[::3], matched_values_lst[1::3]):
-                    portcmd_dct[k] = v
+                    sw_portcmd_dct[k] = v
                     portphys_portscn_details = [matched_values_lst[2], matched_values_lst[5]]
             continue
         # single param_name have 1 or 2 values has to AFTER portphys_and_portscn
@@ -81,33 +81,33 @@ def portshow_section_extract(portcmd_dct, connected_wwn_lst, portphys_portscn_de
             param_name = matched_values_lst[0]
             param_value = matched_values_lst[1]
             portphys_portscn_details.append(matched_values_lst[2])
-            portcmd_dct[param_name] = param_value
+            sw_portcmd_dct[param_name] = param_value
             continue
         # two or three param_names with single num value
         elif match_dct['portshow_err_stats']:
             matched_values_lst = dsop.line_to_list(pattern_dct['portshow_err_stats'], line)
             for k, v in zip(matched_values_lst[::2], matched_values_lst[1::2]):
                 if k:
-                    portcmd_dct[k] = v
+                    sw_portcmd_dct[k] = v
             continue
         # device_connected_wwn_match pattern #7
         elif match_dct['device_connected_wwn']:
             connected_wwn = dsop.line_to_list(pattern_dct['device_connected_wwn'], line)
-            connected_wwn_lst.append((portcmd_dct.get('portId'), connected_wwn))
+            connected_wwn_lst.append((sw_portcmd_dct.get('portId'), connected_wwn))
             continue                                    
         # param_name with single value without spaces
         for pattern_name in ['single_param_complete_line', 'portstate', 'portwwn', 'single_param_single_value']:
             if match_dct[pattern_name]:
                 param_name = match_dct[pattern_name].group(1).rstrip()
                 param_value = match_dct[pattern_name].group(2).rstrip()
-                portcmd_dct[param_name] = param_value
+                sw_portcmd_dct[param_name] = param_value
                 break
         if not line:
             break
     return line
 
 
-def portlogin_section_extract(portid_wwn_lst, portcmd_dct, connected_wwn_lst, port_index, 
+def portlogin_section_extract(portid_wwn_lst, sw_portcmd_dct, connected_wwn_lst, port_index, 
                         pattern_dct, line, file):
     """Function to extract portloginshow information for the current port_index"""
 
@@ -130,11 +130,11 @@ def portlogin_section_extract(portid_wwn_lst, portcmd_dct, connected_wwn_lst, po
         portid_wwn_lst = connected_wwn_lst.copy()
     # adding port_id and None wwn if no device is connected or slave trunk link
     else:
-        portid_wwn_lst.append([portcmd_dct.get('portId'), None])
+        portid_wwn_lst.append([sw_portcmd_dct.get('portId'), None])
     return line
 
 
-def portstats_section_extract(portcmd_dct, port_index, pattern_dct, line, file):
+def portstats_section_extract(sw_portcmd_dct, port_index, pattern_dct, line, file):
     """Function to extract portstats information for the current port_index"""
 
     while not re.search(fr'^(portstats64show|portcamshow) +{int(port_index)}$', line):
@@ -142,14 +142,14 @@ def portstats_section_extract(portcmd_dct, port_index, pattern_dct, line, file):
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
         # port information without virtual channel numbers pattern #4
         if match_dct['portstats']:
-            portcmd_dct[match_dct['portstats'].group(1).rstrip()] = match_dct['portstats'].group(2)
+            sw_portcmd_dct[match_dct['portstats'].group(1).rstrip()] = match_dct['portstats'].group(2)
         # port information with virtual channel numbers pattern #5
         elif match_dct['portstats_vc']:
             line_values = dsop.line_to_list(pattern_dct['portstats_vc'], line)
             param_name, start_vc = line_values[0:2]
             for i, value in enumerate(line_values[3:]):
                 param_name_vc = param_name + '_' + str(int(start_vc) + i)
-                portcmd_dct[param_name_vc] = value
+                sw_portcmd_dct[param_name_vc] = value
         if not line:
             break
     return line

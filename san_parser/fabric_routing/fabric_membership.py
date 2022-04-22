@@ -38,8 +38,8 @@ def fabric_membership_extract(switch_params_df, project_constants_lst):
         switch_num = len(switch_params_df.index)
         # list to store only REQUIRED switch parameters
         # collecting data for all switches during looping
-        fabricshow_lst = []
-        ag_principal_lst = []    
+        san_fabricshow_lst = []
+        san_ag_principal_lst = []    
         
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('fabric', max_title)
@@ -52,14 +52,14 @@ def fabric_membership_extract(switch_params_df, project_constants_lst):
             print(info, end =" ")
 
             if switch_params_sr["switchRole"] == 'Principal':
-                sw_fabricshow_lst = current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct, 
+                sw_fabricshow_lst = current_config_extract(san_fabricshow_lst, san_ag_principal_lst, pattern_dct, 
                                                                         switch_params_sr, ag_params)
                 meop.show_collection_status(sw_fabricshow_lst, max_title, len(info))
             else:
                 meop.status_info('skip', max_title, len(info))
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fabric_columns', 'ag_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, fabricshow_lst, ag_principal_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_fabricshow_lst, san_ag_principal_lst)
         fabricshow_df, ag_principal_df, *_ = data_lst    
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
@@ -72,7 +72,7 @@ def fabric_membership_extract(switch_params_df, project_constants_lst):
     return fabricshow_df, ag_principal_df
 
 
-def current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct, 
+def current_config_extract(san_fabricshow_lst, san_ag_principal_lst, pattern_dct, 
                             switch_params_sr, ag_params):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
@@ -103,7 +103,7 @@ def current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct,
                     # when section is found corresponding collected dict values changed to True
                     collected['fabricshow'] = True
                     line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line, sw_fabricshow_lst = reop.extract_list_from_line(fabricshow_lst, pattern_dct, line, file, 
+                    line, sw_fabricshow_lst = reop.extract_list_from_line(san_fabricshow_lst, pattern_dct, line, file, 
                                                                                         extract_pattern_name='fabricshow', 
                                                                                         save_local=True, line_add_values=principal_switch_lst)
                 # fabricshow section end
@@ -111,7 +111,7 @@ def current_config_extract(fabricshow_lst, ag_principal_lst, pattern_dct,
                 elif re.search(pattern_dct['switchcmd_agshow'], line):
                     collected['ag_principal'] = True
                     line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                    line = agshow_section_extract(ag_principal_lst, pattern_dct, principal_switch_lst, ag_params, line, file)
+                    line = agshow_section_extract(san_ag_principal_lst, pattern_dct, principal_switch_lst, ag_params, line, file)
                 # ag_principal section end
 
     return sw_fabricshow_lst

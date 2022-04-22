@@ -43,7 +43,7 @@ def san_device_ports_section_extract(san_device_ports_lst, pattern_dct, line, fi
     return line, switch_device_ports_lst
 
 
-def nsshow_file_extract(nsshow_file, nsshow_manual_lst, pattern_dct, nsshow_params, nsshow_params_add):
+def nsshow_file_extract(nsshow_file, san_nsshow_manual_lst, pattern_dct, nsshow_params, nsshow_params_add):
     """Function to extract NameServer information from dedicated text file"""               
     
     with open(nsshow_file, encoding='utf-8', errors='ignore') as file:
@@ -64,7 +64,7 @@ def nsshow_file_extract(nsshow_file, nsshow_manual_lst, pattern_dct, nsshow_para
                 # adding additional parameters and values to the fdmi_dct
                 dsop.update_dct(nsshow_params_add[6:], pid, nsshow_port_dct)               
                 # appending list with only REQUIRED port info for the current loop iteration to the list with all fabrics port info
-                nsshow_manual_lst.append([nsshow_port_dct.get(nsshow_param) for nsshow_param in nsshow_params])
+                san_nsshow_manual_lst.append([nsshow_port_dct.get(nsshow_param) for nsshow_param in nsshow_params])
             else:
                 line = file.readline()
             if not line:

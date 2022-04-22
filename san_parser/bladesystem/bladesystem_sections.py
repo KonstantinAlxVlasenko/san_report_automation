@@ -31,20 +31,26 @@ def vc_enclosure_section(pattern_dct, file, enclosure_params):
 
     line = file.readline()
     enclosure_total_dct = {}
-    while not re.search(r'^ +.+?INFORMATION', line):
+    while not re.search(pattern_dct['vc_information_header'], line):
         line = file.readline()
-        if re.match(r'ID +: +enc\d+', line):
+        if re.match(pattern_dct['vc_enclosure_id'], line):
             enclosure_current_dct = {}
-            while not re.search(r'Part Number',line):
-                # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-                match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-                # name_value_pair_match
-                if match_dct['name_value_pair']:
-                    result = match_dct['name_value_pair']
-                    enclosure_current_dct[result.group(1).strip()] = result.group(2).strip()
-                line = file.readline()      
-                if not line:
-                    break
+            line = reop.extract_key_value_from_line(enclosure_current_dct, pattern_dct, line, file, 
+                                                    extract_pattern_name='name_value_pair', stop_pattern_name='part_number_line', 
+                                                    first_line_skip=False)
+
+
+            # while not re.search(r'Part Number',line):
+            #     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
+            #     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
+            #     # name_value_pair_match
+            #     if match_dct['name_value_pair']:
+            #         result = match_dct['name_value_pair']
+            #         enclosure_current_dct[result.group(1).strip()] = result.group(2).strip()
+            #     line = file.readline()      
+            #     if not line:
+            #         break
+            
             # rename Description key to Enclosure Type key for VC
             if enclosure_current_dct.get('Description'):
                 enclosure_current_dct['Enclosure Type'] = enclosure_current_dct.pop('Description')
@@ -55,7 +61,7 @@ def vc_enclosure_section(pattern_dct, file, enclosure_params):
     return enclosure_total_dct
 
 
-def vc_fabric_connection_section(blade_vc_comprehensive_lst, enclosure_vc_lst, 
+def vc_fabric_connection_section(san_blade_vc_lst, enclosure_vc_lst, 
                                     enclosure_total_dct, pattern_dct, file):
     """Function to extract vc fabric information from  vc>show all *"""
     
@@ -71,7 +77,7 @@ def vc_fabric_connection_section(blade_vc_comprehensive_lst, enclosure_vc_lst,
             vc_port = [*enclosure_lst, *vc_port]
 
             enclosure_vc_lst.append(vc_port)
-            blade_vc_comprehensive_lst.append(vc_port)
+            san_blade_vc_lst.append(vc_port)
             line = file.readline()
         else:
             line = file.readline()
@@ -96,8 +102,8 @@ def active_oa_section(file, pattern_dct):
             if not line:
                 break
 
-def interconnect_module_section(module_comprehensive_lst, pattern_dct,
-                        file, enclosure_lst, oa_ip, module_num, module_params):
+def interconnect_module_section(san_module_lst, pattern_dct,
+                                file, enclosure_lst, oa_ip, module_num, module_params):
     """Function to extract interconnect modules from oa>show all"""
 
     line = file.readline()
@@ -113,53 +119,16 @@ def interconnect_module_section(module_comprehensive_lst, pattern_dct,
             module_slot = module.group(1)
             # interconnect module type (Ethernet, FC)
             module_type = module.group(2).rstrip()
-            # line = file.readline()
-            # # module_section_end_comp
-            # while not re.search(pattern_dct['module_section_end'], line):
-            #     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-            #     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-            #     # name_value_pair_match
-            #     if match_dct['name_value_pair']:
-            #         result = match_dct['name_value_pair']
-            #         name = result.group(1).strip()
-            #         value = result.group(2).strip()
-            #         # if value is empty string use None
-            #         if value == '':
-            #             value = None
-            #         module_dct[name] = value
-            #         line = file.readline()
-            #     else:
-            #         line = file.readline()
-            #         if not line:
-            #             break
-
+            
             line = file.readline()
-            line = reop.extract_key_value_from_line(module_dct, pattern_dct, 
-                                            line, file, 
-                                            extract_pattern_name='name_value_pair', stop_pattern_name='module_section_end', 
-                                            first_line_skip=False) 
-
-            # while not re.search(pattern_dct['module_section_end'], line):
-            #     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-            #     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-            #     # name_value_pair_match
-            #     if match_dct['name_value_pair']:
-            #         result = match_dct['name_value_pair']
-            #         name = result.group(1).strip()
-            #         value = result.group(2).strip()
-            #         # if value is empty string use None
-            #         if value == '':
-            #             value = None
-            #         module_dct[name] = value
-            #     line = file.readline()
-            #     if not line:
-            #         break
-
+            line = reop.extract_key_value_from_line(module_dct, pattern_dct, line, file, 
+                                                        extract_pattern_name='name_value_pair', stop_pattern_name='module_section_end', 
+                                                        first_line_skip=False) 
             # creating list with REQUIRED interconnect module information only
             module_lst = [module_dct.get(param) for param in module_params]
             # add current module information to list containing all modules infromation
             # oa_ip added as None and extracted later in the file
-            module_comprehensive_lst.append([*enclosure_lst, oa_ip, module_slot, module_type, *module_lst])
+            san_module_lst.append([*enclosure_lst, oa_ip, module_slot, module_type, *module_lst])
             # based on module's number oa_ip is added to module_comprehensive_lst after extraction
             module_num += 1
         else:
@@ -169,8 +138,8 @@ def interconnect_module_section(module_comprehensive_lst, pattern_dct,
     return module_num
 
 
-def server_hba_flb_section(blades_comprehensive_lst, blade_lst, pattern_dct,
-                        file, enclosure_lst, blade_params):
+def server_hba_flb_section(san_blade_lst, blade_lst, pattern_dct,
+                            file, enclosure_lst, blade_params):
     """Function to extract blade server, hba and flb from oa>show all"""
                 
     line = file.readline()
@@ -230,7 +199,6 @@ def server_hba_flb_section(blades_comprehensive_lst, blade_lst, pattern_dct,
                             result = match_dct['flb_wwn']
                             wwnp = result.group(1)
                             hba_lst.append([flex_description, flex_model, wwnp])
-
                         line = file.readline()
                 # flex flb hba section end
                 # blade server section start
@@ -261,10 +229,10 @@ def server_hba_flb_section(blades_comprehensive_lst, blade_lst, pattern_dct,
             if len(hba_lst):
                 # add line for each hba to blades_comprehensive_lst
                 for hba in hba_lst:
-                    blades_comprehensive_lst.append([*enclosure_lst, *blade_lst, *hba])
+                    san_blade_lst.append([*enclosure_lst, *blade_lst, *hba])
             # if no nba add one line with enclosure and blade info only
             else:
-                blades_comprehensive_lst.append([*enclosure_lst, *blade_lst, None, None])
+                san_blade_lst.append([*enclosure_lst, *blade_lst, None, None])
         # if no blade_server_num_match found in >SHOW SERVER INFO ALL section than next line
         else:
             line = file.readline()

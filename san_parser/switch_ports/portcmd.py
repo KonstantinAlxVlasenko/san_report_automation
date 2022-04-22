@@ -34,9 +34,8 @@ def portcmd_extract(chassis_params_df, project_constants_lst):
         
         switch_num = len(chassis_params_df.index)
 
-        # list to store only REQUIRED switch parameters
-        # collecting data for all switches during looping       
-        portshow_lst = []  
+        # nested list(s) to store required values of the module in defined order for all switches in SAN       
+        san_portshow_lst = []  
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('portcmd', max_title)
         portcmd_params, portcmd_params_add = dfop.list_from_dataframe(re_pattern_df, 'portcmd_params', 'portcmd_params_add')
@@ -47,12 +46,12 @@ def portcmd_extract(chassis_params_df, project_constants_lst):
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} switch portshow, portloginshow and statsshow'
             print(info, end =" ")
             # if chassis_params_sr["chassis_name"] == 's1bchwcmn05-fcsw1':
-            sw_portcmd_lst = current_config_extract(portshow_lst, pattern_dct, 
+            sw_portcmd_lst = current_config_extract(san_portshow_lst, pattern_dct, 
                             chassis_params_sr, portcmd_params, portcmd_params_add)                  
             meop.show_collection_status(sw_portcmd_lst, max_title, len(info))
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'portcmd_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, portshow_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_portshow_lst)
         portshow_df, *_ = data_lst
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)      
@@ -66,7 +65,7 @@ def portcmd_extract(chassis_params_df, project_constants_lst):
     return portshow_df
 
 
-def current_config_extract(portshow_lst, pattern_dct, 
+def current_config_extract(san_portshow_lst, pattern_dct, 
                             chassis_params_sr, portcmd_params, portcmd_params_add):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
@@ -96,7 +95,7 @@ def current_config_extract(portshow_lst, pattern_dct,
                     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
                     # portFcPortCmdShow section start
                     if match_dct['slot_port_number']:
-                        line, sw_portcmd_lst = port_fc_portcmd_section_extract(portshow_lst, pattern_dct, chassis_info_lst, 
+                        line, sw_portcmd_lst = port_fc_portcmd_section_extract(san_portshow_lst, pattern_dct, chassis_info_lst, 
                                                         portcmd_params, portcmd_params_add, line, file)
                     # portFcPortCmdShow section end
             # sshow_port section end

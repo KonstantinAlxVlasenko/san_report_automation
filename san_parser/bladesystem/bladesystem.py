@@ -1,4 +1,4 @@
-"""Module to extract blade system information"""
+"""Module to extract Blade system information"""
 
 import os
 import re
@@ -35,11 +35,11 @@ def blade_system_extract(project_constants_lst):
         # lists to store only REQUIRED infromation
         # collecting data for all blades during looping
         # list containing enclosure, blade and hba information for all blade systems
-        blades_comprehensive_lst = []
+        san_blade_lst = []
         # list containing enclosure and interconnect modules information for all blade systems
-        module_comprehensive_lst = []
+        san_module_lst = []
         # list containing virtual connect ports information for all blade systems
-        blade_vc_comprehensive_lst = []
+        san_blade_vc_lst = []
 
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('blades', max_title)
         enclosure_params, module_params, blade_params = dfop.list_from_dataframe(re_pattern_df, 'enclosure_params', 'module_params', 'blade_params')
@@ -67,7 +67,7 @@ def blade_system_extract(project_constants_lst):
                     info = f'[{i+1} of {configs_num}]: {configname} system.'
                     print(info, end =" ")
 
-                    blade_lst, enclosure_vc_lst, info = current_config_extract(blades_comprehensive_lst, module_comprehensive_lst, blade_vc_comprehensive_lst, 
+                    blade_lst, enclosure_vc_lst, info = current_config_extract(san_blade_lst, san_module_lst, san_blade_vc_lst, 
                                                                             pattern_dct, blade_config, info,
                                                                             enclosure_params, module_params, blade_params)                        
                     # show status blades information extraction from file
@@ -82,7 +82,7 @@ def blade_system_extract(project_constants_lst):
             meop.status_info('skip', max_title, len(info))
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'enclosure_columns', 'blade_columns', 'blade_vc_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, module_comprehensive_lst, blades_comprehensive_lst, blade_vc_comprehensive_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_module_lst, san_blade_lst, san_blade_vc_lst)
         blade_module_df, blade_servers_df, blade_vc_df, *_ = data_lst 
         # save_data(report_constant_lst, data_names, *data_lst)
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
@@ -98,7 +98,7 @@ def blade_system_extract(project_constants_lst):
     return blade_module_df, blade_servers_df, blade_vc_df
 
 
-def current_config_extract(blades_comprehensive_lst, module_comprehensive_lst, blade_vc_comprehensive_lst, 
+def current_config_extract(san_blade_lst, san_module_lst, san_blade_vc_lst, 
                             pattern_dct, blade_config, info,
                             enclosure_params, module_params, blade_params):
     """Function to extract values from current switch confguration file. 
@@ -137,7 +137,7 @@ def current_config_extract(blades_comprehensive_lst, module_comprehensive_lst, b
                 print(info_type, end = " ")
                 info = info + " " + info_type
                 collected['vc'] = True
-                vc_fabric_connection_section(blade_vc_comprehensive_lst, enclosure_vc_lst, 
+                vc_fabric_connection_section(san_blade_vc_lst, enclosure_vc_lst, 
                                     enclosure_total_dct, pattern_dct, file)
             # vc fabric connection section end
             # active onboard administrator ip section start
@@ -151,19 +151,19 @@ def current_config_extract(blades_comprehensive_lst, module_comprehensive_lst, b
             # interconnect modules section start
             elif re.search(r'>SHOW INTERCONNECT INFO ALL', line):
                 collected['modules'] = True
-                module_num = interconnect_module_section(module_comprehensive_lst, pattern_dct,
+                module_num = interconnect_module_section(san_module_lst, pattern_dct,
                                     file, enclosure_lst, oa_ip, module_num, module_params)
             # interconnect modules section end
             # blade server, hba and flb section start
             elif re.search(r'>SHOW SERVER INFO ALL', line):
                 collected['servers'] = True
-                blade_lst = server_hba_flb_section(blades_comprehensive_lst, blade_lst, pattern_dct,
+                blade_lst = server_hba_flb_section(san_blade_lst, blade_lst, pattern_dct,
                                                     file, enclosure_lst, blade_params)
             # blade server, hba and flb section end
         
         # adding OA IP to module_comprehensive_lst based on interconnect modules number
         for num in range(-1, -module_num-1, -1):
-            module_comprehensive_lst[num][3] = oa_ip
+            san_module_lst[num][3] = oa_ip
     return  blade_lst , enclosure_vc_lst, info
 
 

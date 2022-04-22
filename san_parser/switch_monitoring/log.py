@@ -38,7 +38,7 @@ def log_extract(chassis_params_df, project_constants_lst):
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('log', max_title)
 
         # nested list(s) to store required values of the module in defined order for all switches in SAN
-        errdump_lst = []  
+        san_errdump_lst = []  
 
         # checking each chassis for switch level parameters
         for i, chassis_params_sr in chassis_params_df.iterrows():       
@@ -46,12 +46,12 @@ def log_extract(chassis_params_df, project_constants_lst):
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} switch logs'
             print(info, end =" ")
             
-            sw_errdump_lst = current_config_extract(errdump_lst, pattern_dct, chassis_params_sr)
+            sw_errdump_lst = current_config_extract(san_errdump_lst, pattern_dct, chassis_params_sr)
             meop.show_collection_status(sw_errdump_lst, max_title, len(info))
             
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'errdump_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, errdump_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_errdump_lst)
         errdump_df, *_ = data_lst    
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)   
@@ -65,7 +65,7 @@ def log_extract(chassis_params_df, project_constants_lst):
     return errdump_df
 
 
-def current_config_extract(errdump_lst, pattern_dct, chassis_params_sr):
+def current_config_extract(san_errdump_lst, pattern_dct, chassis_params_sr):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
 
@@ -87,7 +87,7 @@ def current_config_extract(errdump_lst, pattern_dct, chassis_params_sr):
             if re.search(pattern_dct['errdump_start'], line) and not collected['errdump']:
                 # when section is found corresponding collected dict values changed to True
                 collected['errdump'] = True
-                line, sw_errdump_lst = reop.extract_list_from_line(errdump_lst, pattern_dct, line, file, 
+                line, sw_errdump_lst = reop.extract_list_from_line(san_errdump_lst, pattern_dct, line, file, 
                                                                     extract_pattern_name='errdump_message', 
                                                                     save_local=True, line_add_values=chassis_info_lst)
             # errdump section end

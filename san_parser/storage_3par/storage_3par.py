@@ -36,11 +36,11 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
         # lists to store only REQUIRED infromation
         # collecting data for all systems during looping
         # list containing system parameters
-        system_3par_comprehensive_lst = []
+        san_system_3par_lst = []
         # list containing 3par FC port information
-        port_3par_comprehensive_lst = []
+        san_port_3par_lst = []
         # list containing hosts defined on 3par ports
-        host_3par_comprehensive_lst = []
+        san_host_3par_lst = []
 
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('3par', max_title)
@@ -72,9 +72,9 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
                     info = f'[{i+1} of {configs_num}]: {configname} system'
                     print(info, end =" ")
                     showsys_lst, port_lst, host_lst = storage_params_extract(config_3par, system_params, system_params_add, pattern_dct)
-                    system_3par_comprehensive_lst.extend(showsys_lst)
-                    port_3par_comprehensive_lst.extend(port_lst)
-                    host_3par_comprehensive_lst.extend(host_lst)
+                    san_system_3par_lst.extend(showsys_lst)
+                    san_port_3par_lst.extend(port_lst)
+                    san_host_3par_lst.extend(host_lst)
                     if port_lst or host_lst:
                         meop.status_info('ok', max_title, len(info))
                     else:
@@ -87,7 +87,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
             
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'system_columns', 'port_columns', 'host_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, system_3par_comprehensive_lst, port_3par_comprehensive_lst, host_3par_comprehensive_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_system_3par_lst, san_port_3par_lst, san_host_3par_lst)
         system_3par_df, port_3par_df, host_3par_df, *_ = data_lst        
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)  

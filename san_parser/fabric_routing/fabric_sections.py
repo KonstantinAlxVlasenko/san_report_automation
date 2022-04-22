@@ -5,7 +5,7 @@ import re
 import utilities.data_structure_operations as dsop
 
 
-def agshow_section_extract(ag_principal_lst, pattern_dct, 
+def agshow_section_extract(san_ag_principal_lst, pattern_dct, 
                             principal_switch_lst, ag_params,  
                             line, file):
     """Function to extract agshow information from principal switch sshow file"""
@@ -74,7 +74,7 @@ def agshow_section_extract(ag_principal_lst, pattern_dct,
             ag_info_lst = [ag_info_dct.get(param) for param in ag_params]               
             # appending list with only REQUIRED ag info for the current loop iteration to the list with all ag switch info
             for n_portid in n_portids_lst:
-                ag_principal_lst.append([*principal_switch_lst[:-1], *ag_info_lst, *did_port_dct[n_portid],
+                san_ag_principal_lst.append([*principal_switch_lst[:-1], *ag_info_lst, *did_port_dct[n_portid],
                                     *ag_attach_dct[n_portid], *ag_fport_dct[n_portid]])
         else:
             line = file.readline()

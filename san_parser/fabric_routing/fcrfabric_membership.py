@@ -42,19 +42,19 @@ def fcr_membership_extract(switch_params_df, project_constants_lst):
         switch_num = len(switch_params_df.index)
            
         # nested list(s) to store required values of the module in defined order for all switches in SAN
-        fcrfabric_lst = []
-        fcrproxydev_lst = []
-        fcrphydev_lst = []
-        lsan_lst = []
-        fcredge_lst = []
-        fcrresource_lst = []
-        fcrxlateconfig_lst = []
+        san_fcrfabric_lst = []
+        san_fcrproxydev_lst = []
+        san_fcrphydev_lst = []
+        san_lsan_lst = []
+        san_fcredge_lst = []
+        san_fcrresource_lst = []
+        san_fcrxlateconfig_lst = []
         
         # dictionary to collect fcr device data
         # first element of list is regular expression pattern name of line where section is started,
         # second - is the list to collect data, 
-        fcrdev_dct = {'fcrproxydev': ['switchcmd_fcrproxydevshow', fcrproxydev_lst], 
-                        'fcrphydev': ['switchcmd_fcrphydevshow', fcrphydev_lst]}    
+        fcrdev_dct = {'fcrproxydev': ['switchcmd_fcrproxydevshow', san_fcrproxydev_lst], 
+                        'fcrphydev': ['switchcmd_fcrphydevshow', san_fcrphydev_lst]}    
 
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('fcr', max_title)
@@ -67,7 +67,8 @@ def fcr_membership_extract(switch_params_df, project_constants_lst):
             print(info, end =" ")
 
             if switch_params_sr["FC_Router"] == 'ON':
-                sw_fcredge_lst = current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, fcrxlateconfig_lst, 
+                sw_fcredge_lst = current_config_extract(san_fcrfabric_lst, san_lsan_lst, san_fcredge_lst, 
+                                                        san_fcrresource_lst, san_fcrxlateconfig_lst, fcrdev_dct, 
                                                         pattern_dct, switch_params_sr, fcrresource_params)                                                            
                 meop.show_collection_status(sw_fcredge_lst, max_title, len(info))
             else:
@@ -76,8 +77,8 @@ def fcr_membership_extract(switch_params_df, project_constants_lst):
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'fcrfabric_columns', 'fcrproxydev_columns', 'fcrphydev_columns', 
                                                                 'lsan_columns', 'fcredge_columns', 'fcrresource_columns', 'fcrxlateconfig_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, fcrfabric_lst, fcrproxydev_lst, fcrphydev_lst,
-                                                            lsan_lst, fcredge_lst, fcrresource_lst, fcrxlateconfig_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_fcrfabric_lst, san_fcrproxydev_lst, san_fcrphydev_lst,
+                                                            san_lsan_lst, san_fcredge_lst, san_fcrresource_lst, san_fcrxlateconfig_lst)
         fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df, *_ = data_lst    
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
@@ -91,8 +92,8 @@ def fcr_membership_extract(switch_params_df, project_constants_lst):
     return fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df
 
 
-def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst, fcrdev_dct, fcrxlateconfig_lst, 
-                            pattern_dct, switch_params_sr, fcrresource_params):
+def current_config_extract(san_fcrfabric_lst, san_lsan_lst, san_fcredge_lst, san_fcrresource_lst, san_fcrxlateconfig_lst, 
+                            fcrdev_dct, pattern_dct, switch_params_sr, fcrresource_params):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
 
@@ -125,17 +126,17 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                     if re.search(pattern_dct['switchcmd_fcrfabricshow'], line) and not collected['fcrfabric']:
                         collected['fcrfabric'] = True
                         line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                        line = fcrfabricshow_section_extract(fcrfabric_lst, pattern_dct, 
+                        line = fcrfabricshow_section_extract(san_fcrfabric_lst, pattern_dct, 
                                                                 fcrouter_info_lst, line, file)
                     # fcrfabricshow section end
                     # fcrproxydev and fcrphydev are checked in a loop
                     # fcrdevshow section start
                     for fcrdev_type in fcrdev_dct.keys():
-                        switchcmd_pattern_name, fcrdev_lst = fcrdev_dct[fcrdev_type]
+                        switchcmd_pattern_name, san_fcrdev_lst = fcrdev_dct[fcrdev_type]
                         if re.search(pattern_dct[switchcmd_pattern_name], line) and not collected[fcrdev_type]:
                             collected[fcrdev_type] = True                                    
                             line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                            line = reop.extract_list_from_line(fcrdev_lst, pattern_dct, 
+                            line = reop.extract_list_from_line(san_fcrdev_lst, pattern_dct, 
                                                                 line, file, extract_pattern_name=fcrdev_type, 
                                                                 line_add_values=fcrouter_info_lst)
                     # fcrdevshow section end
@@ -143,7 +144,7 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                     if re.search(pattern_dct['switchcmd_lsanzoneshow'], line) and not collected['lsanzone']:
                         collected['lsanzone'] = True
                         line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                        line = lsanzoneshow_section_extract(lsan_lst, pattern_dct, fcrouter_info_lst,
+                        line = lsanzoneshow_section_extract(san_lsan_lst, pattern_dct, fcrouter_info_lst,
                                                             line, file)
                     # lsanzoneshow section end
                 # fcredge and fcrresource checked for Principal and Subordinate routers
@@ -151,7 +152,7 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                 if re.search(pattern_dct['switchcmd_fcredgeshow'], line) and not collected['fcredge']:
                     collected['fcredge'] = True
                     line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                    line, sw_fcredge_lst = reop.extract_list_from_line(fcredge_lst, pattern_dct, 
+                    line, sw_fcredge_lst = reop.extract_list_from_line(san_fcredge_lst, pattern_dct, 
                                                         line, file, extract_pattern_name='fcredgeshow',
                                                         save_local=True, line_add_values=fcrouter_info_lst)
                 # fcredgeshow section end
@@ -159,7 +160,7 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                 if re.search(pattern_dct['switchcmd_fcrxlateconfig'], line) and not collected['fcrxlateconfig']:
                     collected['fcrxlateconfig'] = True
                     line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                    line = reop.extract_list_from_line(fcrxlateconfig_lst, pattern_dct, 
+                    line = reop.extract_list_from_line(san_fcrxlateconfig_lst, pattern_dct, 
                                                         line, file, extract_pattern_name='fcrxlateconfig',
                                                         line_add_values=fcrouter_info_lst)
                 # fcrxlateconfig section end
@@ -167,7 +168,7 @@ def current_config_extract(fcrfabric_lst, lsan_lst, fcredge_lst, fcrresource_lst
                 if re.search(pattern_dct['switchcmd_fcrresourceshow'], line) and not collected['fcrresource']:
                     collected['fcrresource'] = True
                     line = goto_baseswitch_context_fid(ls_mode_on, line, file, fid)
-                    line = fcrresourceshow_section_extract(fcrresource_lst, pattern_dct,
+                    line = fcrresourceshow_section_extract(san_fcrresource_lst, pattern_dct,
                                                             fcrouter_info_lst, fcrresource_params,
                                                             line, file)
                 # fcrresourceshow section end

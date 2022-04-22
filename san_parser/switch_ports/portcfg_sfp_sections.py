@@ -62,7 +62,7 @@ def sfpshow_section_extract(sfpshow_lst, pattern_dct,
     return line, sw_sfpshow_lst
 
 
-def portcfgshow_section_extract(portcfgshow_dct, pattern_dct,
+def portcfgshow_section_extract(san_portcfgshow_dct, pattern_dct,
                                 switch_info_lst, portcfg_params, 
                                 line, file):
     """Function to extract portcfgshow information for the current context from the config file"""
@@ -73,7 +73,7 @@ def portcfgshow_section_extract(portcfgshow_dct, pattern_dct,
         # 'slot_port_line_match'
         if match_dct['slot_port_line']:
             # dictionary to store all DISCOVERED switch ports information
-            portcfgshow_tmp_dct = {}
+            sw_portcfgshow_dct = {}
             # extract slot and port numbers
             slot_num, port_nums_str = dsop.line_to_list(pattern_dct['slot_port_line'], line)
             port_nums_lst = port_nums_str.split()
@@ -83,9 +83,9 @@ def portcfgshow_section_extract(portcfgshow_dct, pattern_dct,
             switch_info_slot_lst.append(slot_num)
             # adding switch and slot information for each port to dictionary
             for portcfg_param, switch_info_value in zip(portcfg_params[:7], switch_info_slot_lst):
-                portcfgshow_tmp_dct[portcfg_param] = [switch_info_value for i in range(port_nums)]
+                sw_portcfgshow_dct[portcfg_param] = [switch_info_value for i in range(port_nums)]
             # adding port numbers to dictionary    
-            portcfgshow_tmp_dct[portcfg_params[7]] = port_nums_lst                                
+            sw_portcfgshow_dct[portcfg_params[7]] = port_nums_lst                                
             while not re.match('\r?\n', line):
                 line = file.readline()
                 match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
@@ -93,10 +93,10 @@ def portcfgshow_section_extract(portcfgshow_dct, pattern_dct,
                 if match_dct['portcfg']:
                     # extract param name and values for each port and adding to dictionary
                     param_name, param_values_str = dsop.line_to_list(pattern_dct['portcfg'], line)
-                    portcfgshow_tmp_dct[param_name] = param_values_str.split()
+                    sw_portcfgshow_dct[param_name] = param_values_str.split()
                 if not line:
                     break
             # saving portcfg information of REQUIRED parameters from dictionary with DISCOVERED parameters
             for portcfg_param in portcfg_params:
-                portcfgshow_dct[portcfg_param].extend(portcfgshow_tmp_dct.get(portcfg_param, [None for i in range(port_nums)]))
+                san_portcfgshow_dct[portcfg_param].extend(sw_portcfgshow_dct.get(portcfg_param, [None for i in range(port_nums)]))
     return line 

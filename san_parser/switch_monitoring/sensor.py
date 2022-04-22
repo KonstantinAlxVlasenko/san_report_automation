@@ -38,7 +38,7 @@ def sensor_extract(chassis_params_df, project_constants_lst):
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('sensor', max_title)
 
         # nested list(s) to store required values of the module in defined order for all switches in SAN
-        sensor_lst = []
+        san_sensor_lst = []
 
         # checking each chassis for switch level parameters
         for i, chassis_params_sr in chassis_params_df.iterrows():   
@@ -46,12 +46,12 @@ def sensor_extract(chassis_params_df, project_constants_lst):
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} sensor readings'
             print(info, end =" ")  
 
-            sw_sensor_lst = current_config_extract(sensor_lst, pattern_dct, chassis_params_sr)
+            sw_sensor_lst = current_config_extract(san_sensor_lst, pattern_dct, chassis_params_sr)
             meop.show_collection_status(sw_sensor_lst, max_title, len(info))     
     
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'sensor_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, sensor_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_sensor_lst)
         sensor_df, *_ = data_lst   
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)    
@@ -65,7 +65,7 @@ def sensor_extract(chassis_params_df, project_constants_lst):
     return sensor_df
 
 
-def current_config_extract(sensor_lst, pattern_dct, chassis_params_sr):
+def current_config_extract(san_sensor_lst, pattern_dct, chassis_params_sr):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
 
@@ -85,7 +85,7 @@ def current_config_extract(sensor_lst, pattern_dct, chassis_params_sr):
             # sensor section start   
             if re.search(pattern_dct['switchcmd_sensorhow'], line) and not collected['sensor']:
                 collected['sensor'] = True
-                line, sw_sensor_lst = reop.extract_list_from_line(sensor_lst, pattern_dct, 
+                line, sw_sensor_lst = reop.extract_list_from_line(san_sensor_lst, pattern_dct, 
                                                                     line, file, 'sensor',  save_local=True,
                                                                     line_add_values=chassis_info_lst)                                                 
             # sensor section end

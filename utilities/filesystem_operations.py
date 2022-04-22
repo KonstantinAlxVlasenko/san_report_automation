@@ -58,20 +58,11 @@ def find_files(folder, max_title, filename_contains='', filename_extension=''):
     # list to save configuration data files
     files_lst = []
 
-    # going through all directories inside ssave folder to find configuration data
-    
-    # for root, _, files in os.walk(folder):
-    #     for file in files:
-    #         if re.search(filename_contains, file):
-    #             file_path = os.path.normpath(os.path.join(root, file))
-    #             if filename_extension and file.endswith(filename_extension):
-    #                 files_lst.append(file_path)
-    #             elif not filename_extension and not re.search('\.', file):
-    #                 files_lst.append(file_path)
-
+    # going through all directories inside folder to find configuration data
     for root, _, files in os.walk(folder):
         for file in files:
-            if re.search(filename_contains, file):
+            # filename contains filename_contains atr but not hidden file
+            if re.search(filename_contains, file) and not re.search('^~\$.+', file):
                 file_path = os.path.normpath(os.path.join(root, file))
                 if filename_extension and file.endswith(filename_extension):
                     files_lst.append(file_path)

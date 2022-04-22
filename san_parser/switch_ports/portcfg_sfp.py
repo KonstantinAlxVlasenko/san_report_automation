@@ -41,29 +41,28 @@ def portcfg_sfp_extract(switch_params_df, project_constants_lst):
         sfp_params, sfp_params_add, portcfg_params = dfop.list_from_dataframe(re_pattern_df, 'sfp_params', 'sfp_params_add', 'portcfg_params')
 
         # dictionary to save portcfg ALL information for all ports in fabric
-        portcfgshow_dct = dict((key, []) for key in portcfg_params)
-        # list to store only REQUIRED switch parameters
-        # collecting sfpshow data for all switches ports during looping
-        sfpshow_lst = []
+        san_portcfgshow_dct = dict((key, []) for key in portcfg_params)
+        # nested list(s) to store required values of the module in defined order for all switches in SAN
+        san_sfpshow_lst = []
         # list to save portcfg information for all ports in fabric
-        portcfgshow_lst = []
+        san_portcfgshow_lst = []
         
         for i, switch_params_sr in switch_params_df.iterrows():
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_params_sr["SwitchName"]} ports sfp and cfg'
             print(info, end =" ")                      
-            sw_sfpshow_lst = current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
+            sw_sfpshow_lst = current_config_extract(san_sfpshow_lst, san_portcfgshow_dct, pattern_dct,
                                     switch_params_sr, sfp_params, sfp_params_add, portcfg_params)                     
             meop.show_collection_status(sw_sfpshow_lst, max_title, len(info))
         # after check all config files create list of lists from dictionary. 
         # each nested list contains portcfg information for one port
         for portcfg_param in portcfg_params:
-            portcfgshow_lst.append(portcfgshow_dct.get(portcfg_param))            
-        portcfgshow_lst = list(zip(*portcfgshow_lst))
+            san_portcfgshow_lst.append(san_portcfgshow_dct.get(portcfg_param))            
+        san_portcfgshow_lst = list(zip(*san_portcfgshow_lst))
         
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'sfp_columns', 'portcfg_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, sfpshow_lst, portcfgshow_lst)
+        data_lst = dfop.list_to_dataframe(headers_lst, san_sfpshow_lst, san_portcfgshow_lst)
         sfpshow_df, portcfgshow_df, *_ = data_lst  
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)   
@@ -77,7 +76,7 @@ def portcfg_sfp_extract(switch_params_df, project_constants_lst):
     return sfpshow_df, portcfgshow_df
 
 
-def current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
+def current_config_extract(san_sfpshow_lst, san_portcfgshow_dct, pattern_dct,
                             switch_params_sr, sfp_params, sfp_params_add, portcfg_params):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
@@ -100,7 +99,7 @@ def current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
             if re.search(pattern_dct['switchcmd_sfpshow'], line) and not collected['sfpshow']:
                 collected['sfpshow'] = True
                 line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                line, sw_sfpshow_lst = sfpshow_section_extract(sfpshow_lst, pattern_dct, 
+                line, sw_sfpshow_lst = sfpshow_section_extract(san_sfpshow_lst, pattern_dct, 
                                                 switch_info_lst, sfp_params, sfp_params_add, 
                                                 line, file)
             # sfpshow section end
@@ -108,7 +107,7 @@ def current_config_extract(sfpshow_lst, portcfgshow_dct, pattern_dct,
             if re.search(pattern_dct['switchcmd_portcfgshow'], line) and not collected['portcfgshow']:
                 collected['portcfgshow'] = True
                 line = reop.goto_switch_context(ls_mode_on, line, file, switch_index)
-                line = portcfgshow_section_extract(portcfgshow_dct, pattern_dct, 
+                line = portcfgshow_section_extract(san_portcfgshow_dct, pattern_dct, 
                                                     switch_info_lst, portcfg_params, 
                                                     line, file)
             # portcfgshow section end

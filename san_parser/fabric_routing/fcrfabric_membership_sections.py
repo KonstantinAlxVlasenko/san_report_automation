@@ -20,7 +20,7 @@ def goto_baseswitch_context_fid(ls_mode_on, line, file, fid):
     return line 
 
 
-def fcrfabricshow_section_extract(fcrfabric_lst, pattern_dct, fcrouter_info_lst,
+def fcrfabricshow_section_extract(san_fcrfabric_lst, pattern_dct, fcrouter_info_lst,
                                     line, file):
     """Function to extract fcrfabricshow information 
     for the base switch context fid from the sshow file"""
@@ -41,7 +41,7 @@ def fcrfabricshow_section_extract(fcrfabric_lst, pattern_dct, fcrouter_info_lst,
                     fcrouter_name = match_dct['fcr_info'].group(1)
                 # fcr_exports_match                                        
                 if match_dct['fcr_exports']:
-                    fcrfabric_lst.append(dsop.line_to_list(pattern_dct['fcr_exports'], line, 
+                    san_fcrfabric_lst.append(dsop.line_to_list(pattern_dct['fcr_exports'], line, 
                                                         *fcrouter_info_lst, fcrouter_name, 
                                                         *fcrouter_params_lst))                                            
                 if not line:
@@ -51,7 +51,7 @@ def fcrfabricshow_section_extract(fcrfabric_lst, pattern_dct, fcrouter_info_lst,
     return line
 
 
-def lsanzoneshow_section_extract(lsan_lst, pattern_dct, fcrouter_info_lst,
+def lsanzoneshow_section_extract(san_lsan_lst, pattern_dct, fcrouter_info_lst,
                                     line, file):
     """Function to extract lsanzoneshow information 
     for the base switch context fid from the sshow file"""
@@ -64,7 +64,7 @@ def lsanzoneshow_section_extract(lsan_lst, pattern_dct, fcrouter_info_lst,
             lsan_name = dsop.line_to_list(pattern_dct['lsan_name'], line)
             # move cursor to one line down to get inside while loop
             line = file.readline()
-            line = reop.extract_list_from_line(lsan_lst, pattern_dct, line, file, 
+            line = reop.extract_list_from_line(san_lsan_lst, pattern_dct, line, file, 
                                                 extract_pattern_name='lsan_members', stop_pattern_name='lsan_switchcmd_end', 
                                                 first_line_skip=False, line_add_values=[*fcrouter_info_lst, *lsan_name])
         else:
@@ -74,7 +74,7 @@ def lsanzoneshow_section_extract(lsan_lst, pattern_dct, fcrouter_info_lst,
     return line
 
 
-def fcrresourceshow_section_extract(fcrresource_lst, pattern_dct,
+def fcrresourceshow_section_extract(san_fcrresource_lst, pattern_dct,
                                     fcrouter_info_lst, fcrresource_params,
                                     line, file):
     """Function to extract fcrresourceshow information 
@@ -90,5 +90,5 @@ def fcrresourceshow_section_extract(fcrresource_lst, pattern_dct,
     # itertools.chain makes flat tmp_lst list from all lists in dictionary
     fcrresource_chain_lst = list(itertools.chain(*[fcrresource_dct.get(param) 
                                         if fcrresource_dct.get(param) else [None, None] for param in fcrresource_params]))
-    fcrresource_lst.append([*fcrouter_info_lst, *fcrresource_chain_lst])
+    san_fcrresource_lst.append([*fcrouter_info_lst, *fcrresource_chain_lst])
     return line

@@ -16,7 +16,7 @@ from .santoolbox_parser import santoolbox_process
 def switch_config_preprocessing(project_constants_lst, software_path_sr):
     
 
-    _, max_title, data_dependency_df, report_requisites_sr, *_ = project_constants_lst
+    _, max_title, _, report_requisites_sr, *_ = project_constants_lst
 
     # report_constant_lst, report_steps_dct, _ = report_creation_info_lst
     # *_, max_title = report_constant_lst
@@ -116,8 +116,7 @@ def create_files_list_to_parse(ssave_path, max_title):
     
     if sshow_num == 0:
         print('\nNo confgiguration data found')
-        sys.exit()
-              
+        sys.exit()       
     return unparsed_files_lst
 
 
