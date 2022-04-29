@@ -26,12 +26,6 @@ def configs_download(ns_3par_df, pattern_dct, project_constants_lst, software_pa
     """Function to prepare 3PAR configuration files for parsing. 
     Download in from STATs and local (defined in report.xlsx file) folders"""
 
-
-    # # report_steps_dct contains current step desciption and force and export tags
-    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # report_constant_lst, *_ = report_creation_info_lst
-    # *_, max_title = report_constant_lst
-
     # imported project constants required for module execution
     _, max_title, _, report_requisites_sr, *_ = project_constants_lst
 

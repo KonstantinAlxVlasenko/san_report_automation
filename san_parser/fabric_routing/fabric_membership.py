@@ -22,8 +22,8 @@ def fabric_membership_extract(switch_params_df, project_constants_lst):
 
     # data titles obtained after module execution
     data_names = dfop.list_from_dataframe(io_data_names_df, 'fabric_membership_collection')
-    # service step information
-    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
+    # module information
+    meop.show_module_info(project_steps_df, data_names)
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     

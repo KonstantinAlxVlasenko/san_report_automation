@@ -23,8 +23,8 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
 
     # data titles obtained after module execution
     data_names = dfop.list_from_dataframe(io_data_names_df, 'storage_3par_collection')
-    # service step information
-    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
+    # module information
+    meop.show_module_info(project_steps_df, data_names)
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
@@ -33,8 +33,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
     
     if force_run:
-        # lists to store only REQUIRED infromation
-        # collecting data for all systems during looping
+        # nested list(s) to store required values of the module in defined order for all switches in SAN
         # list containing system parameters
         san_system_3par_lst = []
         # list containing 3par FC port information

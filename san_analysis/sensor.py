@@ -20,8 +20,8 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, project_constants_ls
     # data titles obtained after module execution (output data)
     # data titles which module is dependent on (input data)
     data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'snesor_analysis_out', 'sensor_analysis_in')
-    # service step information
-    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
+    # module information
+    meop.show_module_info(project_steps_df, data_names)
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     

@@ -34,10 +34,10 @@ def show_module_info(project_steps_df, data_names, data_name_id=0):
     print(f'\n\n{project_steps_df.loc[data_names[data_name_id], "module_info"]}\n')
 
 
-def show_step_info(project_steps_df, data_names, data_name_id=0):
+def show_step_info(project_steps_df, data_names, data_name_id=0, end='\n'):
     """Function to show step information of the module from project_steps_df"""
 
-    print(f'\n{project_steps_df.loc[data_names[data_name_id], "step_info"]}\n')
+    print(f'\n{project_steps_df.loc[data_names[data_name_id], "step_info"]}\n', end=end)
 
 
 def display_status(info, max_title):

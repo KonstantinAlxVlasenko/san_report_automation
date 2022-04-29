@@ -19,14 +19,7 @@ from .switch_connection_statistics import \
 def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
                             isl_statistics_df, blade_module_loc_df, switch_pair_df, project_constants_lst):
     """Main function to add porterr, transceiver and portcfg information to portshow DataFrame"""
-    
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_sr show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_sr = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-    
+        
     # imported project constants required for module execution
     project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
 
@@ -34,22 +27,11 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
     # data titles which module is dependent on (input data)
     data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'maps_npiv_ports_analysis_out', 'maps_npiv_ports_analysis_in')
 
-    # # names to save data obtained after current module execution
-    # data_names = ['MAPS_ports', 'NPIV_ports', 'NPIV_statistics', 'Connection_statistics', 'blade_module_loc',
-    #                 'MAPS_порты', 'NPIV_порты', 'Статистика_NPIV', 'Статистика_соединений', 'Blade_шасси']
-    
-    # service step information
-    print(f'\n\n{project_steps_df.loc[data_names[0], "step_info"]}\n')
+    # module information
+    meop.show_module_info(project_steps_df, data_names)
     
     # reade data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
-
-    # # list of data to analyze from report_info table
-    # analyzed_data_names = ['portshow_aggregated', 'portshow_sfp_aggregated', 'sfpshow', 'portcfgshow', 'portcmd', 
-    #                         'switchshow_ports', 'switch_params_aggregated', 'maps_parameters', 'fdmi', 
-    #                         'device_rename', 'report_columns_usage_upd', 'nscamshow', 
-    #                         'nsshow', 'alias', 'blade_servers', 'fabric_labels', 'isl', 'isl_statistics',
-    #                         'blade_interconnect', 'synergy_interconnect', 'switch_pair']
 
     # force run when any output data from data_lst is not found in database or 
     # procedure execution explicitly requested (force_run flag is on) for any output or input data    

@@ -63,7 +63,7 @@ def import_project_steps(max_title):
     
     # replace all nan values with 0 and all notna values (except 0) with 1
     project_steps_df.fillna({'export_to_excel': 0, 'force_run': 0, 'sort_weight': 1, 
-                            'report_type': 'unknown', 'step_info': '-', 'description': '-', }, inplace=True)
+                            'report_type': 'unknown', 'module_info': '-', 'step_info': '-', 'description': '-', }, inplace=True)
     for column in ['export_to_excel', 'force_run']: 
         mask_force_run = project_steps_df[column].notna() & ~project_steps_df[column].isin([0, '0'])
         project_steps_df.loc[mask_force_run, column] = 1
@@ -83,7 +83,8 @@ def import_project_steps(max_title):
     else:
         meop.status_info('off', max_title, len(info))
     
-    project_steps_columns =  ['keys', 'report_type', 'export_to_excel', 'force_run', 'step_info', 'description', 'sort_weight']
+    project_steps_columns =  ['keys', 'report_type', 'export_to_excel', 'force_run', 
+                                'module_info', 'step_info', 'description', 'sort_weight']
     project_steps_df = project_steps_df[project_steps_columns].copy()
     project_steps_df.set_index('keys', inplace=True)
     return project_steps_df
