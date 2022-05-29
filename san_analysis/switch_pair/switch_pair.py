@@ -25,11 +25,12 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
     # data titles obtained after module execution (output data)
     # data titles which module is dependent on (input data)
     data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'switch_pair_analysis_out', 'switch_pair_analysis_in')
+    
     # module information
     meop.show_module_info(project_steps_df, data_names)
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
-    switch_pair_df, _ = data_lst
+    switch_pair_df, *_ = data_lst
     
     # force run when any output data from data_lst is not found in database or 
     # procedure execution explicitly requested (force_run flag is on) for any output or input data   
@@ -46,7 +47,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
         change_flag = False
         if switch_pair_df is None:
             first_run = True
-            switch_pair_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df)    
+            switch_pair_df, npv_ag_connected_devices_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df)    
         
         switch_pair_bckp_df = switch_pair_df.copy()
         
@@ -60,7 +61,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
                     reply = meop.reply_request(question, reply_options=['r', 'reset', 'm', 'modify'])
                     if reply in ['r', 'reset']:
                         reset_flag = True
-                        switch_pair_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df)
+                        switch_pair_df, npv_ag_connected_devices_df = auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df)
                         print('Switch pairs have been reset')
                     else:
                         reset_flag = False
@@ -111,18 +112,17 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
             meop.status_info('skip', max_title, len(info))
         
         # create list with partitioned DataFrames
-        data_lst = [switch_pair_df, sw_wwn_occurrence_stats_df]
+        data_lst = [switch_pair_df, npv_ag_connected_devices_df, sw_wwn_occurrence_stats_df]
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
-        switch_pair_df, *_ = data_lst
+        switch_pair_df, npv_ag_connected_devices_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-
-    return switch_pair_df 
+    return switch_pair_df, npv_ag_connected_devices_df 
 
 
 def show_switch_wwn_pair_summary(switch_pair_df):

@@ -36,7 +36,8 @@ def move_all_down(df):
     """Function to move total row All to the bottom of the DataFrame"""
     
     mask_all = df['Fabric_name'] == 'All'
-    df = df[~mask_all].append(df[mask_all]).reset_index(drop=True)
+    # df = df[~mask_all].append(df[mask_all]).reset_index(drop=True)
+    df = pd.concat([df[~mask_all], df[mask_all]], ignore_index=True)
     return df
 
 

@@ -5,7 +5,7 @@ import utilities.dataframe_operations as dfop
 
 switch_columns = ['configname', 'Fabric_name', 'Fabric_label', 'Device_Location', 
                     'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 
-                    'switchType', 'ModelName', 'switchMode', 'LS_type_report']
+                    'switchType', 'switchClass', 'ModelName', 'switchMode', 'LS_type_report']
 
 
 def create_sw_brocade_dataframe(switch_params_aggregated_df):

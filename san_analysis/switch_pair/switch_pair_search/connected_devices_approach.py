@@ -111,7 +111,7 @@ def find_max_device_match_switch(sw_wwn_name_match_sr, sw_current_devices_sr, po
     sw_candidates_wwn_lst = portshow_sw_candidates_df['switchWwn'].unique().tolist()
     
     if not sw_candidates_wwn_lst:
-        return [None]*3
+        return [None]*4
     
     # list with the number of device matches of each candidate switch with the current switch
     # how many devices from current switch connected to switch being verified

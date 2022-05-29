@@ -60,7 +60,5 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
                                     blade_module_df, blade_servers_df, blade_vc_df,
                                     synergy_module_df, synergy_servers_df,
                                     system_3par_df, port_3par_df, host_3par_df]
-
-    exit()
     return extracted_configuration_lst
         

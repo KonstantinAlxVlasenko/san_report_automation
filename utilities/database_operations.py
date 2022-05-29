@@ -130,12 +130,14 @@ def read_database(project_constants_lst, *args):
     data_imported = []
     # conn = sqlite3.connect(db_path)
 
+
     for data_name in args:
 
         # db_type = report_steps_dct[data_name][2]
 
         db_type = project_steps_df.loc[data_name, 'report_type']
         db_name = report_requisites_sr['customer_name'] + '_' + db_type + '_database.db'
+        
         db_path = os.path.join(report_requisites_sr['database_folder'], db_name)
         conn = sqlite3.connect(db_path)
 

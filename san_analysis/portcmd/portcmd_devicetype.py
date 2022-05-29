@@ -35,6 +35,9 @@ def oui_join(portshow_aggregated_df, oui_df, switchshow_ports_df):
 def type_check(series, switches_oui, blade_servers_df, synergy_servers_df):
     """Function to define device class and type"""
     
+    if synergy_servers_df.empty:
+        synergy_servers_df['Connected_portWwn'] = np.nan
+
     # drop rows with empty WWNp values
     blade_hba_df = blade_servers_df.dropna(subset = ['portWwn']).copy()
     synergy_hba_df = synergy_servers_df.dropna(subset = ['Connected_portWwn']).copy()

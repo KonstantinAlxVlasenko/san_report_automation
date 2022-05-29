@@ -110,7 +110,7 @@ def add_proxy_device_details(fcr_xd_proxydev_df, portshow_aggregated_df):
                     'portIndex', 'slot', 'port', 'Connected_portId',
                     'speed', 'portType',
                     'Device_Host_Name', 'Device_Port', 'alias',
-                    'LSAN', 'deviceType', 'deviceSubtype']
+                    'LSAN', 'Device_Location', 'deviceType', 'deviceSubtype']
     # add proxy device information based in portWwn
     fcr_xd_proxydev_df = dfop.dataframe_fillna(fcr_xd_proxydev_df, portshow_aggregated_df, join_lst=['Connected_portWwn'], filled_lst=device_columns)
     # add Device_ flag for columns related to proxy device

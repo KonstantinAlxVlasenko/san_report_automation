@@ -88,9 +88,6 @@ def device_type_fillna(nsshow_labeled_df, nscamshow_labeled_df, nsshow_dedicated
 def nsshow_clean(nsshow_labeled_df, pattern_dct):
     """Function to clean (remove unnecessary symbols) PortSymb and NodeSymb columns in NameServer DataFrame"""
 
-    # regular expression patterns
-    # comp_keys, _, comp_dct = re_pattern_lst
-
     # columns of Name Server (NS) registered devices DataFrame
     nsshow_lst = [
         'Fabric_name', 'Fabric_label', 'configname', 'chassis_name', 'chassis_wwn', 
@@ -109,7 +106,7 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
     # clean 'PortSymb' and 'NodeSymb' columns
     for symb_column in symb_columns:
         # symb_clean_comp removes brackets and quotation marks
-        warnings.filterwarnings("ignore", 'This pattern has match groups')
+        warnings.filterwarnings("ignore", 'This pattern is interpreted as a regular expression, and has match groups')
         mask_symb_clean = nsshow_join_df[symb_column].str.contains(pattern_dct['symb_clean'], regex=True, na=False)
         nsshow_join_df.loc[mask_symb_clean, symb_column] = nsshow_join_df.loc[mask_symb_clean, symb_column].str.extract(pattern_dct['symb_clean']).values
         # replace multiple whitespaces with single whitespace
@@ -120,7 +117,6 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
         nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
         # hostname_clean_comp
         nsshow_join_df[symb_column].replace(to_replace = pattern_dct['hostname_clean'], value = np.nan, regex=True, inplace = True)
-    
     return nsshow_join_df
 
 

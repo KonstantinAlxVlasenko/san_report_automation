@@ -49,11 +49,15 @@ def find_sw_npv_ag_connected_devices(switch_pair_df, portshow_aggregated_df, mer
     mask_devicetype_notna = portshow_cp_df['deviceType'].notna()
     mask_device_lib_srv_stor = ~portshow_cp_df['deviceType'].isin(['SWITCH', 'VC'])
     mask_connected_switchwwn_notna = portshow_cp_df['Connected_switchWwn'].notna()
-    device_columns = ['Fabric_name', 'Fabric_label', 'Connected_switchWwn', 'Device_Host_Name']
+    # device_columns = ['Fabric_name', 'Fabric_label', 'Connected_switchWwn', 'Device_Host_Name']
+    device_columns = ['Fabric_name', 'Fabric_label', 'Connected_switchWwn', 
+                        'Device_Host_Name', 'Connected_portWwn', 'Connected_portId', 
+                        'speed', 'Device_Location', 'deviceType', 'deviceSubtype']
+    
     npv_ag_connected_devices_df = portshow_cp_df.loc[mask_devicetype_notna & mask_device_lib_srv_stor & mask_connected_switchwwn_notna, device_columns]
     # switchWwn, switchType, switchMode columns used to run function to find pair switch (pair candidate must have same switcType and switchMode)
     npv_ag_connected_devices_df.rename(columns={'Connected_switchWwn': 'switchWwn'}, inplace=True)
     npv_ag_connected_devices_df = dfop.dataframe_fillna(npv_ag_connected_devices_df, switch_pair_df, 
                                                         join_lst=['switchWwn'], 
-                                                        filled_lst=['switchType', 'switchMode'])
+                                                        filled_lst=['switchName', 'switchType', 'switchMode'])
     return npv_ag_connected_devices_df

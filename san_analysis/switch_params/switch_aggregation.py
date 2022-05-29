@@ -54,7 +54,7 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     # sorting DataFrame
     sort_switches(switch_params_aggregated_df)
     # add empty column FOS suuported to fill manually 
-    switch_params_aggregated_df['FW_Supported'] = pd.Series()
+    switch_params_aggregated_df['FW_Supported'] = pd.Series(dtype='object')
 
     # license check
     license_dct = {'Trunking_license': 'Trunking', 'Fabric_Vision_license': 'Fabric Vision'}

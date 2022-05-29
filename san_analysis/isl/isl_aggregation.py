@@ -26,7 +26,8 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     fcredge_cp_df = fcredge_to_isl_compliance(fcredge_df, switch_params_aggregated_df)
     # add ifl to isl
     isl_df['IFL_number'] = np.nan
-    fcredge_cp_df = fcredge_cp_df.reindex(columns=isl_df.columns).copy()
+    fcredge_cp_df = fcredge_cp_df.reindex(columns=[*isl_df.columns, 'Connected_FID']).copy()
+    fcredge_cp_df.rename(columns={'Connected_FID': 'Connected_Edge_FID'}, inplace=True)
     isl_df = pd.concat([isl_df, fcredge_cp_df], ignore_index=True)
     # outer join of isl + ifl with trunk DataFrames 
     isl_aggregated_df = trunk_join(isl_df, trunk_df)

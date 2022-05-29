@@ -258,7 +258,7 @@ def group_name_usage(report_columns_usage_sr, device_rename_df, max_title, force
         reply = meop.reply_request('Do you want to use Alias Group Device names? (y)es/(n)o: ')
         print('\n')
         if reply == 'y':
-            report_columns_usage_sr['group_name_usage'] = True
+            report_columns_usage_sr['group_name_usage'] = True # Need to be checked
             print(info, end =" ")
             meop.status_info('on', max_title, len(info))
         else:

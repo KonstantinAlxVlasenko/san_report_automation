@@ -17,8 +17,8 @@ import utilities.dataframe_operations as dfop
 def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, pattern_dct):
     """Function to add notes to isl_statistics_df DataFrame"""
 
-    if not 'XISL' in isl_statistics_df.columns:
-        isl_statistics_df['XISL'] = 0
+    if not 'LISL' in isl_statistics_df.columns:
+        isl_statistics_df['LISL'] = 0
     # inter switch connection have physical links (not logical only)
     # logical link always displayed as single link
     
@@ -31,8 +31,8 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         # columns with ISL tag (links quantity in ISL) in isl_statistics_df
         isl_columns = [column for column in isl_statistics_df.columns if ('ISL' in column or 'IFL' in column)]
         # conditions for trunk presence
-        # switches connected with more then one ISL (excluding XISL)
-        mask_port_quantity = (isl_statistics_df['Port_quantity'] - isl_statistics_df['XISL']) > 1
+        # switches connected with more then one ISL (excluding LISL)
+        mask_port_quantity = (isl_statistics_df['Port_quantity'] - isl_statistics_df['LISL']) > 1
         # link out of trunk present (any ISL contains single link)
         mask_single_link_isl = (isl_statistics_df[isl_columns] == 1).any(axis=1)
         # trunkimg licence present on both switches
@@ -44,7 +44,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         
         """
         nonredundant connection
-        Port_Quantity XISL Difference Status
+        Port_Quantity LISL Difference Status
         1             0    1          nonredundant
         1             1    0          redundant
         2             0    2          redundant
@@ -53,7 +53,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         3             1    2          redundant
         Summary: Difference == 1 is nonredundant
         """
-        mask_nonredundant_link = (isl_statistics_df['Port_quantity'] - isl_statistics_df['XISL']) == 1
+        mask_nonredundant_link = (isl_statistics_df['Port_quantity'] - isl_statistics_df['LISL']) == 1
         # TO_REMOVE
         # isl_statistics_df['Connection_note'] = np.where(mask_nonredundant_link, 'nonredundant_connection', pd.NA)
         isl_statistics_df.loc[mask_nonredundant_link, 'Connection_note'] = 'nonredundant_connection'
@@ -134,7 +134,7 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         isl_statistics_df['Speed_auto_note'] = pd.NA
         if 'Speed_Auto' in isl_statistics_df.columns:
             mask_speed_auto = isl_statistics_df['Speed_Auto'] != 0
-            mask_not_xisl_only = isl_statistics_df['Port_quantity'] > isl_statistics_df['XISL']
+            mask_not_xisl_only = isl_statistics_df['Port_quantity'] > isl_statistics_df['LISL']
             isl_statistics_df['Speed_auto_note'] = np.where(mask_speed_auto & mask_not_xisl_only, 'auto_speed', pd.NA)
         
         speed_note_columns = ['Speed_auto_note', 'Speed_low_note', 'Speed_reduced_note', 'Speed_Gbps_nonuniformity_note']
@@ -182,7 +182,6 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
     isl_statistics_df = connection_pair_absent_note(isl_statistics_df)
     isl_statistics_df.fillna(np.nan, inplace=True)
 
-    if (isl_statistics_df['XISL'] == 0).all():
-        isl_statistics_df.drop(columns=['XISL'], inplace=True)
-    
+    if (isl_statistics_df['LISL'] == 0).all():
+        isl_statistics_df.drop(columns=['LISL'], inplace=True)
     return isl_statistics_df
