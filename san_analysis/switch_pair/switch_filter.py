@@ -11,11 +11,13 @@ switch_columns = ['configname', 'Fabric_name', 'Fabric_label', 'Device_Location'
 def create_sw_brocade_dataframe(switch_params_aggregated_df):
     """Function to filter Brocade swithes for which pair switch need to be found"""
     
-    mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
-    mask_not_vc = ~switch_params_aggregated_df['ModelName'].str.contains('virtual', case=False, na=False)
-    mask_not_fd_xd = ~switch_params_aggregated_df['LS_type'].isin(['front_domain', 'translate_domain'])
-
-    switch_pair_brocade_df = switch_params_aggregated_df.loc[mask_valid_fabric & mask_not_vc & mask_not_fd_xd, switch_columns].copy()
+    switch_pair_brocade_df = switch_params_aggregated_df.copy()
+    switch_pair_brocade_df['switch_oui'] = switch_pair_brocade_df['switchWwn'].str.slice(start=6, stop=14)
+    mask_valid_fabric = ~switch_pair_brocade_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
+    # mask_not_vc = ~switch_pair_brocade_df['ModelName'].str.contains('virtual', case=False, na=False)
+    mask_not_vc = ~switch_pair_brocade_df['switch_oui'].isin(['00:14:38'])
+    mask_not_fd_xd = ~switch_pair_brocade_df['LS_type'].isin(['front_domain', 'translate_domain'])
+    switch_pair_brocade_df = switch_pair_brocade_df.loc[mask_valid_fabric & mask_not_vc & mask_not_fd_xd, switch_columns].copy()
     return switch_pair_brocade_df
 
 
