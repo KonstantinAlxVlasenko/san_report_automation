@@ -30,7 +30,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
     meop.show_module_info(project_steps_df, data_names)
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
-    switch_pair_df, *_ = data_lst
+    switch_pair_df, npv_ag_connected_devices_df, *_ = data_lst
     
     # force run when any output data from data_lst is not found in database or 
     # procedure execution explicitly requested (force_run flag is on) for any output or input data   

@@ -25,17 +25,7 @@ def oui_join(portshow_aggregated_df, oui_df, switchshow_ports_df):
     portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, switchshow_ports_df, join_lst=['switchWwn', 'slot', 'port'],
                                                     filled_lst=['Connected_portWwn_switchshow_filled'])
     # extract oui from WWNp
-    portshow_aggregated_df['Connected_oui'] = portshow_aggregated_df['Connected_portWwn_switchshow_filled'].str.slice(start=6, stop=14)
-    
-    # fill NodeName for slave trunks
-    nodename_df = portshow_aggregated_df[['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portId', 'NodeName']].copy()
-    nodename_df.dropna(inplace=True)
-
-    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, nodename_df, 
-                                                    join_lst=['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portId'],
-                                                    filled_lst=['NodeName'])  
-    portshow_aggregated_df['Node_oui'] = portshow_aggregated_df['NodeName'].str.slice(start=6, stop=14)
-    portshow_aggregated_df['Connected_oui'].fillna(portshow_aggregated_df['Node_oui'], inplace = True)
+    portshow_aggregated_df['Connected_oui'] = portshow_aggregated_df['Connected_portWwn_switchshow_filled'].str.slice(start=6, stop=14)    
     # add device types from oui DataFrame
     oui_df.dropna(subset=['Connected_oui'], inplace=True)
     portshow_aggregated_df = portshow_aggregated_df.merge(oui_df, how = 'left', on = ['Connected_oui'])

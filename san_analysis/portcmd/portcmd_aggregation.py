@@ -33,7 +33,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
     """
-    
+
+
     # lower case WWNp
     blade_servers_df.portWwn = blade_servers_df.portWwn.str.lower()
     portshow_df.Connected_portWwn = portshow_df.Connected_portWwn.str.lower()
@@ -61,6 +62,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # fillna portshow_aggregated DataFrame null values with values from blade_vc_join_df
     portshow_aggregated_df = \
         blade_vc_fillna(portshow_aggregated_df, blade_module_df, blade_vc_df, synergy_module_df)
+
     # fillna portshow_aggregated DataFrame null values with values from collected 3PAR configs
     portshow_aggregated_df = \
         storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df)
@@ -70,8 +72,11 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df = \
         portshow_aggregated_df.reindex(
             columns=[*portshow_aggregated_df.columns.tolist(), 'deviceType', 'deviceSubtype'])
+    
+    
     # add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)
     portshow_aggregated_df = oui_join(portshow_aggregated_df, oui_df, switchshow_ports_df)
+    
     # preliminarily assisgn to all initiators type SRV
     mask_initiator = portshow_aggregated_df.Device_type.isin(['Physical Initiator', 'NPIV Initiator'])
     portshow_aggregated_df.loc[mask_initiator, ['deviceType', 'deviceSubtype']] = ['SRV', 'SRV']
@@ -87,6 +92,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = \
         verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)
+    
     # fill isl links information
     portshow_aggregated_df = \
         fill_isl_link(portshow_aggregated_df, isl_aggregated_df)
@@ -96,15 +102,20 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
                             switch_params_aggregated_df)
     # filled device information for trunkarea links
     portshow_aggregated_df = verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df)
-
     # libraries Device_Host_Name correction to avoid hba information from FDMI DataFrame usage for library name
     portshow_aggregated_df.Device_Host_Name = \
         portshow_aggregated_df.apply(lambda series: lib_name_correction(series) \
         if pd.notna(series[['deviceType', 'Device_Name']]).all() else series['Device_Host_Name'], axis=1)
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias group name values
     portshow_aggregated_df = group_name_fillna(portshow_aggregated_df)
+
     # fill portshow_aggregated DataFrame Device_Host_Name column null values with alias values 
-    portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.alias, inplace = True)
+    mask_device_type_not_sw_vc = ~portshow_aggregated_df['deviceType'].isin(['SWITCH', 'VC'])
+    portshow_alias_df = portshow_aggregated_df.loc[mask_device_type_not_sw_vc, ['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portWwn', 'alias']]
+    portshow_alias_df.rename(columns={'alias': 'Device_Host_Name'}, inplace=True)
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, portshow_alias_df, join_lst=['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portWwn'], 
+                                                    filled_lst=['Device_Host_Name'])
+    
     # fill portshow_aggregated DataFrame Device_Host_Name column null values for VC modules 
     # with combination of 'VC' and serial number
     portshow_aggregated_df = vc_name_fillna(portshow_aggregated_df)
@@ -113,13 +124,6 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # with combination of device class and it's wwnp
     portshow_aggregated_df.Device_Host_Name = \
         portshow_aggregated_df.apply(lambda series: device_name_fillna(series), axis=1)
-    
-    # # sorting DataFrame TO_REMOVE sorting performed in the main portcmf fn
-    # sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
-    #                 'switchWwn', 'switchName']
-    # sort_order = [True, True, False, True, False, True]
-    # portshow_aggregated_df.sort_values(by=sort_columns, ascending=sort_order, inplace=True)
-
     return portshow_aggregated_df, alias_wwnn_wwnp_df, nsshow_unsplit_df, expected_ag_links_df
 
 
@@ -260,3 +264,5 @@ def find_msa_port(series):
         return 'B' + str(port_num-3)
         
     return series['Device_Port']
+
+

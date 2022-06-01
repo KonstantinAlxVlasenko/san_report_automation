@@ -136,10 +136,3 @@ def find_max_device_match_switch(sw_wwn_name_match_sr, sw_current_devices_sr, po
         return max_device_match_number, max_device_match_number_ratio, sw_pair_name_lst, sw_pair_wwn_lst
     else:
         return max_device_match_number, max_device_match_number_ratio, None, None
-
-
-
-
-
-
-

@@ -354,7 +354,6 @@ def verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df):
                                             filled_lst=[*device_columns[:-2], 'Connected_portId'])
         porttrunkarea_cp_df['Connected_NPIV'] = 'yes'
 
-
         # npiv trunk area link number defined by link number of trunk master link 
         master_port = porttrunkarea_cp_df['State'] == 'Master'
         porttrunkarea_master_df = porttrunkarea_cp_df.loc[master_port].copy()
@@ -365,6 +364,17 @@ def verify_trunkarea_link(portshow_aggregated_df, porttrunkarea_df):
                                             filled_lst=['NPIV_link_number'])
         # add device information for slave trunk area links
         portshow_aggregated_df = portshow_aggregated_df.astype({'portIndex': 'str', 'slot': 'str', 'port': 'str'}, errors = 'ignore')
+        
+        # at this moment slave links have UNKNOWN deviceType and deviceSubtype
+        
+        slave_links_df = porttrunkarea_cp_df.loc[porttrunkarea_cp_df['State'] == 'Slave', ['switchWwn', 'slot', 'port']].copy()
+        portshow_aggregated_df = pd.merge(portshow_aggregated_df, slave_links_df, how='left', on=['switchWwn', 'slot', 'port'], indicator='Trunk_slave_indicator')
+        # remove UNKNOWN deviceType for slave links
+        mask_devicetype_unknown = portshow_aggregated_df['deviceType'] == 'UNKNOWN'
+        mask_slave_link = portshow_aggregated_df['Trunk_slave_indicator'] == 'both'
+        portshow_aggregated_df.loc[mask_slave_link & mask_slave_link, ['deviceType', 'deviceSubtype']] = (None, None)
+        portshow_aggregated_df.drop(columns=['Trunk_slave_indicator'], inplace=True)
+        # add device information for trunk slave link
         portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, porttrunkarea_cp_df, 
                                                             join_lst=[*switch_columns, 'Connected_portId', *port_columns], 
                                                             filled_lst=device_columns)
