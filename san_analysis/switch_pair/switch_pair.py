@@ -51,7 +51,12 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
         
         switch_pair_bckp_df = switch_pair_df.copy()
         
+        first_while_run = True
+
         while True:
+            if first_while_run and not first_run:
+                print('Summary for switch pairs loaded from database:')
+                first_while_run = False
             show_switch_wwn_pair_summary(switch_pair_df)
             reply = meop.reply_request('Do you want to CHANGE switch pairs? (y)es/(n)o: ')
             if reply == 'y':
@@ -129,11 +134,11 @@ def show_switch_wwn_pair_summary(switch_pair_df):
     """Function to display status of switchWwn pair match."""
 
     if all_switch_pairs_matched(switch_pair_df):
-        print('ALL switch pairs have MATCHED.\n')
+        print('\nALL switch pairs have MATCHED.\n')
         pairing_type_stat_df = switch_pair_df.groupby(by=['Fabric_name', 'Switch_pairing_type'])['Switch_pairing_type'].count()
         print(pairing_type_stat_df)
     else:
-        print('Switch pairs MISMATCH is found.\n')
+        print('\nSwitch pairs MISMATCH is found.\n')
         print(count_switch_pairs_match_stats(switch_pair_df))
     print('\n')
 
