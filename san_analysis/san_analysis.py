@@ -77,7 +77,6 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
     portshow_npiv_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
                                                 isl_statistics_df, blade_module_loc_df, switch_pair_df, project_constants_lst)
 
-    exit()
     
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 

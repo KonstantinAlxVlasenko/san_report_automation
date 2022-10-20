@@ -88,7 +88,7 @@ def message_extract(errdump_aggregated_df, pattern_dct):
     for pattern, extracted_columns in extract_pattern_columns_lst:
         # pattern contains groups but str.cotains used to identify mask
         # supress warning message
-        warnings.filterwarnings("ignore", 'This pattern has match groups')
+        warnings.filterwarnings("ignore", 'This pattern is interpreted as a regular expression, and has match groups.')
         mask = errdump_aggregated_df['Message'].str.contains(pattern, regex=True)
         errdump_aggregated_df.loc[mask, extracted_columns] = errdump_aggregated_df.loc[mask, 'Message'].str.extract(pattern).values
     

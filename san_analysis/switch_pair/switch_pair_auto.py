@@ -121,14 +121,21 @@ def search_vc_cisco_pairs(portshow_aggregated_df, fabric_labels_lst):
     
     # filter NPV connected switches except Brocade (VC, CISCO)
     vc_cisco_pair_df = create_sw_npv_dataframe(portshow_aggregated_df)
+    
     # series with wwn and switch name correspondance
     vc_cisco_wwn_name_match_sr = create_wwn_name_match_series(vc_cisco_pair_df)
     
+    
+
     if vc_cisco_pair_df.empty:
-        return vc_cisco_pair_df
+        return vc_cisco_pair_df, pd.DataFrame()
+
+
     # find devices connected to VC and Cisco switches
     portshow_vc_cisco_devices_df = find_sw_npv_ag_connected_devices(vc_cisco_pair_df, portshow_aggregated_df, merge_column='NodeName')
     
+
+
     # find switch pairs with highest connected device match
     vc_cisco_pair_df[sw_pair_columns] = vc_cisco_pair_df.apply(
         lambda series: find_nonzero_device_connected_switch_pair(series, vc_cisco_wwn_name_match_sr, portshow_vc_cisco_devices_df, 
@@ -138,4 +145,6 @@ def search_vc_cisco_pairs(portshow_aggregated_df, fabric_labels_lst):
     vc_cisco_pair_df[sw_pair_columns[3:7]] = vc_cisco_pair_df.apply(
         lambda series: find_zero_device_connected_switchname_match(series, vc_cisco_pair_df.copy(), vc_cisco_wwn_name_match_sr, 
                                                                     sw_pair_columns, min_sw_name_match_ratio), axis=1)     
+    
+    
     return vc_cisco_pair_df, portshow_vc_cisco_devices_df
