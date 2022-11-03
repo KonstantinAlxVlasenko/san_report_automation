@@ -45,7 +45,6 @@ def portcmd_extract(chassis_params_df, project_constants_lst):
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {chassis_params_sr["chassis_name"]} switch portshow, portloginshow and statsshow'
             print(info, end =" ")
-            # if chassis_params_sr["chassis_name"] == 's1bchwcmn05-fcsw1':
             sw_portcmd_lst = current_config_extract(san_portshow_lst, pattern_dct, 
                             chassis_params_sr, portcmd_params, portcmd_params_add)                  
             meop.show_collection_status(sw_portcmd_lst, max_title, len(info))
@@ -85,6 +84,7 @@ def current_config_extract(san_portshow_lst, pattern_dct,
                 break
             # sshow_port section start
             if re.search(pattern_dct['section_sshow_port'], line):
+                print(line)
                 # when section is found corresponding collected dict values changed to True
                 collected['portshow'] = True
                 while not re.search(pattern_dct['rebuilt finished'],line):

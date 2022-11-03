@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Tue Nov  1 18:17:13 2022
+
+@author: kavlasenko
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu May 12 13:51:11 2022
 
 @author: vlasenko
@@ -9,26 +16,9 @@ import win32com.client
 import os
 import pandas as pd
 import re
-import time
-from datetime import datetime
-
-
 script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
 # Change the current working directory
 os.chdir(script_dir)
-
-
-log_file = "visio_graph_log.txt"
-
-
-
-# str_dev = connected_devices_df.to_string()
-
-
-
-
-start_time = f'start: {current_datetime()}'
-add_log_entry(log_file, '*'*40, start_time)
 
 visio = win32com.client.Dispatch("Visio.Application")
 visio.Visible = 1
@@ -36,20 +26,18 @@ visio.Visible = 1
 
 
 san_template = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts\SAN_Drawings_template_DataLine2.vsdm'
+doc = visio.Documents.Add(san_template)
 
 
-visio.Documents.Add(san_template)
+# for shape  in doc.masters:
+#     print(shape.Name)
+    
+# print(len(doc.masters))
+# doc.masters[0].name
 
-# doc = visio.Documents.Add(san_template)
-# print(doc.Pages.count)
-# print(visio.ActivePage.Name)
-
-# doc.Pages.Add()
+# doc.MacrosEnabled 
 
 
-# doc = visio.Documents.Add(san_template)
-
-# print(visio.Documents[0])
 
 stn = visio.Documents.OpenEx(r"C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts\san_assessment_stn_upd.vssx", 64)
 
@@ -65,16 +53,7 @@ fabric_name_lst = list(san_graph_sw_pair_df['Fabric_name'].unique())
 
 print(fabric_name_lst)
 
-
-
-# print(bool(visio.ActivePage))
-# print(doc.Pages[0])    
-# time.sleep(10)
-# print(bool(visio.ActivePage))    
-
-
-
-  
+# if visio:
 visio.ActivePage.Name = fabric_name_lst[0]
 for fabric_name in fabric_name_lst[1:]:
     visio.ActivePage.Duplicate()
@@ -90,9 +69,9 @@ LINK_FONT_SIZE = "12 pt"
 # Y_AG_LEVEL = 120
     
 
-# fabric_name_prev = None
-# graph_level_prev = None
-# x_group_current = 0
+fabric_name_prev = None
+graph_level_prev = None
+x_group_current = 0
 # y_group_current = 0
 
 # san_graph_switch_df = san_graph_switch_df.iloc[:8].copy()
@@ -102,86 +81,96 @@ fabric_label_colours_dct = dict(zip(fabric_labels, HPE_PALETTE))
 
 
 
-
-def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn):
-    """Function to add swith and VC shapes to Visio document pages (fabric_name)""" 
-
-
-    fabric_name_prev = None
-    graph_level_prev = None
-    x_group_current = 0
-    doc = visio.ActiveDocument
     
-    add_log_entry(log_file, '\nSwitches\n', 'Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate')
+for idx, switch_pair in san_graph_sw_pair_df.iterrows():
+    
+    # print(idx, switch_pair['x_group_offset'])
+    
+    # if idx < 12:
+    #     continue
+    
+    # if idx > 8:
+    #     break
+    
+    fabric_name_current = switch_pair['Fabric_name']
+    graph_level_current = switch_pair['graph_level']
+    
+    page = doc.Pages.ItemU(fabric_name_current)
+    visio.ActiveWindow.Page = fabric_name_current
+    active_window = visio.ActiveWindow
+    
+    
+    if fabric_name_current != fabric_name_prev:
+        x_group_current = X_START
+        fabric_name_prev = fabric_name_current
         
-    for idx, switch_pair in san_graph_sw_pair_df.iterrows():
         
-        # add_log_entry(log_file, '\n', switch_pair.to_string())
+    if graph_level_current != graph_level_prev:
+        x_group_current = X_START
+        graph_level_prev = graph_level_current
+    
+    print("X: ", x_group_current)
+    
+    # print(switch_pair)
+    
+    master_shapes = switch_pair['master_shape'].split(', ')
+    shape_names = switch_pair['switchName_Wwn'].split(', ')
+    shape_text = switch_pair['switchName_DID'].split('/ ')[::-1]
+    
+    for i, master_shape, shape_name in list(zip(range(len(master_shapes)-1, -1, -1), master_shapes, shape_names))[::-1]:
         
         
-        fabric_name_current = switch_pair['Fabric_name']
-        # graph_level: core, edge, ag
-        graph_level_current = switch_pair['graph_level']
+        
+        master = stn.Masters(master_shape)
+        x = x_group_current - i * switch_pair['x_shape_offset']
+        y = switch_pair['y_group_level'] + i * switch_pair['y_shape_offset']
+        
+        print(fabric_name_current, shape_name, i, x, y)
+        
+        shape = page.Drop(master, x, y)
+        shape.Name = shape_name
         
         
-        doc = visio.ActiveDocument
-        page = doc.Pages.ItemU(fabric_name_current)
-        visio.ActiveWindow.Page = fabric_name_current   
-        
-        # reset x-coordinate if new page (fabric_name) selected
-        if fabric_name_current != fabric_name_prev:
-            x_group_current = X_START
-            fabric_name_prev = fabric_name_current
+        if 'DIR' in switch_pair['switchClass_mode']:
+            shape.Text = shape_text[i] + "\n" + switch_pair['ModelName']
+            # shape.Cells("Char.Size").FormulaU = SHAPE_FONT_SIZE
+            shape_chars = shape.Characters
+            shape_chars.CharProps(2, 0)
+            shape_chars.End = len(shape_text[i])
+            shape_chars.CharProps(2, 1)
+        else:
+            shape.Text = " "
+    
+    
+    
+    if not 'DIR' in switch_pair['switchClass_mode']:
+        bottom_shape = page.Shapes.ItemU(shape_names[-1])
+        if switch_pair['ModelName']:
             
-        # reset x-coordinate if shape drop level (y-coordinate) changed    
-        if graph_level_current != graph_level_prev:
-            x_group_current = X_START
-            graph_level_prev = graph_level_current
+            bottom_shape.Text = switch_pair['switchName_DID'] + "\n" + switch_pair['ModelName']
+        else:
+            bottom_shape.Text = switch_pair['switchName_DID']
+        # bottom_shape.Cells("Char.Size").FormulaU = SHAPE_FONT_SIZE
+        # bottom_shape.CellsU("TxtHeight").FormulaForceU = "Height*0"
+        # bottom_shape.CellsU("TxtPinY").FormulaForceU = "Height*0"
         
-        print("X: ", x_group_current)
+        # bold switch name
+        # shape_chars = bottom_shape.Characters
+        # shape_chars.End = len(switch_pair['switchName_DID'])
+        # shape_chars.CharProps(2, 1)
+    
+    # # create switch_pair groups
+    # active_window.DeselectAll()
+    # for shape_name in shape_names:
+    #     active_window.Select(page.Shapes.ItemU(shape_name), 2)
+    # sw_group = active_window.Selection.Group()
+    # # active_window.DeselectAll()
+
+    
+    x_group_current =  x_group_current + switch_pair['x_group_offset']
         
-        # split switch_pairs details to build Visio graph
-        master_shapes = switch_pair['master_shape'].split(', ')
-        shape_names = switch_pair['switchName_Wwn'].split(', ')
-        shape_text = switch_pair['switchName_DID'].split('/ ')[::-1]
-        
-        # first drop second switch of the switch_pair to make the first switch visually overlap to the second switch 
-        # two ENT swtiches sw1 and sw2 -> [(0, 'ENT', 'sw2'), (1, 'ENT', 'sw1')]
-        for i, master_shape, shape_name in list(zip(range(len(master_shapes)-1, -1, -1), master_shapes, shape_names))[::-1]:
-            
-            
-            master = stn.Masters(master_shape)
-            x = x_group_current - i * switch_pair['x_shape_offset']
-            y = switch_pair['y_group_level'] + i * switch_pair['y_shape_offset']
-            
-            print(fabric_name_current, shape_name, i, x, y)
-            
-            log_entry = ' '.join([fabric_name_current, shape_name, str(i), str(x), str(y)])
-            add_log_entry(log_file, log_entry)
-            
-            shape = page.Drop(master, x, y)
-            shape.Name = shape_name
-            
-            
-            if 'DIR' in switch_pair['switchClass_mode']:
-                shape.Text = shape_text[i] + "\n" + switch_pair['ModelName']
-            else:
-                shape.Text = " "
-        
-        
-        
-        if not 'DIR' in switch_pair['switchClass_mode']:
-            bottom_shape = page.Shapes.ItemU(shape_names[-1])
-            if switch_pair['ModelName']:
-                
-                bottom_shape.Text = switch_pair['switchName_DID'] + "\n" + switch_pair['ModelName']
-            else:
-                bottom_shape.Text = switch_pair['switchName_DID']
-        
-        x_group_current =  x_group_current + switch_pair['x_group_offset']
-        
-# add swith and vc shapes
-add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn)
+
+
 # add isl links
 add_visio_inter_switch_connections(san_graph_isl_df, visio, fabric_label_colours_dct)
 # add npiv links
@@ -203,10 +192,6 @@ add_visio_devices(storage_shape_links_df, visio, stn, fabric_label_colours_dct)
 # create visio groups for switch Pairs
 group_switch_pairs(san_graph_sw_pair_group_df, visio)
 
-finish_time = f'finish: {current_datetime()}'
-add_log_entry(log_file, '\n', finish_time, '^'*40, )
-
-
 # doc = visio.ActiveDocument
 # doc.MacrosEnabled
 # doc.saveas(r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts\testsave.vsdm')
@@ -215,51 +200,14 @@ add_log_entry(log_file, '\n', finish_time, '^'*40, )
 ########################################################
 # Functions
 
-def current_datetime():
-    
-
-    now = datetime.now()
-    # now = now.strftime("%d/%m/%Y %H:%M:%S")
-    return now.strftime("%d/%m/%Y %H:%M:%S")
-
-
-def add_log_entry(file_name, *args):
-    # Open the file in append & read mode ('a+')
-    with open(file_name, "a+") as file_object:
-        appendEOL = False
-        # Move read cursor to the start of file.
-        file_object.seek(0)
-        # Check if file is not empty
-        data = file_object.read(100)
-        if len(data) > 0:
-            appendEOL = True
-        # Iterate over each string in the list
-        for log_entry in args:
-            # If file is not empty then append '\n' before first line for
-            # other lines always append '\n' before appending line
-            if appendEOL == True:
-                file_object.write("\n")
-            else:
-                appendEOL = True
-            # Append element at the end of file
-            file_object.write(log_entry)
 
 
 def add_visio_inter_switch_connections(inter_switch_links_df, visio, fabric_label_colours_dct):
     """Function to create inter switch shape connections"""
     
-    add_log_entry(log_file, '\nLinks\n', 'Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn')
-    
-    
-    
     for _, link_sr in inter_switch_links_df.iterrows():
         
-        log_entry =  ' '.join([link_sr['Fabric_name'], link_sr['shapeName'], '  ---->  ', link_sr['Connected_shapeName']])
-        add_log_entry(log_file, log_entry)
         print(link_sr['shapeName'], '  ---->  ', link_sr['Connected_shapeName'])
-        
-        
-        
         
         fabric_name_current = link_sr['Fabric_name']
         doc = visio.ActiveDocument
@@ -275,20 +223,14 @@ def add_visio_devices(san_links_df, visio, stn, fabric_label_colours):
     create cnnections between device shapes and switch shapes"""    
 
 
-    
-
     fabric_name_prev = None
     x_coordinate = 0
     
-    add_log_entry(log_file, '\nEdge devices')
     san_device_shapes_df = find_device_shapes(san_links_df)
     
     print(san_device_shapes_df)
     
     for _, device_sr in san_device_shapes_df.iterrows():
-        
-        
-        add_log_entry(log_file, '\n', '-'*30, device_sr.to_string())
         
         # if link['Fabric_name'] != "BB":
         #     continue
@@ -310,13 +252,10 @@ def add_visio_devices(san_links_df, visio, stn, fabric_label_colours):
         drop_device_shape(device_sr, page, stn, x_coordinate)
 
         shape_links_df = find_device_shape_links(device_sr, san_links_df)
-        add_log_entry(log_file, shape_links_df.to_string())
-        
         print(shape_links_df)
         
         for _, link_sr in shape_links_df.iterrows():
-            
-            
+        
             create_two_shapes_connection(link_sr, page, stn, fabric_label_colours, source='Device_shapeName', destination='switch_shapeName')    
         
         x_coordinate =  x_coordinate + device_sr['x_group_offset']
@@ -411,14 +350,8 @@ def create_two_shapes_connection(link_sr, page, stn, fabric_label_colours_dct, s
 def group_switch_pairs(san_graph_sw_pair_df, visio, ):
     """Function to create Visio groups for each switch pair"""
     
-    
-    add_log_entry(log_file, '\nSwitch groups')
-    
-
-    
     for idx, switch_pair in san_graph_sw_pair_df.iterrows():
         
-        add_log_entry(log_file, '\n', switch_pair.to_string())
         
         fabric_name_current = switch_pair['Fabric_name']
         
@@ -426,7 +359,6 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, ):
         page = doc.Pages.ItemU(fabric_name_current)
         visio.ActiveWindow.Page = fabric_name_current
         active_window = visio.ActiveWindow
-        
         
         shape_names = switch_pair['switchName_Wwn'].split(', ')
         
@@ -443,62 +375,62 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, ):
 ##############################################################################################    
     # break
 
-# san_graph_npiv_df.columns
-# page = doc.Pages.ItemU("VZ")
+san_graph_npiv_df.columns
+page = doc.Pages.ItemU("VZ")
 
-# len(page.Shapes)
+len(page.Shapes)
     
-# page.Shapes.ItemU("xtau-fcsw2 10:00:50:eb:1a:3f:c2:12").NameU
+page.Shapes.ItemU("xtau-fcsw2 10:00:50:eb:1a:3f:c2:12").NameU
     
-# page.Shapes("Sheet.34").NameU
+page.Shapes("Sheet.34").NameU
 
-# page.Shapes.count
-# visio.ActiveWindow.Page = "BB"    
+page.Shapes.count
+visio.ActiveWindow.Page = "BB"    
     
 
 
 
-# active_window = visio.ActiveWindow
-# active_window.DeselectAll()
+active_window = visio.ActiveWindow
+active_window.DeselectAll()
 
-# active_window.Type
-# # active_window.SelectAll()
+active_window.Type
+# active_window.SelectAll()
 
-# # active_window.Selection.SelectAll()
-# # active_window.Selection.Group()
-
-
-# page = visio.ActivePage
-
-# active_window.Selection.Select(shape2, 2)
-
-# # active_window.Select(shape1, 2)
-# active_window.Select(shape2, 2)
-# active_window.Select(shape3, 2)
-# # active_window.Selection.ContainingShape
-# active_window.Selection.Count
-
-# sw_group = active_window.Selection.Group()
+# active_window.Selection.SelectAll()
+# active_window.Selection.Group()
 
 
-# master = stn.Masters("fcr_fd")
-# shape = page.Drop(master, 100, 100)
-# shape.Text = "FCR switch"
-# shape.Cells("Char.Size").FormulaU = SHAPE_FONT_SIZE
+page = visio.ActivePage
 
-# shape_tst = page.Shapes.ItemU("dr03av07-r2-228 10:00:88:94:71:7e:7d:88")
-# len(shape_tst.Text)
-# shape_chars = shape_tst.Characters
+active_window.Selection.Select(shape2, 2)
 
-# shape_chars.Begin = 0
-# shape_chars.End = 15
-# shape_chars.Cells("CharProps").FormulaU = 2
+# active_window.Select(shape1, 2)
+active_window.Select(shape2, 2)
+active_window.Select(shape3, 2)
+# active_window.Selection.ContainingShape
+active_window.Selection.Count
 
-# shape_chars.CharProps(2, 1)
+sw_group = active_window.Selection.Group()
 
-# bool(switch_pair['ModelName'])
 
-# for i, a, b in zip(range(len(master_shapes)), ['a', 'b', 'c'], [1,2,3]):
-#     print(i, a,b)
+master = stn.Masters("fcr_fd")
+shape = page.Drop(master, 100, 100)
+shape.Text = "FCR switch"
+shape.Cells("Char.Size").FormulaU = SHAPE_FONT_SIZE
+
+shape_tst = page.Shapes.ItemU("dr03av07-r2-228 10:00:88:94:71:7e:7d:88")
+len(shape_tst.Text)
+shape_chars = shape_tst.Characters
+
+shape_chars.Begin = 0
+shape_chars.End = 15
+shape_chars.Cells("CharProps").FormulaU = 2
+
+shape_chars.CharProps(2, 1)
+
+bool(switch_pair['ModelName'])
+
+for i, a, b in zip(range(len(master_shapes)), ['a', 'b', 'c'], [1,2,3]):
+    print(i, a,b)
     
-# list(range(2, -1, -1))
+list(range(2, -1, -1))

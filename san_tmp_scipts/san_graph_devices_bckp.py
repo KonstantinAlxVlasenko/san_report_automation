@@ -18,7 +18,7 @@ import numpy as np
 import re
 
 import pandas as pd
-script_dir = r'C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\05.PYTHON\Projects\san_tmp_scipts'
+script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
 # Change the current working directory
 os.chdir(script_dir)
 import general_cmd_module as dfop

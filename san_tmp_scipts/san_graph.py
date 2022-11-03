@@ -11,18 +11,18 @@ import numpy as np
 import re
 
 import pandas as pd
-script_dir = r'C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\05.PYTHON\Projects\san_tmp_scipts'
+script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
 # Change the current working directory
 os.chdir(script_dir)
 import general_cmd_module as dfop
 
 # # MTS Moscow
-# db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\MTS\SAN Assessment\JAN2022\mts_msc\database_MTS_msk"
+# db_path = r"D:\Documents\01.CUSTOMERS\MTS\SAN Assessment\JAN2022\mts_msc\database_MTS_msk"
 # db_file = r"MTS_msk_analysis_database.db"
 
-# MTS SPb
-db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\MTS\SAN Assessment\NOV2021\mts_spb\database_MTS_spb"
-db_file = r"MTS_spb_analysis_database.db"
+# # MTS SPb
+# db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\MTS\SAN Assessment\NOV2021\mts_spb\database_MTS_spb"
+# db_file = r"MTS_spb_analysis_database.db"
 
 # # MTS Tech
 # db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\MTS\SAN Assessment\NOV2021\mts_tech\database_MTS_Techblock"
@@ -48,6 +48,9 @@ db_file = r"MTS_spb_analysis_database.db"
 # db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\Unicredit\SAN Assessment\MAR 2021\database_Unicredit"
 # db_file = r"Unicredit_analysis_database.db"
 
+# DataLine Nord
+db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN NORD\OCT2022\database_DataLine Nord"
+db_file = r"DataLine Nord_analysis_database.db"
 
 data_names = ['switch_params_aggregated', 'isl_aggregated', 'switch_pair', 'isl_statistics', 'NPIV_statistics']
 data_lst = dfop.read_database(db_path, db_file, *data_names)
@@ -61,18 +64,26 @@ switch_params_aggregated_df, isl_aggregated_df, switch_pair_df, isl_statistics_d
 
 
 
-
+# switch_params_aggregated_df['FC_Router'] = "ON"
 
 
 
 # import san_graph
-san_automation_file = r'C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\05.PYTHON\Projects\san_report_automation\san_automation_info.xlsx'
+san_automation_file = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_automation_info.xlsx'
 
 san_graph_details_df = pd.read_excel(san_automation_file, sheet_name='san_graph', header=2)
 
 
 
-pattern_dct = {'native_speed': r'Native_(N?\d+G?)', 'speed': r'^(N?\d+G?)$', 'ls_mode': r'Long_Distance_(\w+)', 'distance': r'distance += +(\d+ (K|k)m)', 'str_contains_wwn': '([0-9a-f]{2}:){7}[0-9a-f]{2}', 'link_quantity': '(?:ISL|IFL|Link)_\d+'}
+# pattern_dct = {'native_speed': r'Native_(N?\d+G?)', 'speed': r'^(N?\d+G?)$', 'ls_mode': r'Long_Distance_(\w+)', 'distance': r'distance += +(\d+ (K|k)m)', 'str_contains_wwn': '([0-9a-f]{2}:){7}[0-9a-f]{2}', 'link_quantity': '(?:ISL|IFL|Link)_\d+'}
+
+pattern_dct = {'native_speed': r'Native_(N?\d+G?)', 'speed': r'^(N?\d+G?)$', 'ls_mode': r'Long_Distance_(\w+)', 
+                'distance': r'distance += +(\d+ (K|k)m)', 'wwn': '([0-9a-f]{2}:){7}[0-9a-f]{2}', 
+                'link_quantity': '(?:ISL|IFL|Link)_\d+', 'enclosure_slot': r'(Enclosure .+?) slot (\d+)'}
+
+
+
+SAN_TOTAL_NAME = 'SAN_Total'
 
 
 """imported-fabric-id
@@ -637,29 +648,106 @@ def create_san_graph_isl(isl_aggregated_df, isl_statistics_df, switch_pair_df, p
     san_graph_isl_df = create_isl_shape_names(san_graph_isl_df)
     return san_graph_isl_df
 
+
+
+def add_san_total_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_df):
+    """Function checks if FC Router present in any fabric.
+    If yes then creates summary SAN switch pairs containing all fabrics Native mode switches only.
+    Then adds summary SAN switch pairs to the switch pairs of all other fabrics."""
+    
+    
+    if (switch_params_aggregated_df['FC_Router'] == "ON").any():
+        # drop all devices exept Native mode switches
+        mask_native_only = ~san_graph_sw_pair_df['switchClass_mode'].str.contains('AG|NPV|VC|FD|XD', na=False)
+        san_total_graph_sw_pair_df = san_graph_sw_pair_df.loc[mask_native_only].copy()
+        # assign same name to all fabrics 
+        san_total_graph_sw_pair_df['Fabric_name'] = SAN_TOTAL_NAME
+        # same switchWwn might present in the Backbone and edge fabrics
+        san_total_graph_sw_pair_df.drop_duplicates(subset='switchName_Wwn', inplace=True)
+        san_total_graph_sw_pair_df.sort_values(by=['Fabric_name', 'switchClass_weight', 'switchName_DID'], inplace=True, ignore_index=True)
+        # calculate y-axis coordinate for each switch pair
+        calculate_sw_grp_y_axis_coordinate(san_total_graph_sw_pair_df)    
+        # concatenatenate san and san_total
+        san_graph_sw_pair_df = pd.concat([san_total_graph_sw_pair_df, san_graph_sw_pair_df]).copy()
+    return san_graph_sw_pair_df
+
+
+def add_san_total_graph_isl(san_graph_isl_df, san_graph_switch_df, switch_params_aggregated_df):
+    """Function checks if FC Router present in any fabric.
+    If yes then creates summary SAN switch isls containing all fabrics Native mode switch isls only.
+    Then adds summary SAN switch isls to the switch isls of all other fabrics."""
+    
+    if (switch_params_aggregated_df['FC_Router'] == "ON").any():
+        # find FD, XD wwns
+        mask_xd_fd = san_graph_switch_df['LS_type_report'].isin(['translate_domain', 'front_domain'])
+        fd_xd_df = san_graph_switch_df.loc[mask_xd_fd, ['switchName', 'switchWwn', 'LS_type_report']]
+        # drop links to and from xd and fd
+        mask_phantom_in_switchwwn = san_graph_isl_df['switchWwn'].isin(fd_xd_df['switchWwn'])
+        mask_phantom_in_connected_switchwwn = san_graph_isl_df['Connected_switchWwn'].isin(fd_xd_df['switchWwn'])
+        san_total_graph_isl_df = san_graph_isl_df.loc[~mask_phantom_in_switchwwn & ~mask_phantom_in_connected_switchwwn].copy()
+        # assign same name to all fabrics
+        san_total_graph_isl_df['Fabric_name'] = SAN_TOTAL_NAME
+        # concatenatenate san and san_total
+        san_graph_isl_df = pd.concat([san_total_graph_isl_df, san_graph_isl_df]).copy()
+    return san_graph_isl_df
+        
+
 san_graph_switch_df = create_san_graph_switch(switch_pair_df, isl_statistics_df, san_graph_details_df)
 san_graph_sw_pair_df = create_san_graph_sw_pair(san_graph_switch_df)
+san_graph_sw_pair_df = add_san_total_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_df)
 san_graph_isl_df = create_san_graph_isl(isl_aggregated_df, isl_statistics_df, switch_pair_df, pattern_dct)
+san_graph_isl_df = add_san_total_graph_isl(san_graph_isl_df, san_graph_switch_df, switch_params_aggregated_df)
 san_graph_npiv_df = create_san_graph_npv(npiv_statistics_df, pattern_dct)
 
-###########
-# san_graph_sw_pair_df for SAN_Total (All Native switches in Fabric with BB)
-mask_native_only = ~san_graph_sw_pair_df['switchClass_mode'].str.contains('AG|NPV|VC|FD|XD', na=False)
-san_graph_sw_pair_df = san_graph_sw_pair_df.loc[mask_native_only]
-san_graph_sw_pair_df['Fabric_name'] = 'SAN_Total'
-
-san_graph_sw_pair_df.drop_duplicates(subset='switchName_Wwn', inplace=True)
-san_graph_sw_pair_df.sort_values(by=['Fabric_name', 'switchClass_weight', 'switchName_DID'], inplace=True, ignore_index=True)
-# calculate y-axis coordinate for each switch pair
-calculate_sw_grp_y_axis_coordinate(san_graph_sw_pair_df)
+# san_graph_switch_df_b = san_graph_switch_df.copy()
+# san_graph_sw_pair_df_b = san_graph_sw_pair_df.copy()
+# san_graph_isl_df_b = san_graph_isl_df.copy()
+# san_graph_npiv_df_b = san_graph_npiv_df.copy()
 
 
-# find FD, XD links
+# data_before_lst = [san_graph_switch_df_b, san_graph_sw_pair_df_b, san_graph_isl_df_b, san_graph_npiv_df_b]
+# data_after_lst = [san_graph_switch_df, san_graph_sw_pair_df, san_graph_isl_df, san_graph_npiv_df]
 
-mask_xd_fd = san_graph_switch_df['LS_type_report'].isin(['translate_domain', 'front_domain'])
-fd_xd_df = san_graph_switch_df.loc[mask_xd_fd, ['switchName', 'switchWwn', 'LS_type_report']]
-# mask_phantom_in_switchwwn = san_graph_isl_df[['switchWwn', 'Connected_switchWwn']].isin(fd_xd_df['switchWwn']).any(axis=1)
-mask_phantom_in_switchwwn = san_graph_isl_df['switchWwn'].isin(fd_xd_df['switchWwn'])
-mask_phantom_in_connected_switchwwn = san_graph_isl_df['Connected_switchWwn'].isin(fd_xd_df['switchWwn'])
-san_graph_isl_df = san_graph_isl_df.loc[~mask_phantom_in_switchwwn & ~mask_phantom_in_connected_switchwwn].copy()
-san_graph_isl_df['Fabric_name'] = 'SAN_Total'
+# def find_differences(data_before_lst, data_after_lst, data_names):
+
+#     for df_name, before_df, after_df in zip(data_names, data_before_lst, data_after_lst):
+#         df_equality = after_df.equals(before_df)
+#         print(f"\n{df_name} equals {df_equality}")
+#         if not df_equality:
+#             print("   column names are equal: ", before_df.columns.equals(after_df.columns))
+#             print("      Unmatched columns:")
+#             for column in before_df.columns:
+#                 if not before_df[column].equals(after_df[column]):
+#                     print("        ", column)  
+
+# find_differences(data_before_lst, data_after_lst, ['san_graph_switch_df', 'san_graph_sw_pair_df', 'san_graph_isl_df', 'san_graph_npiv_df'])
+
+
+# ###########
+# # san_graph_sw_pair_df for SAN_Total (All Native switches in Fabric with BB)
+# if (switch_params_aggregated_df['FC_Router'] == "ON").any():
+
+
+#     mask_native_only = ~san_graph_sw_pair_df['switchClass_mode'].str.contains('AG|NPV|VC|FD|XD', na=False)
+#     san_total_graph_sw_pair_df = san_graph_sw_pair_df.loc[mask_native_only].copy()
+#     san_total_graph_sw_pair_df['Fabric_name'] = SAN_TOTAL_NAME
+
+#     san_total_graph_sw_pair_df.drop_duplicates(subset='switchName_Wwn', inplace=True)
+#     san_total_graph_sw_pair_df.sort_values(by=['Fabric_name', 'switchClass_weight', 'switchName_DID'], inplace=True, ignore_index=True)
+#     # calculate y-axis coordinate for each switch pair
+#     calculate_sw_grp_y_axis_coordinate(san_total_graph_sw_pair_df)
+
+
+#     # find FD, XD links
+    
+#     mask_xd_fd = san_graph_switch_df['LS_type_report'].isin(['translate_domain', 'front_domain'])
+#     fd_xd_df = san_graph_switch_df.loc[mask_xd_fd, ['switchName', 'switchWwn', 'LS_type_report']]
+#     # mask_phantom_in_switchwwn = san_graph_isl_df[['switchWwn', 'Connected_switchWwn']].isin(fd_xd_df['switchWwn']).any(axis=1)
+#     mask_phantom_in_switchwwn = san_graph_isl_df['switchWwn'].isin(fd_xd_df['switchWwn'])
+#     mask_phantom_in_connected_switchwwn = san_graph_isl_df['Connected_switchWwn'].isin(fd_xd_df['switchWwn'])
+#     san_total_graph_isl_df = san_graph_isl_df.loc[~mask_phantom_in_switchwwn & ~mask_phantom_in_connected_switchwwn].copy()
+#     san_total_graph_isl_df['Fabric_name'] = SAN_TOTAL_NAME
+    
+#     # concatenatenate san and san_total
+#     san_graph_sw_pair_df = pd.concat([san_total_graph_sw_pair_df, san_graph_sw_pair_df]).copy()
+#     san_graph_isl_df = pd.concat([san_total_graph_isl_df, san_graph_isl_df]).copy()

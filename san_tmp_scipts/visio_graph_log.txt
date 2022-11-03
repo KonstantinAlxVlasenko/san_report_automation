@@ -1,0 +1,1623 @@
+****************************************
+start: 03/11/2022 11:37:45
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, X, Y
+NORD n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0 0 35 90
+NORD n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60 1 35 95
+NORD san02-nord 10:00:88:94:71:bd:68:c0 0 75 100
+NORD san01-nord 10:00:88:94:71:bd:69:40 1 75 105
+NORD san04-nord 10:00:c4:f5:7c:c7:00:70 0 115 90
+NORD san03-nord 10:00:c4:f5:7c:b2:38:1b 1 115 95
+NORD san12-nord 10:00:d8:1f:cc:06:a9:dd 0 155 100
+NORD san11-nord 10:00:d8:1f:cc:06:c8:e9 1 155 105
+NORD san98-nord 10:00:d8:1f:cc:7c:ca:c0 0 195 90
+NORD san97-nord 10:00:d8:1f:cc:7c:cb:20 1 195 95
+NORD san100-nord 10:00:d8:1f:cc:7c:97:c0 0 235 100
+NORD san99-nord 10:00:d8:1f:cc:7c:b8:00 1 235 105
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san03-nord 10:00:c4:f5:7c:b2:38:1b
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san11-nord 10:00:d8:1f:cc:06:c8:e9
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san99-nord 10:00:d8:1f:cc:7c:b8:00
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san97-nord 10:00:d8:1f:cc:7c:cb:20
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san04-nord 10:00:c4:f5:7c:c7:00:70
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san12-nord 10:00:d8:1f:cc:06:a9:dd
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san100-nord 10:00:d8:1f:cc:7c:97:c0
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san98-nord 10:00:d8:1f:cc:7c:ca:c0
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+
+Edge devices
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-no...
+Device_shapeName                                         SRV GROUP #8
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0    NORD_dev            A        SRV  san97-nord       162.0     Native  10:00:d8:1f:cc:7c:cb:20                       1  san97-nord 10:00:d8:1f:cc:7c:cb:20            6.0               SRV      None            1xN16                      6A: 1xN16               6A: 1xN16; 6B: 1xN16                            20           NORD                    8                        40  IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-nord03.dtln.ru, ibm-nord05.dtln.ru, ibm-nord06.dtln.ru, ibm-nord08.dtln.ru, ibm-nord09.dtln.ru, ibm-nord10.dtln.ru, ibm-nord11.dtln.ru, ibm-nord12.dtln.ru, ibm-nord13.dtln.ru, ibm-nord14.dtln.ru, ibm-nord15.dtln.ru, ibm-nord16.dtln.ru, ibm-nord17.dtln.ru, ibm-nord18.dtln.ru, ibm-nord19.dtln.ru, ibm-nord20.dtln.ru, ibm-nord21.dtln.ru, ibm-nord22.dtln.ru, ibm-nord23.dtln.ru, ibm-nord24.dtln.ru, ibm-nord25.dtln.ru, ibm-nord26.dtln.ru, ibm-nord27.dtln.ru, ibm-nord28.dtln.ru, ibm-nord29.dtln.ru, ibm-nord30.dtln.ru, ibm-nord31.dtln.ru, ibm-nord32.dtln.ru, ibm-nord33.dtln.ru, ibm-nord34.dtln.ru, ibm-nord35.dtln.ru, ibm-nord36.dtln.ru, ibm-nord37.dtln.ru, ibm-nord39.dtln.ru, ibm-nord40.dtln.ru, ibm-nord41.dtln.ru, ibm-nord42.dtln.ru, ibm-nord43.dtln.ru     SRV GROUP #8  SRV GROUP #8 - san97-nord 10:00:d8:1f:cc:7c:cb:20                 2.0          hba          160.0            30.0
+1    NORD_dev            B        SRV  san98-nord       162.0     Native  10:00:d8:1f:cc:7c:ca:c0                       1  san98-nord 10:00:d8:1f:cc:7c:ca:c0            6.0               SRV      None            1xN16                      6B: 1xN16               6A: 1xN16; 6B: 1xN16                            20           NORD                    8                        40  IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-nord03.dtln.ru, ibm-nord05.dtln.ru, ibm-nord06.dtln.ru, ibm-nord08.dtln.ru, ibm-nord09.dtln.ru, ibm-nord10.dtln.ru, ibm-nord11.dtln.ru, ibm-nord12.dtln.ru, ibm-nord13.dtln.ru, ibm-nord14.dtln.ru, ibm-nord15.dtln.ru, ibm-nord16.dtln.ru, ibm-nord17.dtln.ru, ibm-nord18.dtln.ru, ibm-nord19.dtln.ru, ibm-nord20.dtln.ru, ibm-nord21.dtln.ru, ibm-nord22.dtln.ru, ibm-nord23.dtln.ru, ibm-nord24.dtln.ru, ibm-nord25.dtln.ru, ibm-nord26.dtln.ru, ibm-nord27.dtln.ru, ibm-nord28.dtln.ru, ibm-nord29.dtln.ru, ibm-nord30.dtln.ru, ibm-nord31.dtln.ru, ibm-nord32.dtln.ru, ibm-nord33.dtln.ru, ibm-nord34.dtln.ru, ibm-nord35.dtln.ru, ibm-nord36.dtln.ru, ibm-nord37.dtln.ru, ibm-nord39.dtln.ru, ibm-nord40.dtln.ru, ibm-nord41.dtln.ru, ibm-nord42.dtln.ru, ibm-nord43.dtln.ru     SRV GROUP #8  SRV GROUP #8 - san98-nord 10:00:d8:1f:cc:7c:ca:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS...
+Device_shapeName                                         SRV GROUP #2
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2    NORD_dev            A        SRV  san11-nord       109.0     Native  10:00:d8:1f:cc:06:c8:e9                       1  san11-nord 10:00:d8:1f:cc:06:c8:e9            3.0               SRV      None            1xN16                      3A: 1xN16               3A: 1xN16; 3B: 1xN16                            20           NORD                    2                        43  NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS-NORD07, hw-nord01.dtln.ru, hw-nord06.dtln.ru, hw-nord14.dtln.ru, hw-nord15.dtln.ru, hw-nord16.dtln.ru, hw-nord17.dtln.ru, hw-nord18.dtln.ru, hw-nord19.dtln.ru, hw-nord20.dtln.ru, hw-nord21.dtln.ru, hw-nord22.dtln.ru, hw-nord23.dtln.ru, hw-nord24.dtln.ru, hw-nord25.dtln.ru, hw-nord26.dtln.ru, hw-nord27.dtln.ru, hw-nord28.dtln.ru, hw-nord29.dtln.ru, hw-nord30.dtln.ru, n1-line-v7-h05.dtln.ru, n1-line-v7-h06.dtln.ru, n1-line-v7-h07.dtln.ru, n1-line-v7-h08.dtln.ru, n1-line-v7-h09.dtln.ru, n1c3s1.dtln.ru, n1c3s10.dtln.ru, n1c3s11.dtln.ru, n1c3s2.dtln.ru, n1c3s3.dtln.ru, n1c3s4.dtln.ru, n1c3s5.dtln.ru, n1c3s6.dtln.ru, n1c3s7.dtln.ru, n1c3s8.dtln.ru, n1c3s9.dtln.ru, nord-mgmt6.dtln.ru, nord-mgmt7.dtln.ru, nord-mgmt8.dtln.ru, nord-mgmt9     SRV GROUP #2  SRV GROUP #2 - san11-nord 10:00:d8:1f:cc:06:c8:e9                 2.0          hba          160.0            30.0
+3    NORD_dev            B        SRV  san12-nord       109.0     Native  10:00:d8:1f:cc:06:a9:dd                       1  san12-nord 10:00:d8:1f:cc:06:a9:dd            3.0               SRV      None            1xN16                      3B: 1xN16               3A: 1xN16; 3B: 1xN16                            20           NORD                    2                        43  NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS-NORD07, hw-nord01.dtln.ru, hw-nord06.dtln.ru, hw-nord14.dtln.ru, hw-nord15.dtln.ru, hw-nord16.dtln.ru, hw-nord17.dtln.ru, hw-nord18.dtln.ru, hw-nord19.dtln.ru, hw-nord20.dtln.ru, hw-nord21.dtln.ru, hw-nord22.dtln.ru, hw-nord23.dtln.ru, hw-nord24.dtln.ru, hw-nord25.dtln.ru, hw-nord26.dtln.ru, hw-nord27.dtln.ru, hw-nord28.dtln.ru, hw-nord29.dtln.ru, hw-nord30.dtln.ru, n1-line-v7-h05.dtln.ru, n1-line-v7-h06.dtln.ru, n1-line-v7-h07.dtln.ru, n1-line-v7-h08.dtln.ru, n1-line-v7-h09.dtln.ru, n1c3s1.dtln.ru, n1c3s10.dtln.ru, n1c3s11.dtln.ru, n1c3s2.dtln.ru, n1c3s3.dtln.ru, n1c3s4.dtln.ru, n1c3s5.dtln.ru, n1c3s6.dtln.ru, n1c3s7.dtln.ru, n1c3s8.dtln.ru, n1c3s9.dtln.ru, nord-mgmt6.dtln.ru, nord-mgmt7.dtln.ru, nord-mgmt8.dtln.ru, nord-mgmt9     SRV GROUP #2  SRV GROUP #2 - san12-nord 10:00:d8:1f:cc:06:a9:dd                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name             NORD_dev
+Device_shapeText     REFS-NORD09
+Device_shapeName    SRV GROUP #1
+deviceType                   SRV
+master_shape                 hba
+y_graph_level              160.0
+x_group_offset              30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4    NORD_dev            A        SRV  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       1  san01-nord 10:00:88:94:71:bd:69:40            1.0               SRV      None            1xN16                      1A: 1xN16               1A: 1xN16; 1B: 1xN16                            20           NORD                    1                         1      REFS-NORD09     SRV GROUP #1  SRV GROUP #1 - san01-nord 10:00:88:94:71:bd:69:40                 2.0          hba          160.0            30.0
+5    NORD_dev            B        SRV  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       1  san02-nord 10:00:88:94:71:bd:68:c0            1.0               SRV      None            1xN16                      1B: 1xN16               1A: 1xN16; 1B: 1xN16                            20           NORD                    1                         1      REFS-NORD09     SRV GROUP #1  SRV GROUP #1 - san02-nord 10:00:88:94:71:bd:68:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    SRV 20:00:34:80:0d:73:23:f6
+Device_shapeName                   SRV GROUP #3
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6    NORD_dev            A        SRV  san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1  san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN16                      4A: 1xN16                          4A: 1xN16                            20           NORD                    3                         1  SRV 20:00:34:80:0d:73:23:f6     SRV GROUP #3  SRV GROUP #3 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    SRV 20:00:34:80:0d:73:23:f7
+Device_shapeName                   SRV GROUP #6
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+  Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+7    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN16                      4B: 1xN16                          4B: 1xN16                            20           NORD                    6                         1  SRV 20:00:34:80:0d:73:23:f7     SRV GROUP #6  SRV GROUP #6 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord0...
+Device_shapeName                                         SRV GROUP #4
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+8    NORD_dev            A        SRV   san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1   san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                            20           NORD                    4                        24  hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord05.dtln.ru, hw-nord07.dtln.ru, hw-nord08.dtln.ru, hw-nord09.dtln.ru, hw-nord10.dtln.ru, hw-nord11.dtln.ru, hw-nord12.dtln.ru, hw-nord13.dtln.ru, hw-nord31.dtln.ru, n1-line-v7-c2h01, n1-line-v7-c2h02.dtln.ru, n1-line-v7-c2h03, n1-line-v7-c2h04, n1-line-v7-c2h05, n1-line-v7-h01.dtln.ru, n1-line-v7-h02.dtln.ru, n1-line-v7-h03.dtln.ru, n1-line-v7-h04.dtln.ru, n1-line-v7-h10.dtln.ru, n1-mgmt-h01, n1-mgmt-h02, n1-mgmt-h03     SRV GROUP #4   SRV GROUP #4 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+9    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                            20           NORD                    4                        24  hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord05.dtln.ru, hw-nord07.dtln.ru, hw-nord08.dtln.ru, hw-nord09.dtln.ru, hw-nord10.dtln.ru, hw-nord11.dtln.ru, hw-nord12.dtln.ru, hw-nord13.dtln.ru, hw-nord31.dtln.ru, n1-line-v7-c2h01, n1-line-v7-c2h02.dtln.ru, n1-line-v7-c2h03, n1-line-v7-c2h04, n1-line-v7-c2h05, n1-line-v7-h01.dtln.ru, n1-line-v7-h02.dtln.ru, n1-line-v7-h03.dtln.ru, n1-line-v7-h04.dtln.ru, n1-line-v7-h10.dtln.ru, n1-mgmt-h01, n1-mgmt-h02, n1-mgmt-h03     SRV GROUP #4  SRV GROUP #4 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name             NORD_dev
+Device_shapeText      ibm_nord07
+Device_shapeName    SRV GROUP #9
+deviceType                   SRV
+master_shape                 hba
+y_graph_level              160.0
+x_group_offset              30.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+10    NORD_dev            B        SRV  san98-nord       162.0     Native  10:00:d8:1f:cc:7c:ca:c0                       1  san98-nord 10:00:d8:1f:cc:7c:ca:c0            6.0               SRV      None            1xN16                      6B: 1xN16                          6B: 1xN16                            20           NORD                    9                         1       ibm_nord07     SRV GROUP #9  SRV GROUP #9 - san98-nord 10:00:d8:1f:cc:7c:ca:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7...
+Device_shapeName                                         SRV GROUP #5
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+   Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                        Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+11    NORD_dev            A        SRV   san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1   san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN32                      4A: 1xN32               4A: 1xN32; 4B: 1xN32                            20           NORD                    5                         4  n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7-c2h08, n1-line-v7-c2h09     SRV GROUP #5   SRV GROUP #5 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+12    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN32                      4B: 1xN32               4A: 1xN32; 4B: 1xN32                            20           NORD                    5                         4  n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7-c2h08, n1-line-v7-c2h09     SRV GROUP #5  SRV GROUP #5 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln...
+Device_shapeName                                         SRV GROUP #7
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                     Device_shapeText Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+13    NORD_dev            A        SRV  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       1  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0               SRV      None            1xN16                      5A: 1xN16               5A: 1xN16; 5B: 1xN16                            20           NORD                    7                        21  n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln.ru, n3c3s16.dtln.ru, n3c3s17.dtln.ru, n3c3s18.dtln.ru, n3c3s19.dtln.ru, n3c3s27.dtln.ru, n3c3s28.dtln.ru, n3c3s32.dtln.ru, n3c3s34.dtln.ru, n3c3s35.dtln.ru, n3c3s36.dtln.ru, n3c3s37.dtln.ru, n3c3s38.dtln.ru, n3c3s39.dtln.ru, n3c3s40.dtln.ru, n3c3s41.dtln.ru, n3c3s42.dtln.ru, n3c3s43.dtln.ru, n3s3n12.dtln.ru     SRV GROUP #7  SRV GROUP #7 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 2.0          hba          160.0            30.0
+14    NORD_dev            B        SRV  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       1  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0               SRV      None            1xN16                      5B: 1xN16               5A: 1xN16; 5B: 1xN16                            20           NORD                    7                        21  n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln.ru, n3c3s16.dtln.ru, n3c3s17.dtln.ru, n3c3s18.dtln.ru, n3c3s19.dtln.ru, n3c3s27.dtln.ru, n3c3s28.dtln.ru, n3c3s32.dtln.ru, n3c3s34.dtln.ru, n3c3s35.dtln.ru, n3c3s36.dtln.ru, n3c3s37.dtln.ru, n3c3s38.dtln.ru, n3c3s39.dtln.ru, n3c3s40.dtln.ru, n3c3s41.dtln.ru, n3c3s42.dtln.ru, n3c3s43.dtln.ru, n3s3n12.dtln.ru     SRV GROUP #7  SRV GROUP #7 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 2.0          hba          160.0            30.0
+
+Edge devices
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText           HW02_NORD
+Device_shapeName    STORAGE GROUP #3
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+  Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       4  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0            HUAWEI      None            4x16G                      5A: 4x16G               5A: 4x16G; 5B: 4x16G                            20           NORD                    3                         1        HW02_NORD  STORAGE GROUP #3  STORAGE GROUP #3 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+1    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       4  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0            HUAWEI      None            4x16G                      5B: 4x16G               5A: 4x16G; 5B: 4x16G                            20           NORD                    3                         1        HW02_NORD  STORAGE GROUP #3  STORAGE GROUP #3 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                NORD_dev
+Device_shapeText    HW03_NORD, HW22_NORD, HW23_NORD
+Device_shapeName                   STORAGE GROUP #1
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                 Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       2  san01-nord 10:00:88:94:71:bd:69:40            1.0            HUAWEI      None            2xN16                      1A: 2xN16               1A: 2xN16; 1B: 2xN16                            20           NORD                    1                         3  HW03_NORD, HW22_NORD, HW23_NORD  STORAGE GROUP #1  STORAGE GROUP #1 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+3    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       2  san02-nord 10:00:88:94:71:bd:68:c0            1.0            HUAWEI      None            2xN16                      1B: 2xN16               1A: 2xN16; 1B: 2xN16                            20           NORD                    1                         3  HW03_NORD, HW22_NORD, HW23_NORD  STORAGE GROUP #1  STORAGE GROUP #1 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                NORD_dev
+Device_shapeText    HW09_NORD, HW10_NORD, HW17_NORD
+Device_shapeName                   STORAGE GROUP #2
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                 Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       4  san01-nord 10:00:88:94:71:bd:69:40            1.0            HUAWEI      None            4xN16                      1A: 4xN16               1A: 4xN16; 1B: 4xN16                            20           NORD                    2                         3  HW09_NORD, HW10_NORD, HW17_NORD  STORAGE GROUP #2  STORAGE GROUP #2 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+5    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       4  san02-nord 10:00:88:94:71:bd:68:c0            1.0            HUAWEI      None            4xN16                      1B: 4xN16               1A: 4xN16; 1B: 4xN16                            20           NORD                    2                         3  HW09_NORD, HW10_NORD, HW17_NORD  STORAGE GROUP #2  STORAGE GROUP #2 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                      NORD_dev
+Device_shapeText    IBM_V5020_2_NORD1, IBM_V5020_CLOUD152
+Device_shapeName                         STORAGE GROUP #4
+deviceType                                        STORAGE
+master_shape                                      storage
+y_graph_level                                        30.0
+x_group_offset                                       25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                       Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       2  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0               IBM      None             2xN8                       2A: 2xN8                 2A: 2xN8; 2B: 2xN8                            20           NORD                    4                         2  IBM_V5020_2_NORD1, IBM_V5020_CLOUD152  STORAGE GROUP #4  STORAGE GROUP #4 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+7    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       2  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0               IBM      None             2xN8                       2B: 2xN8                 2A: 2xN8; 2B: 2xN8                            20           NORD                    4                         2  IBM_V5020_2_NORD1, IBM_V5020_CLOUD152  STORAGE GROUP #4  STORAGE GROUP #4 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText       IBOX1159_NORD
+Device_shapeName    STORAGE GROUP #6
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+8    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       6  san01-nord 10:00:88:94:71:bd:69:40            1.0         INFINIDAT      None             6x8G                       1A: 6x8G                 1A: 6x8G; 1B: 6x8G                            20           NORD                    6                         1    IBOX1159_NORD  STORAGE GROUP #6  STORAGE GROUP #6 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+9    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       6  san02-nord 10:00:88:94:71:bd:68:c0            1.0         INFINIDAT      None             6x8G                       1B: 6x8G                 1A: 6x8G; 1B: 6x8G                            20           NORD                    6                         1    IBOX1159_NORD  STORAGE GROUP #6  STORAGE GROUP #6 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   NORD_dev
+Device_shapeText    IBOX1772, IBOX2030
+Device_shapeName      STORAGE GROUP #7
+deviceType                     STORAGE
+master_shape                   storage
+y_graph_level                     30.0
+x_group_offset                    25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group    Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+10    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       6  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0         INFINIDAT      None             6xN8                       2A: 6xN8                 2A: 6xN8; 2B: 6xN8                            20           NORD                    7                         2  IBOX1772, IBOX2030  STORAGE GROUP #7  STORAGE GROUP #7 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+11    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       6  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0         INFINIDAT      None             6xN8                       2B: 6xN8                 2A: 6xN8; 2B: 6xN8                            20           NORD                    7                         2  IBOX1772, IBOX2030  STORAGE GROUP #7  STORAGE GROUP #7 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText            IBOX2837
+Device_shapeName    STORAGE GROUP #9
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+12    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       6  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0         INFINIDAT      None             6x8G                       5A: 6x8G                 5A: 6x8G; 5B: 6x8G                            20           NORD                    9                         1         IBOX2837  STORAGE GROUP #9  STORAGE GROUP #9 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+13    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       6  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0         INFINIDAT      None             6x8G                       5B: 6x8G                 5A: 6x8G; 5B: 6x8G                            20           NORD                    9                         1         IBOX2837  STORAGE GROUP #9  STORAGE GROUP #9 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText            IBOX3156
+Device_shapeName    STORAGE GROUP #8
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+14    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       6  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0         INFINIDAT      None            6x16G                      5A: 6x16G               5A: 6x16G; 5B: 6x16G                            20           NORD                    8                         1         IBOX3156  STORAGE GROUP #8  STORAGE GROUP #8 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+15    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       6  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0         INFINIDAT      None            6x16G                      5B: 6x16G               5A: 6x16G; 5B: 6x16G                            20           NORD                    8                         1         IBOX3156  STORAGE GROUP #8  STORAGE GROUP #8 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   NORD_dev
+Device_shapeText    IBOX3365, IBOX3370
+Device_shapeName      STORAGE GROUP #5
+deviceType                     STORAGE
+master_shape                   storage
+y_graph_level                     30.0
+x_group_offset                    25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group    Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+16    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       3  san01-nord 10:00:88:94:71:bd:69:40            1.0         INFINIDAT      None            3xN16                      1A: 3xN16               1A: 3xN16; 1B: 3xN16                            20           NORD                    5                         2  IBOX3365, IBOX3370  STORAGE GROUP #5  STORAGE GROUP #5 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+17    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       3  san02-nord 10:00:88:94:71:bd:68:c0            1.0         INFINIDAT      None            3xN16                      1B: 3xN16               1A: 3xN16; 1B: 3xN16                            20           NORD                    5                         2  IBOX3365, IBOX3370  STORAGE GROUP #5  STORAGE GROUP #5 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    NetApp10, NetApp12, NetApp9
+Device_shapeName              STORAGE GROUP #11
+deviceType                              STORAGE
+master_shape                            storage
+y_graph_level                              30.0
+x_group_offset                             25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level  Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText   Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+18    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       6  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0            NetApp      None     6xN8, 4xNPIV               2A: 6xN8, 4xNPIV  2A: 6xN8, 4xNPIV; 2B: 6xN8, 4xNPIV                            20           NORD                   11                         3  NetApp10, NetApp12, NetApp9  STORAGE GROUP #11  STORAGE GROUP #11 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+19    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       6  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0            NetApp      None     6xN8, 4xNPIV               2B: 6xN8, 4xNPIV  2A: 6xN8, 4xNPIV; 2B: 6xN8, 4xNPIV                            20           NORD                   11                         3  NetApp10, NetApp12, NetApp9  STORAGE GROUP #11  STORAGE GROUP #11 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                  NORD_dev
+Device_shapeText              NetApp8
+Device_shapeName    STORAGE GROUP #10
+deviceType                    STORAGE
+master_shape                  storage
+y_graph_level                    30.0
+x_group_offset                   25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level      Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText   Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+20    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                      12  san01-nord 10:00:88:94:71:bd:69:40            1.0            NetApp      None   12xN16, 8xNPIV             1A: 12xN16, 8xNPIV  1A: 12xN16, 8xNPIV; 1B: 12xN16, 8xNPIV                            20           NORD                   10                         1          NetApp8  STORAGE GROUP #10  STORAGE GROUP #10 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+21    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                      12  san02-nord 10:00:88:94:71:bd:68:c0            1.0            NetApp      None   12xN16, 8xNPIV             1B: 12xN16, 8xNPIV  1A: 12xN16, 8xNPIV; 1B: 12xN16, 8xNPIV                            20           NORD                   10                         1          NetApp8  STORAGE GROUP #10  STORAGE GROUP #10 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+Switch groups
+Fabric_name                                                        NORD
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        n3-g620-109-f1 (DID=109)/ n3-g620-110-f2 (DID=...
+switchClass_mode                                               MID, MID
+switchName_Wwn        n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60, n3-g62...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+Switch groups
+Fabric_name                                                        NORD
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        n3-g620-109-f1 (DID=109)/ n3-g620-110-f2 (DID=...
+switchClass_mode                                               MID, MID
+switchName_Wwn        n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60, n3-g62...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+Fabric_name                                                        NORD
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san01-nord (DID=9)/ san02-nord (DID=9)
+switchClass_mode                                             ENTP, ENTP
+switchName_Wwn        san01-nord 10:00:88:94:71:bd:69:40, san02-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                               sw_enterprise, sw_enterprise
+ModelName                              HPE SN6500B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+Fabric_name                                                        NORD
+switchPair_id                                                       2.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san03-nord (DID=4)/ san04-nord (DID=4)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san03-nord 10:00:c4:f5:7c:b2:38:1b, san04-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+Fabric_name                                                        NORD
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san11-nord (DID=10)/ san12-nord (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san11-nord 10:00:d8:1f:cc:06:c8:e9, san12-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+Fabric_name                                                        NORD
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san97-nord (DID=11)/ san98-nord (DID=11)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san97-nord 10:00:d8:1f:cc:7c:cb:20, san98-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+Fabric_name                                                        NORD
+switchPair_id                                                       4.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                san99-nord (DID=12)/ san100-nord (DID=12)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san99-nord 10:00:d8:1f:cc:7c:b8:00, san100-nor...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        n3-g620-109-f1 (DID=109)/ n3-g620-110-f2 (DID=...
+switchClass_mode                                               MID, MID
+switchName_Wwn        n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60, n3-g62...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san01-nord (DID=9)/ san02-nord (DID=9)
+switchClass_mode                                             ENTP, ENTP
+switchName_Wwn        san01-nord 10:00:88:94:71:bd:69:40, san02-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                               sw_enterprise, sw_enterprise
+ModelName                              HPE SN6500B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       2.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san03-nord (DID=4)/ san04-nord (DID=4)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san03-nord 10:00:c4:f5:7c:b2:38:1b, san04-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san11-nord (DID=10)/ san12-nord (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san11-nord 10:00:d8:1f:cc:06:c8:e9, san12-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san97-nord (DID=11)/ san98-nord (DID=11)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san97-nord 10:00:d8:1f:cc:7c:cb:20, san98-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       4.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                san99-nord (DID=12)/ san100-nord (DID=12)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san99-nord 10:00:d8:1f:cc:7c:b8:00, san100-nor...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+finish: 03/11/2022 11:39:24
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+****************************************
+start: 03/11/2022 11:45:27
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, X, Y
+NORD n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0 0 35 90
+NORD n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60 1 35 95
+NORD san02-nord 10:00:88:94:71:bd:68:c0 0 75 100
+NORD san01-nord 10:00:88:94:71:bd:69:40 1 75 105
+NORD san04-nord 10:00:c4:f5:7c:c7:00:70 0 115 90
+NORD san03-nord 10:00:c4:f5:7c:b2:38:1b 1 115 95
+NORD san12-nord 10:00:d8:1f:cc:06:a9:dd 0 155 100
+NORD san11-nord 10:00:d8:1f:cc:06:c8:e9 1 155 105
+NORD san98-nord 10:00:d8:1f:cc:7c:ca:c0 0 195 90
+NORD san97-nord 10:00:d8:1f:cc:7c:cb:20 1 195 95
+NORD san100-nord 10:00:d8:1f:cc:7c:97:c0 0 235 100
+NORD san99-nord 10:00:d8:1f:cc:7c:b8:00 1 235 105
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san03-nord 10:00:c4:f5:7c:b2:38:1b
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san11-nord 10:00:d8:1f:cc:06:c8:e9
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san99-nord 10:00:d8:1f:cc:7c:b8:00
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san97-nord 10:00:d8:1f:cc:7c:cb:20
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san04-nord 10:00:c4:f5:7c:c7:00:70
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san12-nord 10:00:d8:1f:cc:06:a9:dd
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san100-nord 10:00:d8:1f:cc:7c:97:c0
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san98-nord 10:00:d8:1f:cc:7c:ca:c0
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+
+Edge devices
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-no...
+Device_shapeName                                         SRV GROUP #8
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0    NORD_dev            A        SRV  san97-nord       162.0     Native  10:00:d8:1f:cc:7c:cb:20                       1  san97-nord 10:00:d8:1f:cc:7c:cb:20            6.0               SRV      None            1xN16                      6A: 1xN16               6A: 1xN16; 6B: 1xN16                            20           NORD                    8                        40  IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-nord03.dtln.ru, ibm-nord05.dtln.ru, ibm-nord06.dtln.ru, ibm-nord08.dtln.ru, ibm-nord09.dtln.ru, ibm-nord10.dtln.ru, ibm-nord11.dtln.ru, ibm-nord12.dtln.ru, ibm-nord13.dtln.ru, ibm-nord14.dtln.ru, ibm-nord15.dtln.ru, ibm-nord16.dtln.ru, ibm-nord17.dtln.ru, ibm-nord18.dtln.ru, ibm-nord19.dtln.ru, ibm-nord20.dtln.ru, ibm-nord21.dtln.ru, ibm-nord22.dtln.ru, ibm-nord23.dtln.ru, ibm-nord24.dtln.ru, ibm-nord25.dtln.ru, ibm-nord26.dtln.ru, ibm-nord27.dtln.ru, ibm-nord28.dtln.ru, ibm-nord29.dtln.ru, ibm-nord30.dtln.ru, ibm-nord31.dtln.ru, ibm-nord32.dtln.ru, ibm-nord33.dtln.ru, ibm-nord34.dtln.ru, ibm-nord35.dtln.ru, ibm-nord36.dtln.ru, ibm-nord37.dtln.ru, ibm-nord39.dtln.ru, ibm-nord40.dtln.ru, ibm-nord41.dtln.ru, ibm-nord42.dtln.ru, ibm-nord43.dtln.ru     SRV GROUP #8  SRV GROUP #8 - san97-nord 10:00:d8:1f:cc:7c:cb:20                 2.0          hba          160.0            30.0
+1    NORD_dev            B        SRV  san98-nord       162.0     Native  10:00:d8:1f:cc:7c:ca:c0                       1  san98-nord 10:00:d8:1f:cc:7c:ca:c0            6.0               SRV      None            1xN16                      6B: 1xN16               6A: 1xN16; 6B: 1xN16                            20           NORD                    8                        40  IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-nord03.dtln.ru, ibm-nord05.dtln.ru, ibm-nord06.dtln.ru, ibm-nord08.dtln.ru, ibm-nord09.dtln.ru, ibm-nord10.dtln.ru, ibm-nord11.dtln.ru, ibm-nord12.dtln.ru, ibm-nord13.dtln.ru, ibm-nord14.dtln.ru, ibm-nord15.dtln.ru, ibm-nord16.dtln.ru, ibm-nord17.dtln.ru, ibm-nord18.dtln.ru, ibm-nord19.dtln.ru, ibm-nord20.dtln.ru, ibm-nord21.dtln.ru, ibm-nord22.dtln.ru, ibm-nord23.dtln.ru, ibm-nord24.dtln.ru, ibm-nord25.dtln.ru, ibm-nord26.dtln.ru, ibm-nord27.dtln.ru, ibm-nord28.dtln.ru, ibm-nord29.dtln.ru, ibm-nord30.dtln.ru, ibm-nord31.dtln.ru, ibm-nord32.dtln.ru, ibm-nord33.dtln.ru, ibm-nord34.dtln.ru, ibm-nord35.dtln.ru, ibm-nord36.dtln.ru, ibm-nord37.dtln.ru, ibm-nord39.dtln.ru, ibm-nord40.dtln.ru, ibm-nord41.dtln.ru, ibm-nord42.dtln.ru, ibm-nord43.dtln.ru     SRV GROUP #8  SRV GROUP #8 - san98-nord 10:00:d8:1f:cc:7c:ca:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS...
+Device_shapeName                                         SRV GROUP #2
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2    NORD_dev            A        SRV  san11-nord       109.0     Native  10:00:d8:1f:cc:06:c8:e9                       1  san11-nord 10:00:d8:1f:cc:06:c8:e9            3.0               SRV      None            1xN16                      3A: 1xN16               3A: 1xN16; 3B: 1xN16                            20           NORD                    2                        43  NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS-NORD07, hw-nord01.dtln.ru, hw-nord06.dtln.ru, hw-nord14.dtln.ru, hw-nord15.dtln.ru, hw-nord16.dtln.ru, hw-nord17.dtln.ru, hw-nord18.dtln.ru, hw-nord19.dtln.ru, hw-nord20.dtln.ru, hw-nord21.dtln.ru, hw-nord22.dtln.ru, hw-nord23.dtln.ru, hw-nord24.dtln.ru, hw-nord25.dtln.ru, hw-nord26.dtln.ru, hw-nord27.dtln.ru, hw-nord28.dtln.ru, hw-nord29.dtln.ru, hw-nord30.dtln.ru, n1-line-v7-h05.dtln.ru, n1-line-v7-h06.dtln.ru, n1-line-v7-h07.dtln.ru, n1-line-v7-h08.dtln.ru, n1-line-v7-h09.dtln.ru, n1c3s1.dtln.ru, n1c3s10.dtln.ru, n1c3s11.dtln.ru, n1c3s2.dtln.ru, n1c3s3.dtln.ru, n1c3s4.dtln.ru, n1c3s5.dtln.ru, n1c3s6.dtln.ru, n1c3s7.dtln.ru, n1c3s8.dtln.ru, n1c3s9.dtln.ru, nord-mgmt6.dtln.ru, nord-mgmt7.dtln.ru, nord-mgmt8.dtln.ru, nord-mgmt9     SRV GROUP #2  SRV GROUP #2 - san11-nord 10:00:d8:1f:cc:06:c8:e9                 2.0          hba          160.0            30.0
+3    NORD_dev            B        SRV  san12-nord       109.0     Native  10:00:d8:1f:cc:06:a9:dd                       1  san12-nord 10:00:d8:1f:cc:06:a9:dd            3.0               SRV      None            1xN16                      3B: 1xN16               3A: 1xN16; 3B: 1xN16                            20           NORD                    2                        43  NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS-NORD07, hw-nord01.dtln.ru, hw-nord06.dtln.ru, hw-nord14.dtln.ru, hw-nord15.dtln.ru, hw-nord16.dtln.ru, hw-nord17.dtln.ru, hw-nord18.dtln.ru, hw-nord19.dtln.ru, hw-nord20.dtln.ru, hw-nord21.dtln.ru, hw-nord22.dtln.ru, hw-nord23.dtln.ru, hw-nord24.dtln.ru, hw-nord25.dtln.ru, hw-nord26.dtln.ru, hw-nord27.dtln.ru, hw-nord28.dtln.ru, hw-nord29.dtln.ru, hw-nord30.dtln.ru, n1-line-v7-h05.dtln.ru, n1-line-v7-h06.dtln.ru, n1-line-v7-h07.dtln.ru, n1-line-v7-h08.dtln.ru, n1-line-v7-h09.dtln.ru, n1c3s1.dtln.ru, n1c3s10.dtln.ru, n1c3s11.dtln.ru, n1c3s2.dtln.ru, n1c3s3.dtln.ru, n1c3s4.dtln.ru, n1c3s5.dtln.ru, n1c3s6.dtln.ru, n1c3s7.dtln.ru, n1c3s8.dtln.ru, n1c3s9.dtln.ru, nord-mgmt6.dtln.ru, nord-mgmt7.dtln.ru, nord-mgmt8.dtln.ru, nord-mgmt9     SRV GROUP #2  SRV GROUP #2 - san12-nord 10:00:d8:1f:cc:06:a9:dd                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name             NORD_dev
+Device_shapeText     REFS-NORD09
+Device_shapeName    SRV GROUP #1
+deviceType                   SRV
+master_shape                 hba
+y_graph_level              160.0
+x_group_offset              30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4    NORD_dev            A        SRV  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       1  san01-nord 10:00:88:94:71:bd:69:40            1.0               SRV      None            1xN16                      1A: 1xN16               1A: 1xN16; 1B: 1xN16                            20           NORD                    1                         1      REFS-NORD09     SRV GROUP #1  SRV GROUP #1 - san01-nord 10:00:88:94:71:bd:69:40                 2.0          hba          160.0            30.0
+5    NORD_dev            B        SRV  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       1  san02-nord 10:00:88:94:71:bd:68:c0            1.0               SRV      None            1xN16                      1B: 1xN16               1A: 1xN16; 1B: 1xN16                            20           NORD                    1                         1      REFS-NORD09     SRV GROUP #1  SRV GROUP #1 - san02-nord 10:00:88:94:71:bd:68:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    SRV 20:00:34:80:0d:73:23:f6
+Device_shapeName                   SRV GROUP #3
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6    NORD_dev            A        SRV  san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1  san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN16                      4A: 1xN16                          4A: 1xN16                            20           NORD                    3                         1  SRV 20:00:34:80:0d:73:23:f6     SRV GROUP #3  SRV GROUP #3 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    SRV 20:00:34:80:0d:73:23:f7
+Device_shapeName                   SRV GROUP #6
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+  Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+7    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN16                      4B: 1xN16                          4B: 1xN16                            20           NORD                    6                         1  SRV 20:00:34:80:0d:73:23:f7     SRV GROUP #6  SRV GROUP #6 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord0...
+Device_shapeName                                         SRV GROUP #4
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+8    NORD_dev            A        SRV   san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1   san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                            20           NORD                    4                        24  hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord05.dtln.ru, hw-nord07.dtln.ru, hw-nord08.dtln.ru, hw-nord09.dtln.ru, hw-nord10.dtln.ru, hw-nord11.dtln.ru, hw-nord12.dtln.ru, hw-nord13.dtln.ru, hw-nord31.dtln.ru, n1-line-v7-c2h01, n1-line-v7-c2h02.dtln.ru, n1-line-v7-c2h03, n1-line-v7-c2h04, n1-line-v7-c2h05, n1-line-v7-h01.dtln.ru, n1-line-v7-h02.dtln.ru, n1-line-v7-h03.dtln.ru, n1-line-v7-h04.dtln.ru, n1-line-v7-h10.dtln.ru, n1-mgmt-h01, n1-mgmt-h02, n1-mgmt-h03     SRV GROUP #4   SRV GROUP #4 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+9    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                            20           NORD                    4                        24  hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord05.dtln.ru, hw-nord07.dtln.ru, hw-nord08.dtln.ru, hw-nord09.dtln.ru, hw-nord10.dtln.ru, hw-nord11.dtln.ru, hw-nord12.dtln.ru, hw-nord13.dtln.ru, hw-nord31.dtln.ru, n1-line-v7-c2h01, n1-line-v7-c2h02.dtln.ru, n1-line-v7-c2h03, n1-line-v7-c2h04, n1-line-v7-c2h05, n1-line-v7-h01.dtln.ru, n1-line-v7-h02.dtln.ru, n1-line-v7-h03.dtln.ru, n1-line-v7-h04.dtln.ru, n1-line-v7-h10.dtln.ru, n1-mgmt-h01, n1-mgmt-h02, n1-mgmt-h03     SRV GROUP #4  SRV GROUP #4 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name             NORD_dev
+Device_shapeText      ibm_nord07
+Device_shapeName    SRV GROUP #9
+deviceType                   SRV
+master_shape                 hba
+y_graph_level              160.0
+x_group_offset              30.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+10    NORD_dev            B        SRV  san98-nord       162.0     Native  10:00:d8:1f:cc:7c:ca:c0                       1  san98-nord 10:00:d8:1f:cc:7c:ca:c0            6.0               SRV      None            1xN16                      6B: 1xN16                          6B: 1xN16                            20           NORD                    9                         1       ibm_nord07     SRV GROUP #9  SRV GROUP #9 - san98-nord 10:00:d8:1f:cc:7c:ca:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7...
+Device_shapeName                                         SRV GROUP #5
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+   Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                        Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+11    NORD_dev            A        SRV   san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1   san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN32                      4A: 1xN32               4A: 1xN32; 4B: 1xN32                            20           NORD                    5                         4  n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7-c2h08, n1-line-v7-c2h09     SRV GROUP #5   SRV GROUP #5 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+12    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN32                      4B: 1xN32               4A: 1xN32; 4B: 1xN32                            20           NORD                    5                         4  n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7-c2h08, n1-line-v7-c2h09     SRV GROUP #5  SRV GROUP #5 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln...
+Device_shapeName                                         SRV GROUP #7
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                     Device_shapeText Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+13    NORD_dev            A        SRV  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       1  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0               SRV      None            1xN16                      5A: 1xN16               5A: 1xN16; 5B: 1xN16                            20           NORD                    7                        21  n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln.ru, n3c3s16.dtln.ru, n3c3s17.dtln.ru, n3c3s18.dtln.ru, n3c3s19.dtln.ru, n3c3s27.dtln.ru, n3c3s28.dtln.ru, n3c3s32.dtln.ru, n3c3s34.dtln.ru, n3c3s35.dtln.ru, n3c3s36.dtln.ru, n3c3s37.dtln.ru, n3c3s38.dtln.ru, n3c3s39.dtln.ru, n3c3s40.dtln.ru, n3c3s41.dtln.ru, n3c3s42.dtln.ru, n3c3s43.dtln.ru, n3s3n12.dtln.ru     SRV GROUP #7  SRV GROUP #7 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 2.0          hba          160.0            30.0
+14    NORD_dev            B        SRV  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       1  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0               SRV      None            1xN16                      5B: 1xN16               5A: 1xN16; 5B: 1xN16                            20           NORD                    7                        21  n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln.ru, n3c3s16.dtln.ru, n3c3s17.dtln.ru, n3c3s18.dtln.ru, n3c3s19.dtln.ru, n3c3s27.dtln.ru, n3c3s28.dtln.ru, n3c3s32.dtln.ru, n3c3s34.dtln.ru, n3c3s35.dtln.ru, n3c3s36.dtln.ru, n3c3s37.dtln.ru, n3c3s38.dtln.ru, n3c3s39.dtln.ru, n3c3s40.dtln.ru, n3c3s41.dtln.ru, n3c3s42.dtln.ru, n3c3s43.dtln.ru, n3s3n12.dtln.ru     SRV GROUP #7  SRV GROUP #7 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 2.0          hba          160.0            30.0
+
+Edge devices
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText           HW02_NORD
+Device_shapeName    STORAGE GROUP #3
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+  Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       4  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0            HUAWEI      None            4x16G                      5A: 4x16G               5A: 4x16G; 5B: 4x16G                            20           NORD                    3                         1        HW02_NORD  STORAGE GROUP #3  STORAGE GROUP #3 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+1    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       4  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0            HUAWEI      None            4x16G                      5B: 4x16G               5A: 4x16G; 5B: 4x16G                            20           NORD                    3                         1        HW02_NORD  STORAGE GROUP #3  STORAGE GROUP #3 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                NORD_dev
+Device_shapeText    HW03_NORD, HW22_NORD, HW23_NORD
+Device_shapeName                   STORAGE GROUP #1
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                 Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       2  san01-nord 10:00:88:94:71:bd:69:40            1.0            HUAWEI      None            2xN16                      1A: 2xN16               1A: 2xN16; 1B: 2xN16                            20           NORD                    1                         3  HW03_NORD, HW22_NORD, HW23_NORD  STORAGE GROUP #1  STORAGE GROUP #1 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+3    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       2  san02-nord 10:00:88:94:71:bd:68:c0            1.0            HUAWEI      None            2xN16                      1B: 2xN16               1A: 2xN16; 1B: 2xN16                            20           NORD                    1                         3  HW03_NORD, HW22_NORD, HW23_NORD  STORAGE GROUP #1  STORAGE GROUP #1 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                NORD_dev
+Device_shapeText    HW09_NORD, HW10_NORD, HW17_NORD
+Device_shapeName                   STORAGE GROUP #2
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                 Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       4  san01-nord 10:00:88:94:71:bd:69:40            1.0            HUAWEI      None            4xN16                      1A: 4xN16               1A: 4xN16; 1B: 4xN16                            20           NORD                    2                         3  HW09_NORD, HW10_NORD, HW17_NORD  STORAGE GROUP #2  STORAGE GROUP #2 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+5    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       4  san02-nord 10:00:88:94:71:bd:68:c0            1.0            HUAWEI      None            4xN16                      1B: 4xN16               1A: 4xN16; 1B: 4xN16                            20           NORD                    2                         3  HW09_NORD, HW10_NORD, HW17_NORD  STORAGE GROUP #2  STORAGE GROUP #2 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                      NORD_dev
+Device_shapeText    IBM_V5020_2_NORD1, IBM_V5020_CLOUD152
+Device_shapeName                         STORAGE GROUP #4
+deviceType                                        STORAGE
+master_shape                                      storage
+y_graph_level                                        30.0
+x_group_offset                                       25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                       Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       2  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0               IBM      None             2xN8                       2A: 2xN8                 2A: 2xN8; 2B: 2xN8                            20           NORD                    4                         2  IBM_V5020_2_NORD1, IBM_V5020_CLOUD152  STORAGE GROUP #4  STORAGE GROUP #4 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+7    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       2  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0               IBM      None             2xN8                       2B: 2xN8                 2A: 2xN8; 2B: 2xN8                            20           NORD                    4                         2  IBM_V5020_2_NORD1, IBM_V5020_CLOUD152  STORAGE GROUP #4  STORAGE GROUP #4 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText       IBOX1159_NORD
+Device_shapeName    STORAGE GROUP #6
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+8    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       6  san01-nord 10:00:88:94:71:bd:69:40            1.0         INFINIDAT      None             6x8G                       1A: 6x8G                 1A: 6x8G; 1B: 6x8G                            20           NORD                    6                         1    IBOX1159_NORD  STORAGE GROUP #6  STORAGE GROUP #6 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+9    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       6  san02-nord 10:00:88:94:71:bd:68:c0            1.0         INFINIDAT      None             6x8G                       1B: 6x8G                 1A: 6x8G; 1B: 6x8G                            20           NORD                    6                         1    IBOX1159_NORD  STORAGE GROUP #6  STORAGE GROUP #6 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   NORD_dev
+Device_shapeText    IBOX1772, IBOX2030
+Device_shapeName      STORAGE GROUP #7
+deviceType                     STORAGE
+master_shape                   storage
+y_graph_level                     30.0
+x_group_offset                    25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group    Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+10    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       6  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0         INFINIDAT      None             6xN8                       2A: 6xN8                 2A: 6xN8; 2B: 6xN8                            20           NORD                    7                         2  IBOX1772, IBOX2030  STORAGE GROUP #7  STORAGE GROUP #7 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+11    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       6  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0         INFINIDAT      None             6xN8                       2B: 6xN8                 2A: 6xN8; 2B: 6xN8                            20           NORD                    7                         2  IBOX1772, IBOX2030  STORAGE GROUP #7  STORAGE GROUP #7 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText            IBOX2837
+Device_shapeName    STORAGE GROUP #9
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+12    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       6  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0         INFINIDAT      None             6x8G                       5A: 6x8G                 5A: 6x8G; 5B: 6x8G                            20           NORD                    9                         1         IBOX2837  STORAGE GROUP #9  STORAGE GROUP #9 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+13    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       6  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0         INFINIDAT      None             6x8G                       5B: 6x8G                 5A: 6x8G; 5B: 6x8G                            20           NORD                    9                         1         IBOX2837  STORAGE GROUP #9  STORAGE GROUP #9 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText            IBOX3156
+Device_shapeName    STORAGE GROUP #8
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+14    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       6  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0         INFINIDAT      None            6x16G                      5A: 6x16G               5A: 6x16G; 5B: 6x16G                            20           NORD                    8                         1         IBOX3156  STORAGE GROUP #8  STORAGE GROUP #8 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+15    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       6  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0         INFINIDAT      None            6x16G                      5B: 6x16G               5A: 6x16G; 5B: 6x16G                            20           NORD                    8                         1         IBOX3156  STORAGE GROUP #8  STORAGE GROUP #8 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   NORD_dev
+Device_shapeText    IBOX3365, IBOX3370
+Device_shapeName      STORAGE GROUP #5
+deviceType                     STORAGE
+master_shape                   storage
+y_graph_level                     30.0
+x_group_offset                    25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group    Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+16    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       3  san01-nord 10:00:88:94:71:bd:69:40            1.0         INFINIDAT      None            3xN16                      1A: 3xN16               1A: 3xN16; 1B: 3xN16                            20           NORD                    5                         2  IBOX3365, IBOX3370  STORAGE GROUP #5  STORAGE GROUP #5 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+17    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       3  san02-nord 10:00:88:94:71:bd:68:c0            1.0         INFINIDAT      None            3xN16                      1B: 3xN16               1A: 3xN16; 1B: 3xN16                            20           NORD                    5                         2  IBOX3365, IBOX3370  STORAGE GROUP #5  STORAGE GROUP #5 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    NetApp10, NetApp12, NetApp9
+Device_shapeName              STORAGE GROUP #11
+deviceType                              STORAGE
+master_shape                            storage
+y_graph_level                              30.0
+x_group_offset                             25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level  Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText   Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+18    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       6  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0            NetApp      None     6xN8, 4xNPIV               2A: 6xN8, 4xNPIV  2A: 6xN8, 4xNPIV; 2B: 6xN8, 4xNPIV                            20           NORD                   11                         3  NetApp10, NetApp12, NetApp9  STORAGE GROUP #11  STORAGE GROUP #11 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+19    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       6  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0            NetApp      None     6xN8, 4xNPIV               2B: 6xN8, 4xNPIV  2A: 6xN8, 4xNPIV; 2B: 6xN8, 4xNPIV                            20           NORD                   11                         3  NetApp10, NetApp12, NetApp9  STORAGE GROUP #11  STORAGE GROUP #11 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                  NORD_dev
+Device_shapeText              NetApp8
+Device_shapeName    STORAGE GROUP #10
+deviceType                    STORAGE
+master_shape                  storage
+y_graph_level                    30.0
+x_group_offset                   25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level      Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText   Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+20    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                      12  san01-nord 10:00:88:94:71:bd:69:40            1.0            NetApp      None   12xN16, 8xNPIV             1A: 12xN16, 8xNPIV  1A: 12xN16, 8xNPIV; 1B: 12xN16, 8xNPIV                            20           NORD                   10                         1          NetApp8  STORAGE GROUP #10  STORAGE GROUP #10 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+21    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                      12  san02-nord 10:00:88:94:71:bd:68:c0            1.0            NetApp      None   12xN16, 8xNPIV             1B: 12xN16, 8xNPIV  1A: 12xN16, 8xNPIV; 1B: 12xN16, 8xNPIV                            20           NORD                   10                         1          NetApp8  STORAGE GROUP #10  STORAGE GROUP #10 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+Switch groups
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        n3-g620-109-f1 (DID=109)/ n3-g620-110-f2 (DID=...
+switchClass_mode                                               MID, MID
+switchName_Wwn        n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60, n3-g62...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san01-nord (DID=9)/ san02-nord (DID=9)
+switchClass_mode                                             ENTP, ENTP
+switchName_Wwn        san01-nord 10:00:88:94:71:bd:69:40, san02-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                               sw_enterprise, sw_enterprise
+ModelName                              HPE SN6500B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       2.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san03-nord (DID=4)/ san04-nord (DID=4)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san03-nord 10:00:c4:f5:7c:b2:38:1b, san04-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san11-nord (DID=10)/ san12-nord (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san11-nord 10:00:d8:1f:cc:06:c8:e9, san12-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san97-nord (DID=11)/ san98-nord (DID=11)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san97-nord 10:00:d8:1f:cc:7c:cb:20, san98-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       4.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                san99-nord (DID=12)/ san100-nord (DID=12)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san99-nord 10:00:d8:1f:cc:7c:b8:00, san100-nor...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        n3-g620-109-f1 (DID=109)/ n3-g620-110-f2 (DID=...
+switchClass_mode                                               MID, MID
+switchName_Wwn        n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60, n3-g62...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san01-nord (DID=9)/ san02-nord (DID=9)
+switchClass_mode                                             ENTP, ENTP
+switchName_Wwn        san01-nord 10:00:88:94:71:bd:69:40, san02-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                               sw_enterprise, sw_enterprise
+ModelName                              HPE SN6500B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       2.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san03-nord (DID=4)/ san04-nord (DID=4)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san03-nord 10:00:c4:f5:7c:b2:38:1b, san04-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san11-nord (DID=10)/ san12-nord (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san11-nord 10:00:d8:1f:cc:06:c8:e9, san12-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san97-nord (DID=11)/ san98-nord (DID=11)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san97-nord 10:00:d8:1f:cc:7c:cb:20, san98-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       4.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                san99-nord (DID=12)/ san100-nord (DID=12)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san99-nord 10:00:d8:1f:cc:7c:b8:00, san100-nor...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+finish: 03/11/2022 11:46:00
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+****************************************
+start: 03/11/2022 13:01:00
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate
+NORD n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0 0 35 90
+NORD n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60 1 35 95
+NORD san02-nord 10:00:88:94:71:bd:68:c0 0 75 100
+NORD san01-nord 10:00:88:94:71:bd:69:40 1 75 105
+NORD san04-nord 10:00:c4:f5:7c:c7:00:70 0 115 90
+NORD san03-nord 10:00:c4:f5:7c:b2:38:1b 1 115 95
+NORD san12-nord 10:00:d8:1f:cc:06:a9:dd 0 155 100
+NORD san11-nord 10:00:d8:1f:cc:06:c8:e9 1 155 105
+NORD san98-nord 10:00:d8:1f:cc:7c:ca:c0 0 195 90
+NORD san97-nord 10:00:d8:1f:cc:7c:cb:20 1 195 95
+NORD san100-nord 10:00:d8:1f:cc:7c:97:c0 0 235 100
+NORD san99-nord 10:00:d8:1f:cc:7c:b8:00 1 235 105
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san03-nord 10:00:c4:f5:7c:b2:38:1b
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san11-nord 10:00:d8:1f:cc:06:c8:e9
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san99-nord 10:00:d8:1f:cc:7c:b8:00
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60
+NORD san01-nord 10:00:88:94:71:bd:69:40   ---->   san97-nord 10:00:d8:1f:cc:7c:cb:20
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san04-nord 10:00:c4:f5:7c:c7:00:70
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san12-nord 10:00:d8:1f:cc:06:a9:dd
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san100-nord 10:00:d8:1f:cc:7c:97:c0
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0
+NORD san02-nord 10:00:88:94:71:bd:68:c0   ---->   san98-nord 10:00:d8:1f:cc:7c:ca:c0
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+
+Edge devices
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-no...
+Device_shapeName                                         SRV GROUP #8
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0    NORD_dev            A        SRV  san97-nord       162.0     Native  10:00:d8:1f:cc:7c:cb:20                       1  san97-nord 10:00:d8:1f:cc:7c:cb:20            6.0               SRV      None            1xN16                      6A: 1xN16               6A: 1xN16; 6B: 1xN16                            20           NORD                    8                        40  IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-nord03.dtln.ru, ibm-nord05.dtln.ru, ibm-nord06.dtln.ru, ibm-nord08.dtln.ru, ibm-nord09.dtln.ru, ibm-nord10.dtln.ru, ibm-nord11.dtln.ru, ibm-nord12.dtln.ru, ibm-nord13.dtln.ru, ibm-nord14.dtln.ru, ibm-nord15.dtln.ru, ibm-nord16.dtln.ru, ibm-nord17.dtln.ru, ibm-nord18.dtln.ru, ibm-nord19.dtln.ru, ibm-nord20.dtln.ru, ibm-nord21.dtln.ru, ibm-nord22.dtln.ru, ibm-nord23.dtln.ru, ibm-nord24.dtln.ru, ibm-nord25.dtln.ru, ibm-nord26.dtln.ru, ibm-nord27.dtln.ru, ibm-nord28.dtln.ru, ibm-nord29.dtln.ru, ibm-nord30.dtln.ru, ibm-nord31.dtln.ru, ibm-nord32.dtln.ru, ibm-nord33.dtln.ru, ibm-nord34.dtln.ru, ibm-nord35.dtln.ru, ibm-nord36.dtln.ru, ibm-nord37.dtln.ru, ibm-nord39.dtln.ru, ibm-nord40.dtln.ru, ibm-nord41.dtln.ru, ibm-nord42.dtln.ru, ibm-nord43.dtln.ru     SRV GROUP #8  SRV GROUP #8 - san97-nord 10:00:d8:1f:cc:7c:cb:20                 2.0          hba          160.0            30.0
+1    NORD_dev            B        SRV  san98-nord       162.0     Native  10:00:d8:1f:cc:7c:ca:c0                       1  san98-nord 10:00:d8:1f:cc:7c:ca:c0            6.0               SRV      None            1xN16                      6B: 1xN16               6A: 1xN16; 6B: 1xN16                            20           NORD                    8                        40  IBM-NORD38.dtln.ru, ibm-nord02.dtln.ru, ibm-nord03.dtln.ru, ibm-nord05.dtln.ru, ibm-nord06.dtln.ru, ibm-nord08.dtln.ru, ibm-nord09.dtln.ru, ibm-nord10.dtln.ru, ibm-nord11.dtln.ru, ibm-nord12.dtln.ru, ibm-nord13.dtln.ru, ibm-nord14.dtln.ru, ibm-nord15.dtln.ru, ibm-nord16.dtln.ru, ibm-nord17.dtln.ru, ibm-nord18.dtln.ru, ibm-nord19.dtln.ru, ibm-nord20.dtln.ru, ibm-nord21.dtln.ru, ibm-nord22.dtln.ru, ibm-nord23.dtln.ru, ibm-nord24.dtln.ru, ibm-nord25.dtln.ru, ibm-nord26.dtln.ru, ibm-nord27.dtln.ru, ibm-nord28.dtln.ru, ibm-nord29.dtln.ru, ibm-nord30.dtln.ru, ibm-nord31.dtln.ru, ibm-nord32.dtln.ru, ibm-nord33.dtln.ru, ibm-nord34.dtln.ru, ibm-nord35.dtln.ru, ibm-nord36.dtln.ru, ibm-nord37.dtln.ru, ibm-nord39.dtln.ru, ibm-nord40.dtln.ru, ibm-nord41.dtln.ru, ibm-nord42.dtln.ru, ibm-nord43.dtln.ru     SRV GROUP #8  SRV GROUP #8 - san98-nord 10:00:d8:1f:cc:7c:ca:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS...
+Device_shapeName                                         SRV GROUP #2
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2    NORD_dev            A        SRV  san11-nord       109.0     Native  10:00:d8:1f:cc:06:c8:e9                       1  san11-nord 10:00:d8:1f:cc:06:c8:e9            3.0               SRV      None            1xN16                      3A: 1xN16               3A: 1xN16; 3B: 1xN16                            20           NORD                    2                        43  NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS-NORD07, hw-nord01.dtln.ru, hw-nord06.dtln.ru, hw-nord14.dtln.ru, hw-nord15.dtln.ru, hw-nord16.dtln.ru, hw-nord17.dtln.ru, hw-nord18.dtln.ru, hw-nord19.dtln.ru, hw-nord20.dtln.ru, hw-nord21.dtln.ru, hw-nord22.dtln.ru, hw-nord23.dtln.ru, hw-nord24.dtln.ru, hw-nord25.dtln.ru, hw-nord26.dtln.ru, hw-nord27.dtln.ru, hw-nord28.dtln.ru, hw-nord29.dtln.ru, hw-nord30.dtln.ru, n1-line-v7-h05.dtln.ru, n1-line-v7-h06.dtln.ru, n1-line-v7-h07.dtln.ru, n1-line-v7-h08.dtln.ru, n1-line-v7-h09.dtln.ru, n1c3s1.dtln.ru, n1c3s10.dtln.ru, n1c3s11.dtln.ru, n1c3s2.dtln.ru, n1c3s3.dtln.ru, n1c3s4.dtln.ru, n1c3s5.dtln.ru, n1c3s6.dtln.ru, n1c3s7.dtln.ru, n1c3s8.dtln.ru, n1c3s9.dtln.ru, nord-mgmt6.dtln.ru, nord-mgmt7.dtln.ru, nord-mgmt8.dtln.ru, nord-mgmt9     SRV GROUP #2  SRV GROUP #2 - san11-nord 10:00:d8:1f:cc:06:c8:e9                 2.0          hba          160.0            30.0
+3    NORD_dev            B        SRV  san12-nord       109.0     Native  10:00:d8:1f:cc:06:a9:dd                       1  san12-nord 10:00:d8:1f:cc:06:a9:dd            3.0               SRV      None            1xN16                      3B: 1xN16               3A: 1xN16; 3B: 1xN16                            20           NORD                    2                        43  NORD152-REFS03, REFS-NORD04, REFS-NORD06, REFS-NORD07, hw-nord01.dtln.ru, hw-nord06.dtln.ru, hw-nord14.dtln.ru, hw-nord15.dtln.ru, hw-nord16.dtln.ru, hw-nord17.dtln.ru, hw-nord18.dtln.ru, hw-nord19.dtln.ru, hw-nord20.dtln.ru, hw-nord21.dtln.ru, hw-nord22.dtln.ru, hw-nord23.dtln.ru, hw-nord24.dtln.ru, hw-nord25.dtln.ru, hw-nord26.dtln.ru, hw-nord27.dtln.ru, hw-nord28.dtln.ru, hw-nord29.dtln.ru, hw-nord30.dtln.ru, n1-line-v7-h05.dtln.ru, n1-line-v7-h06.dtln.ru, n1-line-v7-h07.dtln.ru, n1-line-v7-h08.dtln.ru, n1-line-v7-h09.dtln.ru, n1c3s1.dtln.ru, n1c3s10.dtln.ru, n1c3s11.dtln.ru, n1c3s2.dtln.ru, n1c3s3.dtln.ru, n1c3s4.dtln.ru, n1c3s5.dtln.ru, n1c3s6.dtln.ru, n1c3s7.dtln.ru, n1c3s8.dtln.ru, n1c3s9.dtln.ru, nord-mgmt6.dtln.ru, nord-mgmt7.dtln.ru, nord-mgmt8.dtln.ru, nord-mgmt9     SRV GROUP #2  SRV GROUP #2 - san12-nord 10:00:d8:1f:cc:06:a9:dd                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name             NORD_dev
+Device_shapeText     REFS-NORD09
+Device_shapeName    SRV GROUP #1
+deviceType                   SRV
+master_shape                 hba
+y_graph_level              160.0
+x_group_offset              30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4    NORD_dev            A        SRV  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       1  san01-nord 10:00:88:94:71:bd:69:40            1.0               SRV      None            1xN16                      1A: 1xN16               1A: 1xN16; 1B: 1xN16                            20           NORD                    1                         1      REFS-NORD09     SRV GROUP #1  SRV GROUP #1 - san01-nord 10:00:88:94:71:bd:69:40                 2.0          hba          160.0            30.0
+5    NORD_dev            B        SRV  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       1  san02-nord 10:00:88:94:71:bd:68:c0            1.0               SRV      None            1xN16                      1B: 1xN16               1A: 1xN16; 1B: 1xN16                            20           NORD                    1                         1      REFS-NORD09     SRV GROUP #1  SRV GROUP #1 - san02-nord 10:00:88:94:71:bd:68:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    SRV 20:00:34:80:0d:73:23:f6
+Device_shapeName                   SRV GROUP #3
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6    NORD_dev            A        SRV  san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1  san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN16                      4A: 1xN16                          4A: 1xN16                            20           NORD                    3                         1  SRV 20:00:34:80:0d:73:23:f6     SRV GROUP #3  SRV GROUP #3 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    SRV 20:00:34:80:0d:73:23:f7
+Device_shapeName                   SRV GROUP #6
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+  Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+7    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN16                      4B: 1xN16                          4B: 1xN16                            20           NORD                    6                         1  SRV 20:00:34:80:0d:73:23:f7     SRV GROUP #6  SRV GROUP #6 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord0...
+Device_shapeName                                         SRV GROUP #4
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+8    NORD_dev            A        SRV   san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1   san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                            20           NORD                    4                        24  hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord05.dtln.ru, hw-nord07.dtln.ru, hw-nord08.dtln.ru, hw-nord09.dtln.ru, hw-nord10.dtln.ru, hw-nord11.dtln.ru, hw-nord12.dtln.ru, hw-nord13.dtln.ru, hw-nord31.dtln.ru, n1-line-v7-c2h01, n1-line-v7-c2h02.dtln.ru, n1-line-v7-c2h03, n1-line-v7-c2h04, n1-line-v7-c2h05, n1-line-v7-h01.dtln.ru, n1-line-v7-h02.dtln.ru, n1-line-v7-h03.dtln.ru, n1-line-v7-h04.dtln.ru, n1-line-v7-h10.dtln.ru, n1-mgmt-h01, n1-mgmt-h02, n1-mgmt-h03     SRV GROUP #4   SRV GROUP #4 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+9    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                            20           NORD                    4                        24  hw-nord02.dtln.ru, hw-nord03.dtln.ru, hw-nord05.dtln.ru, hw-nord07.dtln.ru, hw-nord08.dtln.ru, hw-nord09.dtln.ru, hw-nord10.dtln.ru, hw-nord11.dtln.ru, hw-nord12.dtln.ru, hw-nord13.dtln.ru, hw-nord31.dtln.ru, n1-line-v7-c2h01, n1-line-v7-c2h02.dtln.ru, n1-line-v7-c2h03, n1-line-v7-c2h04, n1-line-v7-c2h05, n1-line-v7-h01.dtln.ru, n1-line-v7-h02.dtln.ru, n1-line-v7-h03.dtln.ru, n1-line-v7-h04.dtln.ru, n1-line-v7-h10.dtln.ru, n1-mgmt-h01, n1-mgmt-h02, n1-mgmt-h03     SRV GROUP #4  SRV GROUP #4 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name             NORD_dev
+Device_shapeText      ibm_nord07
+Device_shapeName    SRV GROUP #9
+deviceType                   SRV
+master_shape                 hba
+y_graph_level              160.0
+x_group_offset              30.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+10    NORD_dev            B        SRV  san98-nord       162.0     Native  10:00:d8:1f:cc:7c:ca:c0                       1  san98-nord 10:00:d8:1f:cc:7c:ca:c0            6.0               SRV      None            1xN16                      6B: 1xN16                          6B: 1xN16                            20           NORD                    9                         1       ibm_nord07     SRV GROUP #9  SRV GROUP #9 - san98-nord 10:00:d8:1f:cc:7c:ca:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7...
+Device_shapeName                                         SRV GROUP #5
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+   Fabric_name Fabric_label deviceType   switchName  switchType switchMode                switchWwn  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                        Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+11    NORD_dev            A        SRV   san99-nord       162.0     Native  10:00:d8:1f:cc:7c:b8:00                       1   san99-nord 10:00:d8:1f:cc:7c:b8:00            4.0               SRV      None            1xN32                      4A: 1xN32               4A: 1xN32; 4B: 1xN32                            20           NORD                    5                         4  n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7-c2h08, n1-line-v7-c2h09     SRV GROUP #5   SRV GROUP #5 - san99-nord 10:00:d8:1f:cc:7c:b8:00                 2.0          hba          160.0            30.0
+12    NORD_dev            B        SRV  san100-nord       162.0     Native  10:00:d8:1f:cc:7c:97:c0                       1  san100-nord 10:00:d8:1f:cc:7c:97:c0            4.0               SRV      None            1xN32                      4B: 1xN32               4A: 1xN32; 4B: 1xN32                            20           NORD                    5                         4  n1-line-v7-c2h06, n1-line-v7-c2h07, n1-line-v7-c2h08, n1-line-v7-c2h09     SRV GROUP #5  SRV GROUP #5 - san100-nord 10:00:d8:1f:cc:7c:97:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                                  NORD_dev
+Device_shapeText    n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln...
+Device_shapeName                                         SRV GROUP #7
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                     Device_shapeText Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+13    NORD_dev            A        SRV  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       1  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0               SRV      None            1xN16                      5A: 1xN16               5A: 1xN16; 5B: 1xN16                            20           NORD                    7                        21  n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln.ru, n3c3s16.dtln.ru, n3c3s17.dtln.ru, n3c3s18.dtln.ru, n3c3s19.dtln.ru, n3c3s27.dtln.ru, n3c3s28.dtln.ru, n3c3s32.dtln.ru, n3c3s34.dtln.ru, n3c3s35.dtln.ru, n3c3s36.dtln.ru, n3c3s37.dtln.ru, n3c3s38.dtln.ru, n3c3s39.dtln.ru, n3c3s40.dtln.ru, n3c3s41.dtln.ru, n3c3s42.dtln.ru, n3c3s43.dtln.ru, n3s3n12.dtln.ru     SRV GROUP #7  SRV GROUP #7 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 2.0          hba          160.0            30.0
+14    NORD_dev            B        SRV  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       1  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0               SRV      None            1xN16                      5B: 1xN16               5A: 1xN16; 5B: 1xN16                            20           NORD                    7                        21  n3c3s13.dtln.ru, n3c3s14.dtln.ru, n3c3s15.dtln.ru, n3c3s16.dtln.ru, n3c3s17.dtln.ru, n3c3s18.dtln.ru, n3c3s19.dtln.ru, n3c3s27.dtln.ru, n3c3s28.dtln.ru, n3c3s32.dtln.ru, n3c3s34.dtln.ru, n3c3s35.dtln.ru, n3c3s36.dtln.ru, n3c3s37.dtln.ru, n3c3s38.dtln.ru, n3c3s39.dtln.ru, n3c3s40.dtln.ru, n3c3s41.dtln.ru, n3c3s42.dtln.ru, n3c3s43.dtln.ru, n3s3n12.dtln.ru     SRV GROUP #7  SRV GROUP #7 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 2.0          hba          160.0            30.0
+
+Edge devices
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText           HW02_NORD
+Device_shapeName    STORAGE GROUP #3
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+  Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       4  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0            HUAWEI      None            4x16G                      5A: 4x16G               5A: 4x16G; 5B: 4x16G                            20           NORD                    3                         1        HW02_NORD  STORAGE GROUP #3  STORAGE GROUP #3 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+1    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       4  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0            HUAWEI      None            4x16G                      5B: 4x16G               5A: 4x16G; 5B: 4x16G                            20           NORD                    3                         1        HW02_NORD  STORAGE GROUP #3  STORAGE GROUP #3 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                NORD_dev
+Device_shapeText    HW03_NORD, HW22_NORD, HW23_NORD
+Device_shapeName                   STORAGE GROUP #1
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                 Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       2  san01-nord 10:00:88:94:71:bd:69:40            1.0            HUAWEI      None            2xN16                      1A: 2xN16               1A: 2xN16; 1B: 2xN16                            20           NORD                    1                         3  HW03_NORD, HW22_NORD, HW23_NORD  STORAGE GROUP #1  STORAGE GROUP #1 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+3    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       2  san02-nord 10:00:88:94:71:bd:68:c0            1.0            HUAWEI      None            2xN16                      1B: 2xN16               1A: 2xN16; 1B: 2xN16                            20           NORD                    1                         3  HW03_NORD, HW22_NORD, HW23_NORD  STORAGE GROUP #1  STORAGE GROUP #1 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                NORD_dev
+Device_shapeText    HW09_NORD, HW10_NORD, HW17_NORD
+Device_shapeName                   STORAGE GROUP #2
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                 Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       4  san01-nord 10:00:88:94:71:bd:69:40            1.0            HUAWEI      None            4xN16                      1A: 4xN16               1A: 4xN16; 1B: 4xN16                            20           NORD                    2                         3  HW09_NORD, HW10_NORD, HW17_NORD  STORAGE GROUP #2  STORAGE GROUP #2 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+5    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       4  san02-nord 10:00:88:94:71:bd:68:c0            1.0            HUAWEI      None            4xN16                      1B: 4xN16               1A: 4xN16; 1B: 4xN16                            20           NORD                    2                         3  HW09_NORD, HW10_NORD, HW17_NORD  STORAGE GROUP #2  STORAGE GROUP #2 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                                      NORD_dev
+Device_shapeText    IBM_V5020_2_NORD1, IBM_V5020_CLOUD152
+Device_shapeName                         STORAGE GROUP #4
+deviceType                                        STORAGE
+master_shape                                      storage
+y_graph_level                                        30.0
+x_group_offset                                       25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                       Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       2  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0               IBM      None             2xN8                       2A: 2xN8                 2A: 2xN8; 2B: 2xN8                            20           NORD                    4                         2  IBM_V5020_2_NORD1, IBM_V5020_CLOUD152  STORAGE GROUP #4  STORAGE GROUP #4 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+7    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       2  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0               IBM      None             2xN8                       2B: 2xN8                 2A: 2xN8; 2B: 2xN8                            20           NORD                    4                         2  IBM_V5020_2_NORD1, IBM_V5020_CLOUD152  STORAGE GROUP #4  STORAGE GROUP #4 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText       IBOX1159_NORD
+Device_shapeName    STORAGE GROUP #6
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+  Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+8    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       6  san01-nord 10:00:88:94:71:bd:69:40            1.0         INFINIDAT      None             6x8G                       1A: 6x8G                 1A: 6x8G; 1B: 6x8G                            20           NORD                    6                         1    IBOX1159_NORD  STORAGE GROUP #6  STORAGE GROUP #6 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+9    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       6  san02-nord 10:00:88:94:71:bd:68:c0            1.0         INFINIDAT      None             6x8G                       1B: 6x8G                 1A: 6x8G; 1B: 6x8G                            20           NORD                    6                         1    IBOX1159_NORD  STORAGE GROUP #6  STORAGE GROUP #6 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   NORD_dev
+Device_shapeText    IBOX1772, IBOX2030
+Device_shapeName      STORAGE GROUP #7
+deviceType                     STORAGE
+master_shape                   storage
+y_graph_level                     30.0
+x_group_offset                    25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group    Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+10    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       6  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0         INFINIDAT      None             6xN8                       2A: 6xN8                 2A: 6xN8; 2B: 6xN8                            20           NORD                    7                         2  IBOX1772, IBOX2030  STORAGE GROUP #7  STORAGE GROUP #7 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+11    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       6  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0         INFINIDAT      None             6xN8                       2B: 6xN8                 2A: 6xN8; 2B: 6xN8                            20           NORD                    7                         2  IBOX1772, IBOX2030  STORAGE GROUP #7  STORAGE GROUP #7 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText            IBOX2837
+Device_shapeName    STORAGE GROUP #9
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+12    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       6  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0         INFINIDAT      None             6x8G                       5A: 6x8G                 5A: 6x8G; 5B: 6x8G                            20           NORD                    9                         1         IBOX2837  STORAGE GROUP #9  STORAGE GROUP #9 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+13    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       6  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0         INFINIDAT      None             6x8G                       5B: 6x8G                 5A: 6x8G; 5B: 6x8G                            20           NORD                    9                         1         IBOX2837  STORAGE GROUP #9  STORAGE GROUP #9 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 NORD_dev
+Device_shapeText            IBOX3156
+Device_shapeName    STORAGE GROUP #8
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+   Fabric_name Fabric_label deviceType      switchName  switchType switchMode                switchWwn  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText  Device_shapeName                                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+14    NORD_dev            A    STORAGE  n3-g620-109-f1       162.0     Native  10:00:d8:1f:cc:7c:ca:60                       6  n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60            5.0         INFINIDAT      None            6x16G                      5A: 6x16G               5A: 6x16G; 5B: 6x16G                            20           NORD                    8                         1         IBOX3156  STORAGE GROUP #8  STORAGE GROUP #8 - n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60                 1.0      storage           30.0            25.0
+15    NORD_dev            B    STORAGE  n3-g620-110-f2       162.0     Native  10:00:d8:1f:cc:7c:c3:a0                       6  n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0            5.0         INFINIDAT      None            6x16G                      5B: 6x16G               5A: 6x16G; 5B: 6x16G                            20           NORD                    8                         1         IBOX3156  STORAGE GROUP #8  STORAGE GROUP #8 - n3-g620-110-f2 10:00:d8:1f:cc:7c:c3:a0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   NORD_dev
+Device_shapeText    IBOX3365, IBOX3370
+Device_shapeName      STORAGE GROUP #5
+deviceType                     STORAGE
+master_shape                   storage
+y_graph_level                     30.0
+x_group_offset                    25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group    Device_shapeText  Device_shapeName                                         Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+16    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                       3  san01-nord 10:00:88:94:71:bd:69:40            1.0         INFINIDAT      None            3xN16                      1A: 3xN16               1A: 3xN16; 1B: 3xN16                            20           NORD                    5                         2  IBOX3365, IBOX3370  STORAGE GROUP #5  STORAGE GROUP #5 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+17    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                       3  san02-nord 10:00:88:94:71:bd:68:c0            1.0         INFINIDAT      None            3xN16                      1B: 3xN16               1A: 3xN16; 1B: 3xN16                            20           NORD                    5                         2  IBOX3365, IBOX3370  STORAGE GROUP #5  STORAGE GROUP #5 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                            NORD_dev
+Device_shapeText    NetApp10, NetApp12, NetApp9
+Device_shapeName              STORAGE GROUP #11
+deviceType                              STORAGE
+master_shape                            storage
+y_graph_level                              30.0
+x_group_offset                             25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level  Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText   Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+18    NORD_dev            A    STORAGE  san03-nord       109.0     Native  10:00:c4:f5:7c:b2:38:1b                       6  san03-nord 10:00:c4:f5:7c:b2:38:1b            2.0            NetApp      None     6xN8, 4xNPIV               2A: 6xN8, 4xNPIV  2A: 6xN8, 4xNPIV; 2B: 6xN8, 4xNPIV                            20           NORD                   11                         3  NetApp10, NetApp12, NetApp9  STORAGE GROUP #11  STORAGE GROUP #11 - san03-nord 10:00:c4:f5:7c:b2:38:1b                 1.0      storage           30.0            25.0
+19    NORD_dev            B    STORAGE  san04-nord       109.0     Native  10:00:c4:f5:7c:c7:00:70                       6  san04-nord 10:00:c4:f5:7c:c7:00:70            2.0            NetApp      None     6xN8, 4xNPIV               2B: 6xN8, 4xNPIV  2A: 6xN8, 4xNPIV; 2B: 6xN8, 4xNPIV                            20           NORD                   11                         3  NetApp10, NetApp12, NetApp9  STORAGE GROUP #11  STORAGE GROUP #11 - san04-nord 10:00:c4:f5:7c:c7:00:70                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                  NORD_dev
+Device_shapeText              NetApp8
+Device_shapeName    STORAGE GROUP #10
+deviceType                    STORAGE
+master_shape                  storage
+y_graph_level                    30.0
+x_group_offset                   25.0
+   Fabric_name Fabric_label deviceType  switchName  switchType switchMode                switchWwn  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level      Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText   Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+20    NORD_dev            A    STORAGE  san01-nord       133.0     Native  10:00:88:94:71:bd:69:40                      12  san01-nord 10:00:88:94:71:bd:69:40            1.0            NetApp      None   12xN16, 8xNPIV             1A: 12xN16, 8xNPIV  1A: 12xN16, 8xNPIV; 1B: 12xN16, 8xNPIV                            20           NORD                   10                         1          NetApp8  STORAGE GROUP #10  STORAGE GROUP #10 - san01-nord 10:00:88:94:71:bd:69:40                 1.0      storage           30.0            25.0
+21    NORD_dev            B    STORAGE  san02-nord       133.0     Native  10:00:88:94:71:bd:68:c0                      12  san02-nord 10:00:88:94:71:bd:68:c0            1.0            NetApp      None   12xN16, 8xNPIV             1B: 12xN16, 8xNPIV  1A: 12xN16, 8xNPIV; 1B: 12xN16, 8xNPIV                            20           NORD                   10                         1          NetApp8  STORAGE GROUP #10  STORAGE GROUP #10 - san02-nord 10:00:88:94:71:bd:68:c0                 1.0      storage           30.0            25.0
+
+Switch groups
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        n3-g620-109-f1 (DID=109)/ n3-g620-110-f2 (DID=...
+switchClass_mode                                               MID, MID
+switchName_Wwn        n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60, n3-g62...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san01-nord (DID=9)/ san02-nord (DID=9)
+switchClass_mode                                             ENTP, ENTP
+switchName_Wwn        san01-nord 10:00:88:94:71:bd:69:40, san02-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                               sw_enterprise, sw_enterprise
+ModelName                              HPE SN6500B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       2.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san03-nord (DID=4)/ san04-nord (DID=4)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san03-nord 10:00:c4:f5:7c:b2:38:1b, san04-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san11-nord (DID=10)/ san12-nord (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san11-nord 10:00:d8:1f:cc:06:c8:e9, san12-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san97-nord (DID=11)/ san98-nord (DID=11)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san97-nord 10:00:d8:1f:cc:7c:cb:20, san98-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                        NORD
+switchPair_id                                                       4.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                san99-nord (DID=12)/ san100-nord (DID=12)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san99-nord 10:00:d8:1f:cc:7c:b8:00, san100-nor...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        n3-g620-109-f1 (DID=109)/ n3-g620-110-f2 (DID=...
+switchClass_mode                                               MID, MID
+switchName_Wwn        n3-g620-109-f1 10:00:d8:1f:cc:7c:ca:60, n3-g62...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san01-nord (DID=9)/ san02-nord (DID=9)
+switchClass_mode                                             ENTP, ENTP
+switchName_Wwn        san01-nord 10:00:88:94:71:bd:69:40, san02-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                               sw_enterprise, sw_enterprise
+ModelName                              HPE SN6500B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       2.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san03-nord (DID=4)/ san04-nord (DID=4)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san03-nord 10:00:c4:f5:7c:b2:38:1b, san04-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san11-nord (DID=10)/ san12-nord (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san11-nord 10:00:d8:1f:cc:06:c8:e9, san12-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6000B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san97-nord (DID=11)/ san98-nord (DID=11)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san97-nord 10:00:d8:1f:cc:7c:cb:20, san98-nord...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                    NORD_dev
+switchPair_id                                                       4.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                san99-nord (DID=12)/ san100-nord (DID=12)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san99-nord 10:00:d8:1f:cc:7c:b8:00, san100-nor...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                              HPE SN6600B Fibre Channel Switch
+group_level                                                           1
+y_group_level                                                       100
+
+
+finish: 03/11/2022 13:01:51
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
