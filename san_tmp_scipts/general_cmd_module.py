@@ -153,6 +153,19 @@ def series_from_dataframe(df, index_column: str, value_column: str=None):
     return  sr
 
 
+def list_to_dataframe(header_lst, *args):
+    """Function to export lists (args) to DataFrame with column titles from header_lst"""
+
+    if len(args) == 1:
+        header_lst = [header_lst]
+
+    if len(args) != len(header_lst):
+        print('Number of lists to convert to DataFrame and length of list of column titles are not equal')
+        exit()
+    return [pd.DataFrame(lst, columns=columns) for lst, columns in zip(args, header_lst)]
+
+
+
 def sort_cell_values(df, *args, sep=', '):
     """Function to sort values in cells of columns (args)"""
     

@@ -63,11 +63,20 @@ def list_to_dataframe(header_lst, *args):
     return [pd.DataFrame(lst, columns=columns) for lst, columns in zip(args, header_lst)]
 
    
-def list_from_dataframe(df, *args, drop_na=True):
+def list_from_dataframe(df, *args, drop_na=False):
     """Function to convert DataFrame columns to list of lists. 
     drop_na removes nan values from the list.
     if column doesn't exist list is empty"""
 
+    
+    if not drop_na:
+        missing_columns = [column for column in args if column not in df.columns]
+        if missing_columns:
+            print(f"\nERROR. Column(s) {', '.join(missing_columns)} {'is' if len(missing_columns) == 1 else 'are'} missing in dataframe")
+            exit()
+
+            
+            
     result = [df[column].dropna().tolist() for column in args]
 
     # if drop_na:

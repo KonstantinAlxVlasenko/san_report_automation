@@ -16,7 +16,7 @@ def fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df,
 
     # data titles obtained after module execution (output data)
     # data titles which module is dependent on (input data)
-    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'fcr_xd_device_analysis_out', 'fcr_xd_device_analysis_in')
+    data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'fcr_proxydevice_analysis_out', 'fcr_proxydevice_analysis_in')
     
     # module information
     meop.show_module_info(project_steps_df, data_names)

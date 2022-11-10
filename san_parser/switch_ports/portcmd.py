@@ -84,7 +84,6 @@ def current_config_extract(san_portshow_lst, pattern_dct,
                 break
             # sshow_port section start
             if re.search(pattern_dct['section_sshow_port'], line):
-                print(line)
                 # when section is found corresponding collected dict values changed to True
                 collected['portshow'] = True
                 while not re.search(pattern_dct['rebuilt finished'],line):

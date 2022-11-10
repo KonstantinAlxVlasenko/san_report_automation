@@ -76,7 +76,8 @@ def _symb_split(series, pattern_dct, nsshow_symb_columns):
         match = match_node_dct['netapp_node']
         series['Device_Manufacturer'] = match.group(2)
         series['Device_Model'] = match.group(1)
-        series['Device_Name'] = match.group(3)
+        if match.group(3):
+            series['Device_Name'] = match.group(3)
         series['nodeSymbUsed'] = 'yes'
         series['nodeSymbPattern'] = 21
         # netapp_port_match port_symb

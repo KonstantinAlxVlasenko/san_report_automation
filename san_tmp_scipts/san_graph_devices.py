@@ -16,34 +16,8 @@ import pandas as pd
 os.chdir(script_dir)
 import general_cmd_module as dfop
 
-# # MTS Moscow
-# db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\MTS\SAN Assessment\JAN2022\mts_msc\database_MTS_msk"
-# db_file = r"MTS_msk_analysis_database.db"
 
-
-# # MTS Tech
-# db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\MTS\SAN Assessment\NOV2021\mts_tech\database_MTS_Techblock"
-# db_file = r"MTS_Techblock_analysis_database.db"
-
-
-# # NOVATEK MAR2022
-# db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\Novatek\SAN Assessment\MAR2022\database_Novatek"
-# db_file = r"Novatek_analysis_database.db"
-
-
-
-
-# # OTP
-# db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\OTPBank\SAN Assessment DEC2020\database_OTPBank"
-# db_file = r"OTPBank_analysis_database.db"
-
-
-# # Mechel
-# db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\Mechel\SAN Assessment FEB21\database_Mechel"
-# db_file = r"Mechel_analysis_database.db"
-
-
-data_names = ['portshow_aggregated', 'npv_ag_connected_devices', 'fcr_xd_proxydev']
+data_names = ['portshow_aggregated', 'npv_ag_connected_devices', 'fcr_proxydev']
 data_lst = dfop.read_database(db_path, db_file, *data_names)
 data_lst = dfop.verify_read_data(20, data_names, *data_lst,  show_status=True)
 
@@ -54,7 +28,7 @@ portshow_aggregated_df, npv_ag_connected_devices_df, fcr_xd_proxydev_df, *_ = da
 # fcrxlateconfig_df, *_ = data_lst
 
 
-SW_PAIR_NUMBER_PER_FABRIC_THRESHOLD = 2
+SW_PAIR_NUMBER_PER_FABRIC_THRESHOLD = 8
 DEVICE_FABRIC_NAME_TAG = '_dev'
 STORAGE_NUMBER_PER_FABRIC_THRESHOLD = 15
 
@@ -151,7 +125,6 @@ def align_device_type(connected_devices_df):
 def extract_enclosure_slot(connected_devices_df, pattern_dct):
     """Function to extract enclosure and slot information from 'Device_Location' column.
     Slot is convetred to int"""
-    
     
     # enclosure_slot_pattern = r'(Enclosure .+?) slot (\d+)'
     if connected_devices_df['Device_Location'].notna().any() and connected_devices_df['Device_Location'].str.contains(pattern_dct['enclosure_slot'], na=False).any():
@@ -553,8 +526,8 @@ connected_devices_df = find_connected_devices(portshow_aggregated_df, npv_ag_con
 # create link description for switch -> device_name rows on fabric_name level
 connected_devices_df = create_device_link_description(connected_devices_df, switch_pair_df, pattern_dct)
 # create device shapes and link shapes to the switch shapes
-connected_devices_df, storage_shape_links_df, server_shape_links_df, san_graph_sw_pair_group_df, fabric_name_duplicated_lst, fabric_name_dev_lst\
-    = create_device_shape_links(connected_devices_df, san_graph_sw_pair_df, pattern_dct)
+connected_devices_df, storage_shape_links_df, server_shape_links_df, san_graph_sw_pair_group_df, fabric_name_duplicated_lst, fabric_name_dev_lst = \
+    create_device_shape_links(connected_devices_df, san_graph_sw_pair_df, pattern_dct)
 
 #############################################################################
 # end

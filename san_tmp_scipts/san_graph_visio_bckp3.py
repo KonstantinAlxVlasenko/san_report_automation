@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Tue Nov  8 10:29:28 2022
+
+@author: kavlasenko
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu May 12 13:51:11 2022
 
 @author: vlasenko
@@ -45,27 +52,27 @@ fabric_label_colours_dct = dict(zip(fabric_labels, HPE_PALETTE))
 
 
 
-# doc = visio.ActiveDocument
-# # page = visio.ActiveWindow
-# # for shape in page.Shapes:
-# #     print(shape.Text)
+doc = visio.ActiveDocument
+# page = visio.ActiveWindow
+# for shape in page.Shapes:
+#     print(shape.Text)
 
 
-# for page in doc.Pages:
-#     for shape in page.Shapes:
+for page in doc.Pages:
+    for shape in page.Shapes:
 
-#         print(shape.Text)
+        print(shape.Text)
 
-#         if shape.Text == 'Customer / SAN Assessment':
-#             shape.Text = 'Data Line' + ' / ' + 'SAN Inventory'
+        if shape.Text == 'Customer / SAN Assessment':
+            shape.Text = 'Data Line' + ' / ' + 'SAN Inventory'
 
 
-# for page in doc.Pages:
-#     for shape in page.Shapes:
-#         if shape.Text == 'Fabric Name':
-#             shape.Text = 'Фабрика ' + page.Name
-#         elif project_name and shape.Text == 'Project title':
-#             shape.Text = project_name
+for page in doc.Pages:
+    for shape in page.Shapes:
+        if shape.Text == 'Fabric Name':
+            shape.Text = 'Фабрика ' + page.Name
+        elif project_name and shape.Text == 'Project title':
+            shape.Text = project_name
 
 
 
@@ -167,13 +174,20 @@ def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn):
     
     add_log_entry(log_file, '\nSwitches\n', 'Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate')
         
-    for idx, switch_pair_sr in san_graph_sw_pair_df.iterrows():
-        # add_log_entry(log_file, '\n', switch_pair_sr.to_string())
-        fabric_name_current = switch_pair_sr['Fabric_name']
+    for idx, switch_pair in san_graph_sw_pair_df.iterrows():
+        
+        # add_log_entry(log_file, '\n', switch_pair.to_string())
+        
+        fabric_name_current = switch_pair['Fabric_name']
         # graph_level: core, edge, ag
-        graph_level_current = switch_pair_sr['graph_level']
-        # activate page with switch_pair
+        graph_level_current = switch_pair['graph_level']
+        
+        # doc = visio.ActiveDocument
+        # page = doc.Pages.ItemU(fabric_name_current)
+        # visio.ActiveWindow.Page = fabric_name_current
+        
         page = activate_visio_page(visio, page_name=fabric_name_current)
+        
         # reset x-coordinate if new page (fabric_name) selected
         if fabric_name_current != fabric_name_prev:
             x_group_current = X_START
@@ -186,60 +200,52 @@ def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn):
         
         print("X: ", x_group_current)
         
-        drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn)
+        # split switch_pairs details to build Visio graph
+        master_shapes = switch_pair['master_shape'].split(', ')
+        shape_names = switch_pair['switchName_Wwn'].split(', ')
+        shape_text = switch_pair['switchName_DID'].split('/ ')[::-1]
+        
+        # first drop second switch of the switch_pair to make the first switch visually overlap to the second switch 
+        # two ENT swtiches sw1 and sw2 -> [(0, 'ENT', 'sw2'), (1, 'ENT', 'sw1')]
+        for i, master_shape, shape_name in list(zip(range(len(master_shapes)-1, -1, -1), master_shapes, shape_names))[::-1]:
+            
+            # choose shape icon
+            master = stn.Masters(master_shape)
+            # set x, y coordinates
+            # x_shape_offset is for Direcors only (for all other devices it's 0)
+            x = x_group_current - i * switch_pair['x_shape_offset']
+            # y_shape_offset makes fabic_label A switch shape to be located above fabic_label B switch shape
+            y = switch_pair['y_group_level'] + i * switch_pair['y_shape_offset']
+            
+            print(fabric_name_current, shape_name, i, x, y)
+            
+            # add enrty to visio graph creation log
+            log_entry = ' '.join([fabric_name_current, shape_name, str(i), str(x), str(y)])
+            add_log_entry(log_file, log_entry)
+            
+            # add switch shape to the Visio page
+            shape = page.Drop(master, x, y)
+            shape.Name = shape_name
+            
+            # for Directors shape text is under each shape with
+            # Director name, DID and model individually
+            if 'DIR' in switch_pair['switchClass_mode']:
+                shape.Text = shape_text[i] + "\n" + switch_pair['ModelName']
+            else:
+                shape.Text = " "
+        
+        # for all switches except Directors shape text with switch name, DID and model 
+        # for the switch pair on the bottom shape of the switch pair
+        if not 'DIR' in switch_pair['switchClass_mode']:
+            bottom_shape = page.Shapes.ItemU(shape_names[-1])
+            if switch_pair['ModelName']:
+                bottom_shape.Text = switch_pair['switchName_DID'] + "\n" + switch_pair['ModelName']
+            else:
+                bottom_shape.Text = switch_pair['switchName_DID']
+        
         # move cursor to the next switch pair location x-coordinate
-        x_group_current =  x_group_current + switch_pair_sr['x_group_offset']
+        x_group_current =  x_group_current + switch_pair['x_group_offset']
         
-
-
-def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn):
-    """Function to drop switch shapes from single switch_pair to the active visio page and
-    add shape text (to all shapes of the switch_pair in case of directors and to 
-    the bottom shape onlyk in case if switches and vcs"""
-
-
-    # split switch_pair_srs details to build Visio graph
-    master_shapes = switch_pair_sr['master_shape'].split(', ')
-    shape_names = switch_pair_sr['switchName_Wwn'].split(', ')
-    shape_text = switch_pair_sr['switchName_DID'].split('/ ')[::-1]
-    
-    # first drop second switch of the switch_pair_sr to make the first switch visually overlap to the second switch 
-    # two ENT swtiches sw1 and sw2 -> [(0, 'ENT', 'sw2'), (1, 'ENT', 'sw1')]
-    for i, master_shape, shape_name in list(zip(range(len(master_shapes)-1, -1, -1), master_shapes, shape_names))[::-1]:
-        
-        # choose shape icon
-        master = stn.Masters(master_shape)
-        # set x, y coordinates
-        # x_shape_offset is for Direcors only (for all other devices it's 0)
-        x = x_group_current - i * switch_pair_sr['x_shape_offset']
-        # y_shape_offset makes fabic_label A switch shape to be located above fabic_label B switch shape
-        y = switch_pair_sr['y_group_level'] + i * switch_pair_sr['y_shape_offset']
-        
-        print(switch_pair_sr['Fabric_name'], shape_name, i, x, y)
-        
-        # add enrty to visio graph creation log
-        log_entry = ' '.join([switch_pair_sr['Fabric_name'], shape_name, str(i), str(x), str(y)])
-        add_log_entry(log_file, log_entry)
-        
-        # add switch shape to the Visio page
-        shape = page.Drop(master, x, y)
-        shape.Name = shape_name
-        
-        # for Directors shape text is under each shape with
-        # Director name, DID and model individually
-        if 'DIR' in switch_pair_sr['switchClass_mode']:
-            shape.Text = shape_text[i] + "\n" + switch_pair_sr['ModelName']
-        else:
-            shape.Text = " "
-    
-    # for all switches except Directors shape text with switch name, DID and model 
-    # for the switch pair on the bottom shape of the switch pair
-    if not 'DIR' in switch_pair_sr['switchClass_mode']:
-        bottom_shape = page.Shapes.ItemU(shape_names[-1])
-        if switch_pair_sr['ModelName']:
-            bottom_shape.Text = switch_pair_sr['switchName_DID'] + "\n" + switch_pair_sr['ModelName']
-        else:
-            bottom_shape.Text = switch_pair_sr['switchName_DID']
 
 
 
@@ -282,6 +288,7 @@ def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric
     add_log_entry(log_file, '\nLinks\n', 'Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn')
     
     for _, link_sr in inter_switch_links_df.iterrows():
+        
         # add connection log entry
         log_entry =  ' '.join([link_sr['Fabric_name'], link_sr['shapeName'], '  ---->  ', link_sr['Connected_shapeName']])
         add_log_entry(log_file, log_entry)
@@ -289,64 +296,74 @@ def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric
         
         # activate page with shapes to be connected 
         fabric_name_current = link_sr['Fabric_name']
+        # doc = visio.ActiveDocument
+        # page = doc.Pages.ItemU(fabric_name_current)
+        # visio.ActiveWindow.Page = fabric_name_current
         page = activate_visio_page(visio, page_name=fabric_name_current)
         # drop connection between shapes
-        drop_connector_shape(link_sr, page, stn, fabric_label_colours_dct, source='shapeName', destination='Connected_shapeName')
+        create_two_shapes_connection(link_sr, page, stn, fabric_label_colours_dct, source='shapeName', destination='Connected_shapeName')
 
 
 
 
 def add_visio_devices(san_links_df, visio, stn, fabric_label_colours):
-    """Function to add servers, storages and libraries shapes to Visio document page and
-    create connections between device shapes and switch shapes"""    
+    """Function to add servers, storages and libraries to Visio document pages and
+    create cnnections between device shapes and switch shapes"""    
+
 
     
+
     fabric_name_prev = None
     x_coordinate = 0
     
     add_log_entry(log_file, '\nEdge devices')
-    # find unique devices on fabric_name -> device_shapename -> device_class level
     san_device_shapes_df = find_device_shapes(san_links_df)
     
     print(san_device_shapes_df)
     
     for _, device_sr in san_device_shapes_df.iterrows():
-        print(device_sr)
-        add_log_entry(log_file, '\n', '-'*30, device_sr.to_string())
-        fabric_name_current = device_sr['Fabric_name']
-        # activate page with shape to be dropped 
-        page = activate_visio_page(visio, page_name=fabric_name_current)
         
-        # reset x-coordinate if new page (fabric_name) is activated
+        
+        add_log_entry(log_file, '\n', '-'*30, device_sr.to_string())
+        
+        # if link['Fabric_name'] != "BB":
+        #     continue
+        
+        fabric_name_current = device_sr['Fabric_name']
+        print(device_sr)
+        
+        
+        doc = visio.ActiveDocument
+        page = doc.Pages.ItemU(fabric_name_current)
+        visio.ActiveWindow.Page = fabric_name_current   
+        
         if fabric_name_current != fabric_name_prev:
             x_coordinate = X_START
             fabric_name_prev = fabric_name_current
         
         print(fabric_name_current, device_sr['Device_shapeText'])   
-        # drop shape on active page
+        
         drop_device_shape(device_sr, page, stn, x_coordinate)
-        # filter device_shapename links for the dropped shape
-        # each row is switch -> device_shapename link with link quantity
-        # device_shapename is single device or list of devices groped on fabric connection description
+
         shape_links_df = find_device_shape_links(device_sr, san_links_df)
         add_log_entry(log_file, shape_links_df.to_string())
         
         print(shape_links_df)
+        
         for _, link_sr in shape_links_df.iterrows():
-            # drop device_shapename -> switch links
-            drop_connector_shape(link_sr, page, stn, fabric_label_colours, source='Device_shapeName', destination='switch_shapeName')    
-        # shift x-coordinate to the right for the next device_shapename location
+            
+            
+            create_two_shapes_connection(link_sr, page, stn, fabric_label_colours, source='Device_shapeName', destination='switch_shapeName')    
+        
         x_coordinate =  x_coordinate + device_sr['x_group_offset']
 
 
-
 def find_device_shapes(san_links_df):
-    """Function to filter unique devices or device groups on 
-    fabric_name -> device_shapename -> device_class level"""
+    """Function to locate unique devices out of Device Links DataFrame"""
 
+    # create storage, library unique df to iterate
     san_device_shapes_df = san_links_df.drop_duplicates(subset=['Fabric_name', 'Device_shapeName', 'deviceType']).copy()
-    san_device_shapes_df = san_device_shapes_df[
-        ['Fabric_name', 'Device_shapeText', 'Device_shapeName',  'deviceType', 'master_shape', 'y_graph_level', 'x_group_offset']]
+    san_device_shapes_df = san_device_shapes_df[['Fabric_name', 'Device_shapeText', 'Device_shapeName',  'deviceType', 'master_shape', 'y_graph_level', 'x_group_offset']]
     return san_device_shapes_df
 
 
@@ -362,12 +379,11 @@ def drop_device_shape(device_sr, page, stn, x_coordinate):
     
     shape_text = device_sr['Device_shapeText']
     # synergy and blade server names are each on new line
-    # replace ': ' and ', ' in device_shapetext with new line
     if device_sr['deviceType'] in ['SRV_BLADE', 'SRV_SYNERGY']:
         shape_text = re.sub(': |, ', '\n', shape_text)
         
     device_shape.Text = shape_text
-    # device_shape.Cells("Char.Size").FormulaU = SHAPE_FONT_SIZE
+    device_shape.Cells("Char.Size").FormulaU = SHAPE_FONT_SIZE
     
     # # make title bold
     # shape_chars = device_shape.Characters
@@ -376,95 +392,86 @@ def drop_device_shape(device_sr, page, stn, x_coordinate):
 
 
 def find_device_shape_links(device_sr, san_links_df):
-    """Function to filter device_shapename links in the fabric_name. 
-    Each row is switch -> device_shapename link with link quantity for the device_sr fabric_name.
-    Device_shapename is a single device or list of devices groped on fabric connection description"""
+    """Function to locate all current device_sr shape links to switch shapes in the fabric_name"""
 
     mask_fabric_name = san_links_df['Fabric_name'] == device_sr['Fabric_name']
-    mask_shape_name = san_links_df['Device_shapeName'] == device_sr['Device_shapeName']
+    mask_storage_name = san_links_df['Device_shapeName'] == device_sr['Device_shapeName']
     mask_device_type = san_links_df['deviceType'] == device_sr['deviceType']
-    return san_links_df.loc[mask_fabric_name & mask_shape_name & mask_device_type]
+    return san_links_df.loc[mask_fabric_name & mask_storage_name & mask_device_type]
 
 
 
 
-def drop_connector_shape(link_sr, page, stn, fabric_label_colours_dct, source, destination):
-    """Function to connect source and destination shapes from link_sr with connector_master shape.
-    source and destination parameters are links_sr Series row titles with source and destination shapeNames accordingly"""
+def create_two_shapes_connection(link_sr, page, stn, fabric_label_colours_dct, source, destination):
+    """Function to connect source and destination shapes with connector_master.
+    source, destination - links_sr title with source and destination shapeName accordingly"""
 
+    
+    fabric_label_colour = fabric_label_colours_dct[link_sr['Fabric_label']]
     source_shape_name = link_sr[source]
     destination_shape_name =  link_sr[destination]
+    link_quantity = link_sr['Physical_link_quantity']
+    
     connector_master = stn.Masters('Link - HPE')
     
-    # verify if source and desrinataion exist
     page_shape_name_lst = [page.Shapes.ItemU(i).Name  for i in range(1, page.Shapes.count + 1)]
     absent_shape_name_lst = [shape_name for shape_name in [source_shape_name, destination_shape_name] if shape_name not in page_shape_name_lst]
     
     if not absent_shape_name_lst:
-        # sorce and destination shape objects
+
+        
         source_shape = page.Shapes.ItemU(link_sr[source])
         destination_shape = page.Shapes.ItemU(link_sr[destination])
-        # connect source and destionation shape objects (0 - connect without relocating the shapes)
+        
         source_shape.AutoConnect(destination_shape, 0, connector_master)
-        # last shape in the page shapes list is connector added above
         connector = page.Shapes.ItemU(page.Shapes.count)
-        set_connector_attributes(connector, link_sr, fabric_label_colours_dct)
+        connector.Name = link_sr['Link_shapeName']
+        connector.Cells('LineColor' ).FormulaU = fabric_label_colour
+        if pd.notna(link_sr['Link_description']):
+            connector.Text = link_sr['Link_description']
+        else:
+            connector.Text = ""
+        # connector.Cells("Char.Size").FormulaU = LINK_FONT_SIZE
+        connector.Cells('Char.Color' ).FormulaU = fabric_label_colour
+        
+        
+        if  1 < link_quantity < 5:
+            connector.Cells("LinePattern").FormulaU = LINE_PATTERN[link_quantity]
+        
+        elif link_quantity > 4:
+            connector.Cells("LinePattern").FormulaU = LINE_PATTERN['4+']
     else:
-        print(f"Can't create link between {source_shape_name} and {destination_shape_name}. "
-              f"{', '.join(absent_shape_name_lst)} missing on page {page.Name}")
+        print(f"Can't create link betwen {source_shape_name} and {destination_shape_name}. {', '.join(absent_shape_name_lst)} missing on page {page.Name}")
 
-
-def set_connector_attributes(connector, link_sr, fabric_label_colours_dct):
-    """Function to set connector shape name, text, colour and lines number"""
-    
-    # connection shape colour
-    fabric_label_colour = fabric_label_colours_dct[link_sr['Fabric_label']]
-    link_quantity = link_sr['Physical_link_quantity']
-    
-    # set shape connector name
-    connector.Name = link_sr['Link_shapeName']
-    # set shape connector colour
-    connector.Cells('LineColor' ).FormulaU = fabric_label_colour
-    # set shape connector text (links number, trunk, npiv etc) if exist
-    if pd.notna(link_sr['Link_description']):
-        connector.Text = link_sr['Link_description']
-    else:
-        connector.Text = ""
-    # connector.Cells("Char.Size").FormulaU = LINK_FONT_SIZE
-    # set shape connector text colour
-    connector.Cells('Char.Color' ).FormulaU = fabric_label_colour
-    
-    # show lines number for connector with links quantity up to four
-    if  1 < link_quantity <= 4:
-        connector.Cells("LinePattern").FormulaU = LINE_PATTERN[link_quantity]
-    # for connector with links quantity greater than 4 show multiline connector
-    elif link_quantity > 4:
-        connector.Cells("LinePattern").FormulaU = LINE_PATTERN['4+']
-            
-            
 
 def group_switch_pairs(san_graph_sw_pair_df, visio, ):
     """Function to create Visio groups for each switch pair"""
     
+    
     add_log_entry(log_file, '\nSwitch groups')
     
-    for idx, switch_pair_sr in san_graph_sw_pair_df.iterrows():
-        add_log_entry(log_file, '\n', switch_pair_sr.to_string())
-        fabric_name_current = switch_pair_sr['Fabric_name']
-        # activate page with shapes to be grouped 
-        page = activate_visio_page(visio, page_name=fabric_name_current)
-        active_window = visio.ActiveWindow
-        shape_names = switch_pair_sr['switchName_Wwn'].split(', ')
+
+    
+    for idx, switch_pair in san_graph_sw_pair_df.iterrows():
         
-        # drop any previous selections if they exist
+        add_log_entry(log_file, '\n', switch_pair.to_string())
+        
+        fabric_name_current = switch_pair['Fabric_name']
+        
+        doc = visio.ActiveDocument 
+        page = doc.Pages.ItemU(fabric_name_current)
+        visio.ActiveWindow.Page = fabric_name_current
+        active_window = visio.ActiveWindow
+        
+        
+        shape_names = switch_pair['switchName_Wwn'].split(', ')
+        
+        # create switch_pair groups
         active_window.DeselectAll()
-        # select all switches from switch_pair
         for shape_name in shape_names:
             print(shape_name)
             active_window.Select(page.Shapes.ItemU(shape_name), 2)
-        # group all switches from switch_pair
         active_window.Selection.Group()
-        # set name attribute for the group
         sw_group = page.Shapes.ItemU(len(page.Shapes))
         sw_group.Name = ' - '.join(shape_names)
 
