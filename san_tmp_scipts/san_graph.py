@@ -655,7 +655,6 @@ def add_san_total_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_d
     If yes then creates summary SAN switch pairs containing all fabrics Native mode switches only.
     Then adds summary SAN switch pairs to the switch pairs of all other fabrics."""
     
-    
     if (switch_params_aggregated_df['FC_Router'] == "ON").any():
         # drop all devices exept Native mode switches
         mask_native_only = ~san_graph_sw_pair_df['switchClass_mode'].str.contains('AG|NPV|VC|FD|XD', na=False)
