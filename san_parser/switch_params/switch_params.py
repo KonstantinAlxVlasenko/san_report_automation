@@ -104,6 +104,7 @@ def current_config_extract(san_switch_params_lst, san_switchshow_ports_lst, patt
                                                             line, file, 
                                                             extract_pattern_name='switch_configshow_param', 
                                                             stop_pattern_name='switch_configshow_end')
+                
                 # configshow section end
                 # switchshow section start
                 elif re.search(pattern_dct['switchcmd_switchshow'], line) and not collected['switchshow']:

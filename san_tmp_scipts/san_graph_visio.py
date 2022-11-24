@@ -456,17 +456,18 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, ):
         active_window = visio.ActiveWindow
         shape_names = switch_pair_sr['switchName_Wwn'].split(', ')
         
-        # drop any previous selections if they exist
-        active_window.DeselectAll()
-        # select all switches from switch_pair
-        for shape_name in shape_names:
-            print(shape_name)
-            active_window.Select(page.Shapes.ItemU(shape_name), 2)
-        # group all switches from switch_pair
-        active_window.Selection.Group()
-        # set name attribute for the group
-        sw_group = page.Shapes.ItemU(len(page.Shapes))
-        sw_group.Name = ' - '.join(shape_names)
+        if len(shape_names) > 1:
+            # drop any previous selections if they exist
+            active_window.DeselectAll()
+            # select all switches from switch_pair
+            for shape_name in shape_names:
+                print(shape_name)
+                active_window.Select(page.Shapes.ItemU(shape_name), 2)
+            # group all switches from switch_pair
+            active_window.Selection.Group()
+            # set name attribute for the group
+            sw_group = page.Shapes.ItemU(len(page.Shapes))
+            sw_group.Name = ' - '.join(shape_names)
 
 
 ##############################################################################################    

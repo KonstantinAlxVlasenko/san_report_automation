@@ -57,7 +57,7 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_params_aggregated_df['FW_Supported'] = pd.Series(dtype='object')
 
     # license check
-    license_dct = {'Trunking_license': 'Trunking', 'Fabric_Vision_license': 'Fabric Vision'}
+    license_dct = {'Trunking_license': 'Trunking', 'Fabric_Vision_license': 'Fabric Vision', 'Expiry_date': 'Expiry', 'Expired_license': 'expired'}
     for lic_check, lic_name in license_dct.items():
         switch_params_aggregated_df[lic_check] = \
             switch_params_aggregated_df.loc[switch_params_aggregated_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)

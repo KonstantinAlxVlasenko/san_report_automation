@@ -31,27 +31,8 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     zonemember_stat_notes_df['Target_Initiator_note'] =\
         zonemember_stat_notes_df.apply(lambda series: target_initiator_note(series), axis=1)
     zonemember_stat_notes_df.drop(columns=['STORAGE_LIB'], inplace=True)
-
-    # find storage models columns if they exist (should be at least one storage in fabric)
-    storage_model_columns = [column for column in columns_lst if 'storage' in column.lower() and not column.lower() in ['storage', 'storage unique name']]
-
-    """
-    Explicitly exclude replication zones (considered to be correct and presence of different storage models
-    is permitted by zone purpose) and zones without initiator (condsidered to be incorrect).
-    No target and empty zones are excluded by defenition (target ports) and considered to be incorrect.
-    All incorrect zones are out of scope of verification if different storage models or 
-    library and storage presence in a single zone
-    """
-    mask_exclude_zone = ~zonemember_stat_notes_df['Target_Initiator_note'].isin(['replication_zone', 'no_initiator'])
-    # check if zone contains storages of different models
-    if len(storage_model_columns) > 1:
-        # zonemember_stat_notes_df['Storage_model_note'] = np.nan
-        mask_different_storages = (zonemember_stat_notes_df[storage_model_columns] != 0).all(axis=1)
-        zonemember_stat_notes_df['Storage_model_note'] = np.where(mask_exclude_zone & mask_different_storages, 'different_storages', pd.NA)
-    else:
-        zonemember_stat_notes_df['Storage_model_note'] = np.nan
-
-
+    # add note if different storage models are in the same zone (except peer zones)
+    zonemember_stat_notes_df = storage_model_note(zonemember_stat_notes_df)
     # check if zone contains storage and library in a single zone
     mask_storage_lib = (zonemember_stat_notes_df[['STORAGE', 'LIB']] != 0).all(axis=1)
     zonemember_stat_notes_df['Storage_library_note'] = np.where(mask_storage_lib, 'storage_library', pd.NA)
@@ -89,7 +70,38 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     invalid_zone_tags = ['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators']
     mask_valid_zone = ~zonemember_stat_notes_df['Target_Initiator_note'].isin(invalid_zone_tags)
     zonemember_stat_notes_df.loc[mask_valid_zone & mask_device_connection & mask_no_pair_zone, 'Pair_zone_note'] = 'pair_zone_not_found'
-    
+    return zonemember_stat_notes_df
+
+
+
+def storage_model_note(zonemember_stat_notes_df):
+    """Function to add note if different storage models are in the same zone (except peer zones).
+    Explicitly exclude replication zones (presence of different storage models in the same zone
+    is allowed due to replication purpose) and zones without initiator (condsidered to be incorrect).
+    No target and empty zones are excluded by defenition (target ports) and considered to be incorrect.
+    All incorrect zones are out of scope of verification if different storage models or 
+    library and storage presence in a single zone"""
+
+
+    # find storage models columns if they exist (should be at least one storage in fabric)
+    storage_model_columns = [column for column in zonemember_stat_notes_df.columns 
+                                if 'storage' in column.lower() and not column.lower() in ['storage', 'storage unique name']]
+
+    mask_exclude_zone = ~zonemember_stat_notes_df['Target_Initiator_note'].isin(['replication_zone', 'no_initiator'])
+    # check if zone contains storages of different models
+    if len(storage_model_columns) > 1:
+        mask_different_storages = (zonemember_stat_notes_df[storage_model_columns] != 0).sum(axis=1).gt(1)
+        # peer zone can containt diffrent storage models
+        if 'peer' in zonemember_stat_notes_df.columns:
+            mask_not_peer = zonemember_stat_notes_df['peer'] == 0
+            mask_different_storages_note = mask_exclude_zone & mask_different_storages & mask_not_peer
+        else:
+            mask_different_storages_note = mask_exclude_zone & mask_different_storages
+        zonemember_stat_notes_df['Storage_model_note'] = np.where(mask_different_storages_note, 'different_storages', pd.NA)
+    else:
+        zonemember_stat_notes_df['Storage_model_note'] = np.nan
+    # count storage models in zones
+    zonemember_stat_notes_df['Storage_model_quantity'] = (zonemember_stat_notes_df[storage_model_columns] != 0).sum(axis=1)
     return zonemember_stat_notes_df
 
 
@@ -138,5 +150,4 @@ def target_initiator_note(series):
                 return 'several_initiators'
         else:
             return 'several_initiators'
-    
     return np.nan

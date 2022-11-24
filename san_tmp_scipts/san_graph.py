@@ -48,9 +48,15 @@ import general_cmd_module as dfop
 # db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\Unicredit\SAN Assessment\MAR 2021\database_Unicredit"
 # db_file = r"Unicredit_analysis_database.db"
 
-# DataLine Nord
-db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN NORD\NOV2022\database_DataLine Nord"
+# # DataLine Nord
+# db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN NORD\NOV2022\database_DataLine Nord"
+# db_file = r"DataLine Nord_analysis_database.db"
+
+
+# DataLine OST
+db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine Nord"
 db_file = r"DataLine Nord_analysis_database.db"
+
 
 data_names = ['switch_params_aggregated', 'isl_aggregated', 'switch_pair', 'isl_statistics', 'NPIV_statistics']
 data_lst = dfop.read_database(db_path, db_file, *data_names)

@@ -139,5 +139,6 @@ def vc_name_fillna(portshow_aggregated_df):
     mask_sn = portshow_aggregated_df['Device_SN'].notna()
     mask_devicename_empty = portshow_aggregated_df['Device_Host_Name'].isna()
     mask_complete = mask_vc & mask_sn & mask_devicename_empty
-    portshow_aggregated_df.loc[mask_complete, 'Device_Host_Name'] = 'VC' + portshow_aggregated_df['Device_SN']
+    if not portshow_aggregated_df.loc[mask_complete].empty:
+        portshow_aggregated_df.loc[mask_complete, 'Device_Host_Name'] = 'VC' + portshow_aggregated_df['Device_SN']
     return portshow_aggregated_df

@@ -6151,3 +6151,1331 @@ y_group_level                                                       100
 
 finish: 09/11/2022 19:21:03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+****************************************
+start: 14/11/2022 23:26:22
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate
+OST Cloud 152 san102-ost 10:00:d8:1f:cc:7c:a0:c0 0 35 90
+OST Cloud 152 san101-ost 10:00:d8:1f:cc:7c:9c:40 1 35 95
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64 0 35 90
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4 1 35 95
+OST Internal VDI san20-ost 10:00:88:94:71:ed:f3:a0 0 75 100
+OST Internal VDI san19-ost 10:00:88:94:71:ee:39:20 1 75 105
+OST Internal VDI san22-ost 10:00:88:94:71:ee:3c:61 0 115 90
+OST Internal VDI san21-ost 10:00:88:94:71:ee:3d:a1 1 115 95
+OST Internal VDI VC 10:00:00:11:0a:02:74:75 0 35 120
+OST Internal VDI VC 10:00:00:11:0a:02:74:74 1 35 122
+OST Internal VDI c6_B_H6C170 10:00:00:27:f8:89:85:7b 0 55 127
+OST VDI MGMT ost-6510-08-f2 10:00:88:94:71:c5:b2:00 0 35 90
+OST VDI MGMT ost-6510-07-f1 10:00:88:94:71:c5:b1:c0 1 35 95
+OST VDI MGMT san28-ost 10:00:88:94:71:31:16:80 0 75 100
+OST VDI MGMT san27-ost 10:00:88:94:71:31:1c:80 1 75 105
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4   ---->   san19-ost 10:00:88:94:71:ee:39:20
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4   ---->   san21-ost 10:00:88:94:71:ee:3d:a1
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   san20-ost 10:00:88:94:71:ed:f3:a0
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   san22-ost 10:00:88:94:71:ee:3c:61
+OST VDI MGMT ost-6510-07-f1 10:00:88:94:71:c5:b1:c0   ---->   san27-ost 10:00:88:94:71:31:1c:80
+OST VDI MGMT ost-6510-08-f2 10:00:88:94:71:c5:b2:00   ---->   san28-ost 10:00:88:94:71:31:16:80
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4   ---->   VC 10:00:00:11:0a:02:74:74
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   VC 10:00:00:11:0a:02:74:75
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   c6_B_H6C170 10:00:00:27:f8:89:85:7b
+
+Edge devices
+
+
+------------------------------
+Fabric_name                                             OST Cloud 152
+Device_shapeText    OST152-REFS01, sec-ost-esxi-04, sec-ost-esxi-0...
+Device_shapeName                                         SRV GROUP #1
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                             Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40        SRV  san101-ost       162.0     Native                       1  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0               SRV      None            1xN16                      8A: 1xN16               8A: 1xN16; 8B: 1xN16                             2  OST Cloud 152                    1                         7  OST152-REFS01, sec-ost-esxi-04, sec-ost-esxi-05, sec-ost-esxi-06, v01h01-ost1.cloud152.ru, v01h02-ost1.cloud152.ru, v01h03-ost1.cloud152.ru     SRV GROUP #1  SRV GROUP #1 - san101-ost 10:00:d8:1f:cc:7c:9c:40                 2.0          hba          160.0            30.0
+1  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0        SRV  san102-ost       162.0     Native                       1  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0               SRV      None            1xN16                      8B: 1xN16               8A: 1xN16; 8B: 1xN16                             2  OST Cloud 152                    1                         7  OST152-REFS01, sec-ost-esxi-04, sec-ost-esxi-05, sec-ost-esxi-06, v01h01-ost1.cloud152.ru, v01h02-ost1.cloud152.ru, v01h03-ost1.cloud152.ru     SRV GROUP #1  SRV GROUP #1 - san102-ost 10:00:d8:1f:cc:7c:a0:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                             OST Cloud 152
+Device_shapeText    v01h07-ost1, v01h08-ost1, v01h09-ost1, v01h10-...
+Device_shapeName                                         SRV GROUP #2
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                 Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40        SRV  san101-ost       162.0     Native                       1  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0               SRV      None            1xN32                      8A: 1xN32               8A: 1xN32; 8B: 1xN32                             2  OST Cloud 152                    2                         5  v01h07-ost1, v01h08-ost1, v01h09-ost1, v01h10-ost1, v01h11-ost1     SRV GROUP #2  SRV GROUP #2 - san101-ost 10:00:d8:1f:cc:7c:9c:40                 2.0          hba          160.0            30.0
+3  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0        SRV  san102-ost       162.0     Native                       1  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0               SRV      None            1xN32                      8B: 1xN32               8A: 1xN32; 8B: 1xN32                             2  OST Cloud 152                    2                         5  v01h07-ost1, v01h08-ost1, v01h09-ost1, v01h10-ost1, v01h11-ost1     SRV GROUP #2  SRV GROUP #2 - san102-ost 10:00:d8:1f:cc:7c:a0:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                    OST Internal VDI
+Device_shapeText    SRV 20:00:34:80:0d:79:42:e0
+Device_shapeName                   SRV GROUP #5
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+        Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4  OST Internal VDI            A  10:00:88:94:71:ee:39:20        SRV  san19-ost       109.0     Native                       1  san19-ost 10:00:88:94:71:ee:39:20            6.0               SRV      None            1xN16                      6A: 1xN16                          6A: 1xN16                            12  OST Internal VDI                    5                         1  SRV 20:00:34:80:0d:79:42:e0     SRV GROUP #5  SRV GROUP #5 - san19-ost 10:00:88:94:71:ee:39:20                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                    OST Internal VDI
+Device_shapeText    SRV 20:00:34:80:0d:79:42:e1
+Device_shapeName                   SRV GROUP #8
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+        Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+5  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0        SRV  san20-ost       109.0     Native                       1  san20-ost 10:00:88:94:71:ed:f3:a0            6.0               SRV      None            1xN16                      6B: 1xN16                          6B: 1xN16                            12  OST Internal VDI                    8                         1  SRV 20:00:34:80:0d:79:42:e1     SRV GROUP #8  SRV GROUP #8 - san20-ost 10:00:88:94:71:ed:f3:a0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    SRV 50:01:43:80:26:e8:84:c7, esxi18-test, h05....
+Device_shapeName                                         SRV GROUP #4
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+        Fabric_name Fabric_label                switchWwn deviceType   switchName  switchType           switchMode  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                     Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6  OST Internal VDI            B  10:00:00:27:f8:89:85:7b        SRV  c6_B_H6C170        72.0  Access Gateway Mode                       1  c6_B_H6C170 10:00:00:27:f8:89:85:7b            2.0               SRV      None             1xN8                       2B: 1xN8                           2B: 1xN8                            12  OST Internal VDI                    4                         3  SRV 50:01:43:80:26:e8:84:c7, esxi18-test, h05.tl.ru     SRV GROUP #4  SRV GROUP #4 - c6_B_H6C170 10:00:00:27:f8:89:85:7b                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    bl4-vdi.vdi.dtln.ru, bl5-vdi.vdi.dtln.ru, bl6-...
+Device_shapeName                                         SRV GROUP #3
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+        Fabric_name Fabric_label                switchWwn deviceType                  switchName  switchType           switchMode  Physical_link_quantity            switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                        Device_shapeText Device_shapeName                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+7  OST Internal VDI            A  10:00:00:11:0a:02:74:74        SRV  VC 10:00:00:11:0a:02:74:74       502.0  Access Gateway Mode                       1  VC 10:00:00:11:0a:02:74:74            1.0               SRV      None             1xN8                       1A: 1xN8                 1A: 1xN8; 1B: 1xN8                            12  OST Internal VDI                    3                         6  bl4-vdi.vdi.dtln.ru, bl5-vdi.vdi.dtln.ru, bl6-vdi.vdi.dtln.ru, bl7-vdi.vdi.dtln.ru, bl8-vdi.vdi.dtln.ru, bor08.dtln.ru     SRV GROUP #3  SRV GROUP #3 - VC 10:00:00:11:0a:02:74:74                 2.0          hba          160.0            30.0
+8  OST Internal VDI            B  10:00:00:11:0a:02:74:75        SRV  VC 10:00:00:11:0a:02:74:75       502.0  Access Gateway Mode                       1  VC 10:00:00:11:0a:02:74:75            1.0               SRV      None             1xN8                       1B: 1xN8                 1A: 1xN8; 1B: 1xN8                            12  OST Internal VDI                    3                         6  bl4-vdi.vdi.dtln.ru, bl5-vdi.vdi.dtln.ru, bl6-vdi.vdi.dtln.ru, bl7-vdi.vdi.dtln.ru, bl8-vdi.vdi.dtln.ru, bor08.dtln.ru     SRV GROUP #3  SRV GROUP #3 - VC 10:00:00:11:0a:02:74:75                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    nubis-h02.dtln.ru, nubis-h04.dtln.ru, nubis-h0...
+Device_shapeName                                         SRV GROUP #6
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+         Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                            Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+9   OST Internal VDI            A  10:00:88:94:71:ee:39:20        SRV  san19-ost       109.0     Native                       1  san19-ost 10:00:88:94:71:ee:39:20            6.0               SRV      None            1xN16                      6A: 1xN16               6A: 1xN16; 6B: 1xN16                            12  OST Internal VDI                    6                        23  nubis-h02.dtln.ru, nubis-h04.dtln.ru, nubis-h05.dtln.ru, nubis-h06.dtln.ru, v4c2h01.ost.virt.local, v4c2h02.ost.virt.local, v4c2h03.ost.virt.local, v4h11.dtln.ru, v4h12.dtln.ru, v4h13.dtln.ru, v4h14.dtln.ru, v4h15.dtln.ru, v4h16.dtln.ru, v4h17.dtln.ru, v4h18.dtln.ru, v4h24.dtln.ru, v4h25, v4h26.dtln.ru, v4h27.dtln.ru, v4h28.dtln.ru, v4h29.dtln.ru, v4h35.dtln.ru, v4h36.dtln.ru     SRV GROUP #6  SRV GROUP #6 - san19-ost 10:00:88:94:71:ee:39:20                 2.0          hba          160.0            30.0
+10  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0        SRV  san20-ost       109.0     Native                       1  san20-ost 10:00:88:94:71:ed:f3:a0            6.0               SRV      None            1xN16                      6B: 1xN16               6A: 1xN16; 6B: 1xN16                            12  OST Internal VDI                    6                        23  nubis-h02.dtln.ru, nubis-h04.dtln.ru, nubis-h05.dtln.ru, nubis-h06.dtln.ru, v4c2h01.ost.virt.local, v4c2h02.ost.virt.local, v4c2h03.ost.virt.local, v4h11.dtln.ru, v4h12.dtln.ru, v4h13.dtln.ru, v4h14.dtln.ru, v4h15.dtln.ru, v4h16.dtln.ru, v4h17.dtln.ru, v4h18.dtln.ru, v4h24.dtln.ru, v4h25, v4h26.dtln.ru, v4h27.dtln.ru, v4h28.dtln.ru, v4h29.dtln.ru, v4h35.dtln.ru, v4h36.dtln.ru     SRV GROUP #6  SRV GROUP #6 - san20-ost 10:00:88:94:71:ed:f3:a0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    v4-edge-h01.dtln.ru, v4-edge-h02.dtln.ru, v4-e...
+Device_shapeName                                         SRV GROUP #7
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+         Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                               Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+11  OST Internal VDI            A  10:00:88:94:71:ee:39:20        SRV  san19-ost       109.0     Native                       1  san19-ost 10:00:88:94:71:ee:39:20            6.0               SRV      None             1xN8                       6A: 1xN8                 6A: 1xN8; 6B: 1xN8                            12  OST Internal VDI                    7                         3  v4-edge-h01.dtln.ru, v4-edge-h02.dtln.ru, v4-edge-h03.dtln.ru     SRV GROUP #7  SRV GROUP #7 - san19-ost 10:00:88:94:71:ee:39:20                 2.0          hba          160.0            30.0
+12  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0        SRV  san20-ost       109.0     Native                       1  san20-ost 10:00:88:94:71:ed:f3:a0            6.0               SRV      None             1xN8                       6B: 1xN8                 6A: 1xN8; 6B: 1xN8                            12  OST Internal VDI                    7                         3  v4-edge-h01.dtln.ru, v4-edge-h02.dtln.ru, v4-edge-h03.dtln.ru     SRV GROUP #7  SRV GROUP #7 - san20-ost 10:00:88:94:71:ed:f3:a0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    v4c3h01, v4c3h02, v4c3h03, v4c3h04, v4c4h01, v...
+Device_shapeName                                         SRV GROUP #9
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+         Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                        Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+13  OST Internal VDI            A  10:00:88:94:71:ee:3d:a1        SRV  san21-ost       109.0     Native                       1  san21-ost 10:00:88:94:71:ee:3d:a1            7.0               SRV      None            1xN16                      7A: 1xN16               7A: 1xN16; 7B: 1xN16                            12  OST Internal VDI                    9                        18  v4c3h01, v4c3h02, v4c3h03, v4c3h04, v4c4h01, v4h19.dtln.ru, v4h20.dtln.ru, v4h21.dtln.ru, v4h22.dtln.ru, v4h23.dtln.ru, v4h30.dtln.ru, v4h31.dtln.ru, v4h32.dtln.ru, v4h33, v4h34.dtln.ru, v4h37.dtln.ru, v4h38, v4h39     SRV GROUP #9  SRV GROUP #9 - san21-ost 10:00:88:94:71:ee:3d:a1                 2.0          hba          160.0            30.0
+14  OST Internal VDI            B  10:00:88:94:71:ee:3c:61        SRV  san22-ost       109.0     Native                       1  san22-ost 10:00:88:94:71:ee:3c:61            7.0               SRV      None            1xN16                      7B: 1xN16               7A: 1xN16; 7B: 1xN16                            12  OST Internal VDI                    9                        18  v4c3h01, v4c3h02, v4c3h03, v4c3h04, v4c4h01, v4h19.dtln.ru, v4h20.dtln.ru, v4h21.dtln.ru, v4h22.dtln.ru, v4h23.dtln.ru, v4h30.dtln.ru, v4h31.dtln.ru, v4h32.dtln.ru, v4h33, v4h34.dtln.ru, v4h37.dtln.ru, v4h38, v4h39     SRV GROUP #9  SRV GROUP #9 - san22-ost 10:00:88:94:71:ee:3c:61                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                              OST VDI MGMT
+Device_shapeText    REFS-OST03, REFS_OST02_VC8, hw50-vdi, hw51-vdi...
+Device_shapeName                                        SRV GROUP #11
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                              Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+15  OST VDI MGMT            A  10:00:88:94:71:31:1c:80        SRV  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0               SRV      None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT                   11                        10  REFS-OST03, REFS_OST02_VC8, hw50-vdi, hw51-vdi.dtln.ru, hw54-vdi, hw55-vdi, hw56-vdi, o1-mgmt-h01.virt.local, o1-mgmt-h02.virt.local, o1-mgmt-h03.virt.local    SRV GROUP #11  SRV GROUP #11 - san27-ost 10:00:88:94:71:31:1c:80                 2.0          hba          160.0            30.0
+16  OST VDI MGMT            B  10:00:88:94:71:31:16:80        SRV  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0               SRV      None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT                   11                        10  REFS-OST03, REFS_OST02_VC8, hw50-vdi, hw51-vdi.dtln.ru, hw54-vdi, hw55-vdi, hw56-vdi, o1-mgmt-h01.virt.local, o1-mgmt-h02.virt.local, o1-mgmt-h03.virt.local    SRV GROUP #11  SRV GROUP #11 - san28-ost 10:00:88:94:71:31:16:80                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name          OST VDI MGMT
+Device_shapeText         hw52-vdi
+Device_shapeName    SRV GROUP #12
+deviceType                    SRV
+master_shape                  hba
+y_graph_level               160.0
+x_group_offset               30.0
+     Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+17  OST VDI MGMT            A  10:00:88:94:71:31:1c:80        SRV  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0               SRV      None             1xN8                       4A: 1xN8                 4A: 1xN8; 4B: 1xN8                             9   OST VDI MGMT                   12                         1         hw52-vdi    SRV GROUP #12  SRV GROUP #12 - san27-ost 10:00:88:94:71:31:1c:80                 2.0          hba          160.0            30.0
+18  OST VDI MGMT            B  10:00:88:94:71:31:16:80        SRV  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0               SRV      None             1xN8                       4B: 1xN8                 4A: 1xN8; 4B: 1xN8                             9   OST VDI MGMT                   12                         1         hw52-vdi    SRV GROUP #12  SRV GROUP #12 - san28-ost 10:00:88:94:71:31:16:80                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name          OST VDI MGMT
+Device_shapeText         hw53-vdi
+Device_shapeName    SRV GROUP #10
+deviceType                    SRV
+master_shape                  hba
+y_graph_level               160.0
+x_group_offset               30.0
+     Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+19  OST VDI MGMT            A  10:00:88:94:71:31:1c:80        SRV  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0               SRV      None            1x16G                      4A: 1x16G               4A: 1x16G; 4B: 1xN16                             9   OST VDI MGMT                   10                         1         hw53-vdi    SRV GROUP #10  SRV GROUP #10 - san27-ost 10:00:88:94:71:31:1c:80                 2.0          hba          160.0            30.0
+20  OST VDI MGMT            B  10:00:88:94:71:31:16:80        SRV  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0               SRV      None            1xN16                      4B: 1xN16               4A: 1x16G; 4B: 1xN16                             9   OST VDI MGMT                   10                         1         hw53-vdi    SRV GROUP #10  SRV GROUP #10 - san28-ost 10:00:88:94:71:31:16:80                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                              OST VDI MGMT
+Device_shapeText    v8h10.dtln.ru, v8h12.dtln.ru, v8h13.dtln.ru, v...
+Device_shapeName                                        SRV GROUP #14
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType      switchName  switchType switchMode  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Device_shapeText Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+21  OST VDI MGMT            A  10:00:88:94:71:c5:b1:c0        SRV  ost-6510-07-f1       109.0     Native                       1  ost-6510-07-f1 10:00:88:94:71:c5:b1:c0            5.0               SRV      None            1xN16                      5A: 1xN16               5A: 1xN16; 5B: 1xN16                             9   OST VDI MGMT                   14                        31  v8h10.dtln.ru, v8h12.dtln.ru, v8h13.dtln.ru, v8h14.dtln.ru, v8h15.dtln.ru, v8h16.dtln.ru, v8h17.dtln.ru, v8h18.dtln.ru, v8h19.dtln.ru, v8h20.dtln.ru, v8h21.dtln.ru, v8h22.dtln.ru, v8h23.dtln.ru, v8h24.dtln.ru, v8h25.dtln.ru, v8h26.dtln.ru, v8h27.dtln.ru, v8h28.dtln.ru, v8h29.dtln.ru, v8h30.dtln.ru, v8h31.dtln.ru, v8h32.dtln.ru, v8h33.dtln.ru, v8h34.dtln.ru, v8h35.dtln.ru, v8h36.dtln.ru, v8h37.dtln.ru, v8h38.dtln.ru, v8h39.dtln.ru, v8h40.dtln.ru, v8h41.dtln.ru    SRV GROUP #14  SRV GROUP #14 - ost-6510-07-f1 10:00:88:94:71:c5:b1:c0                 2.0          hba          160.0            30.0
+22  OST VDI MGMT            B  10:00:88:94:71:c5:b2:00        SRV  ost-6510-08-f2       109.0     Native                       1  ost-6510-08-f2 10:00:88:94:71:c5:b2:00            5.0               SRV      None            1xN16                      5B: 1xN16               5A: 1xN16; 5B: 1xN16                             9   OST VDI MGMT                   14                        31  v8h10.dtln.ru, v8h12.dtln.ru, v8h13.dtln.ru, v8h14.dtln.ru, v8h15.dtln.ru, v8h16.dtln.ru, v8h17.dtln.ru, v8h18.dtln.ru, v8h19.dtln.ru, v8h20.dtln.ru, v8h21.dtln.ru, v8h22.dtln.ru, v8h23.dtln.ru, v8h24.dtln.ru, v8h25.dtln.ru, v8h26.dtln.ru, v8h27.dtln.ru, v8h28.dtln.ru, v8h29.dtln.ru, v8h30.dtln.ru, v8h31.dtln.ru, v8h32.dtln.ru, v8h33.dtln.ru, v8h34.dtln.ru, v8h35.dtln.ru, v8h36.dtln.ru, v8h37.dtln.ru, v8h38.dtln.ru, v8h39.dtln.ru, v8h40.dtln.ru, v8h41.dtln.ru    SRV GROUP #14  SRV GROUP #14 - ost-6510-08-f2 10:00:88:94:71:c5:b2:00                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name          OST VDI MGMT
+Device_shapeText    v8h11.dtln.ru
+Device_shapeName    SRV GROUP #13
+deviceType                    SRV
+master_shape                  hba
+y_graph_level               160.0
+x_group_offset               30.0
+     Fabric_name Fabric_label                switchWwn deviceType      switchName  switchType switchMode  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+23  OST VDI MGMT            A  10:00:88:94:71:c5:b1:c0        SRV  ost-6510-07-f1       109.0     Native                       1  ost-6510-07-f1 10:00:88:94:71:c5:b1:c0            5.0               SRV      None            1xN16                      5A: 1xN16               5A: 1xN16; 5B: 1x16G                             9   OST VDI MGMT                   13                         1    v8h11.dtln.ru    SRV GROUP #13  SRV GROUP #13 - ost-6510-07-f1 10:00:88:94:71:c5:b1:c0                 2.0          hba          160.0            30.0
+24  OST VDI MGMT            B  10:00:88:94:71:c5:b2:00        SRV  ost-6510-08-f2       109.0     Native                       1  ost-6510-08-f2 10:00:88:94:71:c5:b2:00            5.0               SRV      None            1x16G                      5B: 1x16G               5A: 1xN16; 5B: 1x16G                             9   OST VDI MGMT                   13                         1    v8h11.dtln.ru    SRV GROUP #13  SRV GROUP #13 - ost-6510-08-f2 10:00:88:94:71:c5:b2:00                 2.0          hba          160.0            30.0
+
+Edge devices
+
+
+------------------------------
+Fabric_name         OST Cloud 152
+Device_shapeText             HW24
+Device_shapeName     STORAGE HW24
+deviceType                STORAGE
+master_shape              storage
+y_graph_level                30.0
+x_group_offset               25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp Device_shapeName                                     Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+0  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40             HW24            None    STORAGE  san101-ost       162.0     Native                       2  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0            HUAWEI      None  None     None            2xN32                      8A: 2xN32               8A: 2xN32; 8B: 2xN32                             2  OST Cloud 152     STORAGE HW24  STORAGE HW24 - san101-ost 10:00:d8:1f:cc:7c:9c:40             HW24                 1.0      storage           30.0            25.0
+1  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0             HW24            None    STORAGE  san102-ost       162.0     Native                       2  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0            HUAWEI      None  None     None            2xN32                      8B: 2xN32               8A: 2xN32; 8B: 2xN32                             2  OST Cloud 152     STORAGE HW24  STORAGE HW24 - san102-ost 10:00:d8:1f:cc:7c:a0:c0             HW24                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST Cloud 152
+Device_shapeText            IBOX3361
+Device_shapeName    STORAGE IBOX3361
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_shapeName                                         Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+2  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40         IBOX3361            None    STORAGE  san101-ost       162.0     Native                       6  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0         INFINIDAT      None  None     None            6xN16                      8A: 6xN16               8A: 6xN16; 8B: 6xN16                             2  OST Cloud 152  STORAGE IBOX3361  STORAGE IBOX3361 - san101-ost 10:00:d8:1f:cc:7c:9c:40         IBOX3361                 1.0      storage           30.0            25.0
+3  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0         IBOX3361            None    STORAGE  san102-ost       162.0     Native                       6  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0         INFINIDAT      None  None     None            6xN16                      8B: 6xN16               8A: 6xN16; 8B: 6xN16                             2  OST Cloud 152  STORAGE IBOX3361  STORAGE IBOX3361 - san102-ost 10:00:d8:1f:cc:7c:a0:c0         IBOX3361                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   OST Internal VDI
+Device_shapeText            INTERNAL_VIRT_3PAR
+Device_shapeName    STORAGE INTERNAL_VIRT_3PAR
+deviceType                             STORAGE
+master_shape                           storage
+y_graph_level                             30.0
+x_group_offset                            25.0
+        Fabric_name Fabric_label                switchWwn    Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp            Device_shapeName                                                  Link_shapeName    Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+4  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4  INTERNAL_VIRT_3PAR            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0              3Par      None  None     None             2xN8                       3A: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE INTERNAL_VIRT_3PAR  STORAGE INTERNAL_VIRT_3PAR - san17-ost 10:00:00:27:f8:fb:bd:f4  INTERNAL_VIRT_3PAR                 1.0      storage           30.0            25.0
+5  OST Internal VDI            B  10:00:00:27:f8:fd:91:64  INTERNAL_VIRT_3PAR            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0              3Par      None  None     None             2xN8                       3B: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE INTERNAL_VIRT_3PAR  STORAGE INTERNAL_VIRT_3PAR - san18-ost 10:00:00:27:f8:fd:91:64  INTERNAL_VIRT_3PAR                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST Internal VDI
+Device_shapeText            VNX5600_RGT
+Device_shapeName    STORAGE VNX5600_RGT
+deviceType                      STORAGE
+master_shape                    storage
+y_graph_level                      30.0
+x_group_offset                     25.0
+        Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp     Device_shapeName                                           Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+6  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4      VNX5600_RGT            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0               EMC      None  None     None             2xN8                       3A: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE VNX5600_RGT  STORAGE VNX5600_RGT - san17-ost 10:00:00:27:f8:fb:bd:f4      VNX5600_RGT                 1.0      storage           30.0            25.0
+7  OST Internal VDI            B  10:00:00:27:f8:fd:91:64      VNX5600_RGT            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0               EMC      None  None     None             2xN8                       3B: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE VNX5600_RGT  STORAGE VNX5600_RGT - san18-ost 10:00:00:27:f8:fd:91:64      VNX5600_RGT                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            HW01_OST
+Device_shapeName    STORAGE HW01_OST
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+        Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+8  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4         HW01_OST            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            HUAWEI      None  None     None            2xN16                      3A: 2xN16               3A: 2xN16; 3B: 2xN16                            12  OST Internal VDI  STORAGE HW01_OST  STORAGE HW01_OST - san17-ost 10:00:00:27:f8:fb:bd:f4         HW01_OST                 1.0      storage           30.0            25.0
+9  OST Internal VDI            B  10:00:00:27:f8:fd:91:64         HW01_OST            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0            HUAWEI      None  None     None            2xN16                      3B: 2xN16               3A: 2xN16; 3B: 2xN16                            12  OST Internal VDI  STORAGE HW01_OST  STORAGE HW01_OST - san18-ost 10:00:00:27:f8:fd:91:64         HW01_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            HW07_OST
+Device_shapeName    STORAGE HW07_OST
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+10  OST Internal VDI            A  10:00:88:94:71:ee:39:20         HW07_OST            None    STORAGE  san19-ost       109.0     Native                       2  san19-ost 10:00:88:94:71:ee:39:20            6.0            HUAWEI      None  None     None            2xN16                      6A: 2xN16               6A: 2xN16; 6B: 2xN16                            12  OST Internal VDI  STORAGE HW07_OST  STORAGE HW07_OST - san19-ost 10:00:88:94:71:ee:39:20         HW07_OST                 1.0      storage           30.0            25.0
+11  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0         HW07_OST            None    STORAGE  san20-ost       109.0     Native                       2  san20-ost 10:00:88:94:71:ed:f3:a0            6.0            HUAWEI      None  None     None            2xN16                      6B: 2xN16               6A: 2xN16; 6B: 2xN16                            12  OST Internal VDI  STORAGE HW07_OST  STORAGE HW07_OST - san20-ost 10:00:88:94:71:ed:f3:a0         HW07_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText                HW28
+Device_shapeName        STORAGE HW28
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp Device_shapeName                                    Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+12  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4             HW28            None    STORAGE  san17-ost       109.0     Native                       3  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            HUAWEI      None  None     None             3xN8                       3A: 3xN8                 3A: 3xN8; 3B: 3xN8                            12  OST Internal VDI     STORAGE HW28  STORAGE HW28 - san17-ost 10:00:00:27:f8:fb:bd:f4             HW28                 1.0      storage           30.0            25.0
+13  OST Internal VDI            B  10:00:00:27:f8:fd:91:64             HW28            None    STORAGE  san18-ost       109.0     Native                       3  san18-ost 10:00:00:27:f8:fd:91:64            3.0            HUAWEI      None  None     None             3xN8                       3B: 3xN8                 3A: 3xN8; 3B: 3xN8                            12  OST Internal VDI     STORAGE HW28  STORAGE HW28 - san18-ost 10:00:00:27:f8:fd:91:64             HW28                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST Internal VDI
+Device_shapeText            IBOX2598_OST
+Device_shapeName    STORAGE IBOX2598_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+14  OST Internal VDI            A  10:00:88:94:71:ee:39:20     IBOX2598_OST            None    STORAGE  san19-ost       109.0     Native                       6  san19-ost 10:00:88:94:71:ee:39:20            6.0         INFINIDAT      None  None     None            6xN16                      6A: 6xN16               6A: 6xN16; 6B: 6xN16                            12  OST Internal VDI  STORAGE IBOX2598_OST  STORAGE IBOX2598_OST - san19-ost 10:00:88:94:71:ee:39:20     IBOX2598_OST                 1.0      storage           30.0            25.0
+15  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0     IBOX2598_OST            None    STORAGE  san20-ost       109.0     Native                       6  san20-ost 10:00:88:94:71:ed:f3:a0            6.0         INFINIDAT      None  None     None            6xN16                      6B: 6xN16               6A: 6xN16; 6B: 6xN16                            12  OST Internal VDI  STORAGE IBOX2598_OST  STORAGE IBOX2598_OST - san20-ost 10:00:88:94:71:ed:f3:a0     IBOX2598_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST Internal VDI
+Device_shapeText            IBOX3222_OST
+Device_shapeName    STORAGE IBOX3222_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+16  OST Internal VDI            A  10:00:88:94:71:ee:39:20     IBOX3222_OST            None    STORAGE  san19-ost       109.0     Native                       3  san19-ost 10:00:88:94:71:ee:39:20            6.0         INFINIDAT      None  None     None             3xN8                       6A: 3xN8                 6A: 3xN8; 6B: 3xN8                            12  OST Internal VDI  STORAGE IBOX3222_OST  STORAGE IBOX3222_OST - san19-ost 10:00:88:94:71:ee:39:20     IBOX3222_OST                 1.0      storage           30.0            25.0
+17  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0     IBOX3222_OST            None    STORAGE  san20-ost       109.0     Native                       3  san20-ost 10:00:88:94:71:ed:f3:a0            6.0         INFINIDAT      None  None     None             3xN8                       6B: 3xN8                 6A: 3xN8; 6B: 3xN8                            12  OST Internal VDI  STORAGE IBOX3222_OST  STORAGE IBOX3222_OST - san20-ost 10:00:88:94:71:ed:f3:a0     IBOX3222_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            IBOX3364
+Device_shapeName    STORAGE IBOX3364
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+18  OST Internal VDI            A  10:00:88:94:71:ee:39:20         IBOX3364            None    STORAGE  san19-ost       109.0     Native                       3  san19-ost 10:00:88:94:71:ee:39:20            6.0         INFINIDAT      None  None     None            3xN16                      6A: 3xN16               6A: 3xN16; 6B: 3xN16                            12  OST Internal VDI  STORAGE IBOX3364  STORAGE IBOX3364 - san19-ost 10:00:88:94:71:ee:39:20         IBOX3364                 1.0      storage           30.0            25.0
+19  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0         IBOX3364            None    STORAGE  san20-ost       109.0     Native                       3  san20-ost 10:00:88:94:71:ed:f3:a0            6.0         INFINIDAT      None  None     None            3xN16                      6B: 3xN16               6A: 3xN16; 6B: 3xN16                            12  OST Internal VDI  STORAGE IBOX3364  STORAGE IBOX3364 - san20-ost 10:00:88:94:71:ed:f3:a0         IBOX3364                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            NetApp11
+Device_shapeName    STORAGE NetApp11
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+20  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4         NetApp11            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            NetApp      None  None     None             2xN8                       3A: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE NetApp11  STORAGE NetApp11 - san17-ost 10:00:00:27:f8:fb:bd:f4         NetApp11                 1.0      storage           30.0            25.0
+21  OST Internal VDI            B  10:00:00:27:f8:fd:91:64         NetApp11            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0            NetApp      None  None     None             2xN8                       3B: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE NetApp11  STORAGE NetApp11 - san18-ost 10:00:00:27:f8:fd:91:64         NetApp11                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            NetApp16
+Device_shapeName    STORAGE NetApp16
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level    Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+22  OST Internal VDI            A  10:00:88:94:71:ee:39:20         NetApp16            None    STORAGE  san19-ost       109.0     Native                       8  san19-ost 10:00:88:94:71:ee:39:20            6.0            NetApp      None  None     None    8xN16, 6xNPIV              6A: 8xN16, 6xNPIV  6A: 8xN16, 6xNPIV; 6B: 8xN16, 6xNPIV                            12  OST Internal VDI  STORAGE NetApp16  STORAGE NetApp16 - san19-ost 10:00:88:94:71:ee:39:20         NetApp16                 1.0      storage           30.0            25.0
+23  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0         NetApp16            None    STORAGE  san20-ost       109.0     Native                       8  san20-ost 10:00:88:94:71:ed:f3:a0            6.0            NetApp      None  None     None    8xN16, 6xNPIV              6B: 8xN16, 6xNPIV  6A: 8xN16, 6xNPIV; 6B: 8xN16, 6xNPIV                            12  OST Internal VDI  STORAGE NetApp16  STORAGE NetApp16 - san20-ost 10:00:88:94:71:ed:f3:a0         NetApp16                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText             NetApp5
+Device_shapeName     STORAGE NetApp5
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level  Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+24  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4          NetApp5            None    STORAGE  san17-ost       109.0     Native                       6  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3A: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp5  STORAGE NetApp5 - san17-ost 10:00:00:27:f8:fb:bd:f4          NetApp5                 1.0      storage           30.0            25.0
+25  OST Internal VDI            B  10:00:00:27:f8:fd:91:64          NetApp5            None    STORAGE  san18-ost       109.0     Native                       6  san18-ost 10:00:00:27:f8:fd:91:64            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3B: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp5  STORAGE NetApp5 - san18-ost 10:00:00:27:f8:fd:91:64          NetApp5                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText             NetApp7
+Device_shapeName     STORAGE NetApp7
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level  Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+26  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4          NetApp7            None    STORAGE  san17-ost       109.0     Native                       6  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3A: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp7  STORAGE NetApp7 - san17-ost 10:00:00:27:f8:fb:bd:f4          NetApp7                 1.0      storage           30.0            25.0
+27  OST Internal VDI            B  10:00:00:27:f8:fd:91:64          NetApp7            None    STORAGE  san18-ost       109.0     Native                       6  san18-ost 10:00:00:27:f8:fd:91:64            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3B: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp7  STORAGE NetApp7 - san18-ost 10:00:00:27:f8:fd:91:64          NetApp7                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                     OST VDI MGMT
+Device_shapeText            HW06_D3000_OST02
+Device_shapeName    STORAGE HW06_D3000_OST02
+deviceType                           STORAGE
+master_shape                         storage
+y_graph_level                           30.0
+x_group_offset                          25.0
+     Fabric_name Fabric_label                switchWwn  Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp          Device_shapeName                                                Link_shapeName  Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+28  OST VDI MGMT            A  10:00:88:94:71:31:1c:80  HW06_D3000_OST02            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            HUAWEI      None  None     None            2xN16                      4A: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW06_D3000_OST02  STORAGE HW06_D3000_OST02 - san27-ost 10:00:88:94:71:31:1c:80  HW06_D3000_OST02                 1.0      storage           30.0            25.0
+29  OST VDI MGMT            B  10:00:88:94:71:31:16:80  HW06_D3000_OST02            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            HUAWEI      None  None     None            2xN16                      4B: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW06_D3000_OST02  STORAGE HW06_D3000_OST02 - san28-ost 10:00:88:94:71:31:16:80  HW06_D3000_OST02                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST VDI MGMT
+Device_shapeText            HW16_OST
+Device_shapeName    STORAGE HW16_OST
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+30  OST VDI MGMT            A  10:00:88:94:71:31:1c:80         HW16_OST            None    STORAGE  san27-ost       109.0     Native                       4  san27-ost 10:00:88:94:71:31:1c:80            4.0            HUAWEI      None  None     None            4xN16                      4A: 4xN16               4A: 4xN16; 4B: 4xN16                             9   OST VDI MGMT  STORAGE HW16_OST  STORAGE HW16_OST - san27-ost 10:00:88:94:71:31:1c:80         HW16_OST                 1.0      storage           30.0            25.0
+31  OST VDI MGMT            B  10:00:88:94:71:31:16:80         HW16_OST            None    STORAGE  san28-ost       109.0     Native                       4  san28-ost 10:00:88:94:71:31:16:80            4.0            HUAWEI      None  None     None            4xN16                      4B: 4xN16               4A: 4xN16; 4B: 4xN16                             9   OST VDI MGMT  STORAGE HW16_OST  STORAGE HW16_OST - san28-ost 10:00:88:94:71:31:16:80         HW16_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST VDI MGMT
+Device_shapeText            HW5_OST
+Device_shapeName    STORAGE HW5_OST
+deviceType                  STORAGE
+master_shape                storage
+y_graph_level                  30.0
+x_group_offset                 25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+32  OST VDI MGMT            A  10:00:88:94:71:31:1c:80          HW5_OST            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            HUAWEI      None  None     None            2xN16                      4A: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW5_OST  STORAGE HW5_OST - san27-ost 10:00:88:94:71:31:1c:80          HW5_OST                 1.0      storage           30.0            25.0
+33  OST VDI MGMT            B  10:00:88:94:71:31:16:80          HW5_OST            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            HUAWEI      None  None     None            2xN16                      4B: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW5_OST  STORAGE HW5_OST - san28-ost 10:00:88:94:71:31:16:80          HW5_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 OST VDI MGMT
+Device_shapeText            IBOX2512_OST
+Device_shapeName    STORAGE IBOX2512_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+34  OST VDI MGMT            A  10:00:88:94:71:31:1c:80     IBOX2512_OST            None    STORAGE  san27-ost       109.0     Native                       6  san27-ost 10:00:88:94:71:31:1c:80            4.0         INFINIDAT      None  None     None             6xN8                       4A: 6xN8                 4A: 6xN8; 4B: 6xN8                             9   OST VDI MGMT  STORAGE IBOX2512_OST  STORAGE IBOX2512_OST - san27-ost 10:00:88:94:71:31:1c:80     IBOX2512_OST                 1.0      storage           30.0            25.0
+35  OST VDI MGMT            B  10:00:88:94:71:31:16:80     IBOX2512_OST            None    STORAGE  san28-ost       109.0     Native                       6  san28-ost 10:00:88:94:71:31:16:80            4.0         INFINIDAT      None  None     None             6xN8                       4B: 6xN8                 4A: 6xN8; 4B: 6xN8                             9   OST VDI MGMT  STORAGE IBOX2512_OST  STORAGE IBOX2512_OST - san28-ost 10:00:88:94:71:31:16:80     IBOX2512_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 OST VDI MGMT
+Device_shapeText            IBOX3054_OST
+Device_shapeName    STORAGE IBOX3054_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType      switchName  switchType switchMode  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp      Device_shapeName                                                 Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+36  OST VDI MGMT            A  10:00:88:94:71:c5:b1:c0     IBOX3054_OST            None    STORAGE  ost-6510-07-f1       109.0     Native                       3  ost-6510-07-f1 10:00:88:94:71:c5:b1:c0            5.0         INFINIDAT      None  None     None            3x16G                      5A: 3x16G               5A: 3x16G; 5B: 3x16G                             9   OST VDI MGMT  STORAGE IBOX3054_OST  STORAGE IBOX3054_OST - ost-6510-07-f1 10:00:88:94:71:c5:b1:c0     IBOX3054_OST                 1.0      storage           30.0            25.0
+37  OST VDI MGMT            B  10:00:88:94:71:c5:b2:00     IBOX3054_OST            None    STORAGE  ost-6510-08-f2       109.0     Native                       3  ost-6510-08-f2 10:00:88:94:71:c5:b2:00            5.0         INFINIDAT      None  None     None            3x16G                      5B: 3x16G               5A: 3x16G; 5B: 3x16G                             9   OST VDI MGMT  STORAGE IBOX3054_OST  STORAGE IBOX3054_OST - ost-6510-08-f2 10:00:88:94:71:c5:b2:00     IBOX3054_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST VDI MGMT
+Device_shapeText            NetApp1
+Device_shapeName    STORAGE NetApp1
+deviceType                  STORAGE
+master_shape                storage
+y_graph_level                  30.0
+x_group_offset                 25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+38  OST VDI MGMT            A  10:00:88:94:71:31:1c:80          NetApp1            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None             2x4G                       4A: 2x4G                 4A: 2x4G; 4B: 2x4G                             9   OST VDI MGMT  STORAGE NetApp1  STORAGE NetApp1 - san27-ost 10:00:88:94:71:31:1c:80          NetApp1                 1.0      storage           30.0            25.0
+39  OST VDI MGMT            B  10:00:88:94:71:31:16:80          NetApp1            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None             2x4G                       4B: 2x4G                 4A: 2x4G; 4B: 2x4G                             9   OST VDI MGMT  STORAGE NetApp1  STORAGE NetApp1 - san28-ost 10:00:88:94:71:31:16:80          NetApp1                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST VDI MGMT
+Device_shapeText            NetApp13
+Device_shapeName    STORAGE NetApp13
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level    Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+40  OST VDI MGMT            A  10:00:88:94:71:31:1c:80         NetApp13            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None    2xN16, 2xNPIV              4A: 2xN16, 2xNPIV  4A: 2xN16, 2xNPIV; 4B: 2xN16, 2xNPIV                             9   OST VDI MGMT  STORAGE NetApp13  STORAGE NetApp13 - san27-ost 10:00:88:94:71:31:1c:80         NetApp13                 1.0      storage           30.0            25.0
+41  OST VDI MGMT            B  10:00:88:94:71:31:16:80         NetApp13            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None    2xN16, 2xNPIV              4B: 2xN16, 2xNPIV  4A: 2xN16, 2xNPIV; 4B: 2xN16, 2xNPIV                             9   OST VDI MGMT  STORAGE NetApp13  STORAGE NetApp13 - san28-ost 10:00:88:94:71:31:16:80         NetApp13                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                            OST VDI MGMT
+Device_shapeText    STORAGE 50:0a:09:80:80:81:85:12
+Device_shapeName    STORAGE 50:0a:09:80:80:81:85:12
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+     Fabric_name Fabric_label                switchWwn                 Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp                 Device_shapeName                                                       Link_shapeName                 Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+42  OST VDI MGMT            A  10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:81:85:12            None    STORAGE  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:81:85:12  STORAGE 50:0a:09:80:80:81:85:12 - san27-ost 10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:81:85:12                 1.0      storage           30.0            25.0
+43  OST VDI MGMT            B  10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:81:85:12            None    STORAGE  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:81:85:12  STORAGE 50:0a:09:80:80:81:85:12 - san28-ost 10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:81:85:12                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                            OST VDI MGMT
+Device_shapeText    STORAGE 50:0a:09:80:80:b1:85:24
+Device_shapeName    STORAGE 50:0a:09:80:80:b1:85:24
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+     Fabric_name Fabric_label                switchWwn                 Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp                 Device_shapeName                                                       Link_shapeName                 Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+44  OST VDI MGMT            A  10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:b1:85:24            None    STORAGE  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:b1:85:24  STORAGE 50:0a:09:80:80:b1:85:24 - san27-ost 10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:b1:85:24                 1.0      storage           30.0            25.0
+45  OST VDI MGMT            B  10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:b1:85:24            None    STORAGE  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:b1:85:24  STORAGE 50:0a:09:80:80:b1:85:24 - san28-ost 10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:b1:85:24                 1.0      storage           30.0            25.0
+
+Switch groups
+
+
+Fabric_name                                               OST Cloud 152
+switchPair_id                                                       8.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san101-ost (DID=21)/ san102-ost (DID=21)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san101-ost 10:00:d8:1f:cc:7c:9c:40, san102-ost...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade G620
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                     san17-ost (DID=6)/ san18-ost (DID=6)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san17-ost 10:00:00:27:f8:fb:bd:f4, san18-ost 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                     san19-ost (DID=3)/ san20-ost (DID=2)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san19-ost 10:00:88:94:71:ee:39:20, san20-ost 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       7.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san21-ost (DID=10)/ san22-ost (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san21-ost 10:00:88:94:71:ee:3d:a1, san22-ost 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        VC 10:00:00:11:0a:02:74:74/ VC 10:00:00:11:0a:...
+switchClass_mode                                                 VC, VC
+switchName_Wwn        VC 10:00:00:11:0a:02:74:74, VC 10:00:00:11:0a:...
+switchClass_weight                                                    3
+graph_level                                                          ag
+y_graph_level                                                       120
+x_group_offset                                                       20
+y_group_offset                                                        7
+x_shape_offset                                                        0
+y_shape_offset                                                        2
+master_shape                                                     vc, vc
+ModelName                                                          None
+group_level                                                           0
+y_group_level                                                       120
+
+
+Fabric_name                              OST Internal VDI
+switchPair_id                                         2.0
+Fabric_label                                            B
+quantity                                                1
+switchName_DID                                c6_B_H6C170
+switchClass_mode                                   EMB AG
+switchName_Wwn        c6_B_H6C170 10:00:00:27:f8:89:85:7b
+switchClass_weight                                      3
+graph_level                                            ag
+y_graph_level                                         120
+x_group_offset                                         20
+y_group_offset                                          7
+x_shape_offset                                          0
+y_shape_offset                                          2
+master_shape                               sw_ag_embedded
+ModelName               Brocade 5480/5481 Embedded Switch
+group_level                                             1
+y_group_level                                         127
+****************************************
+start: 14/11/2022 23:29:32
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate
+OST Cloud 152 san102-ost 10:00:d8:1f:cc:7c:a0:c0 0 35 90
+OST Cloud 152 san101-ost 10:00:d8:1f:cc:7c:9c:40 1 35 95
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64 0 35 90
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4 1 35 95
+OST Internal VDI san20-ost 10:00:88:94:71:ed:f3:a0 0 75 100
+OST Internal VDI san19-ost 10:00:88:94:71:ee:39:20 1 75 105
+OST Internal VDI san22-ost 10:00:88:94:71:ee:3c:61 0 115 90
+OST Internal VDI san21-ost 10:00:88:94:71:ee:3d:a1 1 115 95
+OST Internal VDI VC 10:00:00:11:0a:02:74:75 0 35 120
+OST Internal VDI VC 10:00:00:11:0a:02:74:74 1 35 122
+OST Internal VDI c6_B_H6C170 10:00:00:27:f8:89:85:7b 0 55 127
+OST VDI MGMT ost-6510-08-f2 10:00:88:94:71:c5:b2:00 0 35 90
+OST VDI MGMT ost-6510-07-f1 10:00:88:94:71:c5:b1:c0 1 35 95
+OST VDI MGMT san28-ost 10:00:88:94:71:31:16:80 0 75 100
+OST VDI MGMT san27-ost 10:00:88:94:71:31:1c:80 1 75 105
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4   ---->   san19-ost 10:00:88:94:71:ee:39:20
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4   ---->   san21-ost 10:00:88:94:71:ee:3d:a1
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   san20-ost 10:00:88:94:71:ed:f3:a0
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   san22-ost 10:00:88:94:71:ee:3c:61
+OST VDI MGMT ost-6510-07-f1 10:00:88:94:71:c5:b1:c0   ---->   san27-ost 10:00:88:94:71:31:1c:80
+OST VDI MGMT ost-6510-08-f2 10:00:88:94:71:c5:b2:00   ---->   san28-ost 10:00:88:94:71:31:16:80
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+OST Internal VDI san17-ost 10:00:00:27:f8:fb:bd:f4   ---->   VC 10:00:00:11:0a:02:74:74
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   VC 10:00:00:11:0a:02:74:75
+OST Internal VDI san18-ost 10:00:00:27:f8:fd:91:64   ---->   c6_B_H6C170 10:00:00:27:f8:89:85:7b
+
+Edge devices
+
+
+------------------------------
+Fabric_name                                             OST Cloud 152
+Device_shapeText    OST152-REFS01, sec-ost-esxi-04, sec-ost-esxi-0...
+Device_shapeName                                         SRV GROUP #1
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                             Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40        SRV  san101-ost       162.0     Native                       1  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0               SRV      None            1xN16                      8A: 1xN16               8A: 1xN16; 8B: 1xN16                             2  OST Cloud 152                    1                         7  OST152-REFS01, sec-ost-esxi-04, sec-ost-esxi-05, sec-ost-esxi-06, v01h01-ost1.cloud152.ru, v01h02-ost1.cloud152.ru, v01h03-ost1.cloud152.ru     SRV GROUP #1  SRV GROUP #1 - san101-ost 10:00:d8:1f:cc:7c:9c:40                 2.0          hba          160.0            30.0
+1  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0        SRV  san102-ost       162.0     Native                       1  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0               SRV      None            1xN16                      8B: 1xN16               8A: 1xN16; 8B: 1xN16                             2  OST Cloud 152                    1                         7  OST152-REFS01, sec-ost-esxi-04, sec-ost-esxi-05, sec-ost-esxi-06, v01h01-ost1.cloud152.ru, v01h02-ost1.cloud152.ru, v01h03-ost1.cloud152.ru     SRV GROUP #1  SRV GROUP #1 - san102-ost 10:00:d8:1f:cc:7c:a0:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                             OST Cloud 152
+Device_shapeText    v01h07-ost1, v01h08-ost1, v01h09-ost1, v01h10-...
+Device_shapeName                                         SRV GROUP #2
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                 Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+2  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40        SRV  san101-ost       162.0     Native                       1  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0               SRV      None            1xN32                      8A: 1xN32               8A: 1xN32; 8B: 1xN32                             2  OST Cloud 152                    2                         5  v01h07-ost1, v01h08-ost1, v01h09-ost1, v01h10-ost1, v01h11-ost1     SRV GROUP #2  SRV GROUP #2 - san101-ost 10:00:d8:1f:cc:7c:9c:40                 2.0          hba          160.0            30.0
+3  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0        SRV  san102-ost       162.0     Native                       1  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0               SRV      None            1xN32                      8B: 1xN32               8A: 1xN32; 8B: 1xN32                             2  OST Cloud 152                    2                         5  v01h07-ost1, v01h08-ost1, v01h09-ost1, v01h10-ost1, v01h11-ost1     SRV GROUP #2  SRV GROUP #2 - san102-ost 10:00:d8:1f:cc:7c:a0:c0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                    OST Internal VDI
+Device_shapeText    SRV 20:00:34:80:0d:79:42:e0
+Device_shapeName                   SRV GROUP #5
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+        Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+4  OST Internal VDI            A  10:00:88:94:71:ee:39:20        SRV  san19-ost       109.0     Native                       1  san19-ost 10:00:88:94:71:ee:39:20            6.0               SRV      None            1xN16                      6A: 1xN16                          6A: 1xN16                            12  OST Internal VDI                    5                         1  SRV 20:00:34:80:0d:79:42:e0     SRV GROUP #5  SRV GROUP #5 - san19-ost 10:00:88:94:71:ee:39:20                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                    OST Internal VDI
+Device_shapeText    SRV 20:00:34:80:0d:79:42:e1
+Device_shapeName                   SRV GROUP #8
+deviceType                                  SRV
+master_shape                                hba
+y_graph_level                             160.0
+x_group_offset                             30.0
+        Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group             Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+5  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0        SRV  san20-ost       109.0     Native                       1  san20-ost 10:00:88:94:71:ed:f3:a0            6.0               SRV      None            1xN16                      6B: 1xN16                          6B: 1xN16                            12  OST Internal VDI                    8                         1  SRV 20:00:34:80:0d:79:42:e1     SRV GROUP #8  SRV GROUP #8 - san20-ost 10:00:88:94:71:ed:f3:a0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    SRV 50:01:43:80:26:e8:84:c7, esxi18-test, h05....
+Device_shapeName                                         SRV GROUP #4
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+        Fabric_name Fabric_label                switchWwn deviceType   switchName  switchType           switchMode  Physical_link_quantity                     switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                     Device_shapeText Device_shapeName                                      Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+6  OST Internal VDI            B  10:00:00:27:f8:89:85:7b        SRV  c6_B_H6C170        72.0  Access Gateway Mode                       1  c6_B_H6C170 10:00:00:27:f8:89:85:7b            2.0               SRV      None             1xN8                       2B: 1xN8                           2B: 1xN8                            12  OST Internal VDI                    4                         3  SRV 50:01:43:80:26:e8:84:c7, esxi18-test, h05.tl.ru     SRV GROUP #4  SRV GROUP #4 - c6_B_H6C170 10:00:00:27:f8:89:85:7b                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    bl4-vdi.vdi.dtln.ru, bl5-vdi.vdi.dtln.ru, bl6-...
+Device_shapeName                                         SRV GROUP #3
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+        Fabric_name Fabric_label                switchWwn deviceType                  switchName  switchType           switchMode  Physical_link_quantity            switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                        Device_shapeText Device_shapeName                             Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+7  OST Internal VDI            A  10:00:00:11:0a:02:74:74        SRV  VC 10:00:00:11:0a:02:74:74       502.0  Access Gateway Mode                       1  VC 10:00:00:11:0a:02:74:74            1.0               SRV      None             1xN8                       1A: 1xN8                 1A: 1xN8; 1B: 1xN8                            12  OST Internal VDI                    3                         6  bl4-vdi.vdi.dtln.ru, bl5-vdi.vdi.dtln.ru, bl6-vdi.vdi.dtln.ru, bl7-vdi.vdi.dtln.ru, bl8-vdi.vdi.dtln.ru, bor08.dtln.ru     SRV GROUP #3  SRV GROUP #3 - VC 10:00:00:11:0a:02:74:74                 2.0          hba          160.0            30.0
+8  OST Internal VDI            B  10:00:00:11:0a:02:74:75        SRV  VC 10:00:00:11:0a:02:74:75       502.0  Access Gateway Mode                       1  VC 10:00:00:11:0a:02:74:75            1.0               SRV      None             1xN8                       1B: 1xN8                 1A: 1xN8; 1B: 1xN8                            12  OST Internal VDI                    3                         6  bl4-vdi.vdi.dtln.ru, bl5-vdi.vdi.dtln.ru, bl6-vdi.vdi.dtln.ru, bl7-vdi.vdi.dtln.ru, bl8-vdi.vdi.dtln.ru, bor08.dtln.ru     SRV GROUP #3  SRV GROUP #3 - VC 10:00:00:11:0a:02:74:75                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    nubis-h02.dtln.ru, nubis-h04.dtln.ru, nubis-h0...
+Device_shapeName                                         SRV GROUP #6
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+         Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                            Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+9   OST Internal VDI            A  10:00:88:94:71:ee:39:20        SRV  san19-ost       109.0     Native                       1  san19-ost 10:00:88:94:71:ee:39:20            6.0               SRV      None            1xN16                      6A: 1xN16               6A: 1xN16; 6B: 1xN16                            12  OST Internal VDI                    6                        23  nubis-h02.dtln.ru, nubis-h04.dtln.ru, nubis-h05.dtln.ru, nubis-h06.dtln.ru, v4c2h01.ost.virt.local, v4c2h02.ost.virt.local, v4c2h03.ost.virt.local, v4h11.dtln.ru, v4h12.dtln.ru, v4h13.dtln.ru, v4h14.dtln.ru, v4h15.dtln.ru, v4h16.dtln.ru, v4h17.dtln.ru, v4h18.dtln.ru, v4h24.dtln.ru, v4h25, v4h26.dtln.ru, v4h27.dtln.ru, v4h28.dtln.ru, v4h29.dtln.ru, v4h35.dtln.ru, v4h36.dtln.ru     SRV GROUP #6  SRV GROUP #6 - san19-ost 10:00:88:94:71:ee:39:20                 2.0          hba          160.0            30.0
+10  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0        SRV  san20-ost       109.0     Native                       1  san20-ost 10:00:88:94:71:ed:f3:a0            6.0               SRV      None            1xN16                      6B: 1xN16               6A: 1xN16; 6B: 1xN16                            12  OST Internal VDI                    6                        23  nubis-h02.dtln.ru, nubis-h04.dtln.ru, nubis-h05.dtln.ru, nubis-h06.dtln.ru, v4c2h01.ost.virt.local, v4c2h02.ost.virt.local, v4c2h03.ost.virt.local, v4h11.dtln.ru, v4h12.dtln.ru, v4h13.dtln.ru, v4h14.dtln.ru, v4h15.dtln.ru, v4h16.dtln.ru, v4h17.dtln.ru, v4h18.dtln.ru, v4h24.dtln.ru, v4h25, v4h26.dtln.ru, v4h27.dtln.ru, v4h28.dtln.ru, v4h29.dtln.ru, v4h35.dtln.ru, v4h36.dtln.ru     SRV GROUP #6  SRV GROUP #6 - san20-ost 10:00:88:94:71:ed:f3:a0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    v4-edge-h01.dtln.ru, v4-edge-h02.dtln.ru, v4-e...
+Device_shapeName                                         SRV GROUP #7
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+         Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                               Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+11  OST Internal VDI            A  10:00:88:94:71:ee:39:20        SRV  san19-ost       109.0     Native                       1  san19-ost 10:00:88:94:71:ee:39:20            6.0               SRV      None             1xN8                       6A: 1xN8                 6A: 1xN8; 6B: 1xN8                            12  OST Internal VDI                    7                         3  v4-edge-h01.dtln.ru, v4-edge-h02.dtln.ru, v4-edge-h03.dtln.ru     SRV GROUP #7  SRV GROUP #7 - san19-ost 10:00:88:94:71:ee:39:20                 2.0          hba          160.0            30.0
+12  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0        SRV  san20-ost       109.0     Native                       1  san20-ost 10:00:88:94:71:ed:f3:a0            6.0               SRV      None             1xN8                       6B: 1xN8                 6A: 1xN8; 6B: 1xN8                            12  OST Internal VDI                    7                         3  v4-edge-h01.dtln.ru, v4-edge-h02.dtln.ru, v4-edge-h03.dtln.ru     SRV GROUP #7  SRV GROUP #7 - san20-ost 10:00:88:94:71:ed:f3:a0                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                          OST Internal VDI
+Device_shapeText    v4c3h01, v4c3h02, v4c3h03, v4c3h04, v4c4h01, v...
+Device_shapeName                                         SRV GROUP #9
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+         Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                        Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+13  OST Internal VDI            A  10:00:88:94:71:ee:3d:a1        SRV  san21-ost       109.0     Native                       1  san21-ost 10:00:88:94:71:ee:3d:a1            7.0               SRV      None            1xN16                      7A: 1xN16               7A: 1xN16; 7B: 1xN16                            12  OST Internal VDI                    9                        18  v4c3h01, v4c3h02, v4c3h03, v4c3h04, v4c4h01, v4h19.dtln.ru, v4h20.dtln.ru, v4h21.dtln.ru, v4h22.dtln.ru, v4h23.dtln.ru, v4h30.dtln.ru, v4h31.dtln.ru, v4h32.dtln.ru, v4h33, v4h34.dtln.ru, v4h37.dtln.ru, v4h38, v4h39     SRV GROUP #9  SRV GROUP #9 - san21-ost 10:00:88:94:71:ee:3d:a1                 2.0          hba          160.0            30.0
+14  OST Internal VDI            B  10:00:88:94:71:ee:3c:61        SRV  san22-ost       109.0     Native                       1  san22-ost 10:00:88:94:71:ee:3c:61            7.0               SRV      None            1xN16                      7B: 1xN16               7A: 1xN16; 7B: 1xN16                            12  OST Internal VDI                    9                        18  v4c3h01, v4c3h02, v4c3h03, v4c3h04, v4c4h01, v4h19.dtln.ru, v4h20.dtln.ru, v4h21.dtln.ru, v4h22.dtln.ru, v4h23.dtln.ru, v4h30.dtln.ru, v4h31.dtln.ru, v4h32.dtln.ru, v4h33, v4h34.dtln.ru, v4h37.dtln.ru, v4h38, v4h39     SRV GROUP #9  SRV GROUP #9 - san22-ost 10:00:88:94:71:ee:3c:61                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                              OST VDI MGMT
+Device_shapeText    REFS-OST03, REFS_OST02_VC8, hw50-vdi, hw51-vdi...
+Device_shapeName                                        SRV GROUP #11
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                              Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+15  OST VDI MGMT            A  10:00:88:94:71:31:1c:80        SRV  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0               SRV      None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT                   11                        10  REFS-OST03, REFS_OST02_VC8, hw50-vdi, hw51-vdi.dtln.ru, hw54-vdi, hw55-vdi, hw56-vdi, o1-mgmt-h01.virt.local, o1-mgmt-h02.virt.local, o1-mgmt-h03.virt.local    SRV GROUP #11  SRV GROUP #11 - san27-ost 10:00:88:94:71:31:1c:80                 2.0          hba          160.0            30.0
+16  OST VDI MGMT            B  10:00:88:94:71:31:16:80        SRV  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0               SRV      None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT                   11                        10  REFS-OST03, REFS_OST02_VC8, hw50-vdi, hw51-vdi.dtln.ru, hw54-vdi, hw55-vdi, hw56-vdi, o1-mgmt-h01.virt.local, o1-mgmt-h02.virt.local, o1-mgmt-h03.virt.local    SRV GROUP #11  SRV GROUP #11 - san28-ost 10:00:88:94:71:31:16:80                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name          OST VDI MGMT
+Device_shapeText         hw52-vdi
+Device_shapeName    SRV GROUP #12
+deviceType                    SRV
+master_shape                  hba
+y_graph_level               160.0
+x_group_offset               30.0
+     Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+17  OST VDI MGMT            A  10:00:88:94:71:31:1c:80        SRV  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0               SRV      None             1xN8                       4A: 1xN8                 4A: 1xN8; 4B: 1xN8                             9   OST VDI MGMT                   12                         1         hw52-vdi    SRV GROUP #12  SRV GROUP #12 - san27-ost 10:00:88:94:71:31:1c:80                 2.0          hba          160.0            30.0
+18  OST VDI MGMT            B  10:00:88:94:71:31:16:80        SRV  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0               SRV      None             1xN8                       4B: 1xN8                 4A: 1xN8; 4B: 1xN8                             9   OST VDI MGMT                   12                         1         hw52-vdi    SRV GROUP #12  SRV GROUP #12 - san28-ost 10:00:88:94:71:31:16:80                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name          OST VDI MGMT
+Device_shapeText         hw53-vdi
+Device_shapeName    SRV GROUP #10
+deviceType                    SRV
+master_shape                  hba
+y_graph_level               160.0
+x_group_offset               30.0
+     Fabric_name Fabric_label                switchWwn deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                     Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+19  OST VDI MGMT            A  10:00:88:94:71:31:1c:80        SRV  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0               SRV      None            1x16G                      4A: 1x16G               4A: 1x16G; 4B: 1xN16                             9   OST VDI MGMT                   10                         1         hw53-vdi    SRV GROUP #10  SRV GROUP #10 - san27-ost 10:00:88:94:71:31:1c:80                 2.0          hba          160.0            30.0
+20  OST VDI MGMT            B  10:00:88:94:71:31:16:80        SRV  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0               SRV      None            1xN16                      4B: 1xN16               4A: 1x16G; 4B: 1xN16                             9   OST VDI MGMT                   10                         1         hw53-vdi    SRV GROUP #10  SRV GROUP #10 - san28-ost 10:00:88:94:71:31:16:80                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name                                              OST VDI MGMT
+Device_shapeText    v8h10.dtln.ru, v8h12.dtln.ru, v8h13.dtln.ru, v...
+Device_shapeName                                        SRV GROUP #14
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+     Fabric_name Fabric_label                switchWwn deviceType      switchName  switchType switchMode  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Device_shapeText Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+21  OST VDI MGMT            A  10:00:88:94:71:c5:b1:c0        SRV  ost-6510-07-f1       109.0     Native                       1  ost-6510-07-f1 10:00:88:94:71:c5:b1:c0            5.0               SRV      None            1xN16                      5A: 1xN16               5A: 1xN16; 5B: 1xN16                             9   OST VDI MGMT                   14                        31  v8h10.dtln.ru, v8h12.dtln.ru, v8h13.dtln.ru, v8h14.dtln.ru, v8h15.dtln.ru, v8h16.dtln.ru, v8h17.dtln.ru, v8h18.dtln.ru, v8h19.dtln.ru, v8h20.dtln.ru, v8h21.dtln.ru, v8h22.dtln.ru, v8h23.dtln.ru, v8h24.dtln.ru, v8h25.dtln.ru, v8h26.dtln.ru, v8h27.dtln.ru, v8h28.dtln.ru, v8h29.dtln.ru, v8h30.dtln.ru, v8h31.dtln.ru, v8h32.dtln.ru, v8h33.dtln.ru, v8h34.dtln.ru, v8h35.dtln.ru, v8h36.dtln.ru, v8h37.dtln.ru, v8h38.dtln.ru, v8h39.dtln.ru, v8h40.dtln.ru, v8h41.dtln.ru    SRV GROUP #14  SRV GROUP #14 - ost-6510-07-f1 10:00:88:94:71:c5:b1:c0                 2.0          hba          160.0            30.0
+22  OST VDI MGMT            B  10:00:88:94:71:c5:b2:00        SRV  ost-6510-08-f2       109.0     Native                       1  ost-6510-08-f2 10:00:88:94:71:c5:b2:00            5.0               SRV      None            1xN16                      5B: 1xN16               5A: 1xN16; 5B: 1xN16                             9   OST VDI MGMT                   14                        31  v8h10.dtln.ru, v8h12.dtln.ru, v8h13.dtln.ru, v8h14.dtln.ru, v8h15.dtln.ru, v8h16.dtln.ru, v8h17.dtln.ru, v8h18.dtln.ru, v8h19.dtln.ru, v8h20.dtln.ru, v8h21.dtln.ru, v8h22.dtln.ru, v8h23.dtln.ru, v8h24.dtln.ru, v8h25.dtln.ru, v8h26.dtln.ru, v8h27.dtln.ru, v8h28.dtln.ru, v8h29.dtln.ru, v8h30.dtln.ru, v8h31.dtln.ru, v8h32.dtln.ru, v8h33.dtln.ru, v8h34.dtln.ru, v8h35.dtln.ru, v8h36.dtln.ru, v8h37.dtln.ru, v8h38.dtln.ru, v8h39.dtln.ru, v8h40.dtln.ru, v8h41.dtln.ru    SRV GROUP #14  SRV GROUP #14 - ost-6510-08-f2 10:00:88:94:71:c5:b2:00                 2.0          hba          160.0            30.0
+
+
+------------------------------
+Fabric_name          OST VDI MGMT
+Device_shapeText    v8h11.dtln.ru
+Device_shapeName    SRV GROUP #13
+deviceType                    SRV
+master_shape                  hba
+y_graph_level               160.0
+x_group_offset               30.0
+     Fabric_name Fabric_label                switchWwn deviceType      switchName  switchType switchMode  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group Device_shapeText Device_shapeName                                          Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+23  OST VDI MGMT            A  10:00:88:94:71:c5:b1:c0        SRV  ost-6510-07-f1       109.0     Native                       1  ost-6510-07-f1 10:00:88:94:71:c5:b1:c0            5.0               SRV      None            1xN16                      5A: 1xN16               5A: 1xN16; 5B: 1x16G                             9   OST VDI MGMT                   13                         1    v8h11.dtln.ru    SRV GROUP #13  SRV GROUP #13 - ost-6510-07-f1 10:00:88:94:71:c5:b1:c0                 2.0          hba          160.0            30.0
+24  OST VDI MGMT            B  10:00:88:94:71:c5:b2:00        SRV  ost-6510-08-f2       109.0     Native                       1  ost-6510-08-f2 10:00:88:94:71:c5:b2:00            5.0               SRV      None            1x16G                      5B: 1x16G               5A: 1xN16; 5B: 1x16G                             9   OST VDI MGMT                   13                         1    v8h11.dtln.ru    SRV GROUP #13  SRV GROUP #13 - ost-6510-08-f2 10:00:88:94:71:c5:b2:00                 2.0          hba          160.0            30.0
+
+Edge devices
+
+
+------------------------------
+Fabric_name         OST Cloud 152
+Device_shapeText             HW24
+Device_shapeName     STORAGE HW24
+deviceType                STORAGE
+master_shape              storage
+y_graph_level                30.0
+x_group_offset               25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp Device_shapeName                                     Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+0  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40             HW24            None    STORAGE  san101-ost       162.0     Native                       2  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0            HUAWEI      None  None     None            2xN32                      8A: 2xN32               8A: 2xN32; 8B: 2xN32                             2  OST Cloud 152     STORAGE HW24  STORAGE HW24 - san101-ost 10:00:d8:1f:cc:7c:9c:40             HW24                 1.0      storage           30.0            25.0
+1  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0             HW24            None    STORAGE  san102-ost       162.0     Native                       2  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0            HUAWEI      None  None     None            2xN32                      8B: 2xN32               8A: 2xN32; 8B: 2xN32                             2  OST Cloud 152     STORAGE HW24  STORAGE HW24 - san102-ost 10:00:d8:1f:cc:7c:a0:c0             HW24                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST Cloud 152
+Device_shapeText            IBOX3361
+Device_shapeName    STORAGE IBOX3361
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType  switchName  switchType switchMode  Physical_link_quantity                    switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_shapeName                                         Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+2  OST Cloud 152            A  10:00:d8:1f:cc:7c:9c:40         IBOX3361            None    STORAGE  san101-ost       162.0     Native                       6  san101-ost 10:00:d8:1f:cc:7c:9c:40            8.0         INFINIDAT      None  None     None            6xN16                      8A: 6xN16               8A: 6xN16; 8B: 6xN16                             2  OST Cloud 152  STORAGE IBOX3361  STORAGE IBOX3361 - san101-ost 10:00:d8:1f:cc:7c:9c:40         IBOX3361                 1.0      storage           30.0            25.0
+3  OST Cloud 152            B  10:00:d8:1f:cc:7c:a0:c0         IBOX3361            None    STORAGE  san102-ost       162.0     Native                       6  san102-ost 10:00:d8:1f:cc:7c:a0:c0            8.0         INFINIDAT      None  None     None            6xN16                      8B: 6xN16               8A: 6xN16; 8B: 6xN16                             2  OST Cloud 152  STORAGE IBOX3361  STORAGE IBOX3361 - san102-ost 10:00:d8:1f:cc:7c:a0:c0         IBOX3361                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                   OST Internal VDI
+Device_shapeText            INTERNAL_VIRT_3PAR
+Device_shapeName    STORAGE INTERNAL_VIRT_3PAR
+deviceType                             STORAGE
+master_shape                           storage
+y_graph_level                             30.0
+x_group_offset                            25.0
+        Fabric_name Fabric_label                switchWwn    Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp            Device_shapeName                                                  Link_shapeName    Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+4  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4  INTERNAL_VIRT_3PAR            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0              3Par      None  None     None             2xN8                       3A: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE INTERNAL_VIRT_3PAR  STORAGE INTERNAL_VIRT_3PAR - san17-ost 10:00:00:27:f8:fb:bd:f4  INTERNAL_VIRT_3PAR                 1.0      storage           30.0            25.0
+5  OST Internal VDI            B  10:00:00:27:f8:fd:91:64  INTERNAL_VIRT_3PAR            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0              3Par      None  None     None             2xN8                       3B: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE INTERNAL_VIRT_3PAR  STORAGE INTERNAL_VIRT_3PAR - san18-ost 10:00:00:27:f8:fd:91:64  INTERNAL_VIRT_3PAR                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST Internal VDI
+Device_shapeText            VNX5600_RGT
+Device_shapeName    STORAGE VNX5600_RGT
+deviceType                      STORAGE
+master_shape                    storage
+y_graph_level                      30.0
+x_group_offset                     25.0
+        Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp     Device_shapeName                                           Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+6  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4      VNX5600_RGT            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0               EMC      None  None     None             2xN8                       3A: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE VNX5600_RGT  STORAGE VNX5600_RGT - san17-ost 10:00:00:27:f8:fb:bd:f4      VNX5600_RGT                 1.0      storage           30.0            25.0
+7  OST Internal VDI            B  10:00:00:27:f8:fd:91:64      VNX5600_RGT            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0               EMC      None  None     None             2xN8                       3B: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE VNX5600_RGT  STORAGE VNX5600_RGT - san18-ost 10:00:00:27:f8:fd:91:64      VNX5600_RGT                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            HW01_OST
+Device_shapeName    STORAGE HW01_OST
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+        Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+8  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4         HW01_OST            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            HUAWEI      None  None     None            2xN16                      3A: 2xN16               3A: 2xN16; 3B: 2xN16                            12  OST Internal VDI  STORAGE HW01_OST  STORAGE HW01_OST - san17-ost 10:00:00:27:f8:fb:bd:f4         HW01_OST                 1.0      storage           30.0            25.0
+9  OST Internal VDI            B  10:00:00:27:f8:fd:91:64         HW01_OST            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0            HUAWEI      None  None     None            2xN16                      3B: 2xN16               3A: 2xN16; 3B: 2xN16                            12  OST Internal VDI  STORAGE HW01_OST  STORAGE HW01_OST - san18-ost 10:00:00:27:f8:fd:91:64         HW01_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            HW07_OST
+Device_shapeName    STORAGE HW07_OST
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+10  OST Internal VDI            A  10:00:88:94:71:ee:39:20         HW07_OST            None    STORAGE  san19-ost       109.0     Native                       2  san19-ost 10:00:88:94:71:ee:39:20            6.0            HUAWEI      None  None     None            2xN16                      6A: 2xN16               6A: 2xN16; 6B: 2xN16                            12  OST Internal VDI  STORAGE HW07_OST  STORAGE HW07_OST - san19-ost 10:00:88:94:71:ee:39:20         HW07_OST                 1.0      storage           30.0            25.0
+11  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0         HW07_OST            None    STORAGE  san20-ost       109.0     Native                       2  san20-ost 10:00:88:94:71:ed:f3:a0            6.0            HUAWEI      None  None     None            2xN16                      6B: 2xN16               6A: 2xN16; 6B: 2xN16                            12  OST Internal VDI  STORAGE HW07_OST  STORAGE HW07_OST - san20-ost 10:00:88:94:71:ed:f3:a0         HW07_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText                HW28
+Device_shapeName        STORAGE HW28
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp Device_shapeName                                    Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+12  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4             HW28            None    STORAGE  san17-ost       109.0     Native                       3  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            HUAWEI      None  None     None             3xN8                       3A: 3xN8                 3A: 3xN8; 3B: 3xN8                            12  OST Internal VDI     STORAGE HW28  STORAGE HW28 - san17-ost 10:00:00:27:f8:fb:bd:f4             HW28                 1.0      storage           30.0            25.0
+13  OST Internal VDI            B  10:00:00:27:f8:fd:91:64             HW28            None    STORAGE  san18-ost       109.0     Native                       3  san18-ost 10:00:00:27:f8:fd:91:64            3.0            HUAWEI      None  None     None             3xN8                       3B: 3xN8                 3A: 3xN8; 3B: 3xN8                            12  OST Internal VDI     STORAGE HW28  STORAGE HW28 - san18-ost 10:00:00:27:f8:fd:91:64             HW28                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST Internal VDI
+Device_shapeText            IBOX2598_OST
+Device_shapeName    STORAGE IBOX2598_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+14  OST Internal VDI            A  10:00:88:94:71:ee:39:20     IBOX2598_OST            None    STORAGE  san19-ost       109.0     Native                       6  san19-ost 10:00:88:94:71:ee:39:20            6.0         INFINIDAT      None  None     None            6xN16                      6A: 6xN16               6A: 6xN16; 6B: 6xN16                            12  OST Internal VDI  STORAGE IBOX2598_OST  STORAGE IBOX2598_OST - san19-ost 10:00:88:94:71:ee:39:20     IBOX2598_OST                 1.0      storage           30.0            25.0
+15  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0     IBOX2598_OST            None    STORAGE  san20-ost       109.0     Native                       6  san20-ost 10:00:88:94:71:ed:f3:a0            6.0         INFINIDAT      None  None     None            6xN16                      6B: 6xN16               6A: 6xN16; 6B: 6xN16                            12  OST Internal VDI  STORAGE IBOX2598_OST  STORAGE IBOX2598_OST - san20-ost 10:00:88:94:71:ed:f3:a0     IBOX2598_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST Internal VDI
+Device_shapeText            IBOX3222_OST
+Device_shapeName    STORAGE IBOX3222_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+16  OST Internal VDI            A  10:00:88:94:71:ee:39:20     IBOX3222_OST            None    STORAGE  san19-ost       109.0     Native                       3  san19-ost 10:00:88:94:71:ee:39:20            6.0         INFINIDAT      None  None     None             3xN8                       6A: 3xN8                 6A: 3xN8; 6B: 3xN8                            12  OST Internal VDI  STORAGE IBOX3222_OST  STORAGE IBOX3222_OST - san19-ost 10:00:88:94:71:ee:39:20     IBOX3222_OST                 1.0      storage           30.0            25.0
+17  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0     IBOX3222_OST            None    STORAGE  san20-ost       109.0     Native                       3  san20-ost 10:00:88:94:71:ed:f3:a0            6.0         INFINIDAT      None  None     None             3xN8                       6B: 3xN8                 6A: 3xN8; 6B: 3xN8                            12  OST Internal VDI  STORAGE IBOX3222_OST  STORAGE IBOX3222_OST - san20-ost 10:00:88:94:71:ed:f3:a0     IBOX3222_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            IBOX3364
+Device_shapeName    STORAGE IBOX3364
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+18  OST Internal VDI            A  10:00:88:94:71:ee:39:20         IBOX3364            None    STORAGE  san19-ost       109.0     Native                       3  san19-ost 10:00:88:94:71:ee:39:20            6.0         INFINIDAT      None  None     None            3xN16                      6A: 3xN16               6A: 3xN16; 6B: 3xN16                            12  OST Internal VDI  STORAGE IBOX3364  STORAGE IBOX3364 - san19-ost 10:00:88:94:71:ee:39:20         IBOX3364                 1.0      storage           30.0            25.0
+19  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0         IBOX3364            None    STORAGE  san20-ost       109.0     Native                       3  san20-ost 10:00:88:94:71:ed:f3:a0            6.0         INFINIDAT      None  None     None            3xN16                      6B: 3xN16               6A: 3xN16; 6B: 3xN16                            12  OST Internal VDI  STORAGE IBOX3364  STORAGE IBOX3364 - san20-ost 10:00:88:94:71:ed:f3:a0         IBOX3364                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            NetApp11
+Device_shapeName    STORAGE NetApp11
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+20  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4         NetApp11            None    STORAGE  san17-ost       109.0     Native                       2  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            NetApp      None  None     None             2xN8                       3A: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE NetApp11  STORAGE NetApp11 - san17-ost 10:00:00:27:f8:fb:bd:f4         NetApp11                 1.0      storage           30.0            25.0
+21  OST Internal VDI            B  10:00:00:27:f8:fd:91:64         NetApp11            None    STORAGE  san18-ost       109.0     Native                       2  san18-ost 10:00:00:27:f8:fd:91:64            3.0            NetApp      None  None     None             2xN8                       3B: 2xN8                 3A: 2xN8; 3B: 2xN8                            12  OST Internal VDI  STORAGE NetApp11  STORAGE NetApp11 - san18-ost 10:00:00:27:f8:fd:91:64         NetApp11                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText            NetApp16
+Device_shapeName    STORAGE NetApp16
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level    Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+22  OST Internal VDI            A  10:00:88:94:71:ee:39:20         NetApp16            None    STORAGE  san19-ost       109.0     Native                       8  san19-ost 10:00:88:94:71:ee:39:20            6.0            NetApp      None  None     None    8xN16, 6xNPIV              6A: 8xN16, 6xNPIV  6A: 8xN16, 6xNPIV; 6B: 8xN16, 6xNPIV                            12  OST Internal VDI  STORAGE NetApp16  STORAGE NetApp16 - san19-ost 10:00:88:94:71:ee:39:20         NetApp16                 1.0      storage           30.0            25.0
+23  OST Internal VDI            B  10:00:88:94:71:ed:f3:a0         NetApp16            None    STORAGE  san20-ost       109.0     Native                       8  san20-ost 10:00:88:94:71:ed:f3:a0            6.0            NetApp      None  None     None    8xN16, 6xNPIV              6B: 8xN16, 6xNPIV  6A: 8xN16, 6xNPIV; 6B: 8xN16, 6xNPIV                            12  OST Internal VDI  STORAGE NetApp16  STORAGE NetApp16 - san20-ost 10:00:88:94:71:ed:f3:a0         NetApp16                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText             NetApp5
+Device_shapeName     STORAGE NetApp5
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level  Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+24  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4          NetApp5            None    STORAGE  san17-ost       109.0     Native                       6  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3A: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp5  STORAGE NetApp5 - san17-ost 10:00:00:27:f8:fb:bd:f4          NetApp5                 1.0      storage           30.0            25.0
+25  OST Internal VDI            B  10:00:00:27:f8:fd:91:64          NetApp5            None    STORAGE  san18-ost       109.0     Native                       6  san18-ost 10:00:00:27:f8:fd:91:64            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3B: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp5  STORAGE NetApp5 - san18-ost 10:00:00:27:f8:fd:91:64          NetApp5                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name         OST Internal VDI
+Device_shapeText             NetApp7
+Device_shapeName     STORAGE NetApp7
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+         Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level  Link_description_fabric_name_level  Storage_lib_number_in_fabric    Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+26  OST Internal VDI            A  10:00:00:27:f8:fb:bd:f4          NetApp7            None    STORAGE  san17-ost       109.0     Native                       6  san17-ost 10:00:00:27:f8:fb:bd:f4            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3A: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp7  STORAGE NetApp7 - san17-ost 10:00:00:27:f8:fb:bd:f4          NetApp7                 1.0      storage           30.0            25.0
+27  OST Internal VDI            B  10:00:00:27:f8:fd:91:64          NetApp7            None    STORAGE  san18-ost       109.0     Native                       6  san18-ost 10:00:00:27:f8:fd:91:64            3.0            NetApp      None  None     None     6xN8, 4xNPIV               3B: 6xN8, 4xNPIV  3A: 6xN8, 4xNPIV; 3B: 6xN8, 4xNPIV                            12  OST Internal VDI  STORAGE NetApp7  STORAGE NetApp7 - san18-ost 10:00:00:27:f8:fd:91:64          NetApp7                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                     OST VDI MGMT
+Device_shapeText            HW06_D3000_OST02
+Device_shapeName    STORAGE HW06_D3000_OST02
+deviceType                           STORAGE
+master_shape                         storage
+y_graph_level                           30.0
+x_group_offset                          25.0
+     Fabric_name Fabric_label                switchWwn  Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp          Device_shapeName                                                Link_shapeName  Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+28  OST VDI MGMT            A  10:00:88:94:71:31:1c:80  HW06_D3000_OST02            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            HUAWEI      None  None     None            2xN16                      4A: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW06_D3000_OST02  STORAGE HW06_D3000_OST02 - san27-ost 10:00:88:94:71:31:1c:80  HW06_D3000_OST02                 1.0      storage           30.0            25.0
+29  OST VDI MGMT            B  10:00:88:94:71:31:16:80  HW06_D3000_OST02            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            HUAWEI      None  None     None            2xN16                      4B: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW06_D3000_OST02  STORAGE HW06_D3000_OST02 - san28-ost 10:00:88:94:71:31:16:80  HW06_D3000_OST02                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST VDI MGMT
+Device_shapeText            HW16_OST
+Device_shapeName    STORAGE HW16_OST
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+30  OST VDI MGMT            A  10:00:88:94:71:31:1c:80         HW16_OST            None    STORAGE  san27-ost       109.0     Native                       4  san27-ost 10:00:88:94:71:31:1c:80            4.0            HUAWEI      None  None     None            4xN16                      4A: 4xN16               4A: 4xN16; 4B: 4xN16                             9   OST VDI MGMT  STORAGE HW16_OST  STORAGE HW16_OST - san27-ost 10:00:88:94:71:31:1c:80         HW16_OST                 1.0      storage           30.0            25.0
+31  OST VDI MGMT            B  10:00:88:94:71:31:16:80         HW16_OST            None    STORAGE  san28-ost       109.0     Native                       4  san28-ost 10:00:88:94:71:31:16:80            4.0            HUAWEI      None  None     None            4xN16                      4B: 4xN16               4A: 4xN16; 4B: 4xN16                             9   OST VDI MGMT  STORAGE HW16_OST  STORAGE HW16_OST - san28-ost 10:00:88:94:71:31:16:80         HW16_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST VDI MGMT
+Device_shapeText            HW5_OST
+Device_shapeName    STORAGE HW5_OST
+deviceType                  STORAGE
+master_shape                storage
+y_graph_level                  30.0
+x_group_offset                 25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+32  OST VDI MGMT            A  10:00:88:94:71:31:1c:80          HW5_OST            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            HUAWEI      None  None     None            2xN16                      4A: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW5_OST  STORAGE HW5_OST - san27-ost 10:00:88:94:71:31:1c:80          HW5_OST                 1.0      storage           30.0            25.0
+33  OST VDI MGMT            B  10:00:88:94:71:31:16:80          HW5_OST            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            HUAWEI      None  None     None            2xN16                      4B: 2xN16               4A: 2xN16; 4B: 2xN16                             9   OST VDI MGMT  STORAGE HW5_OST  STORAGE HW5_OST - san28-ost 10:00:88:94:71:31:16:80          HW5_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 OST VDI MGMT
+Device_shapeText            IBOX2512_OST
+Device_shapeName    STORAGE IBOX2512_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+34  OST VDI MGMT            A  10:00:88:94:71:31:1c:80     IBOX2512_OST            None    STORAGE  san27-ost       109.0     Native                       6  san27-ost 10:00:88:94:71:31:1c:80            4.0         INFINIDAT      None  None     None             6xN8                       4A: 6xN8                 4A: 6xN8; 4B: 6xN8                             9   OST VDI MGMT  STORAGE IBOX2512_OST  STORAGE IBOX2512_OST - san27-ost 10:00:88:94:71:31:1c:80     IBOX2512_OST                 1.0      storage           30.0            25.0
+35  OST VDI MGMT            B  10:00:88:94:71:31:16:80     IBOX2512_OST            None    STORAGE  san28-ost       109.0     Native                       6  san28-ost 10:00:88:94:71:31:16:80            4.0         INFINIDAT      None  None     None             6xN8                       4B: 6xN8                 4A: 6xN8; 4B: 6xN8                             9   OST VDI MGMT  STORAGE IBOX2512_OST  STORAGE IBOX2512_OST - san28-ost 10:00:88:94:71:31:16:80     IBOX2512_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                 OST VDI MGMT
+Device_shapeText            IBOX3054_OST
+Device_shapeName    STORAGE IBOX3054_OST
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType      switchName  switchType switchMode  Physical_link_quantity                        switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp      Device_shapeName                                                 Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+36  OST VDI MGMT            A  10:00:88:94:71:c5:b1:c0     IBOX3054_OST            None    STORAGE  ost-6510-07-f1       109.0     Native                       3  ost-6510-07-f1 10:00:88:94:71:c5:b1:c0            5.0         INFINIDAT      None  None     None            3x16G                      5A: 3x16G               5A: 3x16G; 5B: 3x16G                             9   OST VDI MGMT  STORAGE IBOX3054_OST  STORAGE IBOX3054_OST - ost-6510-07-f1 10:00:88:94:71:c5:b1:c0     IBOX3054_OST                 1.0      storage           30.0            25.0
+37  OST VDI MGMT            B  10:00:88:94:71:c5:b2:00     IBOX3054_OST            None    STORAGE  ost-6510-08-f2       109.0     Native                       3  ost-6510-08-f2 10:00:88:94:71:c5:b2:00            5.0         INFINIDAT      None  None     None            3x16G                      5B: 3x16G               5A: 3x16G; 5B: 3x16G                             9   OST VDI MGMT  STORAGE IBOX3054_OST  STORAGE IBOX3054_OST - ost-6510-08-f2 10:00:88:94:71:c5:b2:00     IBOX3054_OST                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name            OST VDI MGMT
+Device_shapeText            NetApp1
+Device_shapeName    STORAGE NetApp1
+deviceType                  STORAGE
+master_shape                storage
+y_graph_level                  30.0
+x_group_offset                 25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp Device_shapeName                                       Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+38  OST VDI MGMT            A  10:00:88:94:71:31:1c:80          NetApp1            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None             2x4G                       4A: 2x4G                 4A: 2x4G; 4B: 2x4G                             9   OST VDI MGMT  STORAGE NetApp1  STORAGE NetApp1 - san27-ost 10:00:88:94:71:31:1c:80          NetApp1                 1.0      storage           30.0            25.0
+39  OST VDI MGMT            B  10:00:88:94:71:31:16:80          NetApp1            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None             2x4G                       4B: 2x4G                 4A: 2x4G; 4B: 2x4G                             9   OST VDI MGMT  STORAGE NetApp1  STORAGE NetApp1 - san28-ost 10:00:88:94:71:31:16:80          NetApp1                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name             OST VDI MGMT
+Device_shapeText            NetApp13
+Device_shapeName    STORAGE NetApp13
+deviceType                   STORAGE
+master_shape                 storage
+y_graph_level                   30.0
+x_group_offset                  25.0
+     Fabric_name Fabric_label                switchWwn Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level    Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_shapeName                                        Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+40  OST VDI MGMT            A  10:00:88:94:71:31:1c:80         NetApp13            None    STORAGE  san27-ost       109.0     Native                       2  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None    2xN16, 2xNPIV              4A: 2xN16, 2xNPIV  4A: 2xN16, 2xNPIV; 4B: 2xN16, 2xNPIV                             9   OST VDI MGMT  STORAGE NetApp13  STORAGE NetApp13 - san27-ost 10:00:88:94:71:31:1c:80         NetApp13                 1.0      storage           30.0            25.0
+41  OST VDI MGMT            B  10:00:88:94:71:31:16:80         NetApp13            None    STORAGE  san28-ost       109.0     Native                       2  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None    2xN16, 2xNPIV              4B: 2xN16, 2xNPIV  4A: 2xN16, 2xNPIV; 4B: 2xN16, 2xNPIV                             9   OST VDI MGMT  STORAGE NetApp13  STORAGE NetApp13 - san28-ost 10:00:88:94:71:31:16:80         NetApp13                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                            OST VDI MGMT
+Device_shapeText    STORAGE 50:0a:09:80:80:81:85:12
+Device_shapeName    STORAGE 50:0a:09:80:80:81:85:12
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+     Fabric_name Fabric_label                switchWwn                 Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp                 Device_shapeName                                                       Link_shapeName                 Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+42  OST VDI MGMT            A  10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:81:85:12            None    STORAGE  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:81:85:12  STORAGE 50:0a:09:80:80:81:85:12 - san27-ost 10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:81:85:12                 1.0      storage           30.0            25.0
+43  OST VDI MGMT            B  10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:81:85:12            None    STORAGE  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:81:85:12  STORAGE 50:0a:09:80:80:81:85:12 - san28-ost 10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:81:85:12                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                            OST VDI MGMT
+Device_shapeText    STORAGE 50:0a:09:80:80:b1:85:24
+Device_shapeName    STORAGE 50:0a:09:80:80:b1:85:24
+deviceType                                  STORAGE
+master_shape                                storage
+y_graph_level                                  30.0
+x_group_offset                                 25.0
+     Fabric_name Fabric_label                switchWwn                 Device_Host_Name Device_Location deviceType switchName  switchType switchMode  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp                 Device_shapeName                                                       Link_shapeName                 Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+44  OST VDI MGMT            A  10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:b1:85:24            None    STORAGE  san27-ost       109.0     Native                       1  san27-ost 10:00:88:94:71:31:1c:80            4.0            NetApp      None  None     None            1xN16                      4A: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:b1:85:24  STORAGE 50:0a:09:80:80:b1:85:24 - san27-ost 10:00:88:94:71:31:1c:80  STORAGE 50:0a:09:80:80:b1:85:24                 1.0      storage           30.0            25.0
+45  OST VDI MGMT            B  10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:b1:85:24            None    STORAGE  san28-ost       109.0     Native                       1  san28-ost 10:00:88:94:71:31:16:80            4.0            NetApp      None  None     None            1xN16                      4B: 1xN16               4A: 1xN16; 4B: 1xN16                             9   OST VDI MGMT  STORAGE 50:0a:09:80:80:b1:85:24  STORAGE 50:0a:09:80:80:b1:85:24 - san28-ost 10:00:88:94:71:31:16:80  STORAGE 50:0a:09:80:80:b1:85:24                 1.0      storage           30.0            25.0
+
+Switch groups
+
+
+Fabric_name                                               OST Cloud 152
+switchPair_id                                                       8.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                 san101-ost (DID=21)/ san102-ost (DID=21)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san101-ost 10:00:d8:1f:cc:7c:9c:40, san102-ost...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade G620
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       3.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                     san17-ost (DID=6)/ san18-ost (DID=6)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san17-ost 10:00:00:27:f8:fb:bd:f4, san18-ost 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       6.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                     san19-ost (DID=3)/ san20-ost (DID=2)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san19-ost 10:00:88:94:71:ee:39:20, san20-ost 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           1
+y_group_level                                                       100
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       7.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                   san21-ost (DID=10)/ san22-ost (DID=10)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san21-ost 10:00:88:94:71:ee:3d:a1, san22-ost 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                            OST Internal VDI
+switchPair_id                                                       1.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID        VC 10:00:00:11:0a:02:74:74/ VC 10:00:00:11:0a:...
+switchClass_mode                                                 VC, VC
+switchName_Wwn        VC 10:00:00:11:0a:02:74:74, VC 10:00:00:11:0a:...
+switchClass_weight                                                    3
+graph_level                                                          ag
+y_graph_level                                                       120
+x_group_offset                                                       20
+y_group_offset                                                        7
+x_shape_offset                                                        0
+y_shape_offset                                                        2
+master_shape                                                     vc, vc
+ModelName                                                          None
+group_level                                                           0
+y_group_level                                                       120
+
+
+Fabric_name                              OST Internal VDI
+switchPair_id                                         2.0
+Fabric_label                                            B
+quantity                                                1
+switchName_DID                                c6_B_H6C170
+switchClass_mode                                   EMB AG
+switchName_Wwn        c6_B_H6C170 10:00:00:27:f8:89:85:7b
+switchClass_weight                                      3
+graph_level                                            ag
+y_graph_level                                         120
+x_group_offset                                         20
+y_group_offset                                          7
+x_shape_offset                                          0
+y_shape_offset                                          2
+master_shape                               sw_ag_embedded
+ModelName               Brocade 5480/5481 Embedded Switch
+group_level                                             1
+y_group_level                                         127
+
+
+Fabric_name                                                OST VDI MGMT
+switchPair_id                                                       5.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID           ost-6510-07-f1 (DID=7)/ ost-6510-08-f2 (DID=8)
+switchClass_mode                                               MID, MID
+switchName_Wwn        ost-6510-07-f1 10:00:88:94:71:c5:b1:c0, ost-65...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           0
+y_group_level                                                        90
+
+
+Fabric_name                                                OST VDI MGMT
+switchPair_id                                                       4.0
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                     san27-ost (DID=1)/ san28-ost (DID=1)
+switchClass_mode                                               MID, MID
+switchName_Wwn        san27-ost 10:00:88:94:71:31:1c:80, san28-ost 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                       sw_middle, sw_middle
+ModelName                                                  Brocade 6510
+group_level                                                           1
+y_group_level                                                       100
+
+
+finish: 14/11/2022 23:30:25
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
