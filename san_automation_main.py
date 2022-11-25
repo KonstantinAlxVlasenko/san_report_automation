@@ -18,6 +18,7 @@ def main():
 
     parsed_sshow_maps_lst = san_init.switch_config_preprocessing(project_constants_lst, software_path_sr)
 
+    exit()
     extracted_configuration_lst = san_parser.system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, software_path_sr)
 
     san_analysis.system_configuration_analysis(extracted_configuration_lst, project_constants_lst)
