@@ -3,6 +3,7 @@ Module to get aggreagated connected ports statistics DataFrame
 out of portshow_aggregated_df and switchshow_ports_df DataFrame 
 """
 
+import re
 import numpy as np
 import pandas as pd
 import utilities.dataframe_operations as dfop
@@ -12,8 +13,12 @@ import utilities.dataframe_operations as dfop
 def port_statisctics_aggregated(portshow_aggregated_df):
     """Function to create aggregated statistics table by merging DataFrames"""
 
+    # to find out if there are any ports without license except qflex ports
+    portshow_aggregated_df['qflex_port_no_license'] = \
+        portshow_aggregated_df['connection_details'].str.extract('(No QFLEX Ports on Demand license)', flags = re.IGNORECASE)
+
     # count statistics for columns
-    stat_columns = ['portState', 'license', 'portPhys', 'speed', 'deviceType', 'Device_type', 'portType', 'zoning_enforcement']
+    stat_columns = ['portState', 'license', 'qflex_port_no_license', 'portPhys', 'speed', 'deviceType', 'Device_type', 'portType', 'zoning_enforcement']
     stat_lst = [count_column_statistics(portshow_aggregated_df, column) for column in stat_columns]
     # merge all statistics DataFrames in aggregated DataFrame
     port_statistics_df = stat_lst[0].copy()

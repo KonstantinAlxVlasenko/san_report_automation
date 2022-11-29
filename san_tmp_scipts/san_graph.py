@@ -54,8 +54,8 @@ import general_cmd_module as dfop
 
 
 # DataLine OST
-db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine Nord"
-db_file = r"DataLine Nord_analysis_database.db"
+db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine OST"
+db_file = r"DataLine OST_analysis_database.db"
 
 
 data_names = ['switch_params_aggregated', 'isl_aggregated', 'switch_pair', 'isl_statistics', 'NPIV_statistics']

@@ -15,7 +15,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
     """Main function to extract system configuration files"""
 
     # chassis parameters parsing
-    chassis_params_df, slot_status_df = chassis_params_extract(parsed_sshow_maps_lst, project_constants_lst)
+    chassis_params_df, slot_status_df, licenseport_df = chassis_params_extract(parsed_sshow_maps_lst, project_constants_lst)
     # maps parameters parsing
     maps_params_df = maps_params_extract(parsed_sshow_maps_lst, project_constants_lst)
     # switch parameters parsing
@@ -48,7 +48,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
     system_3par_df, port_3par_df, host_3par_df = \
             storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, software_path_sr)
 
-    extracted_configuration_lst = [chassis_params_df, slot_status_df, maps_params_df, 
+    extracted_configuration_lst = [chassis_params_df, slot_status_df, licenseport_df, maps_params_df, 
                                     switch_params_df, switchshow_ports_df,
                                     fabricshow_df, ag_principal_df, 
                                     portshow_df, sfpshow_df, portcfgshow_df,
