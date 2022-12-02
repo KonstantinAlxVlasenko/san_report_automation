@@ -1,0 +1,1 @@
+from .switch_isl_shapes import switch_isl_shapes_compilation_init

@@ -75,11 +75,11 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
     # verify if loaded data is empty and reset DataFrame if yes
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
-        _, portshow_npiv_df, *_ = data_lst
+        _, portshow_npiv_df, npiv_statistics_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-    return portshow_npiv_df
+    return portshow_npiv_df, npiv_statistics_df
 
 
 def verify_interconnect_slot_fabric(blade_module_loc_df, switch_params_aggregated_df, portshow_npiv_df):

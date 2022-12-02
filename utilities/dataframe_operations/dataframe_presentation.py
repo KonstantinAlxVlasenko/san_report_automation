@@ -2,6 +2,7 @@
 (slice, move columns). All operations on DataFrame which don't add data to existing columns, 
 create new columns with processed data or create new DataFrame"""
 
+import re
 import pandas as pd
 
 
@@ -64,9 +65,22 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     return df[seg1 + seg2 + seg3].copy()
 
 
-def verify_columns_in_dataframe(df, columns):
-    """Function to verify if columns are in DataFrame"""
-
-    if not isinstance(columns, list):
-        columns = [columns]
-    return set(columns).issubset(df.columns)
+def rename_columns(df, column_name_pattern):
+    """Function to rename df columns according to column_name_pattern.
+    If name duplication occurs '_' symbol is added until column name is unique"""
+    
+    original_columns = [column for column in df.columns if re.search(column_name_pattern, column)]
+    renamed_columns = [re.search(column_name_pattern, column).group(1) for column in original_columns]
+    validation_lst = []
+    for i, column in enumerate(renamed_columns):
+        column_name_changed = False
+        while column in validation_lst:
+            column = column + "_"
+            column_name_changed = True
+        validation_lst.append(column)
+        if column_name_changed:
+            renamed_columns[i] = column
+            
+    rename_dct = dict(zip(original_columns, renamed_columns))
+    df.rename(columns=rename_dct, inplace=True)
+    return renamed_columns

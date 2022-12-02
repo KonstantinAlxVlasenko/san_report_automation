@@ -10,3 +10,4 @@ from .statistics_counting import *
 from .value_presentation import *
 from .value_processing import *
 from .value_verification import *
+from .dataframe_details import *

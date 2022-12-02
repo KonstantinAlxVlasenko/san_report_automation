@@ -52,10 +52,6 @@ def modify_zoning(zoning_aggregated_df):
     zoning_modified_df[statistics_columns_lst] = \
     zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan*len(statistics_columns_lst))), axis=1)
     
-    # TO_REMOVE due different series len and columns number
-    # zoning_modified_df[statistics_columns_lst] = \
-    #     zoning_modified_df[statistics_columns_lst].where(mask_connected | mask_peerzone_property, pd.Series((np.nan, np.nan)), axis=1)
-
     mask_zone_name = zoning_modified_df['zone_duplicates_free'].isna()
     zoning_modified_df['zone_tag'] = zoning_modified_df['zone_duplicates_free'].where(mask_zone_name, 'zone_tag')
     # lsan_tag was added in analysis_zoning_aggregation module

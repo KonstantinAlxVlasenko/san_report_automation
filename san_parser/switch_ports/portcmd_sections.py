@@ -22,9 +22,6 @@ def port_fc_portcmd_section_extract(san_portshow_lst, pattern_dct,
     portid_wwn_lst = []
     port_index = None
     slot_port_lst = dsop.line_to_list(pattern_dct['slot_port_number'], line)
-    
-    # print(slot_port_lst)
-    
     while not re.search(r'^portshow +(\d{1,4})$',line):
         line = file.readline()
         if not line:
@@ -34,18 +31,9 @@ def port_fc_portcmd_section_extract(san_portshow_lst, pattern_dct,
     if match_dct['portshow_port_index']:
         port_index = match_dct['portshow_port_index'].group(1)
         line = portshow_section_extract(sw_portcmd_dct, connected_wwn_lst, portphys_portscn_details, port_index, pattern_dct, line, file)
-        
-        # if chassis_info_lst[1] == 'san35-ost':
-        
-        #     print(sw_portcmd_dct)
-    
     # portshow section end
     # portlogin section start                                      
     if re.match(fr'^portloginshow +{int(port_index)}$', line):
-
-        # if chassis_info_lst[1] == 'san35-ost':
-        #     print(line)
-
         line = portlogin_section_extract(portid_wwn_lst, sw_portcmd_dct, connected_wwn_lst, port_index, 
                             pattern_dct, line, file)
     # portlogin section end
@@ -62,15 +50,7 @@ def port_fc_portcmd_section_extract(san_portshow_lst, pattern_dct,
     # additional values which need to be added to the dictionary with all DISCOVERED parameters during current loop iteration
     # chassis_slot_port_values order (configname, chassis_name, port_index, slot_num, port_num, port_ids and wwns of connected devices)
     # values axtracted in manual mode. if change values order change keys order in init.xlsx "chassis_params_add" column
-    
-    # if chassis_info_lst[1] == 'san35-ost':
-    #     print(portid_wwn_lst)
-    
     for port_id, connected_wwn in portid_wwn_lst:
-
-        # if chassis_info_lst[1] == 'san35-ost':
-        #     print(port_id)
-
         chassis_slot_port_values = [*chassis_info_lst, port_index, *slot_port_lst, port_id, connected_wwn, *portphys_portscn_details]
         # adding or changing data from chassis_slot_port_values to the DISCOVERED dictionary
         dsop.update_dct(portcmd_params_add, chassis_slot_port_values, sw_portcmd_dct)
@@ -78,10 +58,6 @@ def port_fc_portcmd_section_extract(san_portshow_lst, pattern_dct,
         san_portshow_lst.append([sw_portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params])
         # for current switch chassis information removed
         sw_portcmd_lst.append([sw_portcmd_dct.get(portcmd_param) for portcmd_param in portcmd_params[3:]])
-    
-    # if chassis_info_lst[1] == 'san35-ost':
-    #     print(sw_portcmd_lst)
-    
     return line, sw_portcmd_lst
 
 
@@ -156,12 +132,7 @@ def portlogin_section_extract(portid_wwn_lst, sw_portcmd_dct, connected_wwn_lst,
         for port_id, wwn_lst in connected_wwn_lst:
             for wwn in wwn_lst:
                 connected_wwn_flat_lst.append((port_id, wwn))
-        
         portid_wwn_lst.extend(connected_wwn_flat_lst)
-
-        # for portid_wwn in connected_wwn_flat_lst:
-        #     portid_wwn_lst.append(portid_wwn)
-        # portid_wwn_lst.append()
     # adding port_id and None wwn if no device is connected or slave trunk link
     else:
         portid_wwn_lst.append((sw_portcmd_dct.get('portId'), None))

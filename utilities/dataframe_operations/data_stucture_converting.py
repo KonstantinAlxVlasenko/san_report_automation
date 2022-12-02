@@ -58,7 +58,7 @@ def list_to_dataframe(header_lst, *args):
         header_lst = [header_lst]
 
     if len(args) != len(header_lst):
-        print('Number of lists to convert to DataFrame and length of list of column titles are not equal')
+        print('\nERROR. Number of lists to convert to DataFrame and length of list of column titles are not equal')
         exit()
     return [pd.DataFrame(lst, columns=columns) for lst, columns in zip(args, header_lst)]
 
@@ -85,4 +85,16 @@ def list_from_dataframe(df, *args, drop_na=False):
     #     result = [df[column].tolist() if column in df.columns else [] for column in args]
     return result if len(args)>1 else result[0]
 
+
+def concatenate_row_values_with_headers(series, columns):
+    """Function to present each row as 
+    comma separated values 'value X index_name' for values greater then zero.
+    index_name is column from columns"""
+
+    values_lst = []
+    for column in columns:
+        if pd.notna(series[column]) and series[column] != 0:
+            values_lst.append(str(int(series[column])) + "x" + column)
+    if values_lst:
+        return ", ".join(values_lst)
 

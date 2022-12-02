@@ -82,7 +82,7 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_sr)
 
     if header_name not in report_headers_df.columns:
         print('\n')
-        print(f'{header_name} column is MISSING')
+        print(f'\nERROR. {header_name} column is MISSING')
         exit()
 
     header_sr = report_headers_df[header_name].dropna()

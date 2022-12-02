@@ -16,9 +16,9 @@ script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_autom
 os.chdir(script_dir)
 import general_cmd_module as dfop
 
-# # MTS Moscow
-# db_path = r"D:\Documents\01.CUSTOMERS\MTS\SAN Assessment\JAN2022\mts_msc\database_MTS_msk"
-# db_file = r"MTS_msk_analysis_database.db"
+# MTS Moscow
+db_path = r"D:\Documents\01.CUSTOMERS\MTS\SAN Assessment\JAN2022\mts_msc\database_MTS_msk"
+db_file = r"MTS_msk_analysis_database.db"
 
 # # MTS SPb
 # db_path = r"C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\01.CUSTOMERS\MTS\SAN Assessment\NOV2021\mts_spb\database_MTS_spb"
@@ -53,9 +53,13 @@ import general_cmd_module as dfop
 # db_file = r"DataLine Nord_analysis_database.db"
 
 
-# DataLine OST
-db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine OST"
-db_file = r"DataLine OST_analysis_database.db"
+# # DataLine OST
+# db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine OST"
+# db_file = r"DataLine OST_analysis_database.db"
+
+# # DataLine MetroCluster
+# db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN MetroCluster\NOV2022\database_DataLine MetroCluster"
+# db_file = r"DataLine MetroCluster_analysis_database.db"
 
 
 data_names = ['switch_params_aggregated', 'isl_aggregated', 'switch_pair', 'isl_statistics', 'NPIV_statistics']
@@ -77,7 +81,7 @@ switch_params_aggregated_df, isl_aggregated_df, switch_pair_df, isl_statistics_d
 # import san_graph
 san_automation_file = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_automation_info.xlsx'
 
-san_graph_details_df = pd.read_excel(san_automation_file, sheet_name='san_graph', header=2)
+san_graph_details_df = pd.read_excel(san_automation_file, sheet_name='san_graph_grid', header=2)
 
 
 
@@ -89,7 +93,7 @@ pattern_dct = {'native_speed': r'Native_(N?\d+G?)', 'speed': r'^(N?\d+G?)$', 'ls
 
 
 
-SAN_TOTAL_NAME = 'SAN_Total'
+SAN_TOTAL_NAME = 'Meta_SAN'
 
 
 """imported-fabric-id
@@ -375,43 +379,44 @@ def add_npv_link_description(san_graph_npiv_df, pattern_dct):
     link_quantity_columns = find_columns(san_graph_npiv_df, pattern_dct['link_quantity'])
     san_graph_npiv_df['trunk_string'] = san_graph_npiv_df.apply(lambda series: count_trunk_links(series, link_quantity_columns), axis=1)
     # merge each group summary strings into 'Link_description'
-    san_graph_isl_df = dfop.merge_columns(san_graph_npiv_df, summary_column='Link_description', merge_columns=['speed_string', 'trunk_string'], drop_merge_columns=True)
+    # san_graph_isl_df = dfop.merge_columns(san_graph_npiv_df, summary_column='Link_description', merge_columns=['speed_string', 'trunk_string'], drop_merge_columns=True)
+    san_graph_npiv_df = dfop.merge_columns(san_graph_npiv_df, summary_column='Link_description', merge_columns=['speed_string', 'trunk_string'], drop_merge_columns=True)
     return san_graph_npiv_df
 
 
 
 
 
-    # column groups
-    speed_columns = find_columns(san_graph_isl_df, pattern_dct['speed'])
-    ls_mode_columns = rename_columns(san_graph_isl_df, pattern_dct['ls_mode'])
-    distance_columns = rename_columns(san_graph_isl_df, pattern_dct['distance'])
-    link_quantity_columns = find_columns(san_graph_isl_df, pattern_dct['link_quantity'])
-    column_grps = [speed_columns, ls_mode_columns, distance_columns,  ['LISL']]
+    # # column groups
+    # speed_columns = find_columns(san_graph_isl_df, pattern_dct['speed'])
+    # ls_mode_columns = rename_columns(san_graph_isl_df, pattern_dct['ls_mode'])
+    # distance_columns = rename_columns(san_graph_isl_df, pattern_dct['distance'])
+    # link_quantity_columns = find_columns(san_graph_isl_df, pattern_dct['link_quantity'])
+    # column_grps = [speed_columns, ls_mode_columns, distance_columns,  ['LISL']]
     
-    summary_column_names = ['speed_string', 'ls_mode_string', 'distance_string', 'lisl_string']
+    # summary_column_names = ['speed_string', 'ls_mode_string', 'distance_string', 'lisl_string']
     
-    # create summary string with joined values for each group of columns from column_grps
-    for summary_column_name, column_grp in zip(summary_column_names, column_grps):
-        san_graph_isl_df[summary_column_name] = san_graph_isl_df.apply(lambda series: values_to_string(series, column_grp), axis=1)
+    # # create summary string with joined values for each group of columns from column_grps
+    # for summary_column_name, column_grp in zip(summary_column_names, column_grps):
+    #     san_graph_isl_df[summary_column_name] = san_graph_isl_df.apply(lambda series: values_to_string(series, column_grp), axis=1)
     
-    # create IFL summary string
-    if 'Connected_Edge_FID' in isl_aggregated_df.columns:
-        # add edge FID
-        san_graph_isl_df = dfop.dataframe_fillna(san_graph_isl_df, isl_aggregated_df, join_lst=['switchWwn', 'Connected_switchWwn'], 
-                                                 filled_lst=['Connected_Edge_FID'])
-        mask_ifl = san_graph_isl_df['IFL'] > 0
-        # FID tag + Edge FID
-        san_graph_isl_df.loc[mask_ifl, 'ifl_string'] = 'IFL FID ' + san_graph_isl_df['Connected_Edge_FID']
-        summary_column_names.append('ifl_string')
+    # # create IFL summary string
+    # if 'Connected_Edge_FID' in isl_aggregated_df.columns:
+    #     # add edge FID
+    #     san_graph_isl_df = dfop.dataframe_fillna(san_graph_isl_df, isl_aggregated_df, join_lst=['switchWwn', 'Connected_switchWwn'], 
+    #                                              filled_lst=['Connected_Edge_FID'])
+    #     mask_ifl = san_graph_isl_df['IFL'] > 0
+    #     # FID tag + Edge FID
+    #     san_graph_isl_df.loc[mask_ifl, 'ifl_string'] = 'IFL FID ' + san_graph_isl_df['Connected_Edge_FID']
+    #     summary_column_names.append('ifl_string')
     
-    san_graph_isl_df['trunk_string'] = san_graph_isl_df.apply(lambda series: count_trunk_links(series, link_quantity_columns), axis=1)
-    summary_column_names.append('trunk_string')
+    # san_graph_isl_df['trunk_string'] = san_graph_isl_df.apply(lambda series: count_trunk_links(series, link_quantity_columns), axis=1)
+    # summary_column_names.append('trunk_string')
     
     
-    # merge each group summary strings into 'Link_description'
-    san_graph_isl_df = dfop.merge_columns(san_graph_isl_df, summary_column='Link_description', merge_columns=summary_column_names, drop_merge_columns=False)
-    return san_graph_isl_df
+    # # merge each group summary strings into 'Link_description'
+    # san_graph_isl_df = dfop.merge_columns(san_graph_isl_df, summary_column='Link_description', merge_columns=summary_column_names, drop_merge_columns=False)
+    # return san_graph_isl_df
 
 
 def create_npv_shape_names(san_graph_npiv_df):
@@ -597,6 +602,9 @@ def add_isl_link_description(san_graph_isl_df, isl_aggregated_df, pattern_dct):
     return san_graph_isl_df
 
 
+
+
+
 # tst_sr = pd.Series([2, 1, 5, 0, 4, 5])
 # tst_str_sr = tst_sr.loc[tst_sr>1].astype(int).astype(str) + ' links'
 # [str(value) + 'x' + key for key, value in tst_str_sr.value_counts().to_dict().items()]
@@ -656,7 +664,7 @@ def create_san_graph_isl(isl_aggregated_df, isl_statistics_df, switch_pair_df, p
 
 
 
-def add_san_total_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_df):
+def add_meta_san_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_df):
     """Function checks if FC Router present in any fabric.
     If yes then creates summary SAN switch pairs containing all fabrics Native mode switches only.
     Then adds summary SAN switch pairs to the switch pairs of all other fabrics."""
@@ -677,7 +685,7 @@ def add_san_total_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_d
     return san_graph_sw_pair_df
 
 
-def add_san_total_graph_isl(san_graph_isl_df, san_graph_switch_df, switch_params_aggregated_df):
+def add_meta_san_graph_isl(san_graph_isl_df, san_graph_switch_df, switch_params_aggregated_df):
     """Function checks if FC Router present in any fabric.
     If yes then creates summary SAN switch isls containing all fabrics Native mode switch isls only.
     Then adds summary SAN switch isls to the switch isls of all other fabrics."""
@@ -699,9 +707,9 @@ def add_san_total_graph_isl(san_graph_isl_df, san_graph_switch_df, switch_params
 
 san_graph_switch_df = create_san_graph_switch(switch_pair_df, isl_statistics_df, san_graph_details_df)
 san_graph_sw_pair_df = create_san_graph_sw_pair(san_graph_switch_df)
-san_graph_sw_pair_df = add_san_total_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_df)
+san_graph_sw_pair_df = add_meta_san_graph_sw_pair(san_graph_sw_pair_df, switch_params_aggregated_df)
 san_graph_isl_df = create_san_graph_isl(isl_aggregated_df, isl_statistics_df, switch_pair_df, pattern_dct)
-san_graph_isl_df = add_san_total_graph_isl(san_graph_isl_df, san_graph_switch_df, switch_params_aggregated_df)
+san_graph_isl_df = add_meta_san_graph_isl(san_graph_isl_df, san_graph_switch_df, switch_params_aggregated_df)
 san_graph_npiv_df = create_san_graph_npv(npiv_statistics_df, pattern_dct)
 
 # san_graph_switch_df_b = san_graph_switch_df.copy()

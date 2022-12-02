@@ -182,7 +182,7 @@ def verify_read_data(max_title, data_names, *args,  show_status=True):
         if not isinstance(data_verified, (pd.DataFrame, pd.Series)):
             if show_status:
                 status_info('fail', max_title, len(info))
-            print('\nWrong datatype for verification')
+            print('\nERROR. Wrong datatype for verification')
             exit()
         
         first_row = data_verified.iloc[0] if isinstance(data_verified, pd.DataFrame) else data_verified

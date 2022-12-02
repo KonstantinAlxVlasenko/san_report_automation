@@ -31,9 +31,9 @@ def service_initialization():
     # create folders in SAN Assessment project folder and add it to the report_entry_sr
     create_service_folders(report_requisites_sr, max_title)
 
-    project_steps_df, io_data_names_df, report_headers_df, software_path_sr = import_service_dataframes(max_title)
+    project_steps_df, io_data_names_df, report_headers_df, software_path_sr, san_graph_grid_df, san_topology_constantants_sr = import_service_dataframes(max_title)
     project_constants_lst = [project_steps_df, max_title, io_data_names_df, report_requisites_sr, report_headers_df]
-    return project_constants_lst, software_path_sr
+    return project_constants_lst, software_path_sr, san_graph_grid_df, san_topology_constantants_sr
 
 
 def import_service_dataframes(max_title):
@@ -52,7 +52,12 @@ def import_service_dataframes(max_title):
     software_path_sr = dfop.series_from_dataframe(software_path_df, index_column='name', value_column='path')
     # DataFrame with input and output data names of each module
     io_data_names_df = sfop.dataframe_import('in_out_data_names', max_title, init_file='report_info.xlsx')
-    return project_steps_df, io_data_names_df, report_headers_df, software_path_sr
+    # constants to create SAN topology in Visio
+    san_topology_constantants_df = sfop.dataframe_import('san_topology_constants', max_title, init_file='report_info.xlsx')
+    san_topology_constantants_sr = dfop.series_from_dataframe(san_topology_constantants_df, index_column='name', value_column='value')
+    # import data with switch models, firmware and etc
+    san_graph_grid_df = sfop.dataframe_import('san_graph_grid', max_title)
+    return project_steps_df, io_data_names_df, report_headers_df, software_path_sr, san_graph_grid_df, san_topology_constantants_sr
 
 
 def import_project_steps(max_title):

@@ -111,7 +111,6 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
     # alias aggregated DataFrame
     alias_aggregated_df = alias_join_df.copy()
     alias_aggregated_df = alias_aggregated_df.reindex(columns= ['Fabric_name', 'Fabric_label', 'zone_member', 'alias_member'])
-
     return zoning_aggregated_df, alias_aggregated_df
 
 
@@ -150,7 +149,6 @@ def align_dataframe(switch_params_aggregated_df, *args, drop_columns=True):
         if drop_columns:
             df.drop(columns = [*switchparams_lst[:5], 'switch_index', 'Fabric_ID'], inplace=True)
         df_lst.append(df)
-        
     return df_lst
 
 
@@ -218,5 +216,4 @@ def lsan_state_verify(zoning_aggregated_df, alias_aggregated_df, switch_params_a
     lsan_alias_df.drop_duplicates(inplace=True)
     # add LSAN zones device status to alias_aggregated_df DataFrame
     alias_aggregated_df = alias_aggregated_df.merge(lsan_alias_df, how='left', on=lsan_alias_lst[:-1]) 
-
     return zoning_aggregated_df, alias_aggregated_df

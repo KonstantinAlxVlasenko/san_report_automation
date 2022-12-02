@@ -74,7 +74,7 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
 
     portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df, project_constants_lst)
 
-    portshow_npiv_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
+    portshow_npiv_df, npiv_statistics_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
                                                 isl_statistics_df, blade_module_loc_df, switch_pair_df, project_constants_lst)
 
     
@@ -89,3 +89,10 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
 
     errdump_aggregated_df, raslog_counter_df = \
         errdump_analysis(errdump_df, switchshow_ports_df, switch_params_aggregated_df, portshow_aggregated_df, project_constants_lst)
+
+
+    analyzed_configuration_lst = [switch_params_aggregated_df, switch_pair_df, 
+                                    isl_aggregated_df, isl_statistics_df, npiv_statistics_df, 
+                                    portshow_aggregated_df, npv_ag_connected_devices_df, fcr_xd_proxydev_df]
+
+    return analyzed_configuration_lst

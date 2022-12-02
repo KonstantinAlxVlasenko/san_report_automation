@@ -65,7 +65,7 @@ def drop_equal_columns_pairs(df, columns_main: list, columns_droped: list, dropn
     columns_droped = [column for column in columns_droped if column in check_df.columns]
     
     if len(columns_main) != len(columns_droped):
-        print('Checked and main columns quantity must be equal')
+        print('\nERROR. Checked and main columns quantity must be equal')
         exit()
 
     if dropna:

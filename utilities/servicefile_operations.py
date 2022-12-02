@@ -96,7 +96,7 @@ def regex_pattern_import(sheet_title, max_title):
         pattern_dct = dict(zip(pattern_names, patterns))
         return pattern_dct, re_pattern_df
     else:
-        print("'pattern_name' and 'pattern' columns have different length. Check data in {sheet_title} tab")
+        print("ERROR. 'pattern_name' and 'pattern' columns have different length. Check data in {sheet_title} tab")
         exit()
 
 
@@ -137,6 +137,5 @@ def dct_from_columns(sheet_title, max_title, *args, init_file = 'report_info.xls
     else:
         print('Not sufficient data to create dictionary')
         sys.exit()
-
     return dct
 

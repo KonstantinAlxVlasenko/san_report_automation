@@ -8,15 +8,6 @@ from .zoning_statistics_modify import modify_zoning
 from .zoning_statistics_notes import note_zonemember_statistics
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fillna
-
-# from common_operations_filesystem import load_data, save_data, save_xlsx_file
 
 invalid_zone_tags = ['no_initiator', 'no_target', 'no_target, no_initiator', 'no_target, several_initiators']
 
@@ -71,19 +62,6 @@ def zonemember_statistics(zoning_aggregated_df):
     zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = np.where(mask_non_effective, 'unused_zone', pd.NA)
     zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].fillna(np.nan, inplace=True)
 
-
-    # TO_REMOVE rellocated up
-    # # add list of identical (duplicated) zones to each zone in statistics
-    # zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone', 'zone_duplicated']
-    # zonemember_zonelevel_stat_df = dfop.dataframe_fillna(zonemember_zonelevel_stat_df, zoning_duplicated_df, 
-    #                                                     join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
-    # # add list of zone pairs to each zone in statistics
-    # zoning_paired_columns = ['Fabric_name', 'Fabric_label',  'cfg_type',  'zone', 
-    #                             'All_devices_multiple_fabric_label_connection', 'zone_paired']
-    # zonemember_zonelevel_stat_df = dfop.dataframe_fillna(zonemember_zonelevel_stat_df, zoning_pairs_df, 
-    #                                                     join_lst=zoning_paired_columns[:4], filled_lst=zoning_paired_columns[4:])
-
-
     # remove duplicated and paired zones list if current zone is non-working zone (duplication of working zones only required)
     # list of duplicated zones is removed but duplication tag remains  
     mask_valid_zone = ~zonemember_zonelevel_stat_df['Target_Initiator_note'].isin(['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators'])
@@ -92,17 +70,11 @@ def zonemember_statistics(zoning_aggregated_df):
                 'Zone_and_Pairzone_names_ratio', 'Zone_and_Pairzone_names_related']
     columns = [column for column in columns if column in zonemember_zonelevel_stat_df.columns]
     zonemember_zonelevel_stat_df[columns] = zonemember_zonelevel_stat_df[columns].where(mask_valid_zone)
-
-    # TO_REMOVE 
-    # zonemember_zonelevel_stat_df['zone_duplicated'] = zonemember_zonelevel_stat_df['zone_duplicated'].where(mask_valid_zone)
-    # zonemember_zonelevel_stat_df['zone_paired'] = zonemember_zonelevel_stat_df['zone_paired'].where(mask_valid_zone)
-
     # sort values
     zonemember_zonelevel_stat_df.sort_values(by=['Fabric_name', 'Fabric_label', 'cfg_type', 'cfg', 'zone'],
                                                 ascending=[True, True, False, True, True], inplace=True, ignore_index=True)
     # concatenate both statistics
     zonemember_statistics_df = pd.concat([zonemember_zonelevel_stat_df, zonemember_cfgtypelevel_stat_df], ignore_index=True)
-
     return zonemember_statistics_df, zonemember_zonelevel_stat_df
 
 
@@ -202,7 +174,6 @@ def count_zonemember_statistics(zoning_modified_deafult_df, zone=True):
     df_columns = zone_aggregated_statistics_df.columns.to_list()
     fillna_columns = [column for column in df_columns if not (('initiator' in column.lower()) or ('target' in column.lower()))]
     zone_aggregated_statistics_df[fillna_columns] = zone_aggregated_statistics_df[fillna_columns].fillna(0)
-
     return zone_aggregated_statistics_df
 
 
