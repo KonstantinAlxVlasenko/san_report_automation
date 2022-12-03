@@ -1,3 +1,6 @@
+"""Auxiliary module to group edge devices based on link description (multiple devices -> single shape) or 
+devece name (single device -> single shape"""
+
 import warnings
 
 import pandas as pd

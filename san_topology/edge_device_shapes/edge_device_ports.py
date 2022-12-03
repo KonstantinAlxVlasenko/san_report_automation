@@ -1,4 +1,6 @@
 
+"""Module to filter unique device ports"""
+
 import pandas as pd
 
 import utilities.dataframe_operations as dfop

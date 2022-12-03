@@ -7,19 +7,10 @@ import subprocess
 from datetime import date, timedelta
 
 import numpy as np
+
 import utilities.dataframe_operations as dfop
-import utilities.module_execution as meop
 import utilities.filesystem_operations as fsop
-
-
-
-# from common_operations_filesystem import create_folder, find_files
-# from common_operations_miscellaneous import reply_request, status_info
-# from common_operations_table_report import dataframe_to_report
-
-
-# S3MFT_DIR = r'C:\Users\vlasenko\OneDrive - Hewlett Packard Enterprise\Documents\02.DOCUMENTATION\Procedures\SAN Assessment\3par_stats\V5.0120\WINDOWS'
-# S3MFT = r's3mft.exe'
+import utilities.module_execution as meop
 
 
 def configs_download(ns_3par_df, pattern_dct, project_constants_lst, software_path_sr):

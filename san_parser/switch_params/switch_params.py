@@ -156,4 +156,4 @@ def switchshow_section_extract(switch_params_dct, switchshow_ports_lst, pattern_
             switchshow_ports_lst.append(switchshow_port_lst)                      
         if not line:
             break
-    return line  
+    return line

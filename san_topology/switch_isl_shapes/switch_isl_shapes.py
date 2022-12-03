@@ -38,12 +38,10 @@ def switch_isl_shapes_compilation_init(switch_params_aggregated_df, switch_pair_
         # data imported from init file (regular expression patterns) to extract values from data columns
         pattern_dct, _ = sfop.regex_pattern_import('topology_regex', max_title)
         
-
         # current operation information string
         info = f'Generating switch and switch link shapes table'
         print(info, end =" ") 
 
-        # create aggregated table by joining DataFrames
         san_graph_switch_df, san_graph_sw_pair_df, san_graph_isl_df, san_graph_npiv_df  = \
             switch_isl_shapes_compilation(switch_params_aggregated_df, switch_pair_df, 
                                             isl_aggregated_df, isl_statistics_df, npiv_statistics_df, 
@@ -61,7 +59,7 @@ def switch_isl_shapes_compilation_init(switch_params_aggregated_df, switch_pair_
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-    return san_graph_sw_pair_df, san_graph_isl_df, san_graph_npiv_df
+    return san_graph_switch_df, san_graph_sw_pair_df, san_graph_isl_df, san_graph_npiv_df
 
 
 def switch_isl_shapes_compilation(switch_params_aggregated_df, switch_pair_df, 

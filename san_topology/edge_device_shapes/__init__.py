@@ -1,0 +1,1 @@
+from .edge_device_shapes import edge_device_shapes_compilation_init

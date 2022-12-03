@@ -11,11 +11,26 @@ import pandas as pd
 import re
 import time
 from datetime import datetime
-
+import general_cmd_module as dfop
 
 script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
 # Change the current working directory
 os.chdir(script_dir)
+
+# DataLine OST
+db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine OST"
+db_file = r"DataLine OST_analysis_database.db"
+
+
+data_names = ['san_graph_sw_pair', 'san_graph_isl', 'san_graph_npiv', 'storage_shape_links', 'server_shape_links', 'san_graph_sw_pair_group', 'fabric_name_duplicated', 'fabric_name_dev']
+data_lst = dfop.read_database(db_path, db_file, *data_names)
+data_lst = dfop.verify_read_data(20, data_names, *data_lst,  show_status=True)
+
+
+
+switch_params_aggregated_df, isl_aggregated_df, switch_pair_df, isl_statistics_df, npiv_statistics_df, *_ = data_lst
+
+
 
 
 log_file = "visio_graph_log.txt"

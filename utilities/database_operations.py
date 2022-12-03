@@ -152,7 +152,9 @@ def read_database(project_constants_lst, *args):
             # revert single column DataFrame to Series
             if 'index' in df.columns:
                 df.set_index('index', inplace=True)
-                df = df.squeeze()
+                # squeezing objects with more than one value in every axis does nothing
+                # single column squeezed down, resulting in a Series
+                df = df.squeeze('columns')
             data_imported.append(df)
             status_info('ok', max_title, len(info))
         else:
@@ -196,7 +198,7 @@ def verify_read_data(max_title, data_names, *args,  show_status=True):
                 # data_verified = data_verified.iloc[0:0] # for DataFrame use empty DataFrame with column names only
             else:
                 name = data_verified.name
-                data_verified = pd.Series(name=name) # for Series use empty Series
+                data_verified = pd.Series(name=name, dtype='object') # for Series use empty Series
             if show_status:
                 status_info('empty', max_title, len(info))
         else:

@@ -1,9 +1,15 @@
+"""Module to separate storage and servers links. Servers are grouped based on link description
+(all servers with the same link description are in signle shape). Servers are grouped based on
+device name (each storage is a single shape) or link description (list of storages with the equal links description
+are single shape). If number of storages in fabric exceeds threshold then link description merging approach is applied.
+If fabric swith pairs exceeds threshold then two Visio draws is created (with switches only and switches and edge devices)"""
 
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
-from .shape_grouping import group_device_on_name, group_device_on_link_description
 
+from .shape_grouping import (group_device_on_link_description,
+                             group_device_on_name)
 
 
 def create_device_shape_links(connected_devices_df, san_graph_sw_pair_df, san_graph_grid_df, pattern_dct, san_topology_constantants_sr):

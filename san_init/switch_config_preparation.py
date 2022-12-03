@@ -18,9 +18,6 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
 
     _, max_title, _, report_requisites_sr, *_ = project_constants_lst
 
-    # report_constant_lst, report_steps_dct, _ = report_creation_info_lst
-    # *_, max_title = report_constant_lst
-
     ssave_folder = report_requisites_sr['supportsave_folder']
     parsed_sshow_folder = report_requisites_sr['parsed_sshow_folder']
     parsed_other_folder = report_requisites_sr['parsed_other_folder']
