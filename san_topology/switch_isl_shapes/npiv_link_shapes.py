@@ -15,7 +15,7 @@ def create_san_graph_npiv_links(npiv_statistics_df, pattern_dct):
         return pd.DataFrame()
     
     # extract required columns, drop summary rows
-    san_graph_npiv_df = san_graph_npiv_link_init(npiv_statistics_df, pattern_dct)
+    san_graph_npiv_df = get_san_graph_npiv_link_from_npiv_statistics(npiv_statistics_df, pattern_dct)
     #  create link description (speed)
     san_graph_npiv_df = add_npiv_link_description(san_graph_npiv_df, pattern_dct)
     # create switch, npv device and link shape names
@@ -23,7 +23,7 @@ def create_san_graph_npiv_links(npiv_statistics_df, pattern_dct):
     return san_graph_npiv_df
 
 
-def san_graph_npiv_link_init(npiv_statistics_df, pattern_dct):
+def get_san_graph_npiv_link_from_npiv_statistics(npiv_statistics_df, pattern_dct):
     """Function to initialize san_graph_npv DataFrame with links details"""
     
     san_graph_npiv_df = npiv_statistics_df.copy()

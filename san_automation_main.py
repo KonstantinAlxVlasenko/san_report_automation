@@ -23,13 +23,7 @@ def main():
     # supportsave parsing
     parsed_sshow_maps_lst = san_init.switch_config_preprocessing(project_constants_lst, software_path_sr)
 
-    # requst to continue program execution
-    print('\nSupprtsave parsing has finished.')
-    query = 'Do you want continue? (y)es/(n)o: '
-    reply = meop.reply_request(query)
-    if reply == 'n':
-        print("\nExecution successfully finished\n")
-        sys.exit()
+
 
     # extract information from configuration files
     extracted_configuration_lst = san_parser.system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, software_path_sr)

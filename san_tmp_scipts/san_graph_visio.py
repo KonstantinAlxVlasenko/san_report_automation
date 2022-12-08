@@ -11,26 +11,31 @@ import pandas as pd
 import re
 import time
 from datetime import datetime
-import general_cmd_module as dfop
+from tqdm import tqdm
+
 
 script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
 # Change the current working directory
 os.chdir(script_dir)
+import general_cmd_module as dfop
+
 
 # DataLine OST
 db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine OST"
-db_file = r"DataLine OST_analysis_database.db"
+db_file = r"DataLine OST_topology_database.db"
 
 
-data_names = ['san_graph_sw_pair', 'san_graph_isl', 'san_graph_npiv', 'storage_shape_links', 'server_shape_links', 'san_graph_sw_pair_group', 'fabric_name_duplicated', 'fabric_name_dev']
+data_names = ['san_graph_switch', 'san_graph_sw_pair', 'san_graph_isl', 'san_graph_npiv', 'storage_shape_links', 'server_shape_links', 'san_graph_sw_pair_group', 'fabric_name_duplicated', 'fabric_name_dev']
 data_lst = dfop.read_database(db_path, db_file, *data_names)
 data_lst = dfop.verify_read_data(20, data_names, *data_lst,  show_status=True)
 
 
 
-switch_params_aggregated_df, isl_aggregated_df, switch_pair_df, isl_statistics_df, npiv_statistics_df, *_ = data_lst
+san_graph_switch_df, san_graph_sw_pair_df, san_graph_isl_df, san_graph_npiv_df, storage_shape_links_df, server_shape_links_df, san_graph_sw_pair_group_df, fabric_name_duplicated_sr, fabric_name_dev_sr, *_ = data_lst
 
 
+fabric_name_duplicated_lst = fabric_name_duplicated_sr.tolist()
+fabric_name_dev_lst = fabric_name_dev_sr.tolist()
 
 
 log_file = "visio_graph_log.txt"
@@ -54,10 +59,17 @@ start_time = f'start: {current_datetime()}'
 add_log_entry(log_file, '*'*40, start_time)
 
 fabric_name_lst = list(san_graph_sw_pair_df['Fabric_name'].unique())
-fabric_labels = sorted(list(switch_pair_df['Fabric_label'].unique()))
+# fabric_labels = sorted(list(switch_pair_df['Fabric_label'].unique()))
+fabric_labels = sorted(list(san_graph_switch_df['Fabric_label'].unique()))
+
 fabric_label_colours_dct = dict(zip(fabric_labels, HPE_PALETTE))
 
 
+
+
+# for _, (idx, switch_pair_sr) in zip(tqdm(range(1, len(san_graph_sw_pair_df.index)+1), desc="Switch pairs"), san_graph_sw_pair_df.iterrows()):
+#     continue
+    # print(idx, switch_pair_sr)
 
 
 # doc = visio.ActiveDocument
@@ -95,9 +107,9 @@ visio, stn = visio_document_init(san_template_path, stencil_path, fabric_name_ls
 # add swith and vc shapes
 add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn)
 # add isl links
-add_visio_inter_switch_connections(san_graph_isl_df, visio, stn, fabric_label_colours_dct)
+add_visio_inter_switch_connections(san_graph_isl_df, visio, stn, fabric_label_colours_dct, link_type='isl')
 # add npiv links
-add_visio_inter_switch_connections(san_graph_npiv_df, visio, stn, fabric_label_colours_dct)
+add_visio_inter_switch_connections(san_graph_npiv_df, visio, stn, fabric_label_colours_dct, link_type='npiv')
 
 
 ####################
@@ -109,9 +121,9 @@ for fabric_name_duplicated, fabric_name_device in zip(fabric_name_duplicated_lst
 
 
 # add server and unknown
-add_visio_devices(server_shape_links_df, visio, stn, fabric_label_colours_dct)
+add_visio_devices(server_shape_links_df, visio, stn, fabric_label_colours_dct, device_class='server')
 # add storage and lib
-add_visio_devices(storage_shape_links_df, visio, stn, fabric_label_colours_dct)
+add_visio_devices(storage_shape_links_df, visio, stn, fabric_label_colours_dct, device_class='storage')
 # create visio groups for switch Pairs
 group_switch_pairs(san_graph_sw_pair_group_df, visio)
 
@@ -126,6 +138,27 @@ add_log_entry(log_file, '\n', finish_time, '^'*40, )
 
 ########################################################
 # Functions
+
+SWITCH_DESC = 'Switche pairs'
+ISL_DESC = 'ISL, ICL, IFL links'
+NPIV_DESC = 'NPIV links'
+STORAGE_DESC = 'Storages, storage links'
+SERVER_DESC = 'Servers, server links'
+SWITCH_GROUPS_DESC = 'Switch groups'
+LEFT_INDENT = 16
+RIGHT_INDENT = 10
+
+
+def max_desc_len():
+    return max([len(desc) for desc in (SWITCH_DESC, ISL_DESC, NPIV_DESC, STORAGE_DESC, SERVER_DESC)])
+    
+def get_desc_indented(desc_str):
+    return ' '*LEFT_INDENT + desc_str.ljust(max_desc_len())
+
+def get_ncols_num():
+    
+    max_title  = 25
+    return max_title + 80 - RIGHT_INDENT
 
 
 def visio_document_init(san_template_path, stencil_path, fabric_name_lst):
@@ -182,7 +215,13 @@ def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn):
     
     add_log_entry(log_file, '\nSwitches\n', 'Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate')
         
-    for idx, switch_pair_sr in san_graph_sw_pair_df.iterrows():
+    desc_indented = get_desc_indented(SWITCH_DESC)
+    ncols_num = get_ncols_num()
+
+    
+    for _, (idx, switch_pair_sr) in zip(tqdm(range(len(san_graph_sw_pair_df.index)), desc=desc_indented, ncols=ncols_num), san_graph_sw_pair_df.iterrows()):
+    
+    # for idx, switch_pair_sr in san_graph_sw_pair_df.iterrows():
         # add_log_entry(log_file, '\n', switch_pair_sr.to_string())
         fabric_name_current = switch_pair_sr['Fabric_name']
         # graph_level: core, edge, ag
@@ -199,7 +238,7 @@ def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn):
             x_group_current = X_START
             graph_level_prev = graph_level_current
         
-        print("X: ", x_group_current)
+        # print("X: ", x_group_current)
         
         drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn)
         # move cursor to the next switch pair location x-coordinate
@@ -230,7 +269,7 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn):
         # y_shape_offset makes fabic_label A switch shape to be located above fabic_label B switch shape
         y = switch_pair_sr['y_group_level'] + i * switch_pair_sr['y_shape_offset']
         
-        print(switch_pair_sr['Fabric_name'], shape_name, i, x, y)
+        # print(switch_pair_sr['Fabric_name'], shape_name, i, x, y)
         
         # add enrty to visio graph creation log
         log_entry = ' '.join([switch_pair_sr['Fabric_name'], shape_name, str(i), str(x), str(y)])
@@ -257,12 +296,14 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn):
             bottom_shape.Text = switch_pair_sr['switchName_DID']
 
 
+current_datetime().
 
-
-def current_datetime():
+def current_datetime(join=False):
     """Function returns current datetime in 03/11/2022 11:37:45 format"""
 
     now = datetime.now()
+    if join:
+        return now.strftime("%d%m%Y_%H%M%S")
     return now.strftime("%d/%m/%Y %H:%M:%S")
 
 
@@ -290,17 +331,30 @@ def add_log_entry(file_name, *args):
             file_object.write(log_entry)
 
 
-def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric_label_colours_dct):
+def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric_label_colours_dct, link_type):
     """Function to create inter switch shape connections"""
     
     # log entry header
     add_log_entry(log_file, '\nLinks\n', 'Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn')
     
-    for _, link_sr in inter_switch_links_df.iterrows():
+    if link_type == 'isl':
+        desc_str = ISL_DESC
+    elif link_type == 'npiv':
+        desc_str = NPIV_DESC
+    else:
+        desc_str = 'Uknown link'
+        
+    desc_indented = get_desc_indented(desc_str)
+    ncols_num = get_ncols_num()
+
+    
+    # for _, (idx, switch_pair_sr) in zip(tqdm(range(len(san_graph_sw_pair_df.index)), desc=desc_indented, ncols=ncols_num), san_graph_sw_pair_df.iterrows()):
+    
+    for _, (_, link_sr) in zip(tqdm(range(len(inter_switch_links_df.index)), desc=desc_indented, ncols=ncols_num), inter_switch_links_df.iterrows()):
         # add connection log entry
         log_entry =  ' '.join([link_sr['Fabric_name'], link_sr['shapeName'], '  ---->  ', link_sr['Connected_shapeName']])
         add_log_entry(log_file, log_entry)
-        print(link_sr['shapeName'], '  ---->  ', link_sr['Connected_shapeName'])
+        # print(link_sr['shapeName'], '  ---->  ', link_sr['Connected_shapeName'])
         
         # activate page with shapes to be connected 
         fabric_name_current = link_sr['Fabric_name']
@@ -311,7 +365,7 @@ def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric
 
 
 
-def add_visio_devices(san_links_df, visio, stn, fabric_label_colours):
+def add_visio_devices(san_links_df, visio, stn, fabric_label_colours, device_class):
     """Function to add servers, storages and libraries shapes to Visio document page and
     create connections between device shapes and switch shapes"""    
 
@@ -323,10 +377,21 @@ def add_visio_devices(san_links_df, visio, stn, fabric_label_colours):
     # find unique devices on fabric_name -> device_shapename -> device_class level
     san_device_shapes_df = find_device_shapes(san_links_df)
     
-    print(san_device_shapes_df)
+    # print(san_device_shapes_df)
     
-    for _, device_sr in san_device_shapes_df.iterrows():
-        print(device_sr)
+    if device_class == 'server':
+        desc_str = SERVER_DESC
+    elif device_class == 'storage':
+        desc_str = STORAGE_DESC
+    else:
+        desc_str = 'Uknown device'
+        
+    desc_indented = get_desc_indented(desc_str)
+    ncols_num = get_ncols_num()
+    
+    
+    for _, (_, device_sr) in zip(tqdm(range(len(san_device_shapes_df.index)), desc=desc_indented, ncols=ncols_num), san_device_shapes_df.iterrows()):
+        # print(device_sr)
         add_log_entry(log_file, '\n', '-'*30, device_sr.to_string())
         fabric_name_current = device_sr['Fabric_name']
         # activate page with shape to be dropped 
@@ -337,7 +402,7 @@ def add_visio_devices(san_links_df, visio, stn, fabric_label_colours):
             x_coordinate = X_START
             fabric_name_prev = fabric_name_current
         
-        print(fabric_name_current, device_sr['Device_shapeText'])   
+        # print(fabric_name_current, device_sr['Device_shapeText'])   
         # drop shape on active page
         drop_device_shape(device_sr, page, stn, x_coordinate)
         # filter device_shapename links for the dropped shape
@@ -346,7 +411,7 @@ def add_visio_devices(san_links_df, visio, stn, fabric_label_colours):
         shape_links_df = find_device_shape_links(device_sr, san_links_df)
         add_log_entry(log_file, shape_links_df.to_string())
         
-        print(shape_links_df)
+        # print(shape_links_df)
         for _, link_sr in shape_links_df.iterrows():
             # drop device_shapename -> switch links
             drop_connector_shape(link_sr, page, stn, fabric_label_colours, source='Device_shapeName', destination='switch_shapeName')    
@@ -463,7 +528,13 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, ):
     
     add_log_entry(log_file, '\nSwitch groups')
     
-    for idx, switch_pair_sr in san_graph_sw_pair_df.iterrows():
+    
+    desc_indented = get_desc_indented(SWITCH_GROUPS_DESC)
+    ncols_num = get_ncols_num()
+    
+    
+    
+    for _, (idx, switch_pair_sr) in zip(tqdm(range(len(san_graph_sw_pair_df.index)), desc=desc_indented, ncols=ncols_num), san_graph_sw_pair_df.iterrows()):
         add_log_entry(log_file, '\n', switch_pair_sr.to_string())
         fabric_name_current = switch_pair_sr['Fabric_name']
         # activate page with shapes to be grouped 
@@ -476,7 +547,7 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, ):
             active_window.DeselectAll()
             # select all switches from switch_pair
             for shape_name in shape_names:
-                print(shape_name)
+                # print(shape_name)
                 active_window.Select(page.Shapes.ItemU(shape_name), 2)
             # group all switches from switch_pair
             active_window.Selection.Group()

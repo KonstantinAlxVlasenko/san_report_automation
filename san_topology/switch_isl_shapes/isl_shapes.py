@@ -17,7 +17,7 @@ def create_san_graph_isl(isl_aggregated_df, isl_statistics_df, switch_pair_df, p
         return pd.DataFrame()
     
     # extract required columns, drop summary rows
-    san_graph_isl_df = san_graph_isl_init(isl_statistics_df, pattern_dct)
+    san_graph_isl_df = get_san_graph_isl_from_isl_statistics(isl_statistics_df, pattern_dct)
     # add front and translate domain connections information
     san_graph_isl_df = add_fd_xd_virtual_links(san_graph_isl_df, switch_pair_df)
     # each link represented from both switches. drop duplicated link rows
@@ -29,7 +29,7 @@ def create_san_graph_isl(isl_aggregated_df, isl_statistics_df, switch_pair_df, p
     return san_graph_isl_df
 
 
-def san_graph_isl_init(isl_statistics_df, pattern_dct):
+def get_san_graph_isl_from_isl_statistics(isl_statistics_df, pattern_dct):
     """Function to initialize san_graph_isl DataFrame with ISL details"""
     
     san_graph_isl_df = isl_statistics_df.copy()

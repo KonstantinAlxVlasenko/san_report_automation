@@ -205,9 +205,6 @@ def verify_pair_zones(zoning_aggregated_df):
     columns = ['Fabric_name', 'Fabric_label', 'cfg_type']
     mask_connected = zoning_aggregated_df['Fabric_device_status'].isin(['local', 'remote_imported'])
     zoning_cp_df = zoning_aggregated_df.loc[mask_connected].copy()
-    # TO_REMOVE
-    # # drop rows with empty PortWwwns (absent zonemembers)
-    # zoning_cp_df.dropna(subset=['PortName'], inplace=True)
 
     # drop duplicated Wwnp in each zone
     zoning_cp_df.drop_duplicates(subset=[*columns, 'zone', 'PortName'], inplace=True)
@@ -271,9 +268,6 @@ def verify_pair_zones(zoning_aggregated_df):
                         verified_grp_df.reset_index(inplace=True)
                         # if there are more then two fabric_labels in fabric_name then use fabric_label tag with the name of pair zone
                         if len(fabric_label_lst) > 2:
-
-                            # mask_zone_notna = zoning_pairs_df['zone'].notna()
-                            # verified_grp_df.loc[mask_zone_notna, 'zone'] = '(' + verified_label + ': ' + zoning_pairs_df.loc[mask_zone_notna, 'zone'] + ')'
                             mask_zone_notna = verified_grp_df['zone'].notna()
                             verified_grp_df.loc[mask_zone_notna, 'zone'] = '(' + verified_label + ': ' + verified_grp_df.loc[mask_zone_notna, 'zone'] + ')'
                         # to merge pair zones change fabric_label in verified fabric to fabric_label of fabric for which pair zones are searched for

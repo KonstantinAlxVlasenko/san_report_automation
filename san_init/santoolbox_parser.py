@@ -30,6 +30,9 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     parsed_filenames_lst = []
     # number of configuration data sets (one set is config files for one switch)
     config_set_num = len(all_files_to_parse_lst)
+
+    # 
+    santoolbox_run_status_lst = []
     
     print('\n\nPREREQUISITES 4. PROCESSING SUPPORTSAVE FILES WITH SANTOOLBOX\n')
     print(f'Parsed configuration files are moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
@@ -45,7 +48,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         print(f'[{i+1} of {config_set_num}]: {switchname}. Number of configs: {ams_maps_config_num+1} ...')
         
         # calling santoolbox_parser function which parses SHOW_SYS file with SANToolbox
-        parsed_sshow_file = santoolbox_parser(switch_files_to_parse_lst[0], path_to_move_parsed_sshow, santoolbox_path, max_title)
+        parsed_sshow_file = santoolbox_parser(switch_files_to_parse_lst[0], path_to_move_parsed_sshow, santoolbox_path, max_title, santoolbox_run_status_lst)
         parsed_sshow_filename = os.path.basename(parsed_sshow_file)
         
         # tmp lists to save parsed AMS_MAPS_LOG filenames and filepaths
@@ -54,7 +57,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         if ams_maps_config_num > 0:
             for ams_maps_config in switch_files_to_parse_lst[1]:
                 # calling santoolbox_parser function which parses AMS_MAPS_LOG file with SANToolbox
-                parsed_amsmaps_file = santoolbox_parser(ams_maps_config, path_to_move_parsed_others, santoolbox_path, max_title)
+                parsed_amsmaps_file = santoolbox_parser(ams_maps_config, path_to_move_parsed_others, santoolbox_path, max_title, santoolbox_run_status_lst)
                 # append filenames and filepaths to tmp lists
                 ams_maps_files_lst_tmp.append(parsed_amsmaps_file)
                 ams_maps_filenames_lst_tmp.append(os.path.basename(parsed_amsmaps_file))
@@ -74,10 +77,20 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         parsed_filenames_lst.append([switchname, parsed_sshow_filename, ams_maps_filenames_lst_tmp])    
     
     print('\n')
+
+    # requst to continue program execution
+    if {'ok', 'fail'}.issubset(santoolbox_run_status_lst):
+        print('Supprtsave parsing has finished.')
+        query = 'Do you want to continue? (y)es/(n)o: '
+        reply = meop.reply_request(query)
+        if reply == 'n':
+            print("\nExecution successfully finished\n")
+            sys.exit()
+
     return parsed_files_lst, parsed_filenames_lst
 
 
-def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title):
+def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title, santoolbox_run_status_lst):
     """Function to process unparsed ".SSHOW_SYS.txt.gz" and  "AMS_MAPS_LOG.txt.gz" files with SANToolbox."""
 
     # split filepath to directory and filename
@@ -111,13 +124,13 @@ def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title
         try:
             subprocess.call(f'"{santoolbox_path}" -{option} "{file}"', shell=True)
         except subprocess.CalledProcessError:
-            meop.status_info('fail', max_title, len(info))
+            santoolbox_run_status_lst.append(meop.status_info('fail', max_title, len(info)))
         except OSError:
             meop.status_info('fail', max_title, len(info))
             print('SANToolbox program is not found ')
             sys.exit()
         else:
-            meop.status_info('ok', max_title, len(info))
+            santoolbox_run_status_lst.append(meop.status_info('ok', max_title, len(info)))
         
         # moving file to destination config folder
         info = ' '*16+f'{filename} moving'

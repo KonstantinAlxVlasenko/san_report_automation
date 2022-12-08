@@ -643,7 +643,7 @@ def create_isl_shape_names(san_graph_isl_df):
                                           drop_merge_columns=False)
     return san_graph_isl_df
     
-
+#  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def create_san_graph_isl(isl_aggregated_df, isl_statistics_df, switch_pair_df, pattern_dct):
     """Function to create isl DataFrame with details required for san diagram"""
     
