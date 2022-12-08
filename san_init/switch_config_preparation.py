@@ -48,13 +48,9 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)    
-    
-    
-    print(santoolbox_run_status_lst)
-    exit()
-    
+
     # requst to continue program execution
-    if {'OK', 'FAIL'}.issubset(santoolbox_run_status_lst):
+    if any(item in santoolbox_run_status_lst for item in ('OK', 'FAIL')):
         print('Supprtsave parsing has finished.')
         query = 'Do you want to continue? (y)es/(n)o: '
         reply = meop.reply_request(query)
