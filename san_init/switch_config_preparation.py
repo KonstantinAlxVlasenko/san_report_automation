@@ -50,6 +50,9 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)    
     
     
+    print(santoolbox_run_status_lst)
+    exit()
+    
     # requst to continue program execution
     if {'OK', 'FAIL'}.issubset(santoolbox_run_status_lst):
         print('Supprtsave parsing has finished.')
