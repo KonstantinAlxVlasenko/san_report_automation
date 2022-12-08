@@ -183,18 +183,26 @@ def visio_document_init(san_template_path, stencil_path, fabric_name_lst):
 
 
 
-def set_visio_page_note(visio, project_name=None):
+def set_visio_page_note(visio, customer=None, project=None):
     """Function to add page notes: customer name, project title, fabric_name"""
 
     doc = visio.ActiveDocument
     for page in doc.Pages:
         for shape in page.Shapes:
-            if shape.Text == 'Fabric Name':
-                shape.Text = 'Фабрика ' + page.Name
-            elif project_name and shape.Text == 'Project title':
+            if shape.Text == 'Note':
+                shape.Text = page.Name
+            elif all(customer, project, shape.Text=='Customer / Project'):
+                shape.Text = customer + ' / ' + project
+            
+            elif customer and shape.Text == 'Project title':
                 shape.Text = project_name
 
-
+    doc = visio.ActiveDocument
+    for page in doc.Pages:
+        print('\n')
+        print(shape)
+        for shape in page.Shapes:
+            print(shape.Text)
 
 def activate_visio_page(visio, page_name):
     """Function activates page with page_name in Visio document
@@ -204,6 +212,9 @@ def activate_visio_page(visio, page_name):
     page = doc.Pages.ItemU(page_name)
     visio.ActiveWindow.Page = page_name
     return page       
+
+
+
 
 
 def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn):

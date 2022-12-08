@@ -78,6 +78,9 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
     
     print('\n')
 
+    print(santoolbox_run_status_lst)
+    exit()
+
     # requst to continue program execution
     if {'ok', 'fail'}.issubset(santoolbox_run_status_lst):
         print('Supprtsave parsing has finished.')
