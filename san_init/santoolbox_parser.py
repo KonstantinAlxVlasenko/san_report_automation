@@ -75,22 +75,8 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         # ams_maps_filenames_str = ', '.join(ams_maps_filenames_lst_tmp) if ams_maps_filenames_lst_tmp else None
         # parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])
         parsed_filenames_lst.append([switchname, parsed_sshow_filename, ams_maps_filenames_lst_tmp])    
-    
     print('\n')
-
-    print(santoolbox_run_status_lst)
-    exit()
-
-    # requst to continue program execution
-    if {'ok', 'fail'}.issubset(santoolbox_run_status_lst):
-        print('Supprtsave parsing has finished.')
-        query = 'Do you want to continue? (y)es/(n)o: '
-        reply = meop.reply_request(query)
-        if reply == 'n':
-            print("\nExecution successfully finished\n")
-            sys.exit()
-
-    return parsed_files_lst, parsed_filenames_lst
+    return parsed_files_lst, parsed_filenames_lst, santoolbox_run_status_lst
 
 
 def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title, santoolbox_run_status_lst):

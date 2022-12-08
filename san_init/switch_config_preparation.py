@@ -32,7 +32,7 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
     # unparsed_sshow_maps_df = dfop.list_to_dataframe(unparsed_sshow_maps_lst, max_title, columns=['sshow', 'ams_maps'])
     unparsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['sshow', 'ams_maps'], unparsed_sshow_maps_lst)
     # returns list with parsed data
-    parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst = santoolbox_process(unparsed_sshow_maps_lst, 
+    parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst, santoolbox_run_status_lst = santoolbox_process(unparsed_sshow_maps_lst, 
                                                                                 parsed_sshow_folder, parsed_other_folder, software_path_sr, max_title)
     # export parsed config filenames to DataFrame and saves it to excel file
     parsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['chassis_name', 'sshow', 'ams_maps'], parsed_sshow_maps_filename_lst)
@@ -48,6 +48,17 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)    
+    
+    
+    # requst to continue program execution
+    if {'OK', 'FAIL'}.issubset(santoolbox_run_status_lst):
+        print('Supprtsave parsing has finished.')
+        query = 'Do you want to continue? (y)es/(n)o: '
+        reply = meop.reply_request(query)
+        if reply == 'n':
+            print("\nExecution successfully finished\n")
+            sys.exit()
+    
     return parsed_sshow_maps_lst
 
 
