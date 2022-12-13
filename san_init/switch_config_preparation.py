@@ -51,7 +51,7 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
 
     # requst to continue program execution
     if any(item in santoolbox_run_status_lst for item in ('OK', 'FAIL')):
-        print('Supprtsave parsing has finished.')
+        print('\nSupprtsave parsing has finished.')
         query = 'Do you want to continue? (y)es/(n)o: '
         reply = meop.reply_request(query)
         if reply == 'n':

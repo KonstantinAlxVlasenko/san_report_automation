@@ -20,9 +20,13 @@ os.chdir(script_dir)
 import general_cmd_module as dfop
 
 
-# DataLine OST
-db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine OST"
-db_file = r"DataLine OST_topology_database.db"
+# # DataLine OST
+# db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN OST\NOV2022\database_DataLine OST"
+# db_file = r"DataLine OST_topology_database.db"
+
+# DataLine SPB
+db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN SPB\NOV2022\database_DataLine SPB"
+db_file = r"DataLine SPB_topology_database.db"
 
 
 data_names = ['san_graph_switch', 'san_graph_sw_pair', 'san_graph_isl', 'san_graph_npiv', 'storage_shape_links', 'server_shape_links', 'san_graph_sw_pair_group', 'fabric_name_duplicated', 'fabric_name_dev']
@@ -142,15 +146,22 @@ add_log_entry(log_file, '\n', finish_time, '^'*40, )
 SWITCH_DESC = 'Switche pairs'
 ISL_DESC = 'ISL, ICL, IFL links'
 NPIV_DESC = 'NPIV links'
-STORAGE_DESC = 'Storages, storage links'
-SERVER_DESC = 'Servers, server links'
+STORAGE_DESC = 'Storages'
+SERVER_DESC = 'Servers'
 SWITCH_GROUPS_DESC = 'Switch groups'
 LEFT_INDENT = 16
 RIGHT_INDENT = 10
 
 
-def max_desc_len():
-    return max([len(desc) for desc in (SWITCH_DESC, ISL_DESC, NPIV_DESC, STORAGE_DESC, SERVER_DESC)])
+def max_desc_len(san_graph_isl_df, san_graph_npiv_df):
+    
+    desc_link_lst = [desc for (desc, link_df) in zip(
+        (ISL_DESC, NPIV_DESC), 
+        (san_graph_isl_df, san_graph_npiv_df)
+        ) if not link_df.empty]
+    desc_lst = [SWITCH_DESC, STORAGE_DESC, SERVER_DESC, SWITCH_GROUPS_DESC]
+    desc_lst.extend(desc_link_lst)
+    return max([len(desc) for desc in desc_lst])
     
 def get_desc_indented(desc_str):
     return ' '*LEFT_INDENT + desc_str.ljust(max_desc_len())
@@ -189,20 +200,20 @@ def set_visio_page_note(visio, customer=None, project=None):
     doc = visio.ActiveDocument
     for page in doc.Pages:
         for shape in page.Shapes:
-            if shape.Text == 'Note':
+            if shape.Text == 'Description':
                 shape.Text = page.Name
-            elif all(customer, project, shape.Text=='Customer / Project'):
+            elif all((customer, project, shape.Text=='Customer / Project')):
                 shape.Text = customer + ' / ' + project
             
-            elif customer and shape.Text == 'Project title':
-                shape.Text = project_name
+            elif customer and shape.Text == 'Customer / Project':
+                shape.Text = customer
 
-    doc = visio.ActiveDocument
-    for page in doc.Pages:
-        print('\n')
-        print(shape)
-        for shape in page.Shapes:
-            print(shape.Text)
+    # doc = visio.ActiveDocument
+    # for page in doc.Pages:
+    #     print('\n')
+    #     print(shape)
+    #     for shape in page.Shapes:
+    #         print(shape.Text)
 
 def activate_visio_page(visio, page_name):
     """Function activates page with page_name in Visio document
@@ -307,7 +318,7 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn):
             bottom_shape.Text = switch_pair_sr['switchName_DID']
 
 
-current_datetime().
+
 
 def current_datetime(join=False):
     """Function returns current datetime in 03/11/2022 11:37:45 format"""
@@ -344,6 +355,10 @@ def add_log_entry(file_name, *args):
 
 def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric_label_colours_dct, link_type):
     """Function to create inter switch shape connections"""
+    
+    if inter_switch_links_df.empty:
+        return None
+        
     
     # log entry header
     add_log_entry(log_file, '\nLinks\n', 'Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn')

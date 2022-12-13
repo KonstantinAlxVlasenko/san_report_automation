@@ -2,9 +2,12 @@
 checking if each step is required to run"""
 
 
+from datetime import datetime
 from functools import wraps
 
 import utilities.data_structure_operations as dsop
+
+
 
 
 def status_info(status, max_title, len_info_string, shift=0):
@@ -160,7 +163,25 @@ def verify_force_run(data_names, data_lst, project_steps_df, max_title, analyzed
     return force_run
 
 
-      
+def current_datetime(drop_seconds=False, join=False):
+    """Function returns current datetime in 03/11/2022 11:37:45 format"""
+
+    now = datetime.now()
+    # w/o seconds
+    if drop_seconds:
+        if join:
+            return now.strftime("%d%m%Y_%H%M")
+        else:
+            return now.strftime("%d/%m/%Y %H:%M")
+    # with seconds
+    elif not drop_seconds:
+        if join:
+            return now.strftime("%d%m%Y_%H%M%S")
+        else:
+            return now.strftime("%d/%m/%Y %H:%M:%S")
+
+
+
 
 
 

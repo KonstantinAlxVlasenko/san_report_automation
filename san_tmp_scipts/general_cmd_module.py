@@ -9,8 +9,7 @@ import os
 import sqlite3
 import pandas as pd
 import numpy as np
-
-
+import sys
 
 
 
@@ -92,7 +91,7 @@ def verify_read_data(max_title, data_names, *args,  show_status=True):
             if show_status:
                 status_info('fail', max_title, len(info))
             print('\nWrong datatype for verification')
-            exit()
+            sys.exit()
         
         first_row = data_verified.iloc[0] if isinstance(data_verified, pd.DataFrame) else data_verified
         
@@ -161,7 +160,7 @@ def list_to_dataframe(header_lst, *args):
 
     if len(args) != len(header_lst):
         print('Number of lists to convert to DataFrame and length of list of column titles are not equal')
-        exit()
+        sys.exit()
     return [pd.DataFrame(lst, columns=columns) for lst, columns in zip(args, header_lst)]
 
 

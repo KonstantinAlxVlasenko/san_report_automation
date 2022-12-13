@@ -23,20 +23,8 @@ def dataframe_to_excel(data_frame, sheet_title, project_constants_lst,
 
     project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
 
-
     data_frame = data_frame.apply(pd.to_numeric, errors='ignore')
     
-    # # report_steps_dct for each data_name contains: export_to_excel flag, 
-    # # force_extract flag, report_type, step_info, data_description
-    # if report_steps_dct.get(sheet_title):
-    #     export_flag, _, report_type, _, df_decription = report_steps_dct.get(sheet_title)
-    # else:
-    #     info = f'DataFrame {sheet_title}'
-    #     print(info, end =" ")
-    #     status_info('unknown', max_title, len(info))
-    #     export_flag, report_type = 1, 'unknown'
-    #     df_decription = '-'
-
     report_type, export_flag, df_decription = project_steps_df.loc[sheet_title, ['report_type', 'export_to_excel', 'description']].values
 
     # check DataFrame report type to save

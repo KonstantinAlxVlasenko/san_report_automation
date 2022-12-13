@@ -12129,3 +12129,175 @@ y_group_level                                                       100
 
 finish: 06/12/2022 17:35:40
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+****************************************
+start: 08/12/2022 19:16:51
+****************************************
+start: 08/12/2022 19:19:12
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate
+SPB san14-spb 10:00:c4:f5:7c:4e:87:a4 0 35 90
+SPB san13-spb 10:00:c4:f5:7c:4e:b0:04 1 35 95
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+
+Links
+
+Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn
+
+Edge devices
+
+
+------------------------------
+Fabric_name                                                       SPB
+Device_shapeText    hw05.spb.dtln.ru, hw06.spb.dtln.ru, hw07.spb.d...
+Device_shapeName                                         SRV GROUP #1
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType switchName  switchType switchMode                switchWwn  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                      Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0         SPB            A        SRV  san13-spb        71.0     Native  10:00:c4:f5:7c:4e:b0:04                       1  san13-spb 10:00:c4:f5:7c:4e:b0:04            1.0               SRV      None             1xN8                       1A: 1xN8                 1A: 1xN8; 1B: 1xN8                             2            SPB                    1                         7  hw05.spb.dtln.ru, hw06.spb.dtln.ru, hw07.spb.dtln.ru, hw08.spb.dtln.ru, hw09.spb, hw10.spb.dtln.ru, hw11.spb.dtln.ru     SRV GROUP #1  SRV GROUP #1 - san13-spb 10:00:c4:f5:7c:4e:b0:04                 2.0          hba          160.0            30.0
+1         SPB            B        SRV  san14-spb        71.0     Native  10:00:c4:f5:7c:4e:87:a4                       1  san14-spb 10:00:c4:f5:7c:4e:87:a4            1.0               SRV      None             1xN8                       1B: 1xN8                 1A: 1xN8; 1B: 1xN8                             2            SPB                    1                         7  hw05.spb.dtln.ru, hw06.spb.dtln.ru, hw07.spb.dtln.ru, hw08.spb.dtln.ru, hw09.spb, hw10.spb.dtln.ru, hw11.spb.dtln.ru     SRV GROUP #1  SRV GROUP #1 - san14-spb 10:00:c4:f5:7c:4e:87:a4                 2.0          hba          160.0            30.0
+
+Edge devices
+
+
+------------------------------
+Fabric_name                             SPB
+Device_shapeText            HW12_DORADO_SPB
+Device_shapeName    STORAGE HW12_DORADO_SPB
+deviceType                          STORAGE
+master_shape                        storage
+y_graph_level                          30.0
+x_group_offset                         25.0
+  Fabric_name Fabric_label Device_Host_Name Device_Location deviceType switchName  switchType switchMode                switchWwn  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp         Device_shapeName                                               Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+0         SPB            A  HW12_DORADO_SPB            None    STORAGE  san13-spb        71.0     Native  10:00:c4:f5:7c:4e:b0:04                       4  san13-spb 10:00:c4:f5:7c:4e:b0:04            1.0            HUAWEI      None  None     None             4xN8                       1A: 4xN8                 1A: 4xN8; 1B: 4xN8                             2            SPB  STORAGE HW12_DORADO_SPB  STORAGE HW12_DORADO_SPB - san13-spb 10:00:c4:f5:7c:4e:b0:04  HW12_DORADO_SPB                 1.0      storage           30.0            25.0
+1         SPB            B  HW12_DORADO_SPB            None    STORAGE  san14-spb        71.0     Native  10:00:c4:f5:7c:4e:87:a4                       4  san14-spb 10:00:c4:f5:7c:4e:87:a4            1.0            HUAWEI      None  None     None             4xN8                       1B: 4xN8                 1A: 4xN8; 1B: 4xN8                             2            SPB  STORAGE HW12_DORADO_SPB  STORAGE HW12_DORADO_SPB - san14-spb 10:00:c4:f5:7c:4e:87:a4  HW12_DORADO_SPB                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                          SPB
+Device_shapeText            IBOX3363_SPB
+Device_shapeName    STORAGE IBOX3363_SPB
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+  Fabric_name Fabric_label Device_Host_Name Device_Location deviceType switchName  switchType switchMode                switchWwn  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+2         SPB            A     IBOX3363_SPB            None    STORAGE  san13-spb        71.0     Native  10:00:c4:f5:7c:4e:b0:04                       6  san13-spb 10:00:c4:f5:7c:4e:b0:04            1.0         INFINIDAT      None  None     None             6xN8                       1A: 6xN8                 1A: 6xN8; 1B: 6xN8                             2            SPB  STORAGE IBOX3363_SPB  STORAGE IBOX3363_SPB - san13-spb 10:00:c4:f5:7c:4e:b0:04     IBOX3363_SPB                 1.0      storage           30.0            25.0
+3         SPB            B     IBOX3363_SPB            None    STORAGE  san14-spb        71.0     Native  10:00:c4:f5:7c:4e:87:a4                       6  san14-spb 10:00:c4:f5:7c:4e:87:a4            1.0         INFINIDAT      None  None     None             6xN8                       1B: 6xN8                 1A: 6xN8; 1B: 6xN8                             2            SPB  STORAGE IBOX3363_SPB  STORAGE IBOX3363_SPB - san14-spb 10:00:c4:f5:7c:4e:87:a4     IBOX3363_SPB                 1.0      storage           30.0            25.0
+
+Switch groups
+
+
+Fabric_name                                                         SPB
+switchPair_id                                                         1
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                     san13-spb (DID=2)/ san14-spb (DID=2)
+switchClass_mode                                           ENTRY, ENTRY
+switchName_Wwn        san13-spb 10:00:c4:f5:7c:4e:b0:04, san14-spb 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                         sw_entry, sw_entry
+ModelName                                            Brocade 300 Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+finish: 08/12/2022 19:19:19
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+****************************************
+start: 08/12/2022 19:25:39
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate
+SPB san14-spb 10:00:c4:f5:7c:4e:87:a4 0 35 90
+SPB san13-spb 10:00:c4:f5:7c:4e:b0:04 1 35 95
+****************************************
+start: 08/12/2022 19:28:13
+
+Switches
+
+Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate
+SPB san14-spb 10:00:c4:f5:7c:4e:87:a4 0 35 90
+SPB san13-spb 10:00:c4:f5:7c:4e:b0:04 1 35 95
+
+Edge devices
+
+
+------------------------------
+Fabric_name                                                       SPB
+Device_shapeText    hw05.spb.dtln.ru, hw06.spb.dtln.ru, hw07.spb.d...
+Device_shapeName                                         SRV GROUP #1
+deviceType                                                        SRV
+master_shape                                                      hba
+y_graph_level                                                   160.0
+x_group_offset                                                   30.0
+  Fabric_name Fabric_label deviceType switchName  switchType switchMode                switchWwn  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp  Device_Group_number  Device_quantity_in_group                                                                                                      Device_shapeText Device_shapeName                                    Link_shapeName  switchClass_weight master_shape  y_graph_level  x_group_offset
+0         SPB            A        SRV  san13-spb        71.0     Native  10:00:c4:f5:7c:4e:b0:04                       1  san13-spb 10:00:c4:f5:7c:4e:b0:04            1.0               SRV      None             1xN8                       1A: 1xN8                 1A: 1xN8; 1B: 1xN8                             2            SPB                    1                         7  hw05.spb.dtln.ru, hw06.spb.dtln.ru, hw07.spb.dtln.ru, hw08.spb.dtln.ru, hw09.spb, hw10.spb.dtln.ru, hw11.spb.dtln.ru     SRV GROUP #1  SRV GROUP #1 - san13-spb 10:00:c4:f5:7c:4e:b0:04                 2.0          hba          160.0            30.0
+1         SPB            B        SRV  san14-spb        71.0     Native  10:00:c4:f5:7c:4e:87:a4                       1  san14-spb 10:00:c4:f5:7c:4e:87:a4            1.0               SRV      None             1xN8                       1B: 1xN8                 1A: 1xN8; 1B: 1xN8                             2            SPB                    1                         7  hw05.spb.dtln.ru, hw06.spb.dtln.ru, hw07.spb.dtln.ru, hw08.spb.dtln.ru, hw09.spb, hw10.spb.dtln.ru, hw11.spb.dtln.ru     SRV GROUP #1  SRV GROUP #1 - san14-spb 10:00:c4:f5:7c:4e:87:a4                 2.0          hba          160.0            30.0
+
+Edge devices
+
+
+------------------------------
+Fabric_name                             SPB
+Device_shapeText            HW12_DORADO_SPB
+Device_shapeName    STORAGE HW12_DORADO_SPB
+deviceType                          STORAGE
+master_shape                        storage
+y_graph_level                          30.0
+x_group_offset                         25.0
+  Fabric_name Fabric_label Device_Host_Name Device_Location deviceType switchName  switchType switchMode                switchWwn  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp         Device_shapeName                                               Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+0         SPB            A  HW12_DORADO_SPB            None    STORAGE  san13-spb        71.0     Native  10:00:c4:f5:7c:4e:b0:04                       4  san13-spb 10:00:c4:f5:7c:4e:b0:04            1.0            HUAWEI      None  None     None             4xN8                       1A: 4xN8                 1A: 4xN8; 1B: 4xN8                             2            SPB  STORAGE HW12_DORADO_SPB  STORAGE HW12_DORADO_SPB - san13-spb 10:00:c4:f5:7c:4e:b0:04  HW12_DORADO_SPB                 1.0      storage           30.0            25.0
+1         SPB            B  HW12_DORADO_SPB            None    STORAGE  san14-spb        71.0     Native  10:00:c4:f5:7c:4e:87:a4                       4  san14-spb 10:00:c4:f5:7c:4e:87:a4            1.0            HUAWEI      None  None     None             4xN8                       1B: 4xN8                 1A: 4xN8; 1B: 4xN8                             2            SPB  STORAGE HW12_DORADO_SPB  STORAGE HW12_DORADO_SPB - san14-spb 10:00:c4:f5:7c:4e:87:a4  HW12_DORADO_SPB                 1.0      storage           30.0            25.0
+
+
+------------------------------
+Fabric_name                          SPB
+Device_shapeText            IBOX3363_SPB
+Device_shapeName    STORAGE IBOX3363_SPB
+deviceType                       STORAGE
+master_shape                     storage
+y_graph_level                       30.0
+x_group_offset                      25.0
+  Fabric_name Fabric_label Device_Host_Name Device_Location deviceType switchName  switchType switchMode                switchWwn  Physical_link_quantity                   switch_shapeName  switchPair_id deviceSubtype_mod Enclosure  slot slot_int Link_description Link_description_sw_pair_level Link_description_fabric_name_level  Storage_lib_number_in_fabric Fabric_name_cp      Device_shapeName                                            Link_shapeName Device_shapeText  switchClass_weight master_shape  y_graph_level  x_group_offset
+2         SPB            A     IBOX3363_SPB            None    STORAGE  san13-spb        71.0     Native  10:00:c4:f5:7c:4e:b0:04                       6  san13-spb 10:00:c4:f5:7c:4e:b0:04            1.0         INFINIDAT      None  None     None             6xN8                       1A: 6xN8                 1A: 6xN8; 1B: 6xN8                             2            SPB  STORAGE IBOX3363_SPB  STORAGE IBOX3363_SPB - san13-spb 10:00:c4:f5:7c:4e:b0:04     IBOX3363_SPB                 1.0      storage           30.0            25.0
+3         SPB            B     IBOX3363_SPB            None    STORAGE  san14-spb        71.0     Native  10:00:c4:f5:7c:4e:87:a4                       6  san14-spb 10:00:c4:f5:7c:4e:87:a4            1.0         INFINIDAT      None  None     None             6xN8                       1B: 6xN8                 1A: 6xN8; 1B: 6xN8                             2            SPB  STORAGE IBOX3363_SPB  STORAGE IBOX3363_SPB - san14-spb 10:00:c4:f5:7c:4e:87:a4     IBOX3363_SPB                 1.0      storage           30.0            25.0
+
+Switch groups
+
+
+Fabric_name                                                         SPB
+switchPair_id                                                         1
+Fabric_label                                                       A, B
+quantity                                                              2
+switchName_DID                     san13-spb (DID=2)/ san14-spb (DID=2)
+switchClass_mode                                           ENTRY, ENTRY
+switchName_Wwn        san13-spb 10:00:c4:f5:7c:4e:b0:04, san14-spb 1...
+switchClass_weight                                                    2
+graph_level                                                        edge
+y_graph_level                                                        90
+x_group_offset                                                       40
+y_group_offset                                                       10
+x_shape_offset                                                        0
+y_shape_offset                                                        5
+master_shape                                         sw_entry, sw_entry
+ModelName                                            Brocade 300 Switch
+group_level                                                           0
+y_group_level                                                        90
+
+
+finish: 08/12/2022 19:28:20
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

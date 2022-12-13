@@ -1,7 +1,8 @@
 """Main module to visualize SAN topology"""
 
-from .switch_isl_shapes import switch_isl_shapes_compilation_init
 from .edge_device_shapes import edge_device_shapes_compilation_init
+from .switch_isl_shapes import switch_isl_shapes_compilation_init
+from .visio_diagram import visio_diagram_init
 
 
 def visualize_san_topology(analyzed_configuration_lst, project_constants_lst, software_path_sr, 
@@ -26,4 +27,14 @@ def visualize_san_topology(analyzed_configuration_lst, project_constants_lst, so
                 edge_device_shapes_compilation_init(portshow_aggregated_df, npv_ag_connected_devices_df, fcr_xd_proxydev_df, 
                                                     switch_pair_df, san_graph_sw_pair_df,
                                                     project_constants_lst, san_graph_grid_df, san_topology_constantants_sr)
+
+    visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df, 
+                        san_graph_isl_df, san_graph_npiv_df, 
+                        storage_shape_links_df, server_shape_links_df, 
+                        san_graph_sw_pair_group_df, 
+                        fabric_name_duplicated_sr, fabric_name_dev_sr, 
+                        project_constants_lst, 
+                        software_path_sr, san_topology_constantants_sr)
+
+
                                                                 

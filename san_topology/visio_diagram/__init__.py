@@ -1,0 +1,1 @@
+from .visio_diagram import visio_diagram_init
