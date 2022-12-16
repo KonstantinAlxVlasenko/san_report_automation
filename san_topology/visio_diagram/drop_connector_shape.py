@@ -64,7 +64,7 @@ def set_connector_attributes(connector, link_sr, fabric_label_colours_dct, link_
     
     # show lines number for connector with links quantity up to four
     if  1 < link_quantity <= 4:
-        connector.Cells("LinePattern").FormulaU = LINE_PATTERN[str(link_quantity)]
+        connector.Cells("LinePattern").FormulaU = LINE_PATTERN[str(int(link_quantity))]
     # for connector with links quantity greater than 4 show multiline connector
     elif link_quantity > 4:
         connector.Cells("LinePattern").FormulaU = LINE_PATTERN['4+']

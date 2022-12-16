@@ -1,17 +1,8 @@
 """Module to fill ISL links and switches information in portcmd DataFrame"""
 
-import pandas as pd
 import numpy as np
-# import sys
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fillna
 
 
 def switchparams_join(portshow_aggregated_df, switch_params_df, switch_params_aggregated_df):
@@ -54,7 +45,6 @@ def switchshow_join(portshow_df, switchshow_df):
     switchshow_join_df = switchshow_df.loc[:, switchshow_lst].copy()
     # portshow_df and switchshow_join_df DataFrames join operation
     portshow_aggregated_df = portshow_df.merge(switchshow_join_df, how = 'left', on = switchshow_lst[:5])
-
     return portshow_aggregated_df
 
 
@@ -95,7 +85,6 @@ def fill_isl_link(portshow_aggregated_df, isl_aggregated_df):
         # fill empty values in portshow_aggregated_df from isl_join_df
         portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, isl_join_df, 
                                                     join_lst = isl_columns_lst[:9], filled_lst = isl_columns_lst[9:])
-
     return portshow_aggregated_df
 
 
@@ -137,7 +126,6 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
                                                 join_lst = switch_join_columns_lst[:3], filled_lst = switch_join_columns_lst[3:])
     portshow_aggregated_df = switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df)
-
     return portshow_aggregated_df
 
 
@@ -163,5 +151,4 @@ def switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df):
     
     portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Device_Host_Name_tmp'], inplace=True)
     portshow_aggregated_df.drop(columns=['Device_Host_Name_tmp'], inplace=True)
-
     return portshow_aggregated_df

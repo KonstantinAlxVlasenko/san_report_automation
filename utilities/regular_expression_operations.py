@@ -74,6 +74,7 @@ def extract_key_value_from_line(global_filled_dct, pattern_dct,
         match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
         # name_value_pair_match
         if match_dct[extract_pattern_name]:
+            
             extracted_key_value = match_dct[extract_pattern_name]
             key = extracted_key_value.group(1).strip()
             value = extracted_key_value.group(2).strip()

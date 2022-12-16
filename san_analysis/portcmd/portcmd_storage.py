@@ -1,23 +1,7 @@
 """Module contains functions related to storage connections"""
 
 
-import re
-
-import numpy as np
-import pandas as pd
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import (convert_wwn, count_frequency,
-#                                          dataframe_fillna,
-#                                          extract_values_from_column,
-#                                          sequential_equality_note)
-# from common_operations_dataframe_presentation import move_column, remove_duplicates_from_column
 
 
 def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):

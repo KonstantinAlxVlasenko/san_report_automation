@@ -5,22 +5,17 @@ blade and synergy enclosures DataFrames"""
 import numpy as np
 import pandas as pd
 
+import utilities.dataframe_operations as dfop
+
 from .portcmd_aliasgroup import alias_preparation, group_name_fillna
-from .portcmd_bladesystem import blade_server_fillna, blade_vc_fillna, vc_name_fillna
-from .portcmd_storage import storage_3par_fillna
+from .portcmd_bladesystem import (blade_server_fillna, blade_vc_fillna,
+                                  vc_name_fillna)
 from .portcmd_devicetype import oui_join, type_check
 from .portcmd_gateway import verify_gateway_link, verify_trunkarea_link
 from .portcmd_nameserver import nsshow_analysis_main
-from .portcmd_switch import fill_isl_link, fill_switch_info, switchparams_join, switchshow_join
-
-import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import dataframe_fabric_labeling
+from .portcmd_storage import storage_3par_fillna
+from .portcmd_switch import (fill_isl_link, fill_switch_info,
+                             switchparams_join, switchshow_join)
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
@@ -33,7 +28,6 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     Function to fill portshow DataFrame with information from DataFrames passed as params
     and define fabric device types
     """
-
 
     # lower case WWNp
     blade_servers_df.portWwn = blade_servers_df.portWwn.str.lower()
@@ -73,10 +67,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
         portshow_aggregated_df.reindex(
             columns=[*portshow_aggregated_df.columns.tolist(), 'deviceType', 'deviceSubtype'])
     
-    
     # add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)
     portshow_aggregated_df = oui_join(portshow_aggregated_df, oui_df, switchshow_ports_df)
-    
     # preliminarily assisgn to all initiators type SRV
     mask_initiator = portshow_aggregated_df.Device_type.isin(['Physical Initiator', 'NPIV Initiator'])
     portshow_aggregated_df.loc[mask_initiator, ['deviceType', 'deviceSubtype']] = ['SRV', 'SRV']
@@ -165,25 +157,6 @@ def alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df):
                                                         default=portshow_aggregated_df['Device_type'])
     # the rest of empty F and N device type ports without npiv tags marked as Physical ports
     portshow_aggregated_df.loc[mask_device_type_na &  mask_nport_fport, 'Device_type'] = 'Physical_unknown(initiator/target)'
-                                            
-    
-    
-    # mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk', na=False)
-    # mask_fport = portshow_aggregated_df['portType'] == 'F-Port'
-    # mask_device_type_na = portshow_aggregated_df['Device_type'].isna()
-    # mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
-
-    # portshow_aggregated_df['Device_type'] = np.select(condlist=[mask_npiv & mask_fport & mask_device_type_na & mask_not_trunk, 
-    #                                                             ~mask_npiv & mask_nport_fport & mask_nport_fport & mask_not_trunk], 
-    #                                                     choicelist=['NPIV Unknown(initiator/target)', 'Physical Unknown(initiator/target)'], 
-    #                                                     default=portshow_aggregated_df['Device_type'])
-
-
-    # mask_nport_fport = portshow_aggregated_df['portType'].isin(['F-Port', 'N-Port'])
-    # mask_device_type_empty = portshow_aggregated_df['Device_type'].isna()
-    # mask_not_trunk = ~portshow_aggregated_df['portScn'].str.contains('Trunk port', na=False)
-    # portshow_aggregated_df.loc[mask_nport_fport & mask_device_type_empty & mask_not_trunk, 'Device_type'] = 'Unknown(initiator/target)'
-
     return portshow_aggregated_df
 
 
@@ -229,7 +202,6 @@ def vc_id(portshow_aggregated_df):
     portshow_aggregated_df.Virtual_Channel = portshow_aggregated_df.Virtual_Channel.apply(lambda x: int(x, 16)%4 + 2)
     # add VC to vc_id
     portshow_aggregated_df.Virtual_Channel = 'VC' + portshow_aggregated_df.Virtual_Channel.astype('str')
-
     return portshow_aggregated_df
 
 
@@ -262,7 +234,6 @@ def find_msa_port(series):
     # Controller B ports
     elif port_num in range(4,8):
         return 'B' + str(port_num-3)
-        
     return series['Device_Port']
 
 

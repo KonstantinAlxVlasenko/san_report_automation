@@ -2,8 +2,9 @@
 and add notes if some criteria are not fullfilled"""
 
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from .portcmd_device_connection_statistics_notes import add_notes
 
 unique_vc_str ='Unique_VC_quantity_'

@@ -7,18 +7,10 @@ Auxiliary to analysis_portcmd module.
 import warnings
 
 import numpy as np
-import pandas as pd
-
-from .portcmd_nameserver_split import nsshow_symb_split
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
-# from common_operations_dataframe import dataframe_fillna
+from .portcmd_nameserver_split import nsshow_symb_split
 
 
 def nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, pattern_dct):
@@ -35,7 +27,6 @@ def nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, 
     nsshow_join_df = hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct)
     # fill Device_Host_Name for libs, storages, switches
     nsshow_join_df.Device_Host_Name.fillna(nsshow_join_df.Device_Name, inplace = True)
-
     return nsshow_join_df, nsshow_unsplit_df
 
 
@@ -43,7 +34,9 @@ def fabric_labels(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df):
     """Function to label nsshow_df, nscamshow_df, fdmi_df Dataframes with Fabric labels"""
 
     # create fabric labels DataFrame
-    fabric_labels_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 'Fabric_name', 'Fabric_label']
+    fabric_labels_lst = ['configname', 'chassis_name', 'chassis_wwn', 
+                            'switchName', 'switchWwn', 
+                            'Fabric_name', 'Fabric_label']
     # fabric_labels_df = switch_params_aggregated_df.loc[:, fabric_labels_lst].copy()
 
     # copy DataFrames
@@ -57,8 +50,7 @@ def fabric_labels(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df):
         # rename switchname column for merging
         df.rename(columns = {'SwitchName': 'switchName'}, inplace = True)
         # label switches and update DataFrane in the list
-        df_lst[i] = df.merge(fabric_labels_df, how = 'left', on = fabric_labels_lst[:5])
-
+        df_lst[i] = df.merge(fabric_labels_df, how='left', on=fabric_labels_lst[:5])
     return df_lst
 
 
@@ -92,7 +84,8 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
     nsshow_lst = [
         'Fabric_name', 'Fabric_label', 'configname', 'chassis_name', 'chassis_wwn', 
         'switchName', 'switchWwn', 'PortName', 'NodeName', 'PortSymb', 'NodeSymb', 'Device_type', 
-        'LSAN', 'Slow_Drain_Device', 'Connected_through_AG', 'Real_device_behind_AG'
+        'LSAN', 'Slow_Drain_Device', 'Connected_through_AG', 'Real_device_behind_AG', 
+        'SCR', 'SCR_code', 'FC4s', 'FCoE', 'FC4 Features [FCP]', 'FC4 Features [FC-NVMe]'
         ]
 
     nsshow_join_df = nsshow_labeled_df.loc[:, nsshow_lst]
@@ -123,9 +116,6 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
 def hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct):
     """Function to fillna values in HBA related columns of local Name Server (NS) DataFrame"""
 
-    # regular expression patterns
-    # comp_keys, _, comp_dct = re_pattern_lst
-
     # fill empty cells in PortName column with values from WWNp column
     fdmi_labeled_df.PortName.fillna(fdmi_labeled_df.WWNp, inplace = True)
     # hostname_clean_comp
@@ -146,12 +136,6 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct):
     fdmi_labeled_df.loc[mask_release, 'Host_OS'] = \
         fdmi_labeled_df.loc[mask_release, 'Host_OS'].str.extract(pattern_dct['release_remove']).values
 
-    # TO_REMOVE
-    # fdmi_labeled_df.HBA_Driver = fdmi_labeled_df.HBA_Driver.str.extract(pattern_dct['perenthesis_remove'])
-    # fdmi_labeled_df.HBA_Firmware = fdmi_labeled_df.HBA_Firmware.str.extract(pattern_dct['perenthesis_remove'])
-    # fdmi_labeled_df.Host_OS = fdmi_labeled_df.Host_OS.str.extract(pattern_dct['perenthesis_remove'])
-    # fdmi_labeled_df.Host_OS = fdmi_labeled_df.Host_OS.str.extract(pattern_dct['release_remove'])
-
     # drop duplcate WWNs in labeled fdmi DataFrame
     fdmi_labeled_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)
     # set Fabric_name, Fabric_label, PortName as index in order to perform fillna
@@ -166,8 +150,4 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct):
     nsshow_join_df.reset_index(inplace = True)
 
     nsshow_join_df['Device_Host_Name'] = nsshow_join_df.Host_Name
-    
-    # TO REMOVE reloocated to main module
-    # nsshow_join_df.Device_Host_Name.fillna(nsshow_join_df.Device_Name, inplace = True)
-
     return nsshow_join_df

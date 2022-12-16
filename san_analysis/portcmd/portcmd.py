@@ -15,14 +15,14 @@ from .report_portcmd import portcmd_report_main
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
-                            switch_params_aggregated_df, isl_aggregated_df, 
-                            nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df,
-                            ag_principal_df, porttrunkarea_df, 
-                            alias_df, fdmi_df, blade_module_df, 
-                            blade_servers_df, blade_vc_df, 
-                            synergy_module_df, synergy_servers_df, 
-                            system_3par_df, port_3par_df, 
-                            project_constants_lst):
+                        switch_params_aggregated_df, isl_aggregated_df, 
+                        nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df,
+                        ag_principal_df, porttrunkarea_df, 
+                        alias_df, fdmi_df, blade_module_df, 
+                        blade_servers_df, blade_vc_df, 
+                        synergy_module_df, synergy_servers_df, 
+                        system_3par_df, port_3par_df, 
+                        project_constants_lst):
     """Main function to add connected devices information to portshow DataFrame"""
 
     # imported project constants required for module execution

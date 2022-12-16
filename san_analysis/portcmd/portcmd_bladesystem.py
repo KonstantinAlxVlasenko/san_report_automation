@@ -3,19 +3,10 @@ Module to add Blade Servers and Virtual connect information to portcmd table.
 Auxiliary to analysis_portcmd module.
 """
 
-# import re
 import numpy as np
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-
-# from common_operations_dataframe import dataframe_fillna, convert_wwn, sequential_equality_note
 
 # auxiliary lambda function to combine two columns in DataFrame
 # it combines to columns if both are not null and takes second if first is null

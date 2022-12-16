@@ -142,13 +142,21 @@ def add_isl_link_description(san_graph_isl_df, isl_aggregated_df, pattern_dct):
     for summary_column_name, column_grp in zip(summary_column_names, column_grps):
         san_graph_isl_df[summary_column_name] = san_graph_isl_df.apply(lambda series: dfop.concatenate_row_values_with_headers(series, column_grp), axis=1)
     
+    
+    print('\n')
+    print(isl_aggregated_df['Connected_Edge_FID'].notna().any())
+    
     # create IFL summary string
-    if 'Connected_Edge_FID' in isl_aggregated_df.columns:
+    if 'Connected_Edge_FID' in isl_aggregated_df.columns and isl_aggregated_df['Connected_Edge_FID'].notna().any():
         # add edge FID
         san_graph_isl_df = dfop.dataframe_fillna(san_graph_isl_df, isl_aggregated_df, join_lst=['switchWwn', 'Connected_switchWwn'], 
                                                  filled_lst=['Connected_Edge_FID'])
         mask_ifl = san_graph_isl_df['IFL'] > 0
         # FID tag + Edge FID
+
+        print('\n')
+        print(san_graph_isl_df['Connected_Edge_FID'])
+
         san_graph_isl_df.loc[mask_ifl, 'ifl_string'] = 'IFL FID ' + san_graph_isl_df['Connected_Edge_FID']
         summary_column_names.append('ifl_string')
     

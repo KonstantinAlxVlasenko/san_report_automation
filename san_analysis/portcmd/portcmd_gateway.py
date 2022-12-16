@@ -9,15 +9,6 @@ import numpy as np
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-
-# from common_operations_dataframe import (dataframe_fabric_labeling,
-#                                          dataframe_fillna, merge_columns)
 
 portcmd_columns_lst = ['configname', 'Fabric_name', 'Fabric_label',
                         'chassis_name', 'chassis_wwn',

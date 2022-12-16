@@ -9,11 +9,6 @@ Module to create tables
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
 
 def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
@@ -49,7 +44,6 @@ def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df
     
     storage_connection_statistics_report_df = connection_statistics_report(storage_connection_statistics_df, report_headers_df)
     device_connection_statistics_report_df = connection_statistics_report(device_connection_statistics_df, report_headers_df)
-    
     return servers_report_df, storage_report_df, library_report_df, hba_report_df, \
             storage_connection_df,  library_connection_df, server_connection_df, \
                 storage_connection_statistics_report_df, device_connection_statistics_report_df
@@ -65,9 +59,9 @@ def _clean_dataframe(df, mask_type,
     """
 
     # list of columns to check if they are empty
-    columns_empty = ['Медленное устройство', 'Подключено через AG', 'Real_device_behind_AG']
+    columns_empty = ['Медленное устройство', 'Подключено через AG', 'Real device behind AG']
     # list of columns to check if all values are equal
-    columns_unique = ['Режим коммутатора', 'LSAN', 'Connected_NPIV']
+    columns_unique = ['Режим коммутатора', 'LSAN', 'Connected_NPIV', 'FC4s', 'FCoE']
     # list of columns to sort DataFrame on
     columns_sort = [
         'Фабрика', 'Расположение', 'Имя устройства', 'Порт устройства', 
@@ -118,9 +112,6 @@ def _clean_dataframe(df, mask_type,
                                     ('Количество портов устройства в подсети фабрики', 'Количество портов устройства в фабриках подсети'),
                                     ('Всего портов устройства', 'Количество портов устройства в подсетях фабрики')]
     df = dfop.drop_equal_columns(df, possible_equal_column_pairs)
-
-
-
     return df
 
 

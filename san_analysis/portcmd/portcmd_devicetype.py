@@ -9,13 +9,8 @@ Auxiliary to analysis_portcmd module.
 import numpy as np
 import pandas as pd
 
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
+
 
 def oui_join(portshow_aggregated_df, oui_df, switchshow_ports_df):
     """Function to add preliminarily device type (SRV, STORAGE, LIB, SWITCH, VC) and subtype based on oui (WWNp)"""  

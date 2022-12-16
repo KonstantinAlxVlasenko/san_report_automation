@@ -8,11 +8,8 @@ import pandas as pd
 
 import utilities.dataframe_operations as dfop
 import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
 
 
 
@@ -64,13 +61,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
     device_rename_df DataFrame to apply device rename schema
     """
 
-    # report_constant_lst, *_ = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-
     _, max_title, *_ = project_constants_lst
-
-
 
     device_rename_columns = ['Fabric_name', 'Device_Host_Name', 'Group_Name', 
                                 'deviceType', 'deviceSubtype', 'Device_Host_Name_rename']
@@ -192,19 +183,6 @@ def create_device_rename_form(portshow_aggregated_df):
         manual_device_rename_df[column] = manual_device_rename_df[column].str.split(', ').apply(set).str.join(', ')
     # replace '' (empty string) with np.nan
     manual_device_rename_df = manual_device_rename_df.replace(r'^\s*$', np.NaN, regex=True)
-
-    # TO_REMOVE
-    # # fill empty values with 'no_grp_name' tag to perform Group_Name join aggregation
-    # manual_device_rename_df['Group_Name'].fillna('no_grp_name', inplace=True)
-    # manual_device_rename_df = \
-    #     manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).\
-    #         agg({'Group_Name': ', '.join, 
-    #                 'deviceType': 'first', 'deviceSubtype': 'first'})
-    # manual_device_rename_df.reset_index(inplace=True, drop=True)
-    # # remove 'no_grp_name' tag for devices with no Group_Name
-    # mask_no_grp_name = manual_device_rename_df['Group_Name'].str.contains('no_grp_name')
-    # manual_device_rename_df['Group_Name'] = manual_device_rename_df['Group_Name'].where(~mask_no_grp_name, np.nan)
-    
     # create new column for new device names manual imput 
     manual_device_rename_df['Device_Host_Name_rename'] = np.nan
     # sorting DataFrame

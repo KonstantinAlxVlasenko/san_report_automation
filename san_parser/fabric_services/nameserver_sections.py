@@ -32,7 +32,7 @@ def san_device_ports_section_extract(san_device_ports_lst, pattern_dct, line, fi
                                                     extract_pattern_name='fdmi_port', stop_pattern_name=device_stop_pattern_name, 
                                                     first_line_skip=False)
             # adding switch and port_id information to the port dictionary
-            dsop.update_dct(params_add, port_ids_lst, san_device_ports_dct)               
+            dsop.update_dct(params_add, port_ids_lst, san_device_ports_dct)           
             # appending list with only REQUIRED port info
             san_device_ports_lst.append([san_device_ports_dct.get(param) for param in params])
             switch_device_ports_lst.append([san_device_ports_dct.get(param) for param in params[6:]])
