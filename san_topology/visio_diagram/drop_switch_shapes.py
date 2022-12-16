@@ -1,11 +1,11 @@
 
-
+"""Module drops switch and VC module pairs on Visio page"""
 
 from tqdm import tqdm
 
 import utilities.database_operations as dbop
 
-from .connector_shape import drop_connector_shape, shape_font_change
+from .drop_connector_shape import drop_connector_shape, shape_font_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
 
 
@@ -52,8 +52,6 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
     the bottom shape onlyk in case if switches and vcs"""
 
     
-    default_font_size = '12 pt'
-
     # split switch_pair_srs details to build Visio graph
     master_shapes = switch_pair_sr['master_shape'].split(', ')
     shape_names = switch_pair_sr['switchName_Wwn'].split(', ')

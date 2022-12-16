@@ -1,5 +1,5 @@
 
-
+"""Module drops connectors switch->switch, switch->edge device (edge device groups) on Visio page"""
 
 import pandas as pd
 
@@ -70,9 +70,10 @@ def set_connector_attributes(connector, link_sr, fabric_label_colours_dct, link_
         connector.Cells("LinePattern").FormulaU = LINE_PATTERN['4+']
 
 
-def shape_font_change(shape, font_size):
+def shape_font_change(shape, font_size, default_font_size='12 pt'):
+    """Function modifies shape font if it differs from default"""
 
-    default_font_size = '12 pt'
+    # default_font_size = '12 pt'
     font_size = str(font_size) + ' pt'
 
     if font_size != default_font_size:

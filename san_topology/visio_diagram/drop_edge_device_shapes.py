@@ -1,3 +1,6 @@
+
+"""Module drops edge devices on Visio page"""
+
 import re
 
 from tqdm import tqdm
@@ -5,7 +8,7 @@ from tqdm import tqdm
 import utilities.database_operations as dbop
 from san_automation_constants import SERVER_DESC, STORAGE_DESC
 
-from .connector_shape import drop_connector_shape, shape_font_change
+from .drop_connector_shape import drop_connector_shape, shape_font_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
 
 

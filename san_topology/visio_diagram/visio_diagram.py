@@ -1,7 +1,7 @@
+"""Module to draw SAN topology Visio diagram"""
+
 import os
-import re
 from datetime import date
-from itertools import chain
 
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
@@ -11,10 +11,11 @@ from san_automation_constants import (HPE_PALETTE, ISL_DESC, LEFT_INDENT,
                                       SERVER_DESC, STORAGE_DESC, SWITCH_DESC,
                                       SWITCH_GROUPS_DESC)
 
-from .edge_device_shapes import add_visio_device_shapes
-from .switch_shapes import (add_visio_inter_switch_connections,
-                            add_visio_switch_shapes, group_switch_pairs)
-from .visio_document import save_visio_document, visio_document_init
+from .drop_edge_device_shapes import add_visio_device_shapes
+from .drop_switch_shapes import (add_visio_inter_switch_connections,
+                                 add_visio_switch_shapes, group_switch_pairs)
+from .visio_document import (duplicate_visio_page, save_visio_document,
+                             visio_document_init)
 
 
 def visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df, 
@@ -52,8 +53,8 @@ def visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df,
                                                     storage_shape_links_df, server_shape_links_df, 
                                                     san_graph_sw_pair_group_df, 
                                                     fabric_name_duplicated_sr, fabric_name_dev_sr, 
-                                                    project_constants_lst, software_path_sr, san_topology_constantants_sr, first_run)
-        
+                                                    project_constants_lst, software_path_sr, 
+                                                    san_topology_constantants_sr, first_run)
         # current operation information string
         info = f'Creating Visio Diagram'
         print(info, end =" ") 
@@ -64,7 +65,6 @@ def visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df,
         visio_diagram_sr = save_visio_document(visio, report_requisites_sr)
 
         if visio:
-
             # current operation information string
             info = f'Saving Visio file'
             print(info, end =" ") 
@@ -91,9 +91,12 @@ def visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df,
                             storage_shape_links_df, server_shape_links_df, 
                             san_graph_sw_pair_group_df, 
                             fabric_name_duplicated_sr, fabric_name_dev_sr, 
-                            project_constants_lst, software_path_sr, san_topology_constantants_sr, first_run):
+                            project_constants_lst, software_path_sr, 
+                            san_topology_constantants_sr, first_run):
+    """Aggregated function to create SAN topology Visio diagram"""
     
-    
+    # on the first iteration ask if Visio diagram need be created
+    # on next iterations visio_diagram force key need to be set to create diagram
     if first_run:
         print('\n')
         query = "Do you want to create Visio diagram? (y)es/(n)o: "
@@ -103,87 +106,67 @@ def visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df,
         print('\n')    
     
     # imported project constants required for module execution
-    # project_steps_df, max_title, io_data_names_df, *_ = project_constants_lst
     _, max_title, _, report_requisites_sr, *_ = project_constants_lst
-
-
-    fabric_name_duplicated_lst = fabric_name_duplicated_sr.tolist()
-    fabric_name_dev_lst = fabric_name_dev_sr.tolist()
-
+    
+    # fabic names (pages) for the Visio document
+    fabric_name_lst = list(san_graph_sw_pair_df['Fabric_name'].unique())
+    # colour codes for links
+    fabric_label_colours_dct = get_label_colours(san_graph_switch_df)
+    
+    # file for logging Visio diagram creation (one file for all diagrams during the date)
     visio_log_file = get_log_file_path(report_requisites_sr)
-
+    # add start line log for the current iteration
     start_time = f'start: {meop.current_datetime()}'
     dbop.add_log_entry(visio_log_file, '*'*40, start_time)
 
-
-    fabric_name_lst = list(san_graph_sw_pair_df['Fabric_name'].unique())
-    # fabric_labels = sorted(list(switch_pair_df['Fabric_label'].unique()))
-    fabric_labels = sorted(list(san_graph_switch_df['Fabric_label'].unique()))
-
-    
-    hpe_pallete_lst = [HPE_PALETTE[colour] for colour in ('green', 'red', 'blue', 'purple')]
-    
-    fabric_label_colours_dct = dict(zip(fabric_labels, hpe_pallete_lst))
-
-
-    
+    # get maximum length of the tqdm description string (progress bar title)
     tqdm_max_desc_len = get_tqdm_max_desc_len(san_graph_isl_df, san_graph_npiv_df)
+    # get total length of the tqdm progress bar (description string, progress data, left and right indentations)
     tqdm_ncols_num = get_tqdm_ncols_num(max_title)
     
-    visio_template_path = software_path_sr['viso_template_path']
-    visio_stencil_path = software_path_sr['viso_stencil_path']
-
-    
-    # initialize Visio Documet with template
-    visio, stn = visio_document_init(visio_template_path, visio_stencil_path, fabric_name_lst, report_requisites_sr)
+    # initialize Visio Documet with template and stencil
+    visio, stn = visio_document_init(software_path_sr, fabric_name_lst, report_requisites_sr)
     # current operation information string
     info = f'Creating Visio document template'
     print(info, end =" ")
     # after finish display status
     meop.status_info('ok', max_title, len(info))
 
-
-    # add swith and vc shapes
+    # drop swith and vc shapes
     add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn, 
                             visio_log_file, san_topology_constantants_sr, 
                             tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=SWITCH_DESC)
-    
-    
-    # add isl links
+    # drop isl links
     add_visio_inter_switch_connections(san_graph_isl_df, visio, stn, fabric_label_colours_dct,
                                         visio_log_file, san_topology_constantants_sr, 
                                         tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=ISL_DESC)
-    # add npiv links
+    # drop npiv links
     add_visio_inter_switch_connections(san_graph_npiv_df, visio, stn, fabric_label_colours_dct,
                                         visio_log_file, san_topology_constantants_sr, 
                                         tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=NPIV_DESC)
-
-    # add pages for duplicated fabric_names
-    for fabric_name_duplicated, fabric_name_device in zip(fabric_name_duplicated_lst, fabric_name_dev_lst):
-        visio.ActiveWindow.Page = fabric_name_duplicated
-        visio.ActivePage.Duplicate()
-        visio.ActivePage.Name = fabric_name_device
-
-
-    # add server and unknown
+    # duplicate pages with switch_pairs exceeding the threshold
+    clone_switch_diagram(visio, fabric_name_duplicated_sr, fabric_name_dev_sr)
+    # drop server and unknown
     add_visio_device_shapes(server_shape_links_df, visio, stn, fabric_label_colours_dct, 
                             visio_log_file, san_topology_constantants_sr,
                             tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=SERVER_DESC)
-    # add storage and lib
+    # drop storage and lib
     add_visio_device_shapes(storage_shape_links_df, visio, stn, fabric_label_colours_dct,
                             visio_log_file, san_topology_constantants_sr,
-                            tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=STORAGE_DESC) #shape_font_key='storage_font_size')
-    # create visio groups for switch Pairs
+                            tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=STORAGE_DESC)
+    # create visio groups for switch Pairs (so each switch pair presented as single shape)
     group_switch_pairs(san_graph_sw_pair_group_df, visio, visio_log_file, 
                         tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=SWITCH_GROUPS_DESC)
-
+    
+    # add finish line log for the current iteration
     finish_time = f'finish: {meop.current_datetime()}'
     dbop.add_log_entry(visio_log_file,  '\n', finish_time, '^'*40, )
-    
     return visio
 
 
 def get_log_file_path(report_requisites_sr, current_date=str(date.today())):
+    """Function returns Visio log file path in the report folder.
+    Visio log file is used for logging Visio document creation progress"""
 
     file_name = report_requisites_sr['customer_name'] + '_Visio_log_' + current_date + '.log'
     file_path = os.path.join(report_requisites_sr['today_report_folder'], file_name)
@@ -191,7 +174,9 @@ def get_log_file_path(report_requisites_sr, current_date=str(date.today())):
 
 
 def get_tqdm_max_desc_len(san_graph_isl_df, san_graph_npiv_df):
+    """Function returns maximum length of applicable tqdm description string"""
     
+    # verify if fabric contains isl or npiv links
     desc_link_lst = [desc for (desc, link_df) in zip(
         (ISL_DESC, NPIV_DESC), 
         (san_graph_isl_df, san_graph_npiv_df)
@@ -202,5 +187,37 @@ def get_tqdm_max_desc_len(san_graph_isl_df, san_graph_npiv_df):
 
 
 def get_tqdm_ncols_num(max_title):
+    """Function returns total length of the tqdm progress bar 
+    (description string, progress data, left and right indentations)"""
+
+    return max_title + MIDDLE_SPACE - RIGHT_INDENT
+
+
+def get_label_colours(san_graph_switch_df):
+    """Function returns dictionary with fabric label as keys and colour codes as values. 
+    fabric_label_colours_dct used to change link colours for fabric labels"""
+
+    # fabric labels in san
+    fabric_labels = sorted(list(san_graph_switch_df['Fabric_label'].unique()))
+    # get colour codes for fabric labels (used for link colours)
+    hpe_pallete_lst = [HPE_PALETTE[colour] for colour in ('green', 'red', 'blue', 'purple')]
+    fabric_label_colours_dct = dict(zip(fabric_labels, hpe_pallete_lst))
+    return fabric_label_colours_dct
+
+
+def clone_switch_diagram(visio, fabric_name_duplicated_sr, fabric_name_dev_sr):
+    """Function duplicate pages with switch_pairs exceeding the threshold"""
+
+    if fabric_name_duplicated_sr.empty:
+        return None
     
-    return max_title + MIDDLE_SPACE - RIGHT_INDENT      
+    # pages need to be duplicated to create diagrams with and w/o edge devices (switches only)
+    # if switch_pair threshhold exceeded
+    fabric_name_duplicated_lst = fabric_name_duplicated_sr.tolist()
+    # page names used for dupliacted pages with edge devices
+    fabric_name_dev_lst = fabric_name_dev_sr.tolist()
+
+    # add pages for duplicated fabric_names (to create page with and w/o edge devices if required)
+    for fabric_name_duplicated, fabric_name_device in zip(fabric_name_duplicated_lst, fabric_name_dev_lst):
+        duplicate_visio_page(visio, source_page=fabric_name_duplicated, destination_page=fabric_name_device)
+

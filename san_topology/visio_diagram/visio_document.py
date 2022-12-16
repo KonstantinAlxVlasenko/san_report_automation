@@ -1,4 +1,5 @@
 
+"""Module contains functions related with visio document and tqdm progress bar operations"""
 
 import os
 
@@ -9,11 +10,15 @@ import utilities.module_execution as meop
 from san_automation_constants import LEFT_INDENT
 
 
-def visio_document_init(visio_template_path, visio_stencil_path, fabric_name_lst, report_requisites_sr):
+def visio_document_init(software_path_sr, fabric_name_lst, report_requisites_sr):
     """Fuction to initialize visio document with template, 
     add fabric_name pages and add page notes: customer, project title,
     fabric_name"""
 
+    # visio template and visio stencil path
+    visio_template_path = software_path_sr['viso_template_path']
+    visio_stencil_path = software_path_sr['viso_stencil_path']
+    
     visio = win32com.client.Dispatch("Visio.Application")
     visio.Visible = 1
     visio.Documents.Add(visio_template_path)
@@ -29,7 +34,6 @@ def visio_document_init(visio_template_path, visio_stencil_path, fabric_name_lst
     set_visio_page_note(visio, customer=report_requisites_sr['customer_name'], 
                                 project=report_requisites_sr['project_title'])
     return visio, stn
-
 
 
 def set_visio_page_note(visio, customer=None, project=None):
@@ -57,7 +61,16 @@ def activate_visio_page(visio, page_name):
     return page
 
 
+def duplicate_visio_page(visio, source_page, destination_page):
+    """Function duplicates source_page and assigns destination_name to created copy"""
+    
+    visio.ActiveWindow.Page = source_page
+    visio.ActivePage.Duplicate()
+    visio.ActivePage.Name = destination_page
+
+
 def save_visio_document(visio, report_requisites_sr, current_datetime=meop.current_datetime(join=True)):
+    """Function saves Visio document to the report folder"""
 
     if not visio:
         return pd.Series(name='visio_file', dtype='object')
@@ -69,10 +82,9 @@ def save_visio_document(visio, report_requisites_sr, current_datetime=meop.curre
     return pd.Series([file_name], name='visio_file')
 
 
-
-
-    
 def get_tqdm_desc_indented(tqdm_desc_str, max_desc_len):
+    """Function returns indented tqdm description strings for progress bar"""
+
     return ' '*LEFT_INDENT + tqdm_desc_str.ljust(max_desc_len)
 
 
