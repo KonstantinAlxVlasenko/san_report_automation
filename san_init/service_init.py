@@ -121,6 +121,7 @@ def import_requisites(max_title):
         exit()
     
     report_requisites_sr['project_title'] = report_requisites_sr['project_title'].replace(' ', '_')
+    report_requisites_sr['customer_name'] = report_requisites_sr['customer_name'].replace(' ', '_')
 
     # normpath all folders in requisites and check if they exist
     for index, _ in report_requisites_sr.items():
