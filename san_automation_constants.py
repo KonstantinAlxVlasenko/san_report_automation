@@ -19,3 +19,8 @@ HPE_PALETTE = {
     'blue': 'RGB(42,210,201)', 
     'purple': 'RGB(97,71,103)'
     }
+
+# min connected device match ratio for the switch and the pair switch
+MIN_DEVICE_NUMBER_MATCH_RATIO = 0.5
+# min switch name match ratio for switch and the pair switch 
+MIN_SW_NAME_MATCH_RATIO = 0.8

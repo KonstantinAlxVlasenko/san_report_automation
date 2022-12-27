@@ -1,4 +1,3 @@
-
 """Module to change device names in portshow_aggregated DataFrame based on user input"""
 
 import os
@@ -22,15 +21,10 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, project
     
     # check if portshow_aggregated DataFrame is changed or 'device_rename' force flag is on
     force_form_update_flag = any([project_steps_df.loc[data_name, 'force_run'] for data_name in analyzed_data_names])
-    # force_form_update_flag = any([report_steps_dct[data_name][1] for data_name in analyzed_data_names])
-    
     # list of related DataFrame names requested to change
     force_change_data_lst = [data_name for data_name in analyzed_data_names[1:] if project_steps_df.loc[data_name, 'force_run']]
-    # force_change_data_lst = [data_name for data_name in analyzed_data_names[1:] if report_steps_dct[data_name][1]]
-    
     # flag to force change group name usage mode
     force_group_name_usage_update_flag = project_steps_df.loc['report_columns_usage_upd', 'force_run']
-    # force_group_name_usage_update_flag = report_steps_dct['report_columns_usage_upd'][1]
 
     # create DataFrame with devices required to change names
     device_rename_df = define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title, 
@@ -166,7 +160,7 @@ def create_device_rename_form(portshow_aggregated_df):
 
     # add quantity of ports in each 'Device_Host_Name'
     manual_device_rename_df['Port_quantity'] = \
-        manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).Connected_portWwn.transform('count')
+        manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index=False).Connected_portWwn.transform('count')
 
     manual_device_rename_df['Group_Name'].fillna('nan', inplace=True)
 

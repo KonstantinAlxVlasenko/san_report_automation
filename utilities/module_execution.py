@@ -8,8 +8,6 @@ from functools import wraps
 import utilities.data_structure_operations as dsop
 
 
-
-
 def status_info(status, max_title, len_info_string, shift=0):
     """Function to print current operation status ('OK', 'SKIP', 'FAIL')"""
 

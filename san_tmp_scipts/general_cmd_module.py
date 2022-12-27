@@ -353,3 +353,19 @@ def load_and_compare(data_before_lst, db_path, db_file, data_names):
 
     data_after_lst = read_database(db_path, db_file, *data_names)
     find_df_differences(data_before_lst, data_after_lst, data_names)
+    
+    
+def reply_request(question: str, reply_options = ['y', 'yes', 'n', 'no'], show_reply = False):
+    """Function to ask user for input until its in reply options"""
+
+    reply = None                
+    while not reply in reply_options:
+        reply = input(question).lower()
+    else:
+        if show_reply:
+            print(f'Your choice: {reply}')
+    
+    if reply in ['yes', 'no']:
+        return reply[0]
+    else:
+        return reply

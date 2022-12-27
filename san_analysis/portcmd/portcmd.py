@@ -12,6 +12,7 @@ from .portcmd_device_connection_statistics import device_connection_statistics
 from .portcmd_devicename_correction import devicename_correction_main
 from .portcmd_storage_statistics import storage_connection_statistics
 from .report_portcmd import portcmd_report_main
+from .portcmd_domain import hostname_domain_remove_main
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -40,8 +41,16 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     portshow_force_flag = False
     
     device_rename_df = data_lst[3]
+    
+
+    
     if not device_rename_df is None:
         device_rename_df, = dbop.verify_read_data(max_title, ['device_rename'], device_rename_df)
+
+    domain_name_remove_df = data_lst[4]
+    
+    if not domain_name_remove_df is None:
+        domain_name_remove_df, = dbop.verify_read_data(max_title, ['domain_name_remove'], domain_name_remove_df)
 
     nsshow_unsplit_df = pd.DataFrame()
 
@@ -77,6 +86,9 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag = \
             warning_notification(portshow_aggregated_df, switch_params_aggregated_df, 
             nsshow_unsplit_df, expected_ag_links_df, project_steps_df, max_title)        
+        # remove domain names
+        portshow_aggregated_df, domain_name_remove_df = \
+            hostname_domain_remove_main(portshow_aggregated_df, domain_name_remove_df, project_constants_lst)
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst)
@@ -97,12 +109,12 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
             storage_connection_df,  library_connection_df, server_connection_df, \
                 storage_connection_statistics_report_df, device_connection_statistics_report_df  = \
                     portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
-                                            device_connection_statistics_df, data_names[5:-2], 
+                                            device_connection_statistics_df, data_names[6:-2], 
                                             report_headers_df, report_columns_usage_sr)
         # create list with partitioned DataFrames
         data_lst = [
             portshow_aggregated_df, storage_connection_statistics_df, device_connection_statistics_df, 
-            device_rename_df, report_columns_usage_sr, 
+            device_rename_df, domain_name_remove_df, report_columns_usage_sr, 
             servers_report_df, storage_report_df, library_report_df, hba_report_df, 
             storage_connection_df, library_connection_df, server_connection_df, 
             storage_connection_statistics_report_df, device_connection_statistics_report_df
@@ -118,7 +130,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         portshow_aggregated_df, *_ = data_lst
         # add report_columns_usage_sr to report_creation_info_lst
-        project_constants_lst[5] = data_lst[4]
+        project_constants_lst[5] = data_lst[5]
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
@@ -165,7 +177,8 @@ def device_ports_per_group(portshow_aggregated_df):
     return portshow_aggregated_df
 
 
-def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, expected_ag_links_df, project_steps_df, max_title):
+def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, nsshow_unsplit_df, 
+                            expected_ag_links_df, project_steps_df, max_title):
     """Function to show WARNING notification if any deviceType is UNKNOWN,
     if any PortSymb or NodeSymb was not parsed or if new switch founded which was
     not previously discovered"""
@@ -187,7 +200,8 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         meop.status_info('warning', max_title, len(info))
         # ask if save portshow_aggregated_df
         if not portshow_export_flag:
-            reply = meop.reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            reply = meop.reply_request("\nDo you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            print('\n')
             if reply == 'y':
                 portshow_force_flag = True
     # warning if any values in PortSymb or NodeSymb were not parsed
@@ -201,7 +215,8 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         meop.status_info('warning', max_title, len(info))
         # ask if save nsshow_unsplit
         if not nsshow_unsplit_export_flag:
-            reply = meop.reply_request("Do you want to save 'nsshow_unsplit'? (y)es/(n)o: ")
+            reply = meop.reply_request("\nDo you want to save 'nsshow_unsplit'? (y)es/(n)o: ")
+            print('\n')
             if reply == 'y':
                 nsshow_unsplit_force_flag = True        
     # warning if unknown switches was found
@@ -217,7 +232,8 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         meop.status_info('warning', max_title, len(info))
         # ask if save portshow_aggregated_df
         if not portshow_export_flag and not portshow_force_flag:
-            reply = meop.reply_request("Do you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            reply = meop.reply_request("\nDo you want to save 'portshow_aggregated'? (y)es/(n)o: ")
+            print('\n')
             if reply == 'y':
                 portshow_force_flag = True
     # if any unconfirmed AG links found
@@ -228,7 +244,8 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
         meop.status_info('warning', max_title, len(info))
         # ask if save expected_ag_links_df
         if not expected_ag_links_export_flag:
-            reply = meop.reply_request("Do you want to save 'expected_ag_link'? (y)es/(n)o: ")
+            reply = meop.reply_request("\nDo you want to save 'expected_ag_link'? (y)es/(n)o: ")
+            print('\n')
             if reply == 'y':
                 expected_ag_links_force_flag = True
     return portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag

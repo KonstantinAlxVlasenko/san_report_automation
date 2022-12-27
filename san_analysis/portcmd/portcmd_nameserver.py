@@ -1,7 +1,5 @@
-"""
-Module to retrieve storage, host, HBA information from Name Server service data.
-Auxiliary to analysis_portcmd module.
-"""
+"""Module to retrieve storage, host, HBA information from Name Server service data.
+Auxiliary to analysis_portcmd module."""
 
 
 import warnings
@@ -98,18 +96,20 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
 
     # clean 'PortSymb' and 'NodeSymb' columns
     for symb_column in symb_columns:
-        # symb_clean_comp removes brackets and quotation marks
-        warnings.filterwarnings("ignore", 'This pattern is interpreted as a regular expression, and has match groups')
-        mask_symb_clean = nsshow_join_df[symb_column].str.contains(pattern_dct['symb_clean'], regex=True, na=False)
-        nsshow_join_df.loc[mask_symb_clean, symb_column] = nsshow_join_df.loc[mask_symb_clean, symb_column].str.extract(pattern_dct['symb_clean']).values
-        # replace multiple whitespaces with single whitespace
-        nsshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
-        # replace cells with one digit or whatespaces only with None value
-        nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
-        # remove whitespace from the right and left side
-        nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
-        # hostname_clean_comp
-        nsshow_join_df[symb_column].replace(to_replace = pattern_dct['hostname_clean'], value = np.nan, regex=True, inplace = True)
+        if nsshow_join_df[symb_column].notna().any():
+            # symb_clean_comp removes brackets and quotation marks
+            warnings.filterwarnings("ignore", 'This pattern is interpreted as a regular expression, and has match groups')
+            mask_symb_clean = nsshow_join_df[symb_column].str.contains(pattern_dct['symb_clean'], regex=True, na=False)
+            nsshow_join_df.loc[mask_symb_clean, symb_column] = \
+                nsshow_join_df.loc[mask_symb_clean, symb_column].str.extract(pattern_dct['symb_clean']).values
+            # replace multiple whitespaces with single whitespace
+            nsshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
+            # replace cells with one digit or whatespaces only with None value
+            nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
+            # remove whitespace from the right and left side
+            nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
+            # hostname_clean_comp
+            nsshow_join_df[symb_column].replace(to_replace = pattern_dct['hostname_clean'], value = np.nan, regex=True, inplace = True)
     return nsshow_join_df
 
 
@@ -148,6 +148,5 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct):
     nsshow_join_df[hba_columns_lst] = nsshow_join_df[hba_columns_lst].fillna(fdmi_labeled_df[hba_columns_lst])
     # reset index
     nsshow_join_df.reset_index(inplace = True)
-
     nsshow_join_df['Device_Host_Name'] = nsshow_join_df.Host_Name
     return nsshow_join_df

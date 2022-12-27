@@ -4,15 +4,7 @@
 import numpy as np
 import pandas as pd
 
-
-# import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_miscellaneous import reply_request
 
 
 def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_df, info_labels):
@@ -171,7 +163,6 @@ def manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_
         # show actual version of DataFrame after user inputs save or exit
         print(fabricshow_summary_df.loc[:, info_labels])
         print('\n')
-        
     return fabricshow_summary_df
 
 
@@ -189,5 +180,4 @@ def verify_fabric_labels(fabricshow_summary_df):
         np.where((count_labels_df[columns] == 0).any(axis=1) & count_labels_df[columns].lt(2).all(axis=1), 'WARNING', count_labels_df['Verification'])
     # put 'ok' tag if each label used once
     count_labels_df['Verification'] = np.where((count_labels_df[columns] == 1).all(axis=1), 'OK', count_labels_df['Verification'])
-
     return count_labels_df
