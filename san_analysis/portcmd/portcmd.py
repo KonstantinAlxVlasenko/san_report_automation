@@ -12,7 +12,7 @@ from .portcmd_device_connection_statistics import device_connection_statistics
 from .portcmd_devicename_correction import devicename_correction_main
 from .portcmd_storage_statistics import storage_connection_statistics
 from .report_portcmd import portcmd_report_main
-from .portcmd_domain import hostname_domain_remove_main
+from .portcmd_domain import hostname_domain_remove
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -88,7 +88,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
             nsshow_unsplit_df, expected_ag_links_df, project_steps_df, max_title)        
         # remove domain names
         portshow_aggregated_df, domain_name_remove_df = \
-            hostname_domain_remove_main(portshow_aggregated_df, domain_name_remove_df, project_constants_lst)
+            hostname_domain_remove(portshow_aggregated_df, domain_name_remove_df, project_constants_lst)
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
             devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst)
