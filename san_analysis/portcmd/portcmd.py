@@ -38,17 +38,13 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
     # flag to forcible save portshow_aggregated_df if required
-    portshow_force_flag = False
+    portshow_force_flag = False    
     
     device_rename_df = data_lst[3]
-    
-
-    
     if not device_rename_df is None:
         device_rename_df, = dbop.verify_read_data(max_title, ['device_rename'], device_rename_df)
 
     domain_name_remove_df = data_lst[4]
-    
     if not domain_name_remove_df is None:
         domain_name_remove_df, = dbop.verify_read_data(max_title, ['domain_name_remove'], domain_name_remove_df)
 
