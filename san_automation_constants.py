@@ -24,3 +24,8 @@ HPE_PALETTE = {
 MIN_DEVICE_NUMBER_MATCH_RATIO = 0.5
 # min switch name match ratio for switch and the pair switch 
 MIN_SW_NAME_MATCH_RATIO = 0.8
+
+# Direcotors with 4 slots
+DIR_4SLOTS_TYPE = [77, 121, 165, 179]
+# All directors (8-slots, 4-slots)
+DIRECTOR_TYPE = [42, 62, 77, 120, 121, 165, 166, 179, 180]

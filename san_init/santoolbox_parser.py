@@ -1,21 +1,19 @@
 import os
+import re
 import shutil
 import subprocess
 import sys
-import re
 
-# from common_operations_miscellaneous import status_info
+import pandas as pd
 
-# import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
+from san_automation_constants import LEFT_INDENT
 
+from .sshow_creation import create_sshow_file, export_single_section_file
+from .sshow_sections_stats import (count_ssave_section_files_stats,
+                                   filter_fault_sections,
+                                   update_ssave_sections_stats)
 
-# SAN Toolbox.exe path
-# santoolbox_path = os.path.normpath(r"C:\\Program Files\\SAN Toolbox - Reloaded\\SAN Toolbox.exe")
 
 def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_to_move_parsed_others, software_path_sr, max_title):    
     """Check through unparsed list for configuration data sets for each switch.  
@@ -62,7 +60,7 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
                 ams_maps_files_lst_tmp.append(parsed_amsmaps_file)
                 ams_maps_filenames_lst_tmp.append(os.path.basename(parsed_amsmaps_file))
         else:
-            info = ' '*16+'No AMS_MAPS configuration found.'
+            info = ' '*LEFT_INDENT + 'No AMS_MAPS configuration found.'
             print(info, end =" ")
             meop.status_info('skip', max_title, len(info))
             # ams_maps_files_lst_tmp.append(None)
@@ -102,13 +100,13 @@ def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title
         option = 'd'
     
     # information string
-    info = ' '*16+f'{filename} processing'
+    info = ' '*LEFT_INDENT+f'{filename} processing'
     print(info, end =" ")
     
     # after parsing filename is changed
     filename = filename.replace(ending1, ending2)
     
-    # run SANToolbox if only config file hasn't been parsed before 
+    # run SANToolbox if only config file wasn't parsed before 
     if not os.path.isfile(os.path.join(path_to_move_parsed_data, filename)):
         try:
             subprocess.call(f'"{santoolbox_path}" -{option} "{file}"', shell=True)
@@ -122,7 +120,7 @@ def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title
             santoolbox_run_status_lst.append(meop.status_info('ok', max_title, len(info)))
         
         # moving file to destination config folder
-        info = ' '*16+f'{filename} moving'
+        info = ' '*LEFT_INDENT + f'{filename} moving'
         print(info, end =" ") 
         try:
             shutil.move(os.path.join(filedir, filename),path_to_move_parsed_data)
@@ -137,5 +135,97 @@ def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title
             meop.status_info('ok', max_title, len(info))
     else:
         meop.status_info('skip', max_title, len(info))
-    
     return os.path.normpath(os.path.join(path_to_move_parsed_data, filename))
+
+
+pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
+'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
+'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
+
+
+def pull_switch_configuration_file(ssave_section_file, output_dir, max_title, export_status_lst):
+    """Function to process unparsed ".SSHOW_SYS.txt.gz" and  "AMS_MAPS_LOG.txt.gz" files with SANToolbox."""
+
+    ssave_section_filename = os.path.basename(ssave_section_file)
+
+    # information string
+    info = ' '*LEFT_INDENT+f'{ssave_section_filename} processing'
+    print(info, end =" ")
+    
+
+    if re.search(pattern_dct['sshow_sys_section'], ssave_section_filename):
+        exported_switch_config_filepath = get_sshow_filepath(ssave_section_filename, output_dir)
+        exported_switch_config_secondary_filepath = ''
+        config_type = 'sshow'
+    elif re.search(pattern_dct['amps_maps_section'], ssave_section_filename):
+        exported_switch_config_filepath = get_single_section_output_filepath(ssave_section_filename, output_dir)
+        exported_switch_config_secondary_filepath = get_single_section_output_secondary_filepath(ssave_section_filename, output_dir)
+        config_type = 'maps'
+    else:
+        meop.status_info('unknown', max_title, len(info))
+        return None
+
+    if os.path.isfile(exported_switch_config_filepath):
+        meop.status_info('skip', max_title, len(info))
+        return exported_switch_config_filepath
+    elif os.path.isfile(exported_switch_config_secondary_filepath):
+        meop.status_info('skip', max_title, len(info))
+        return exported_switch_config_secondary_filepath
+        
+
+    if config_type == 'sshow':
+
+        ssave_sections_stat_columns = ['directory_path', 'directory_name', 'section_name', 
+                                        'hight_priority', 'ssave_filename', 'count', 'size_KB',  
+                                        'ssave_basename', 'sshow_filename']
+
+        sw_ssave_sections_stat_df, ssave_sections_stat_current_df = \
+            count_ssave_section_files_stats(sshow_sys_section_file=ssave_section_file, sshow_file=exported_switch_config_filepath)
+        sw_fault_sections_df = filter_fault_sections(sw_ssave_sections_stat_df)
+        ssave_sections_stat_df = pd.DataFrame(columns=ssave_sections_stat_columns)
+        ssave_sections_stat_df = update_ssave_sections_stats(ssave_sections_stat_df, ssave_sections_stat_current_df)
+        create_sshow_file(ssave_sections_stat_current_df, exported_switch_config_filepath)
+        meop.status_info('ok', max_title, len(info))
+    elif config_type == 'maps':
+        export_single_section_file(input_filepath=ssave_section_file, output_filepath=exported_switch_config_filepath)
+        meop.status_info('ok', max_title, len(info))
+
+    return exported_switch_config_filepath
+
+
+def get_single_section_output_filepath(input_filepath, output_dir):
+    """Function takes configuration file and directory to export unpacked file as input parameters.
+    Returns output filepath which is used later to export file content"""
+    
+    # input_filename_pattern = '^(.+?.\.(\w+))\.(?:tar|txt).gz'
+    input_filename_pattern = pattern_dct['single_filename']
+    output_filename = re.search(input_filename_pattern, os.path.basename(input_filepath)).group(1) + '.txt'
+    output_filepath = os.path.normpath(os.path.join(output_dir, output_filename))
+    return output_filepath
+
+
+def get_single_section_output_secondary_filepath(input_filepath, output_dir):
+    """Function takes configuration file and directory to export unpacked file as input parameters.
+    Returns output filepath which is used later to export file content"""
+
+    output_filename = os.path.basename(input_filepath) + '.txt'
+    output_filepath = os.path.normpath(os.path.join(output_dir, output_filename))
+    return output_filepath
+
+
+def get_sshow_filepath(sshow_sys_section_file, sshow_dir):
+    """Function takes sshow_sys configuration file and
+    directory to export unpacked and concatenated sshow files as input parameters.
+    Returns output filepath which is used later to export concatenated sshow files"""
+    
+    # sshow_name_pattern = r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$'
+    sshow_name_pattern = pattern_dct['sshow_sys_section']
+    # get filename from absolute filepath
+    sshow_sys_section_filename = os.path.basename(sshow_sys_section_file)
+    # drop characters after sshow collection datetime
+    sshow_filename = re.search(sshow_name_pattern, sshow_sys_section_filename).group(1)
+    # create filename used to export sshow sections
+    sshow_filename = sshow_filename + '-SupportShow.txt'
+    # combine output directory and sshow filename
+    sshow_filepath = os.path.normpath(os.path.join(sshow_dir, sshow_filename))
+    return sshow_filepath

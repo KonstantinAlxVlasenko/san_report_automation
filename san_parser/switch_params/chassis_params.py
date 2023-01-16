@@ -2,16 +2,18 @@
 
 
 import re
-
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
-import utilities.data_structure_operations as dsop
-import utilities.module_execution as meop
-import utilities.servicefile_operations as sfop
-import utilities.regular_expression_operations as reop
 from itertools import chain
 
-director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
+import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
+import utilities.module_execution as meop
+import utilities.regular_expression_operations as reop
+import utilities.servicefile_operations as sfop
+from san_automation_constants import DIRECTOR_TYPE
+
+# TO_REMOVE used DIRECTOR_TYPE constant
+# director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
 
 def chassis_params_extract(all_config_data, project_constants_lst):
     """Function to extract chassis parameters"""
@@ -174,7 +176,7 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
             elif re.search(pattern_dct['switch_type'], line):
                 switch_type = re.match(pattern_dct['switch_type'], line).group(1).strip()
                 switch_type = int(switch_type)
-                if not switch_type in director_type:
+                if not switch_type in DIRECTOR_TYPE:
                     collected['slotshow'] = True
             # director control section end                                         
 

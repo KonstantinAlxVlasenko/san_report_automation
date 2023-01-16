@@ -1,13 +1,14 @@
 """Module to create switch shape related DataFrame. 
 Switch shape DataFrame used to drop switch pairs on Visio page"""
 
-import numpy as np
+
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
-from ..shape_details import calculate_sw_grp_y_axis_coordinate, create_shape_name
+from san_automation_constants import DIR_4SLOTS_TYPE
 
-
+from ..shape_details import (calculate_sw_grp_y_axis_coordinate,
+                             create_shape_name)
 
 # def san_graph_switch_main(switch_params_aggregated_df, switch_pair_df, isl_statistics_df, san_graph_grid_df):
 #     """Aggreagated function to create switch and switch pair shape DataFrames"""
@@ -107,11 +108,11 @@ def concat_switch_class_mode(san_graph_switch_df):
 
     san_graph_switch_df['switchClass_mode'] = san_graph_switch_df['switchClass']
     
-    # switchType for four slot directors
-    dir_4slot_type = [77, 121, 165, 179]
+    # # switchType for four slot directors
+    # dir_4slot_type = [77, 121, 165, 179]
     san_graph_switch_df['switchType'] = pd.to_numeric(san_graph_switch_df['switchType'], errors='ignore')
     # add dir_4slot
-    mask_dir_4slot = san_graph_switch_df['switchType'].isin(dir_4slot_type)
+    mask_dir_4slot = san_graph_switch_df['switchType'].isin(DIR_4SLOTS_TYPE)
     san_graph_switch_df.loc[mask_dir_4slot, 'switchClass_mode'] = san_graph_switch_df['switchClass_mode'] + '_4SLOT'
     # add AG label
     mask_ag = san_graph_switch_df['switchMode'].str.contains('Access Gateway', na=False)

@@ -6,13 +6,14 @@ from datetime import datetime
 from functools import wraps
 
 import utilities.data_structure_operations as dsop
+from san_automation_constants import MIDDLE_SPACE
 
 
 def status_info(status, max_title, len_info_string, shift=0):
     """Function to print current operation status ('OK', 'SKIP', 'FAIL')"""
 
     # information + operation status string length in terminal
-    str_length = max_title + 80 + shift
+    str_length = max_title + MIDDLE_SPACE + shift
     status = status.upper()
     # status info aligned to the right side
     # space between current operation information and status of its execution filled with dots

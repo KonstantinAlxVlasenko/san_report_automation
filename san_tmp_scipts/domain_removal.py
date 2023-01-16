@@ -33,8 +33,8 @@ portshow_aggregated_df, *_ = data_lst
 
 pattern_dct = {'domain_name': '^.+?(\.(?:[\w\d-]+\.)*(?:ru|local|com))'}
 
-domain_found_sr = portshow_aggregated_df['Device_Host_Name'].str.extract(pattern_dct['domain_name'], expand=False).dropna().drop_duplicates().reset_index(drop=True)
-domain_found_sr.rename('Domain', inplace=True)
+# domain_found_sr = portshow_aggregated_df['Device_Host_Name'].str.extract(pattern_dct['domain_name'], expand=False).dropna().drop_duplicates().reset_index(drop=True)
+# domain_found_sr.rename('Domain', inplace=True)
 
 host_domain_sr = portshow_aggregated_df['Device_Host_Name'].str.extract(pattern_dct['domain_name'], expand=False).dropna().drop_duplicates().reset_index(drop=True)
 host_domain_df = host_domain_sr.to_frame()
@@ -45,10 +45,10 @@ host_domain_df.rename(columns={'Device_Host_Name': 'Domain'}, inplace=True)
 # for i, domain in enumerate(domain_sr.tolist()):
 #     print(i, domain)
 
-domain_remove_sr = pd.Series(name='Domain', dtype='object')
+# domain_remove_sr = pd.Series(name='Domain', dtype='object')
 
-domain_found_sr.empty
-domain_remove_sr.empty
+# domain_found_sr.empty
+# domain_remove_sr.empty
 
 
 
@@ -88,8 +88,13 @@ if not host_domain_df.empty:
     
     domain_keep_lst = host_domain_df.loc[~mask_domain_to_remove, 'Domain'].to_list()
     
+    
+    host_domain_df.loc[mask_domain_to_remove].index.to_list()
+    
+    
 
 def domain_drop_status(df, hostname_column, domain_drop_status_column, status):
+    """Function adds domain remove status to the domain_drop_status_column"""
     
     mask_hostname_filled = df[hostname_column].notna()
     mask_domain_status_na = df[domain_drop_status_column].isna()
@@ -98,7 +103,6 @@ def domain_drop_status(df, hostname_column, domain_drop_status_column, status):
     
 def remove_domain(df, domain_drop_lst, domain_keep_lst, hostname_column):
     """Function remove domain names from domain_lst in the hostname_column"""
-    
     
     # copy column with hostnames to the new column
     hostname_domain_column = hostname_column + '_w_domain'
@@ -131,6 +135,7 @@ def remove_domain(df, domain_drop_lst, domain_keep_lst, hostname_column):
     # with domains which are not in the domain_lst
     df[hostname_column].fillna(df[hostname_domain_column], inplace=True)
     domain_drop_status(df, hostname_column, domain_drop_status_column, status='domain_absent')
+    
     # remove tmp column
     df.drop(columns=['Domain_free_tmp'], inplace=True)
 

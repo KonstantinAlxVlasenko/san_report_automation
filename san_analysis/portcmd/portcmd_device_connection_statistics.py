@@ -76,12 +76,6 @@ def prior_preparation(portshow_aggregated_df):
         device_port_quantity_str + portshow_aggregated_modified_df['Fabric_label']
     
     # director or switch connection tag
-    
-    # TO_REMOVE mask director implemente throught the switch Class
-    # portshow_aggregated_modified_df['switchType'] = portshow_aggregated_modified_df['switchType'].astype('float64').astype('int64')
-    # director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
-    # mask_director = portshow_aggregated_modified_df['switchType'].isin(director_type)
-    
     mask_director = portshow_aggregated_modified_df['switchClass'] == 'DIR'
     portshow_aggregated_modified_df['switchType'] = np.where(mask_director, director_str , switch_str)
     portshow_aggregated_modified_df['switchType'] = portshow_aggregated_modified_df['Fabric_label'] + '_' + portshow_aggregated_modified_df['switchType']
@@ -92,7 +86,6 @@ def prior_preparation(portshow_aggregated_df):
     # fabric_labels used in Fabric
     fabric_labels_lst = portshow_aggregated_modified_df['Fabric_label'].unique()
     fabric_labels_lst.sort()
-    
     return portshow_aggregated_modified_df, fabric_labels_lst
 
 
@@ -129,7 +122,6 @@ def unique_values(portshow_modified_df):
     portshow_port_speed_unique_df = portshow_modified_df[unique_slot_columns].copy()
     portshow_port_speed_unique_df.drop_duplicates(inplace=True)
     portshow_port_speed_unique_df['Unique_port_speed'] = unique_port_speed_str +  portshow_port_speed_unique_df['Fabric_label']
-    
     return portshow_vc_unique_df, portshow_switch_unique_df, portshow_slot_unique_df, portshow_port_speed_unique_df
 
 
@@ -168,7 +160,6 @@ def count_device_connection_statistics(portshow_aggregated_modified_df, portshow
                                                                                     left_index=True, right_index=True)
     # rename 'All' column
     device_connection_statistics_df.rename(columns={'All': device_port_quantity_str + 'Total'}, inplace=True)                
-
     return device_connection_statistics_df
 
 
@@ -193,5 +184,4 @@ def count_device_bandwidth(device_connection_statistics_df, portshow_aggregated_
     # add bandwidth info to device_connection_statistics_df DataFrame
     device_connection_statistics_df = device_connection_statistics_df.merge(bandwidth_pivot_df, how='left', left_index=True, right_index=True)
     device_connection_statistics_df.reset_index(inplace=True)
-
     return device_connection_statistics_df

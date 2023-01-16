@@ -1,0 +1,119 @@
+
+import os
+import re
+import pandas as pd
+import numpy as np
+
+
+
+SSHOW_SECTIONS = ['SSHOW_PLOG', 'SSHOW_OS', 'SSHOW_EX', 'SSHOW_FABRIC', 
+                  'SSHOW_CONDB', 'SSHOW_SERVICE', 'SSHOW_SEC', 'SSHOW_NET', 
+                  'SSHOW_SYS', 'SSHOW_FICON', 'SSHOW_ISWITCH', 'SSHOW_ISCSI', 'SSHOW_ASICDB', 
+                  'SSHOW_AG', 'SSHOW_FCIP', 'SSHOW_APM', 'SSHOW_AMP', 'SSHOW_CRYP', 'SSHOW_PORT', 
+                  'SSHOW_DCEHSL', 'SSHOW_FLOW']
+
+
+HIGH_PRIORITY_SECTIONS = ['SSHOW_EX', 'SSHOW_FABRIC', 'SSHOW_SERVICE', 
+                          'SSHOW_SEC', 'SSHOW_SYS', 'SSHOW_AG', 'SSHOW_PORT']
+
+
+
+
+
+
+pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
+
+
+
+
+    
+
+def get_sshow_basename(sshow_sys_section_file):
+    """Function returns SSHOW_SYS file basename (hostname, ip address, S#cp) 
+    to filter sshow files related to sshow_sys_section_file (same S#cp)"""
+    
+    # sshow_name_pattern = r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$'
+    sshow_name_pattern = pattern_dct['sshow_sys_section']
+    # get filename from absolute filepath
+    sshow_sys_section_filename = os.path.basename(sshow_sys_section_file)
+    # extract hostname, ip address, S#cp
+    sshow_section_basename = re.search(sshow_name_pattern, sshow_sys_section_filename).group(2)
+    return sshow_section_basename
+    
+
+def count_ssave_section_files_stats(sshow_sys_section_file, sshow_filepath):
+    """Function counts statistics for the sections from  SSHOW_SECTIONS list 
+    with the same basename as sshow_sys_section_file in directory where sshow_sys_section_file is located"""
+    
+    # section statistics dataframe to filter failed sections
+    sw_ssave_sections_stat_df = pd.DataFrame(index=SSHOW_SECTIONS, columns=['Quantity', 'Size_KB', 'High_priority'])
+    # create pattern to filter required sshow files
+    sshow_sys_section_basename = get_sshow_basename(sshow_sys_section_file)
+    ssave_sections_dir = os.path.dirname(sshow_sys_section_file)
+    pattern = fr"{sshow_sys_section_basename}-\d+\.({'|'.join(SSHOW_SECTIONS)})\.(?:txt.)?gz$"
+    
+    # print(pattern)
+    # print(sshow_section_basename, ssave_sections_dir)
+    
+    # section statistics dataframe used to concatenate sshow files
+    ssave_sections_stat_current_df = pd.DataFrame(columns=ssave_sections_stat_columns)
+
+    for file in os.listdir(ssave_sections_dir):
+        # skip if file is a directory
+        if not os.path.isfile(os.path.join(ssave_sections_dir, file)):
+            continue
+        # if file is related to sshow_sys_section_file basename
+        if re.search(pattern, file):
+            section_name = re.search(pattern, file).group(1)
+            # count files with the same basename and section_name
+            if pd.isna(sw_ssave_sections_stat_df.loc[section_name, 'Quantity']):
+                sw_ssave_sections_stat_df.loc[section_name, 'Quantity'] = 1
+            else:
+                sw_ssave_sections_stat_df.loc[section_name, 'Quantity'] += 1
+            # print(ssave_sections_stat_df.loc[section_name, 'Quantity'])
+            # sshow section file size in KB
+            sw_ssave_sections_stat_df.loc[section_name, 'Size_KB'] = round(os.path.getsize(os.path.join(ssave_sections_dir, file)) / 1024, 2)
+            # section_names used to san audit have priority 1
+            priority = 1 if section_name in HIGH_PRIORITY_SECTIONS else np.nan
+            sw_ssave_sections_stat_df.loc[section_name, 'High_priority'] = priority
+            # print(ssave_sections_stat_df.loc[section_name, 'Size_KB'])
+            # fill values for the ssave section file in dataframe used to concatenate files later
+            ssave_sections_stat_current_df.loc[len(ssave_sections_stat_current_df)] = [ssave_sections_dir, os.path.basename(ssave_sections_dir),
+                                                                                   section_name, priority, file, 
+                                                                                   sw_ssave_sections_stat_df.loc[section_name, 'Quantity'],
+                                                                                   sw_ssave_sections_stat_df.loc[section_name, 'Size_KB'],
+                                                                                   sshow_sys_section_basename,
+                                                                                   os.path.basename(sshow_filepath)]
+    # add empty rows for the sections for which files are absent in the directory
+    absent_sections = [section for section in sw_ssave_sections_stat_df.index if not section in ssave_sections_stat_current_df['section_name'].values]
+    # print(absent_sections)
+    for section in absent_sections:
+        ssave_sections_stat_current_df.loc[len(ssave_sections_stat_current_df), ['directory_path', 'directory_name', 'section_name']] = \
+            (ssave_sections_dir, os.path.basename(ssave_sections_dir), section) 
+    return sw_ssave_sections_stat_df, ssave_sections_stat_current_df
+
+
+def filter_fault_sections(sw_ssave_sections_stat_df):
+    """Function filters failed sections (sections with high piority with absent files or files with zero size,
+    section with any piority and multiple files)"""
+    
+    mask_quantity_failure = sw_ssave_sections_stat_df['Quantity'] != 1
+    mask_high_priority = sw_ssave_sections_stat_df['High_priority'] == 1
+    mask_size_zero = sw_ssave_sections_stat_df['Size_KB'] == 0
+    mask_multiple_files = sw_ssave_sections_stat_df['Quantity'] > 1
+    mask_failure = (mask_high_priority & mask_quantity_failure) | (mask_high_priority & mask_size_zero) | mask_multiple_files
+    sw_fault_sections_df = sw_ssave_sections_stat_df.loc[mask_failure]
+    return sw_fault_sections_df 
+
+
+def update_ssave_sections_stats(ssave_sections_stat_df, ssave_sections_stat_current_df):
+    """Function updates dataframe with statistics for all directories with ssave files.    
+    It drops rows with old statistics for the directory for which 
+    new sssave_sections_stat_current_df statistic is added """
+    
+    # drop rows for the directory for which statistics is updated
+    mask_dropped_dirs = ssave_sections_stat_df['directory_path'].isin(ssave_sections_stat_current_df['directory_path'].unique())
+    ssave_sections_stat_df.drop(ssave_sections_stat_df.index[mask_dropped_dirs], inplace = True)
+    # add new statistics
+    ssave_sections_stat_df = pd.concat([ssave_sections_stat_df, ssave_sections_stat_current_df])
+    return ssave_sections_stat_df

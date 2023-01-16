@@ -3,6 +3,7 @@
 
 import numpy as np
 import pandas as pd
+
 import utilities.dataframe_operations as dfop
 
 
@@ -17,9 +18,7 @@ def fabric_switch_statistics(switch_params_aggregated_df, pattern_dct):
     san_chassis_statistics_df = count_chassis_statistics(switch_params_cp_df)
     # concatenate switch and chassis statistics
     fabric_switch_statistics_df = pd.concat([fabric_switch_statistics_df, san_chassis_statistics_df], ignore_index=True)
-
     fabric_switch_statistics_df = asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df)
-
     return fabric_switch_statistics_df
     
 
@@ -30,23 +29,18 @@ def asymmetry_note(switch_params_cp_df, fabric_switch_statistics_df):
     sw_gen = switch_params_cp_df['Generation'].unique().tolist()
     sw_role = switch_params_cp_df['SwitchMode'].unique().tolist()
 
-    # fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_models, summary_column='Model_Asymmetry_note')
-    # fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_gen, summary_column='Generation_Asymmetry_note')
-    # fabric_switch_statistics_df = dfop.verify_symmetry_regarding_fabric_name(fabric_switch_statistics_df, sw_role, summary_column='Mode_Asymmetry_note')
-
-    fabric_switch_statistics_df = dfop.verify_group_symmetry(fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_models, summary_column='Model_Asymmetry_note')
-    fabric_switch_statistics_df = dfop.verify_group_symmetry(fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_gen, summary_column='Generation_Asymmetry_note')
-    fabric_switch_statistics_df = dfop.verify_group_symmetry(fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_role, summary_column='Mode_Asymmetry_note')
-
-
+    fabric_switch_statistics_df = dfop.verify_group_symmetry(
+        fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_models, summary_column='Model_Asymmetry_note')
+    fabric_switch_statistics_df = dfop.verify_group_symmetry(
+        fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_gen, summary_column='Generation_Asymmetry_note')
+    fabric_switch_statistics_df = dfop.verify_group_symmetry(
+        fabric_switch_statistics_df, symmetry_grp=['Fabric_name'], symmetry_columns=sw_role, summary_column='Mode_Asymmetry_note')
     return fabric_switch_statistics_df
-
 
 
 def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     """Function to modify switch_params_aggregated_df to count statistics"""
 
-    
     mask_valid_fabric = ~switch_params_aggregated_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
     mask_not_vc = ~switch_params_aggregated_df['ModelName'].str.contains('virtual', case=False, na=False)
     switch_params_cp_df = switch_params_aggregated_df.loc[mask_valid_fabric & mask_not_vc].copy()
@@ -79,7 +73,6 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     switch_params_cp_df.loc[mask_date_notna, 'config_collection_date_ymd'] = 'Config date ' + switch_params_cp_df.loc[mask_date_notna, 'config_collection_date_ymd'].astype(str)
 
     switch_params_cp_df['Total'] = 'Total'
-
     return switch_params_cp_df
 
 

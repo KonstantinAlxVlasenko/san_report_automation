@@ -10,6 +10,7 @@ import sqlite3
 import pandas as pd
 import numpy as np
 import sys
+from datetime import datetime
 
 
 
@@ -369,3 +370,21 @@ def reply_request(question: str, reply_options = ['y', 'yes', 'n', 'no'], show_r
         return reply[0]
     else:
         return reply
+
+    
+def current_datetime(drop_seconds=False, join=False):
+    """Function returns current datetime in 03/11/2022 11:37:45 format"""
+
+    now = datetime.now()
+    # w/o seconds
+    if drop_seconds:
+        if join:
+            return now.strftime("%d%m%Y_%H%M")
+        else:
+            return now.strftime("%d/%m/%Y %H:%M")
+    # with seconds
+    elif not drop_seconds:
+        if join:
+            return now.strftime("%d%m%Y_%H%M%S")
+        else:
+            return now.strftime("%d/%m/%Y %H:%M:%S")
