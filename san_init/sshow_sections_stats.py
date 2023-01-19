@@ -46,17 +46,21 @@ def count_ssave_section_files_stats(sshow_sys_section_file, sshow_filepath):
     with the same basename as sshow_sys_section_file in directory where sshow_sys_section_file is located"""
     
     # section statistics dataframe to filter failed sections
-    sw_ssave_sections_stat_df = pd.DataFrame(index=SSHOW_SECTIONS, columns=['Quantity', 'Size_KB', 'High_priority'])
+    sw_ssave_sections_stats_df = pd.DataFrame(index=SSHOW_SECTIONS, columns=['Quantity', 'Size_KB', 'Priority'])
+    sw_ssave_sections_stats_df.index.name = 'Section_name'
     # create pattern to filter required sshow files
     sshow_sys_section_basename = get_sshow_basename(sshow_sys_section_file)
     ssave_sections_dir = os.path.dirname(sshow_sys_section_file)
     pattern = fr"{sshow_sys_section_basename}-\d+\.({'|'.join(SSHOW_SECTIONS)})\.(?:txt.)?gz$"
     
-    # print(pattern)
-    # print(sshow_section_basename, ssave_sections_dir)
+
+    # tmp
+    ssave_sections_stats_columns = ['directory_path', 'directory_name', 'section_name', 
+                                    'priority', 'ssave_filename', 'count', 'size_KB',  
+                                    'ssave_basename', 'sshow_filename']
     
     # section statistics dataframe used to concatenate sshow files
-    ssave_sections_stat_current_df = pd.DataFrame(columns=ssave_sections_stat_columns)
+    ssave_sections_stats_current_df = pd.DataFrame(columns=ssave_sections_stats_columns)
 
     for file in os.listdir(ssave_sections_dir):
         # skip if file is a directory
@@ -66,54 +70,60 @@ def count_ssave_section_files_stats(sshow_sys_section_file, sshow_filepath):
         if re.search(pattern, file):
             section_name = re.search(pattern, file).group(1)
             # count files with the same basename and section_name
-            if pd.isna(sw_ssave_sections_stat_df.loc[section_name, 'Quantity']):
-                sw_ssave_sections_stat_df.loc[section_name, 'Quantity'] = 1
+            if pd.isna(sw_ssave_sections_stats_df.loc[section_name, 'Quantity']):
+                sw_ssave_sections_stats_df.loc[section_name, 'Quantity'] = 1
             else:
-                sw_ssave_sections_stat_df.loc[section_name, 'Quantity'] += 1
-            # print(ssave_sections_stat_df.loc[section_name, 'Quantity'])
+                sw_ssave_sections_stats_df.loc[section_name, 'Quantity'] += 1
+            # print(ssave_sections_stats_df.loc[section_name, 'Quantity'])
             # sshow section file size in KB
-            sw_ssave_sections_stat_df.loc[section_name, 'Size_KB'] = round(os.path.getsize(os.path.join(ssave_sections_dir, file)) / 1024, 2)
+            sw_ssave_sections_stats_df.loc[section_name, 'Size_KB'] = round(os.path.getsize(os.path.join(ssave_sections_dir, file)) / 1024, 2)
             # section_names used to san audit have priority 1
             priority = 1 if section_name in HIGH_PRIORITY_SECTIONS else np.nan
-            sw_ssave_sections_stat_df.loc[section_name, 'High_priority'] = priority
-            # print(ssave_sections_stat_df.loc[section_name, 'Size_KB'])
+            sw_ssave_sections_stats_df.loc[section_name, 'Priority'] = priority
+            # print(ssave_sections_stats_df.loc[section_name, 'Size_KB'])
             # fill values for the ssave section file in dataframe used to concatenate files later
-            ssave_sections_stat_current_df.loc[len(ssave_sections_stat_current_df)] = [ssave_sections_dir, os.path.basename(ssave_sections_dir),
+            ssave_sections_stats_current_df.loc[len(ssave_sections_stats_current_df)] = [ssave_sections_dir, os.path.basename(ssave_sections_dir),
                                                                                    section_name, priority, file, 
-                                                                                   sw_ssave_sections_stat_df.loc[section_name, 'Quantity'],
-                                                                                   sw_ssave_sections_stat_df.loc[section_name, 'Size_KB'],
+                                                                                   sw_ssave_sections_stats_df.loc[section_name, 'Quantity'],
+                                                                                   sw_ssave_sections_stats_df.loc[section_name, 'Size_KB'],
                                                                                    sshow_sys_section_basename,
                                                                                    os.path.basename(sshow_filepath)]
     # add empty rows for the sections for which files are absent in the directory
-    absent_sections = [section for section in sw_ssave_sections_stat_df.index if not section in ssave_sections_stat_current_df['section_name'].values]
+    absent_sections = [section for section in sw_ssave_sections_stats_df.index if not section in ssave_sections_stats_current_df['section_name'].values]
+    absent_sections_proirity = [1  if section in HIGH_PRIORITY_SECTIONS else None for section in absent_sections ]
     # print(absent_sections)
-    for section in absent_sections:
-        ssave_sections_stat_current_df.loc[len(ssave_sections_stat_current_df), ['directory_path', 'directory_name', 'section_name']] = \
-            (ssave_sections_dir, os.path.basename(ssave_sections_dir), section) 
-    return sw_ssave_sections_stat_df, ssave_sections_stat_current_df
+    for section, priority in zip(absent_sections, absent_sections_proirity):
+        ssave_sections_stats_current_df.loc[len(ssave_sections_stats_current_df), ['directory_path', 'directory_name', 'section_name', 'priority']] = \
+            (ssave_sections_dir, os.path.basename(ssave_sections_dir), section, priority)
+        sw_ssave_sections_stats_df.loc[section, 'Priority'] = priority
+    return sw_ssave_sections_stats_df, ssave_sections_stats_current_df
 
 
-def filter_fault_sections(sw_ssave_sections_stat_df):
+def filter_fault_sections(sw_ssave_sections_stats_df):
     """Function filters failed sections (sections with high piority with absent files or files with zero size,
     section with any piority and multiple files)"""
     
-    mask_quantity_failure = sw_ssave_sections_stat_df['Quantity'] != 1
-    mask_high_priority = sw_ssave_sections_stat_df['High_priority'] == 1
-    mask_size_zero = sw_ssave_sections_stat_df['Size_KB'] == 0
-    mask_multiple_files = sw_ssave_sections_stat_df['Quantity'] > 1
+
+    # print(sw_ssave_sections_stats_df)
+    mask_quantity_failure = sw_ssave_sections_stats_df['Quantity'] != 1
+    mask_high_priority = sw_ssave_sections_stats_df['Priority'] == 1
+    mask_size_zero = sw_ssave_sections_stats_df['Size_KB'] == 0
+    mask_multiple_files = sw_ssave_sections_stats_df['Quantity'] > 1
     mask_failure = (mask_high_priority & mask_quantity_failure) | (mask_high_priority & mask_size_zero) | mask_multiple_files
-    sw_fault_sections_df = sw_ssave_sections_stat_df.loc[mask_failure]
-    return sw_fault_sections_df 
+    sw_fault_sections_df = sw_ssave_sections_stats_df.loc[mask_failure]
+    multiple_sshow_section_files_warning_on = mask_multiple_files.any()
+
+    return sw_fault_sections_df, multiple_sshow_section_files_warning_on
 
 
-def update_ssave_sections_stats(ssave_sections_stat_df, ssave_sections_stat_current_df):
+def update_ssave_sections_stats(ssave_sections_stats_df, ssave_sections_stats_current_df):
     """Function updates dataframe with statistics for all directories with ssave files.    
     It drops rows with old statistics for the directory for which 
-    new sssave_sections_stat_current_df statistic is added """
+    new sssave_sections_stats_current_df statistic is added """
     
     # drop rows for the directory for which statistics is updated
-    mask_dropped_dirs = ssave_sections_stat_df['directory_path'].isin(ssave_sections_stat_current_df['directory_path'].unique())
-    ssave_sections_stat_df.drop(ssave_sections_stat_df.index[mask_dropped_dirs], inplace = True)
+    mask_dropped_dirs = ssave_sections_stats_df['directory_path'].isin(ssave_sections_stats_current_df['directory_path'].unique())
+    ssave_sections_stats_df.drop(ssave_sections_stats_df.index[mask_dropped_dirs], inplace = True)
     # add new statistics
-    ssave_sections_stat_df = pd.concat([ssave_sections_stat_df, ssave_sections_stat_current_df])
-    return ssave_sections_stat_df
+    ssave_sections_stats_df = pd.concat([ssave_sections_stats_df, ssave_sections_stats_current_df])
+    return ssave_sections_stats_df

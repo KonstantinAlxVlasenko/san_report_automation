@@ -22,8 +22,7 @@ def main():
     project_constants_lst, software_path_sr, san_graph_grid_df, san_topology_constantants_sr = san_init.service_initialization()
     # supportsave parsing
     parsed_sshow_maps_lst = san_init.switch_config_preprocessing(project_constants_lst, software_path_sr)
-
-
+    exit()
 
     # extract information from configuration files
     extracted_configuration_lst = san_parser.system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, software_path_sr)

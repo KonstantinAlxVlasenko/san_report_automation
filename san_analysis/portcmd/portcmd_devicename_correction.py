@@ -218,7 +218,7 @@ def group_name_usage(report_columns_usage_sr, device_rename_df, max_title, force
 
     # if all devices were renamed and force flag is off column is dropped from report tables 
     if device_rename_df['Device_Host_Name_rename'].notna().all() and not force_group_name_usage_update_flag:
-        report_columns_usage_sr['group_name_usage'] = False
+        report_columns_usage_sr['group_name_usage'] = 0
         print(info, end =" ")
         meop.status_info('off', max_title, len(info))
     # if no information in report_columns_usage_sr or force flag is on or any device keep old name

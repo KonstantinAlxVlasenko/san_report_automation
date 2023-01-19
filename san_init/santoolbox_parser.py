@@ -15,7 +15,7 @@ from .sshow_sections_stats import (count_ssave_section_files_stats,
                                    update_ssave_sections_stats)
 
 
-def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_to_move_parsed_others, software_path_sr, max_title):    
+def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_to_move_parsed_others, software_path_sr, ssave_sections_stats_df, max_title):    
     """Check through unparsed list for configuration data sets for each switch.  
     Unparsed list format  [[unparsed sshow, (unparsed ams_maps, unparsed amps_maps ...)], []]"""
     
@@ -47,6 +47,11 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         
         # calling santoolbox_parser function which parses SHOW_SYS file with SANToolbox
         parsed_sshow_file = santoolbox_parser(switch_files_to_parse_lst[0], path_to_move_parsed_sshow, santoolbox_path, max_title, santoolbox_run_status_lst)
+        
+        parsed_sshow_file = pull_switch_configuration_file(switch_files_to_parse_lst[0], 
+                                                            path_to_move_parsed_sshow, 
+                                                            ssave_sections_stats_df, max_title, santoolbox_run_status_lst)
+        
         parsed_sshow_filename = os.path.basename(parsed_sshow_file)
         
         # tmp lists to save parsed AMS_MAPS_LOG filenames and filepaths
@@ -56,6 +61,10 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
             for ams_maps_config in switch_files_to_parse_lst[1]:
                 # calling santoolbox_parser function which parses AMS_MAPS_LOG file with SANToolbox
                 parsed_amsmaps_file = santoolbox_parser(ams_maps_config, path_to_move_parsed_others, santoolbox_path, max_title, santoolbox_run_status_lst)
+                parsed_amsmaps_file = pull_switch_configuration_file(ams_maps_config, 
+                                                    path_to_move_parsed_others, 
+                                                    ssave_sections_stats_df, max_title, santoolbox_run_status_lst)
+
                 # append filenames and filepaths to tmp lists
                 ams_maps_files_lst_tmp.append(parsed_amsmaps_file)
                 ams_maps_filenames_lst_tmp.append(os.path.basename(parsed_amsmaps_file))
@@ -138,19 +147,100 @@ def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title
     return os.path.normpath(os.path.join(path_to_move_parsed_data, filename))
 
 
+
+
+
+def export_switch_config_files(all_files_to_parse_lst, path_to_move_parsed_sshow, path_to_move_parsed_others, ssave_sections_stats_df, max_title):    
+    """Check through unparsed list for configuration data sets for each switch.  
+    Unparsed list format  [[unparsed sshow, (unparsed ams_maps, unparsed amps_maps ...)], []]"""
+    
+
+    # list to save parsed configuration data files with full path
+    parsed_files_lst = []
+    # list to save parsed configuration data files names
+    parsed_filenames_lst = []
+    # number of configuration data sets (one set is config files for one switch)
+    config_set_num = len(all_files_to_parse_lst)
+
+    # 
+    export_status_lst = []
+
+    ssave_sections_stats_columns = ['directory_path', 'directory_name', 'section_name', 
+                                'hight_priority', 'ssave_filename', 'count', 'size_KB',  
+                                'ssave_basename', 'sshow_filename']
+
+    if ssave_sections_stats_df is None:
+        ssave_sections_stats_df = ssave_sections_stat_df = pd.DataFrame(columns=ssave_sections_stats_columns)
+    
+    print('\n\nPREREQUISITES 4. PROCESSING SUPPORTSAVE FILES WITH SANTOOLBOX\n')
+    print(f'Parsed configuration files are moved to\n{os.path.dirname(path_to_move_parsed_sshow)}\n')
+    
+    # going throgh each configuration set (switch) in unpased list
+    for i,switch_files_to_parse_lst in enumerate(all_files_to_parse_lst):
+        
+        # extracts switchname from supportshow filename
+        switchname = re.search(r'^([\w-]+)(-\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})?-S\d(cp)?-\d+.SSHOW_SYS.(txt.)?gz$', 
+                                os.path.basename(switch_files_to_parse_lst[0])).group(1)
+        # number of ams_maps_log files in current configuration set (switch)
+        ams_maps_config_num = len(switch_files_to_parse_lst[1])
+        print(f'[{i+1} of {config_set_num}]: {switchname}. Number of configs: {ams_maps_config_num+1} ...')
+        
+        # calling santoolbox_parser function which parses SHOW_SYS file with SANToolbox
+
+        
+        parsed_sshow_file, ssave_sections_stats_df = pull_switch_configuration_file(switch_files_to_parse_lst[0], 
+                                                            path_to_move_parsed_sshow, 
+                                                            ssave_sections_stats_df, max_title, export_status_lst)
+        
+        parsed_sshow_filename = os.path.basename(parsed_sshow_file)
+        
+        # tmp lists to save parsed AMS_MAPS_LOG filenames and filepaths
+        ams_maps_files_lst_tmp = []
+        ams_maps_filenames_lst_tmp = []
+        if ams_maps_config_num > 0:
+            for ams_maps_config in switch_files_to_parse_lst[1]:
+                # calling santoolbox_parser function which parses AMS_MAPS_LOG file with SANToolbox
+                parsed_amsmaps_file, _ = pull_switch_configuration_file(ams_maps_config, 
+                                                    path_to_move_parsed_others, 
+                                                    ssave_sections_stats_df, max_title, export_status_lst)
+
+                # append filenames and filepaths to tmp lists
+                ams_maps_files_lst_tmp.append(parsed_amsmaps_file)
+                ams_maps_filenames_lst_tmp.append(os.path.basename(parsed_amsmaps_file))
+        else:
+            info = ' '*LEFT_INDENT + 'No AMS_MAPS configuration found.'
+            print(info, end =" ")
+            meop.status_info('skip', max_title, len(info))
+            # ams_maps_files_lst_tmp.append(None)
+            # ams_maps_filenames_lst_tmp.append(None)
+            ams_maps_files_lst_tmp = None
+            ams_maps_filenames_lst_tmp = None
+        
+        # append parsed configuration data filenames and filepaths to the final lists 
+        parsed_files_lst.append([switchname, parsed_sshow_file, ams_maps_files_lst_tmp])
+        # ams_maps_filenames_str = ', '.join(ams_maps_filenames_lst_tmp) if ams_maps_filenames_lst_tmp else None
+        # parsed_filenames_lst.append([switchname, parsed_sshow_filename, ', '.join(ams_maps_filenames_lst_tmp)])
+        parsed_filenames_lst.append([switchname, parsed_sshow_filename, ams_maps_filenames_lst_tmp])    
+    print('\n')
+    return parsed_files_lst, parsed_filenames_lst, ssave_sections_stats_df, export_status_lst
+
+
+
+
+
 pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
 
 
-def pull_switch_configuration_file(ssave_section_file, output_dir, max_title, export_status_lst):
+def pull_switch_configuration_file(ssave_section_file, output_dir, ssave_sections_stats_df, max_title, export_status_lst):
     """Function to process unparsed ".SSHOW_SYS.txt.gz" and  "AMS_MAPS_LOG.txt.gz" files with SANToolbox."""
 
     ssave_section_filename = os.path.basename(ssave_section_file)
 
     # information string
     info = ' '*LEFT_INDENT+f'{ssave_section_filename} processing'
-    print(info, end =" ")
+    
     
 
     if re.search(pattern_dct['sshow_sys_section'], ssave_section_filename):
@@ -162,35 +252,111 @@ def pull_switch_configuration_file(ssave_section_file, output_dir, max_title, ex
         exported_switch_config_secondary_filepath = get_single_section_output_secondary_filepath(ssave_section_filename, output_dir)
         config_type = 'maps'
     else:
+        print(info, end =" ")
         meop.status_info('unknown', max_title, len(info))
-        return None
+        return '', ssave_sections_stats_df
 
-    if os.path.isfile(exported_switch_config_filepath):
-        meop.status_info('skip', max_title, len(info))
-        return exported_switch_config_filepath
-    elif os.path.isfile(exported_switch_config_secondary_filepath):
-        meop.status_info('skip', max_title, len(info))
-        return exported_switch_config_secondary_filepath
+    # if os.path.isfile(exported_switch_config_filepath):
+    #     export_status_lst.append(meop.status_info('skip', max_title, len(info)))
+    #     # meop.status_info('skip', max_title, len(info))
+    #     print(info, end =" ")
+    #     return exported_switch_config_filepath, ssave_sections_stats_df
+    # elif os.path.isfile(exported_switch_config_secondary_filepath):
+    #     print(info, end =" ")
+    #     export_status_lst.append(meop.status_info('skip', max_title, len(info)))
+    #     # meop.status_info('skip', max_title, len(info))
+    #     return exported_switch_config_secondary_filepath, ssave_sections_stats_df
+
+    if (os.path.isfile(exported_switch_config_filepath) or 
+        os.path.isfile(exported_switch_config_secondary_filepath)):
+        print(info, end =" ")
+        export_status_lst.append(meop.status_info('skip', max_title, len(info)))
+        return (exported_switch_config_filepath, ssave_sections_stats_df) if os.path.isfile(exported_switch_config_filepath) \
+                else (exported_switch_config_secondary_filepath, ssave_sections_stats_df)
+
         
 
     if config_type == 'sshow':
 
-        ssave_sections_stat_columns = ['directory_path', 'directory_name', 'section_name', 
-                                        'hight_priority', 'ssave_filename', 'count', 'size_KB',  
-                                        'ssave_basename', 'sshow_filename']
+        # ssave_sections_stats_columns = ['directory_path', 'directory_name', 'section_name', 
+        #                                 'hight_priority', 'ssave_filename', 'count', 'size_KB',  
+        #                                 'ssave_basename', 'sshow_filename']
 
-        sw_ssave_sections_stat_df, ssave_sections_stat_current_df = \
-            count_ssave_section_files_stats(sshow_sys_section_file=ssave_section_file, sshow_file=exported_switch_config_filepath)
-        sw_fault_sections_df = filter_fault_sections(sw_ssave_sections_stat_df)
-        ssave_sections_stat_df = pd.DataFrame(columns=ssave_sections_stat_columns)
-        ssave_sections_stat_df = update_ssave_sections_stats(ssave_sections_stat_df, ssave_sections_stat_current_df)
-        create_sshow_file(ssave_sections_stat_current_df, exported_switch_config_filepath)
-        meop.status_info('ok', max_title, len(info))
+        sw_ssave_sections_stats_df, ssave_sections_stats_current_df = \
+            count_ssave_section_files_stats(sshow_sys_section_file=ssave_section_file, sshow_filepath=exported_switch_config_filepath)
+        sw_fault_sections_df, multiple_sshow_section_files_warning_on = filter_fault_sections(sw_ssave_sections_stats_df)
+        if not sw_fault_sections_df.empty:
+            input_option = None
+            operation_options_lst = ['r', 'c', 'x']
+            if multiple_sshow_section_files_warning_on:
+                operation_options_lst.remove('c')
+
+            print('\n')
+
+            while multiple_sshow_section_files_warning_on or \
+                    (not multiple_sshow_section_files_warning_on and not input_option in ['c']):
+                
+                display_fault_sections(sw_fault_sections_df, ssave_section_filename)
+                display_menu_options(operation_options_lst)
+                input_option = meop.reply_request("Choose option: ", reply_options=operation_options_lst, show_reply=True)
+                if input_option == 'r':
+                    sw_ssave_sections_stats_df, ssave_sections_stats_current_df = \
+                        count_ssave_section_files_stats(sshow_sys_section_file=ssave_section_file, sshow_filepath=exported_switch_config_filepath)
+                    sw_fault_sections_df, multiple_sshow_section_files_warning_on = filter_fault_sections(sw_ssave_sections_stats_df)
+                    input_option = None
+                    operation_options_lst = ['r', 'c', 'x']
+                    if multiple_sshow_section_files_warning_on:
+                        operation_options_lst.remove('c')
+                    print('Directory rescanned')
+                elif input_option == 'x':
+                    print('Stop program execution')
+                    sys.exit()
+                print('\n')
+
+
+        ssave_sections_stats_df = update_ssave_sections_stats(ssave_sections_stats_df, ssave_sections_stats_current_df)
+        create_sshow_file(ssave_sections_stats_current_df, exported_switch_config_filepath)
     elif config_type == 'maps':
         export_single_section_file(input_filepath=ssave_section_file, output_filepath=exported_switch_config_filepath)
-        meop.status_info('ok', max_title, len(info))
 
-    return exported_switch_config_filepath
+    print(info, end =" ")
+    if os.path.isfile(exported_switch_config_filepath):
+        export_status_lst.append(meop.status_info('ok', max_title, len(info)))
+    else:
+        export_status_lst.append(meop.status_info('fail', max_title, len(info)))
+    
+    return exported_switch_config_filepath, ssave_sections_stats_df
+
+
+def get_operation_options(multiple_sshow_section_files_warning_on):
+    operation_options_lst = ['r', 'c', 'x']
+    if multiple_sshow_section_files_warning_on:
+        operation_options_lst.remove('c')
+    return operation_options_lst
+
+
+def display_fault_sections(sw_fault_sections_df, ssave_section_filename):
+
+    separator_len = get_separator_len(sw_fault_sections_df)
+    print('-' * len(ssave_section_filename))
+    print(ssave_section_filename)
+    print('-' * separator_len)
+    print(sw_fault_sections_df)
+    print('-' * separator_len)
+
+
+def get_separator_len(sw_fault_sections_df):
+    """Function returns length of the printed sw_fault_sections_df DataFrame upper border"""
+
+    # find length all column names
+    column_names_length = len(' '.join(sw_fault_sections_df.columns)) + 1
+    # find max index str length
+    max_section_name_length = sw_fault_sections_df.index.str.len().max()
+    index_name_length = len(sw_fault_sections_df.index.name)
+    section_name_length = max_section_name_length if max_section_name_length > index_name_length else index_name_length
+    # total separator length
+    separator_len = section_name_length + column_names_length
+    return separator_len
 
 
 def get_single_section_output_filepath(input_filepath, output_dir):
@@ -229,3 +395,12 @@ def get_sshow_filepath(sshow_sys_section_file, sshow_dir):
     # combine output directory and sshow filename
     sshow_filepath = os.path.normpath(os.path.join(sshow_dir, sshow_filename))
     return sshow_filepath
+
+
+def display_menu_options(operation_options_lst):
+    """Function displays operation options"""
+
+    print("\nR/r - Rescan files in folder")
+    if 'c' in operation_options_lst:
+        print("C/c - Ignore and continue")
+    print("X/x - Stop program and exit\n")

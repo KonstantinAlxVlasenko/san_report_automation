@@ -129,7 +129,8 @@ def display_domain_name_remove_scheme(domain_name_remove_df, show_domain_remove_
     if show_domain_remove_scheme:
         print(f'\n{"-"*separator_len}')
         print(domain_name_remove_df)
-        print('\n')
+        print(f'{"-"*separator_len}\n')
+        # print('\n')
 
 
 def display_menu_options(operation_options_lst):

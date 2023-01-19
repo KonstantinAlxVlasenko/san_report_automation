@@ -23,8 +23,11 @@ def export_gzip_file(gzip_filepath, dest_filepath):
     """Function read gzip txt file and write its content to dest_filepath"""
     
     with gzip.open(gzip_filepath, "rt", encoding='utf-8', errors='ignore') as gzf:
-        with open(dest_filepath, "a+") as dest_file:
-            dest_file.write(gzf.read())
+        with open(dest_filepath, "a+", encoding='utf-8', errors='ignore') as dest_file:
+            for line in gzf:
+                tab_free_line = line.replace('\t', ' ')
+                dest_file.write(tab_free_line)
+            # dest_file.write(gzf.read())
             
 
 def export_tar_file(tar_filepath, dest_filepath):
@@ -42,7 +45,10 @@ def export_tar_file(tar_filepath, dest_filepath):
         tar_file_content = tf.extractfile(tarfile_lst[0]).read().decode("utf-8", errors='ignore')
         # write content to the dest_filepath
         with open(dest_filepath, "a+") as dest_file:
-            dest_file.write(tar_file_content)
+            for line in tar_file_content:
+                tab_free_line = line.replace('\t', ' ')
+                dest_file.write(tab_free_line)
+            # dest_file.write(tar_file_content)
 
 
 def get_sshow_filepath(sshow_sys_section_file, sshow_dir):
@@ -104,6 +110,7 @@ def create_sshow_file(ssave_sections_stat_current_df, sshow_filepath):
             insert_section_header(sshow_filepath, section_name)
             # write section content to sshow_filepath
             export_gzip_file(gzip_filepath=ssave_section_file, dest_filepath=sshow_filepath)
+    insert_sshow_footer(sshow_filepath)
             
 
     
@@ -115,12 +122,20 @@ def insert_section_header(sshow_filepath, section_name):
     dbop.add_log_entry(sshow_filepath, border_str, section_header_str, border_str, '\n')
 
 
+def insert_sshow_footer(sshow_filepath):
+    """Function inserts sshow section title to concatenated sshow file"""
+    
+    footer_str = "| ... rebuilt finished |"
+    border_str = "+" + "-" * (len(footer_str) - 2) + "+"
+    dbop.add_log_entry(sshow_filepath, border_str, footer_str, border_str, '\n')
+
+
 def insert_sshow_header(ssave_sections_stat_current_df, sshow_filepath):
     """Function inserts header to the sshow_filepath"""
     
     title = "SupportShow rebuilt by SAN Audit Automation"
     author = 'Author: KVl'
-    email = 'Email: konstantin.alx.vlasenko@gmail.com'
+    email = 'E-mail: konstantin.alx.vlasenko@gmail.com'
     date_time = f"Created: {meop.current_datetime()}"
     release = f"with Release: {RELEASE}"
     processed_files = f"Processed {ssave_sections_stat_current_df['ssave_filename'].count()} 'SSHOW_xxx' files" 

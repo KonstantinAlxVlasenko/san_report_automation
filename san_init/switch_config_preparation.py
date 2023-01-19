@@ -10,7 +10,7 @@ import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 
-from .santoolbox_parser import santoolbox_process
+from .santoolbox_parser import santoolbox_process, export_switch_config_files
 from collections import defaultdict
 from san_automation_constants import LEFT_INDENT
 
@@ -27,6 +27,26 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
     parsed_other_folder = report_requisites_sr['parsed_other_folder']
 
 
+
+    # # data titles obtained after module execution (output data)
+    # # data titles which module is dependent on (input data)
+    # data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'switch_params_analysis_out', 'switch_params_analysis_in')
+    # # module information
+    # meop.show_module_info(project_steps_df, data_names)
+
+
+    data_names = ['unparsed_files', 'parsed_files', 'ssave_sections_stats']
+    # read data from database if they were saved on previos program execution iteration
+    data_lst = dbop.read_database(project_constants_lst, *data_names)
+
+    *_, ssave_sections_stats_df = data_lst
+
+
+    # data imported from init file (regular expression patterns) to extract values from data columns
+    pattern_dct, *_ = sfop.regex_pattern_import('ssave', max_title)
+
+
+
     # check for switches unparsed configuration data
     # returns list with config data file paths (ssave, amsmaps) 
     unparsed_sshow_maps_lst = create_files_list_to_parse(ssave_folder, max_title)
@@ -36,15 +56,21 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
     # unparsed_sshow_maps_df = dfop.list_to_dataframe(unparsed_sshow_maps_lst, max_title, columns=['sshow', 'ams_maps'])
     unparsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['sshow', 'ams_maps'], unparsed_sshow_maps_lst)
     # returns list with parsed data
-    parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst, santoolbox_run_status_lst = \
-        santoolbox_process(unparsed_sshow_maps_lst, parsed_sshow_folder, parsed_other_folder, software_path_sr, max_title)
+    
+    
+    # parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst, santoolbox_run_status_lst = \
+    #     santoolbox_process(unparsed_sshow_maps_lst, parsed_sshow_folder, parsed_other_folder, software_path_sr, ssave_sections_stats_df, max_title)
+
+    parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst, ssave_sections_stats_df, santoolbox_run_status_lst = \
+        export_switch_config_files(unparsed_sshow_maps_lst, parsed_sshow_folder, parsed_other_folder, ssave_sections_stats_df, max_title)
+
     # export parsed config filenames to DataFrame and saves it to excel file
     parsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['chassis_name', 'sshow', 'ams_maps'], parsed_sshow_maps_filename_lst)
                                     
     # save files list to database and excel file
-    data_names = ['unparsed_files', 'parsed_files']
-    data_lst = [unparsed_sshow_maps_df, parsed_sshow_maps_df]
-    for df in data_lst:
+    # data_names = ['unparsed_files', 'parsed_files']
+    data_lst = [unparsed_sshow_maps_df, parsed_sshow_maps_df, ssave_sections_stats_df]
+    for df in data_lst[:2]:
         df['ams_maps'] = df['ams_maps'].astype('str')
         df['ams_maps'] = df['ams_maps'].str.strip('[]()')
 
@@ -54,14 +80,13 @@ def switch_config_preprocessing(project_constants_lst, software_path_sr):
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)    
 
     # requst to continue program execution
-    if any(item in santoolbox_run_status_lst for item in ('OK', 'FAIL')):
-        print('\nSupprtsave parsing has finished.')
+    if any(item in santoolbox_run_status_lst for item in ('FAIL')):
+        print('\nSome configs have FAILED status.')
         query = 'Do you want to continue? (y)es/(n)o: '
         reply = meop.reply_request(query)
         if reply == 'n':
             print("\nExecution successfully finished\n")
             sys.exit()
-    
     return parsed_sshow_maps_lst
 
 

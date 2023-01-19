@@ -25,6 +25,7 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     # add switch information to fcredge_df to concatenate it with isl_df
     fcredge_cp_df = fcredge_to_isl_compliance(fcredge_df, switch_params_aggregated_df)
     # add ifl to isl
+    
     isl_df['IFL_number'] = np.nan
     fcredge_cp_df = fcredge_cp_df.reindex(columns=[*isl_df.columns, 'Connected_FID']).copy()
     fcredge_cp_df.rename(columns={'Connected_FID': 'Connected_Edge_FID'}, inplace=True)
@@ -36,6 +37,9 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     if isl_aggregated_df['ISL_number'].notna().any():
         mask_ifl = isl_aggregated_df['ISL_number'].str.contains('ifl', case=False, na=False)
         isl_aggregated_df.loc[mask_ifl, 'ISL_number'] = np.nan
+    
+    
+    
     # adding switchshow port information to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = porttype_join(switchshow_df, isl_aggregated_df, fcredge_df)
     # add link cost
@@ -335,22 +339,19 @@ def trunk_join(isl_df, trunk_df):
     Add switcNames to Trunk and FCREdge DataFrames
     """
 
-    # convert numerical data in ISL and TRUNK DataFrames to float
-    # isl_df = isl_df.astype(dtype='float64', errors='ignore')    
-    # trunk_df = trunk_df.astype(dtype='float64', errors='ignore')
-    # trunk_df['FabricID'] = trunk_df['FabricID'].astype(dtype='float64', errors='ignore')
-
-    # isl_df = isl_df.apply(pd.to_numeric, errors='ignore')
-    # trunk_df = trunk_df.apply(pd.to_numeric, errors='ignore')
-
     # List of columns DataFrames are joined on     
     join_lst = ['configname', 'chassis_name', 'chassis_wwn', 'switch_index', 'SwitchName',
                 'switchWwn', 'switchRole', 'FabricID', 'FC_router', 'portIndex', 
                 'Connected_portIndex', 'Connected_SwitchName',
                 'Connected_switchWwn', 'Connected_switchDID']  
 
+    if isl_df['FC_router'].isna().all():
+        join_lst.remove('FC_router')
+        trunk_df.drop(columns=['FC_router'], inplace=True)
+        isl_df.drop(columns=['FC_router'], inplace=True)
     # merge updated ISL and TRUNK DataFrames
     isl_aggregated_df = trunk_df.merge(isl_df, how='outer', on=join_lst)
+    isl_aggregated_df['FC_router'] = np.nan
     return isl_aggregated_df
 
 

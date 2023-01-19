@@ -318,7 +318,9 @@ ssave_sections_stat_df = update_ssave_sections_stats(ssave_sections_stat_df, ssa
 create_sshow_file(ssave_sections_stat_current_df, sshow_filepath)
 
 
-    
+sr_tst = pd.Series([0, 1])
+   
+bool(sr_tst[0])
     
 # ssave_sections_stat_df = pd.DataFrame(columns=['Directory_path', 'Directory_name', 'Section_name', 'Ssave_filename', 'Sshow_filename'])
 
@@ -334,7 +336,16 @@ create_sshow_file(ssave_sections_stat_current_df, sshow_filepath)
 #     print(type(file))
 
 
-# os.path.dirname(ssave_section_file)
+
+def get_single_section_output_secondary_filepath(input_filepath, output_dir):
+    """Function takes configuration file and directory to export unpacked file as input parameters.
+    Returns output filepath which is used later to export file content"""
+
+    output_filename = os.path.basename(input_filepath) + '.txt'
+    output_filepath = os.path.normpath(os.path.join(output_dir, output_filename))
+    return output_filepath
+
+
 
 
 # ssave_file = r'D:\Documents\06.CONFIGS\Rencredit\Supportinfo-Thu-10-15-2020-15-00-18\SilkWorm4024-10.12.225.16-100000051E596672\fce5-V3135-1R-S0-202010151602.SSHOW_SYS.gz'
@@ -353,7 +364,7 @@ create_sshow_file(ssave_sections_stat_current_df, sshow_file)
 sshow_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON'
 ams_maps_file = r'D:\Documents\06.CONFIGS\MTS\JAN22\mts_msc\ssave_2\Brocade_DCX-10.74.135.9-10000005339A70FF\dr03as07-c1-21_FID128-10.74.135.9-S6cp-202201311347.AMS_MAPS_LOG.txt.gz'
 parsed_ams_maps_file = get_single_filepath(ams_maps_file, sshow_dir)
-export_single_file(ams_maps_file, parsed_ams_maps_file)
+export_single_section_file(ams_maps_file, parsed_ams_maps_file)
     
 sshow_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON'
 ams_maps_file = r'D:\Documents\06.CONFIGS\UnixEducation\ssave\7720\DS_7720B-192.168.5.102-S0cp-202211181116.AMS_MAPS_LOG.tar.gz'
@@ -361,7 +372,7 @@ export_single_file(ams_maps_file, sshow_dir)
 
 
 
-
+get_single_section_output_secondary_filepath(ams_maps_file, sshow_dir)
 
 
 
