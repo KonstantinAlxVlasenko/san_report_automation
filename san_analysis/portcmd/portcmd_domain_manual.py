@@ -124,7 +124,7 @@ def get_separator_len(domain_name_remove_df, remove_mark_column):
 
 
 def display_domain_name_remove_scheme(domain_name_remove_df, show_domain_remove_scheme, separator_len):
-    "Function prints domain remove scheme with upper border separator"
+    "Function prints domain remove scheme with borders"
 
     if show_domain_remove_scheme:
         print(f'\n{"-"*separator_len}')
