@@ -1,96 +1,17 @@
+"""Module to find sshow files in ssave_path folder"""
+
 import os
 import re
 import shutil
 import sys
+from collections import defaultdict
 
-import utilities.data_structure_operations as dsop
-import utilities.database_operations as dbop
-import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
-import utilities.servicefile_operations as sfop
-
-from .santoolbox_parser import santoolbox_process, export_switch_config_files
-from collections import defaultdict
 from san_automation_constants import LEFT_INDENT
 
-from pprint import pprint
 
-
-def switch_config_preprocessing(project_constants_lst, software_path_sr):
-    
-
-    _, max_title, _, report_requisites_sr, *_ = project_constants_lst
-
-    ssave_folder = report_requisites_sr['supportsave_folder']
-    parsed_sshow_folder = report_requisites_sr['parsed_sshow_folder']
-    parsed_other_folder = report_requisites_sr['parsed_other_folder']
-
-
-
-    # # data titles obtained after module execution (output data)
-    # # data titles which module is dependent on (input data)
-    # data_names, analyzed_data_names = dfop.list_from_dataframe(io_data_names_df, 'switch_params_analysis_out', 'switch_params_analysis_in')
-    # # module information
-    # meop.show_module_info(project_steps_df, data_names)
-
-
-    data_names = ['unparsed_files', 'parsed_files', 'ssave_sections_stats']
-    # read data from database if they were saved on previos program execution iteration
-    data_lst = dbop.read_database(project_constants_lst, *data_names)
-
-    *_, ssave_sections_stats_df = data_lst
-
-
-    # data imported from init file (regular expression patterns) to extract values from data columns
-    pattern_dct, *_ = sfop.regex_pattern_import('ssave', max_title)
-
-
-
-    # check for switches unparsed configuration data
-    # returns list with config data file paths (ssave, amsmaps) 
-    unparsed_sshow_maps_lst = create_files_list_to_parse(ssave_folder, max_title)
-
-
-    # export unparsed config filenames to DataFrame and saves it to report file and database
-    # unparsed_sshow_maps_df = dfop.list_to_dataframe(unparsed_sshow_maps_lst, max_title, columns=['sshow', 'ams_maps'])
-    unparsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['sshow', 'ams_maps'], unparsed_sshow_maps_lst)
-    # returns list with parsed data
-    
-    
-    # parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst, santoolbox_run_status_lst = \
-    #     santoolbox_process(unparsed_sshow_maps_lst, parsed_sshow_folder, parsed_other_folder, software_path_sr, ssave_sections_stats_df, max_title)
-
-    parsed_sshow_maps_lst, parsed_sshow_maps_filename_lst, ssave_sections_stats_df, santoolbox_run_status_lst = \
-        export_switch_config_files(unparsed_sshow_maps_lst, parsed_sshow_folder, parsed_other_folder, ssave_sections_stats_df, max_title)
-
-    # export parsed config filenames to DataFrame and saves it to excel file
-    parsed_sshow_maps_df, *_ = dfop.list_to_dataframe(['chassis_name', 'sshow', 'ams_maps'], parsed_sshow_maps_filename_lst)
-                                    
-    # save files list to database and excel file
-    # data_names = ['unparsed_files', 'parsed_files']
-    data_lst = [unparsed_sshow_maps_df, parsed_sshow_maps_df, ssave_sections_stats_df]
-    for df in data_lst[:2]:
-        df['ams_maps'] = df['ams_maps'].astype('str')
-        df['ams_maps'] = df['ams_maps'].str.strip('[]()')
-
-    dbop.write_database(project_constants_lst, data_names, *data_lst)
-    # save data to excel file if it's required
-    for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)    
-
-    # requst to continue program execution
-    if any(item in santoolbox_run_status_lst for item in ('FAIL')):
-        print('\nSome configs have FAILED status.')
-        query = 'Do you want to continue? (y)es/(n)o: '
-        reply = meop.reply_request(query)
-        if reply == 'n':
-            print("\nExecution successfully finished\n")
-            sys.exit()
-    return parsed_sshow_maps_lst
-
-
-def create_files_list_to_parse(ssave_path, max_title):
+def search_ssave_files(ssave_path, max_title):
     """
     Function to create two lists with unparsed supportshow and amps_maps configs data files.
     Directors have two ".SSHOW_SYS.txt.gz" files. For Active and Standby CPs
@@ -103,12 +24,8 @@ def create_files_list_to_parse(ssave_path, max_title):
     # check if ssave_path folder exist
     fsop.check_valid_path(ssave_path)
     # rellocate files for each switch in separate folder
-    separate_ssave_files(ssave_path, max_title)
-    # exit()
+    distribute_ssave_files(ssave_path, max_title)
     verify_sshow_sys_duplication(ssave_path, max_title)
-
-    # exit()
-
     # list to save unparsed configuration data files
     unparsed_files_lst = []
     
@@ -118,9 +35,6 @@ def create_files_list_to_parse(ssave_path, max_title):
     # list to save length of config data file names to find max
     # required in order to proper alighnment information in terminal
     filename_size = []
-
-    # ams_maps_pattern = r'.+_(FID\d+).+(S\d+(?:cp)?)-\d+\.AMS_MAPS_LOG.(?:txt\.|tar\.)?gz$'
-    # scp_sys_pattern = r'.+(S\d+(?:cp)?)-\d+\.SSHOW_SYS.(?:txt.)?gz$'
 
     ssave_section_filename_pattern = r'(([\w-]+?)(?:_(FID\d+))?(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-(S\d(?:cp)?)(?:-DP\d+)?-\d+.[\w.]+$'
 
@@ -190,7 +104,7 @@ def display_continue_request():
         sys.exit()
 
 
-def separate_ssave_files(ssave_path, max_title):
+def distribute_ssave_files(ssave_path, max_title):
     """
     Function to check if switch supportsave files for each switch are in individual
     folder. If not create folder for each swicth met in current folder and move files 
@@ -199,44 +113,91 @@ def separate_ssave_files(ssave_path, max_title):
     
     # going through all directories inside ssave folder to find configurutaion data
     for root, _, files in os.walk(ssave_path):
-        files_group_set = set()
-        # sshow_regex = r'^(([\w-]+)(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-S\d(?:cp)?-\d+.SSHOW_SYS.(?:txt.)?gz$'
-        # filename_nofid_regex = r'(([\w-]+)(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-S\d(?:cp)?-\d+.[\w.]+$'
-        # filename_fid_regex = r'([\w-]+?)_FID\d+(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?-S\d(?:cp)?-\d+.[\w.]+$'
-        
+               
         ssave_section_filename_pattern = r'(([\w-]+?)(?:_(FID\d+))?(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-(S\d(?:cp)?)(?:-DP\d+)?-\d+.[\w.]+$'
 
-        for file in files:
+        # files_group_set = set() 
+        # for file in files:
 
-            files_group_name = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
+        #     files_group_name = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
 
-            if files_group_name:
-                files_group_set.add(files_group_name)
-            else:
-                info = ' '*LEFT_INDENT + f'Unknown file {file} found in folder {os.path.basename(root)}'
-                print(info, end =" ")             
-                meop.status_info('warning', max_title, len(info))
-                display_continue_request()
+        #     if files_group_name:
+        #         files_group_set.add(files_group_name)
+        #     else:
+        #         info = ' '*LEFT_INDENT + f'Unknown file {file} found in folder {os.path.basename(root)}'
+        #         print(info, end =" ")             
+        #         meop.status_info('warning', max_title, len(info))
+        #         display_continue_request()
 
+        files_group_set = find_files_groups(root, files, ssave_section_filename_pattern, max_title)
+        
         if len(files_group_set) > 1:
-            for files_group_name in files_group_set:
-                files_group_folder = os.path.join(root, files_group_name)
-                fsop.create_folder(files_group_folder, max_title)
+            # for files_group_name in files_group_set:
+            #     files_group_folder = os.path.join(root, files_group_name)
+            #     fsop.create_folder(files_group_folder, max_title)
                 
-            for file in files:
-                files_group_folder = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
-                if files_group_folder:
-                    path_to_move = os.path.join(root, files_group_folder)
-                    # moving file to destination config folder
-                    info = ' '*LEFT_INDENT + f'{file} moving'
-                    print(info, end =" ") 
-                    try:
-                        shutil.move(os.path.join(root, file), path_to_move)
-                    except shutil.Error:
-                        meop.status_info('fail', max_title, len(info))
-                        sys.exit()
-                    else:
-                        meop.status_info('ok', max_title, len(info))
+            create_group_folders(root, files_group_set, max_title)
+
+            # for file in files:
+            #     files_group_folder = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
+            #     if files_group_folder:
+            #         path_to_move = os.path.join(root, files_group_folder)
+            #         # moving file to destination config folder
+            #         info = ' '*LEFT_INDENT + f'{file} moving'
+            #         print(info, end =" ") 
+            #         try:
+            #             shutil.move(os.path.join(root, file), path_to_move)
+            #         except shutil.Error:
+            #             meop.status_info('fail', max_title, len(info))
+            #             sys.exit()
+            #         else:
+            #             meop.status_info('ok', max_title, len(info))
+            
+            distribute_files_by_folders(root, files, ssave_section_filename_pattern, max_title)
+
+
+def find_files_groups(root_directory, files, ssave_section_filename_pattern, max_title):
+    """Function finds files group names in the root directory. 
+    Group name is the file basename (combination of switchname and ip address)"""
+
+    files_group_set = set()
+    for file in files:
+        files_group_name = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
+        if files_group_name:
+            files_group_set.add(files_group_name)
+        else:
+            info = ' '*LEFT_INDENT + f'Unknown file {file} found in folder {os.path.basename(root_directory)}'
+            print(info, end =" ")             
+            meop.status_info('warning', max_title, len(info))
+            display_continue_request()
+    return files_group_set
+
+
+def create_group_folders(root_directory, files_group_set, max_title):
+    """Function creates folders in the current root directory with names from  files_group_set"""
+
+    for files_group_name in files_group_set:
+        files_group_folder = os.path.join(root_directory, files_group_name)
+        fsop.create_folder(files_group_folder, max_title)
+
+
+def distribute_files_by_folders(root_directory, files, ssave_section_filename_pattern, max_title):
+    """Function redistributes ssave files by corresponding folders with ssave file basename as folder names"""
+
+    for file in files:
+        files_group_folder = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
+        if files_group_folder:
+            path_to_move = os.path.join(root_directory, files_group_folder)
+            # moving file to destination config folder
+            info = ' '*LEFT_INDENT + f'{file} moving'
+            print(info, end =" ") 
+            try:
+                shutil.move(os.path.join(root_directory, file), path_to_move)
+            except shutil.Error:
+                meop.status_info('fail', max_title, len(info))
+                sys.exit()
+            else:
+                meop.status_info('ok', max_title, len(info))
 
 
 def extract_ssave_section_file_basename(filename, ssave_section_filename_pattern):

@@ -1,5 +1,5 @@
 # san service initialization module
 # imports service related DataDrames, creates project directories and perform switch supportsave preprocessing
 
-from .service_init import service_initialization
-from .switch_config_preparation import switch_config_preprocessing
+# from .service_init import service_initialization
+from .san_switch_config import switch_config_preprocessing

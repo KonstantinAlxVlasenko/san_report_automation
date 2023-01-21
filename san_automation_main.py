@@ -9,19 +9,20 @@ File report_info_xlsx
 import sys
 
 import san_analysis
-import san_init
 import san_parser
+import san_switch_config
 import san_topology
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+from san_automation_init import service_initialization
 
 
 def main():
 
     # project executation related service information
-    project_constants_lst, software_path_sr, san_graph_grid_df, san_topology_constantants_sr = san_init.service_initialization()
+    project_constants_lst, software_path_sr, san_graph_grid_df, san_topology_constantants_sr = service_initialization()
     # supportsave parsing
-    parsed_sshow_maps_lst = san_init.switch_config_preprocessing(project_constants_lst, software_path_sr)
+    parsed_sshow_maps_lst = san_switch_config.switch_config_preprocessing(project_constants_lst, software_path_sr)
     exit()
 
     # extract information from configuration files

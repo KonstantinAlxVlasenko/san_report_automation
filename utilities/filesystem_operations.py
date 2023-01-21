@@ -39,6 +39,11 @@ def check_valid_path(path):
         sys.exit()
         
 
+def validate_files(*args):
+
+    return [arg for arg in args if os.path.isfile(arg)]
+
+
 def find_files(folder, max_title, filename_contains='', filename_extension=''):
     """
     Function to create list with files. Takes directory, regex_pattern to verify if filename
