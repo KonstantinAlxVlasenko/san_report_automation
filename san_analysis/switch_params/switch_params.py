@@ -50,7 +50,7 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         switch_params_aggregated_df, report_columns_usage_sr = \
             switch_param_aggregation(fabric_clean_df, chassis_params_df, \
                 switch_params_df, maps_params_df, switch_models_df, ag_principal_df, pattern_dct)
-
+        
         project_constants_lst.append(report_columns_usage_sr)
 
         # add 'Device_Location for Blade chassis switches

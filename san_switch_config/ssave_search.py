@@ -11,12 +11,11 @@ import utilities.module_execution as meop
 from san_automation_constants import LEFT_INDENT
 
 
-def search_ssave_files(ssave_path, max_title):
-    """
-    Function to create two lists with unparsed supportshow and amps_maps configs data files.
-    Directors have two ".SSHOW_SYS.txt.gz" files. For Active and Standby CPs
-    Configuration file for Active CP has bigger size
-    """
+def search_ssave_files(ssave_path, pattern_dct, max_title):
+    """Function to create two lists with sshow_sys (single) 
+    and amps_maps configs data files (single, multiple or none).
+    Directors have two ".SSHOW_SYS.txt.gz" files. For Active and Standby CPs.
+    Configuration file for Active CP has bigger size"""
     
     print(f'\n\nPREREQUISITES 3. SEARCHING SUPPORTSAVE CONFIGURATION FILES\n')
     print(f'Configuration data folder {ssave_path}')
@@ -24,10 +23,10 @@ def search_ssave_files(ssave_path, max_title):
     # check if ssave_path folder exist
     fsop.check_valid_path(ssave_path)
     # rellocate files for each switch in separate folder
-    distribute_ssave_files(ssave_path, max_title)
-    verify_sshow_sys_duplication(ssave_path, max_title)
+    distribute_ssave_files(ssave_path, pattern_dct, max_title)
+    verify_sshow_sys_duplication(ssave_path, pattern_dct, max_title)
     # list to save unparsed configuration data files
-    unparsed_files_lst = []
+    discovered_sw_cfg_files_lst = []
     
     # var to count total number of ams_maps_log files
     ams_maps_num = 0
@@ -36,7 +35,8 @@ def search_ssave_files(ssave_path, max_title):
     # required in order to proper alighnment information in terminal
     filename_size = []
 
-    ssave_section_filename_pattern = r'(([\w-]+?)(?:_(FID\d+))?(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-(S\d(?:cp)?)(?:-DP\d+)?-\d+.[\w.]+$'
+    # ssave_section_filename_pattern = r'(([\w-]+?)(?:_(FID\d+))?(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-(S\d(?:cp)?)(?:-DP\d+)?-\d+.[\w.]+$'
+    ssave_section_filename_pattern = pattern_dct['ssave_section_filename']
 
     # going through all directories inside ssave folder to find configurutaion data
     for root, _, files in os.walk(ssave_path):
@@ -81,20 +81,20 @@ def search_ssave_files(ssave_path, max_title):
         # add info to unparsed list only if supportshow file has been found in current directory
         # if supportshow found but there is no ams_maps files then empty ams_maps list appended to config set 
         if sshow_file_path:
-            unparsed_files_lst.append([sshow_file_path, tuple(ams_maps_current_folder_lst)])
+            discovered_sw_cfg_files_lst.append([sshow_file_path, tuple(ams_maps_current_folder_lst)])
             if not ams_maps_current_folder_lst:
                 info = ' '*LEFT_INDENT + f'No AMS_MAPS_LOG file found in folder {os.path.basename(root)}'
                 print(info, end =" ")             
                 meop.status_info('warning', max_title, len(info))
                 display_continue_request()
                        
-    sshow_num = len(unparsed_files_lst)
+    sshow_num = len(discovered_sw_cfg_files_lst)
     print(f'SSHOW_SYS: {sshow_num}, AMS_MAPS_LOG: {ams_maps_num}, Total: {sshow_num + ams_maps_num} configuration files.')
     
     if sshow_num == 0:
         print('\nNo confgiguration data found')
         sys.exit()           
-    return unparsed_files_lst
+    return discovered_sw_cfg_files_lst
 
 
 def display_continue_request():
@@ -104,55 +104,21 @@ def display_continue_request():
         sys.exit()
 
 
-def distribute_ssave_files(ssave_path, max_title):
-    """
-    Function to check if switch supportsave files for each switch are in individual
+def distribute_ssave_files(ssave_path, pattern_dct, max_title):
+    """Function to check if switch supportsave files for each switch are in individual
     folder. If not create folder for each swicth met in current folder and move files 
-    to corresponding folders.
-    """
+    to corresponding folders."""
     
+    # ssave_section_filename_pattern = r'(([\w-]+?)(?:_(FID\d+))?(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-(S\d(?:cp)?)(?:-DP\d+)?-\d+.[\w.]+$'
+    ssave_section_filename_pattern = pattern_dct['ssave_section_filename']
+
     # going through all directories inside ssave folder to find configurutaion data
-    for root, _, files in os.walk(ssave_path):
-               
-        ssave_section_filename_pattern = r'(([\w-]+?)(?:_(FID\d+))?(-(?:[0-9]{1,3}\.){3}[0-9]{1,3})?)-(S\d(?:cp)?)(?:-DP\d+)?-\d+.[\w.]+$'
-
-        # files_group_set = set() 
-        # for file in files:
-
-        #     files_group_name = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
-
-        #     if files_group_name:
-        #         files_group_set.add(files_group_name)
-        #     else:
-        #         info = ' '*LEFT_INDENT + f'Unknown file {file} found in folder {os.path.basename(root)}'
-        #         print(info, end =" ")             
-        #         meop.status_info('warning', max_title, len(info))
-        #         display_continue_request()
-
-        files_group_set = find_files_groups(root, files, ssave_section_filename_pattern, max_title)
+    for root, _, files in os.walk(ssave_path):               
         
+        # find file groups. group name is the combination of switchname and ip address
+        files_group_set = find_files_groups(root, files, ssave_section_filename_pattern, max_title)
         if len(files_group_set) > 1:
-            # for files_group_name in files_group_set:
-            #     files_group_folder = os.path.join(root, files_group_name)
-            #     fsop.create_folder(files_group_folder, max_title)
-                
             create_group_folders(root, files_group_set, max_title)
-
-            # for file in files:
-            #     files_group_folder = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
-            #     if files_group_folder:
-            #         path_to_move = os.path.join(root, files_group_folder)
-            #         # moving file to destination config folder
-            #         info = ' '*LEFT_INDENT + f'{file} moving'
-            #         print(info, end =" ") 
-            #         try:
-            #             shutil.move(os.path.join(root, file), path_to_move)
-            #         except shutil.Error:
-            #             meop.status_info('fail', max_title, len(info))
-            #             sys.exit()
-            #         else:
-            #             meop.status_info('ok', max_title, len(info))
-            
             distribute_files_by_folders(root, files, ssave_section_filename_pattern, max_title)
 
 
@@ -216,17 +182,18 @@ def extract_ssave_section_file_basename(filename, ssave_section_filename_pattern
         return ssave_section_file_basename
         
 
-def verify_sshow_sys_duplication(ssave_path, max_title):
+def verify_sshow_sys_duplication(ssave_path, pattern_dct, max_title):
     """Function to check if there is SSHOW_SYS with the same S#cp in the folder"""
 
-    scp_pattern = r'.+(S\d+(?:cp)?)-\d+\.SSHOW_SYS.(?:txt.)?gz$'
+    # scp_pattern = r'.+(S\d+(?:cp)?)-\d+\.SSHOW_SYS.(?:txt.)?gz$'
+    sshow_sys_section_pattern = pattern_dct['sshow_sys_section']
     sshow_duplicated = False
 
     for root, _, files in os.walk(ssave_path):
         scp_dct = defaultdict(int)
         for file in files:
-            if re.match(scp_pattern, file):                
-                scp_dct[re.search(scp_pattern, file).group(1)] += 1
+            if re.match(sshow_sys_section_pattern, file):                
+                scp_dct[re.search(sshow_sys_section_pattern, file).group(3)] += 1
         
         multiple_scp_lst = [key for key in scp_dct if scp_dct[key] > 1]
 

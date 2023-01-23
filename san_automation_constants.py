@@ -1,6 +1,9 @@
 
+# software release number
+RELEASE = '0.1'
+
 # information string
-LEFT_INDENT = 16
+LEFT_INDENT = 10
 MIDDLE_SPACE = 80
 RIGHT_INDENT = 10
 

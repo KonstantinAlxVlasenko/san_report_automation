@@ -155,13 +155,13 @@ def create_service_folders(report_requisites_sr, max_title):
     print(f'Project folder {project_path}')
     # define folder and subfolders to save configuration data (supportsave and ams_maps files)
     santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
-    santoolbox_parsed_sshow_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')
-    santoolbox_parsed_others_path = os.path.join(project_path, santoolbox_parsed_dir, 'others')
-    fsop.create_folder(santoolbox_parsed_sshow_path, max_title)
-    fsop.create_folder(santoolbox_parsed_others_path, max_title)
+    sshow_export_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')
+    other_export__path = os.path.join(project_path, santoolbox_parsed_dir, 'others')
+    fsop.create_folder(sshow_export_path, max_title)
+    fsop.create_folder(other_export__path, max_title)
 
-    report_requisites_sr['parsed_sshow_folder'] = santoolbox_parsed_sshow_path
-    report_requisites_sr['parsed_other_folder'] = santoolbox_parsed_others_path
+    report_requisites_sr['sshow_export_folder'] = sshow_export_path
+    report_requisites_sr['other_export_folder'] = other_export__path
         
     # define folder san_assessment_report to save excel file with parsed configuration data
     san_assessment_report_dir = f'report_{customer_title}_' + current_date

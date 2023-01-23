@@ -145,8 +145,3 @@ def santoolbox_parser(file, path_to_move_parsed_data, santoolbox_path, max_title
     else:
         meop.status_info('skip', max_title, len(info))
     return os.path.normpath(os.path.join(path_to_move_parsed_data, filename))
-
-
-
-
-

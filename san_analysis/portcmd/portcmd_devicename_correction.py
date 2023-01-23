@@ -44,7 +44,6 @@ def devicename_correction_main(portshow_aggregated_df, device_rename_df, project
 
     # check if device Group_Name should be used in report tables (alias group name)
     group_name_usage(report_columns_usage_sr, device_rename_df, max_title, force_group_name_usage_update_flag)
-
     return portshow_aggregated_df, device_rename_df
 
 
@@ -209,10 +208,8 @@ def device_rename(portshow_aggregated_df, device_rename_df):
 
 
 def group_name_usage(report_columns_usage_sr, device_rename_df, max_title, force_group_name_usage_update_flag):
-    """
-    Function to determine if device alias Group_Name column required in report tables.
-    Value (True or False) written to the dictonary so no need to return value.
-    """
+    """Function to determine if device alias Group_Name column required in report tables.
+    Value (True or False) written to the dictonary so no need to return value."""
 
     info = f'Device Group Name usage'
 

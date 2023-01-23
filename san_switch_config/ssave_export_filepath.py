@@ -1,12 +1,15 @@
+"""Module to find file path to export switch configuration"""
+
+
 import os
 import re
 
-pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
-'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
-'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
+# pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
+# 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
+# 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
 
 
-def get_sshow_filepath(sshow_sys_section_file, sshow_dir):
+def get_sshow_filepath(sshow_sys_section_file, sshow_dir, pattern_dct):
     """Function takes sshow_sys configuration file and
     directory to export unpacked and concatenated sshow files as input parameters.
     Returns output filepath which is used later to export concatenated sshow files"""
@@ -24,7 +27,7 @@ def get_sshow_filepath(sshow_sys_section_file, sshow_dir):
     return sshow_filepath
 
 
-def get_single_section_output_filepath(input_filepath, output_dir):
+def get_single_section_output_filepath(input_filepath, output_dir, pattern_dct):
     """Function takes configuration file and directory to export unpacked file as input parameters.
     Returns output filepath which is used later to export file content"""
     

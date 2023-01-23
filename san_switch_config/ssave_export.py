@@ -1,3 +1,5 @@
+"""Module to export ssave files to sshow and ams_maps files"""
+
 import os
 import re
 import sys
@@ -16,9 +18,11 @@ from .sshow_stats import (count_ssave_section_files_stats,
                           filter_fault_sections, update_ssave_sections_stats)
 
 
-def export_ssave_files(san_ssave_files_lst, path_to_move_sshow, path_to_move_others, ssave_sections_stats_df, max_title):    
+def export_ssave_files(san_ssave_files_lst, path_to_move_sshow, path_to_move_others, 
+                        ssave_sections_stats_df, pattern_dct, max_title):    
     """Check through list for configuration sets for each switch.  
-    Config set for each switch is ssave_sys file and list of ssave_ams_maps files."""
+    Config set for each switch is ssave_sys file and list of ssave_ams_maps files.
+    Export ssave files to text configuration files"""
     
 
     # list to save parsed configuration data files with full path
@@ -45,16 +49,17 @@ def export_ssave_files(san_ssave_files_lst, path_to_move_sshow, path_to_move_oth
     for i, switch_ssave_files_lst in enumerate(san_ssave_files_lst):
         
         # extracts switchname from supportshow filename
-        switchname = re.search(r'^([\w-]+)(-\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})?-S\d(cp)?-\d+.SSHOW_SYS.(txt.)?gz$', 
-                                os.path.basename(switch_ssave_files_lst[0])).group(1)
+        # switchname = re.search(r'^([\w-]+)(-\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})?-S\d(cp)?-\d+.SSHOW_SYS.(txt.)?gz$', 
+        #                         os.path.basename(switch_ssave_files_lst[0])).group(1)
+        switchname = re.search(pattern_dct['switchname_sshow_sys'], os.path.basename(switch_ssave_files_lst[0])).group(1)
         # number of ams_maps_log files in current configuration set (switch)
         ssave_ams_maps_files_num = len(switch_ssave_files_lst[1])
         print(f'[{i+1} of {config_set_num}]: {switchname}. Number of configs: {ssave_ams_maps_files_num+1} ...')
         
         # build sshow file from ssave sshow sections
         sshow_filepath, ssave_sections_stats_df = pull_switch_configuration_file(switch_ssave_files_lst[0], 
-                                                            path_to_move_sshow, 
-                                                            ssave_sections_stats_df, max_title, export_status_lst)
+                                                                                path_to_move_sshow, ssave_sections_stats_df, 
+                                                                                export_status_lst, pattern_dct, max_title)
         sshow_filename = os.path.basename(sshow_filepath)
         
         # tmp lists to save parsed AMS_MAPS_LOG filenames and filepaths
@@ -64,8 +69,8 @@ def export_ssave_files(san_ssave_files_lst, path_to_move_sshow, path_to_move_oth
             for ssave_ams_maps_file in switch_ssave_files_lst[1]:
                 # calling santoolbox_parser function which parses AMS_MAPS_LOG file with SANToolbox
                 amsmaps_filepath, _ = pull_switch_configuration_file(ssave_ams_maps_file, 
-                                                    path_to_move_others, 
-                                                    ssave_sections_stats_df, max_title, export_status_lst)
+                                                                    path_to_move_others, ssave_sections_stats_df, 
+                                                                    export_status_lst, pattern_dct, max_title)
 
                 # append filenames and filepaths to tmp lists
                 ams_maps_files_lst_tmp.append(amsmaps_filepath)
@@ -84,25 +89,26 @@ def export_ssave_files(san_ssave_files_lst, path_to_move_sshow, path_to_move_oth
     return exported_files_lst, exported_filenames_lst, ssave_sections_stats_df, export_status_lst
 
 
-pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
-'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
-'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
+# pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
+# 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
+# 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
 
 
-def pull_switch_configuration_file(ssave_section_file, output_dir, ssave_sections_stats_df, max_title, export_status_lst):
+def pull_switch_configuration_file(ssave_section_file, output_dir, ssave_sections_stats_df, 
+                                    export_status_lst, pattern_dct, max_title):
     """Function to process unparsed ".SSHOW_SYS.txt.gz" and  "AMS_MAPS_LOG.txt.gz" files with SANToolbox."""
 
     ssave_section_filename = os.path.basename(ssave_section_file)
 
     # information string
-    info = ' '*LEFT_INDENT+f'{ssave_section_filename} processing'
+    info = ' '*LEFT_INDENT + f'{ssave_section_filename} processing'
     
     if re.search(pattern_dct['sshow_sys_section'], ssave_section_filename):
-        exported_switch_config_filepath = get_sshow_filepath(ssave_section_filename, output_dir)
+        exported_switch_config_filepath = get_sshow_filepath(ssave_section_filename, output_dir, pattern_dct)
         exported_switch_config_secondary_filepath = ''
         config_type = 'sshow'
     elif re.search(pattern_dct['amps_maps_section'], ssave_section_filename):
-        exported_switch_config_filepath = get_single_section_output_filepath(ssave_section_filename, output_dir)
+        exported_switch_config_filepath = get_single_section_output_filepath(ssave_section_filename, output_dir, pattern_dct)
         exported_switch_config_secondary_filepath = get_single_section_output_secondary_filepath(ssave_section_filename, output_dir)
         config_type = 'maps'
     else:
@@ -117,8 +123,11 @@ def pull_switch_configuration_file(ssave_section_file, output_dir, ssave_section
         return config_exist_lst[0], ssave_sections_stats_df
 
     if config_type == 'sshow':
-        ssave_sections_stats_df, ssave_sections_stats_current_df =\
-            validate_sshow_section_files(ssave_section_file, exported_switch_config_filepath, ssave_sections_stats_df)
+        ssave_sections_stats_current_df =\
+            validate_sshow_section_files(ssave_section_file, pattern_dct)
+        ssave_sections_stats_current_df['sshow_filename'] = os.path.basename(exported_switch_config_filepath)
+        # 
+        ssave_sections_stats_df = update_ssave_sections_stats(ssave_sections_stats_df, ssave_sections_stats_current_df)
         # combine and export sshow sections files to exported_switch_config_filepath
         build_sshow_file(ssave_sections_stats_current_df, exported_switch_config_filepath)
     elif config_type == 'maps':
@@ -132,12 +141,12 @@ def pull_switch_configuration_file(ssave_section_file, output_dir, ssave_section
     return exported_switch_config_filepath, ssave_sections_stats_df
 
 
-def validate_sshow_section_files(ssave_sys_section_file, exported_switch_config_filepath, ssave_sections_stats_df):
-    """Function to verify sshow sections with high priority located in follder and there is no files duplication"""
+def validate_sshow_section_files(ssave_sys_section_file, pattern_dct):
+    """Function to verify sshow sections with high priority located in folder and there is no files duplication"""
 
     ssave_sys_section_filename = os.path.basename(ssave_sys_section_file)
     sw_ssave_sections_stats_df, ssave_sections_stats_current_df = \
-        count_ssave_section_files_stats(ssave_sys_section_file, sshow_filepath=exported_switch_config_filepath)
+        count_ssave_section_files_stats(ssave_sys_section_file, pattern_dct)
     sw_fault_sections_df, multiple_sshow_section_files_warning_on = filter_fault_sections(sw_ssave_sections_stats_df)
     if not sw_fault_sections_df.empty:
         input_option = None
@@ -150,15 +159,14 @@ def validate_sshow_section_files(ssave_sys_section_file, exported_switch_config_
             input_option = meop.reply_request("Choose option: ", reply_options=operation_options_lst, show_reply=True)
             if input_option == 'r':
                 sw_ssave_sections_stats_df, ssave_sections_stats_current_df = \
-                    count_ssave_section_files_stats(ssave_sys_section_file, sshow_filepath=exported_switch_config_filepath)
+                    count_ssave_section_files_stats(ssave_sys_section_file, pattern_dct)
                 sw_fault_sections_df, multiple_sshow_section_files_warning_on = filter_fault_sections(sw_ssave_sections_stats_df)
                 print('Directory rescanned')
             elif input_option == 'x':
                 print('Stop program execution')
                 sys.exit()
             print('\n')
-    ssave_sections_stats_df = update_ssave_sections_stats(ssave_sections_stats_df, ssave_sections_stats_current_df)
-    return ssave_sections_stats_df, ssave_sections_stats_current_df
+    return ssave_sections_stats_current_df
 
 
 def get_operation_options(multiple_sshow_section_files_warning_on):

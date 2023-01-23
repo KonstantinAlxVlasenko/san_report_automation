@@ -1,10 +1,10 @@
+"""Module to count sshow sections which are used to build supportshow files for switches in san (sshow section statistics)"""
 
 import os
 import re
-import pandas as pd
+
 import numpy as np
-
-
+import pandas as pd
 
 SSHOW_SECTIONS = ['SSHOW_PLOG', 'SSHOW_OS', 'SSHOW_EX', 'SSHOW_FABRIC', 
                   'SSHOW_CONDB', 'SSHOW_SERVICE', 'SSHOW_SEC', 'SSHOW_NET', 
@@ -12,23 +12,15 @@ SSHOW_SECTIONS = ['SSHOW_PLOG', 'SSHOW_OS', 'SSHOW_EX', 'SSHOW_FABRIC',
                   'SSHOW_AG', 'SSHOW_FCIP', 'SSHOW_APM', 'SSHOW_AMP', 'SSHOW_CRYP', 'SSHOW_PORT', 
                   'SSHOW_DCEHSL', 'SSHOW_FLOW']
 
-
 HIGH_PRIORITY_SECTIONS = ['SSHOW_EX', 'SSHOW_FABRIC', 'SSHOW_SERVICE', 
                           'SSHOW_SEC', 'SSHOW_SYS', 'SSHOW_AG', 'SSHOW_PORT']
 
+# pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
+#                 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
+#                 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
 
 
-
-
-
-pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
-
-
-
-
-    
-
-def get_sshow_basename(sshow_sys_section_file):
+def get_sshow_basename(sshow_sys_section_file, pattern_dct):
     """Function returns SSHOW_SYS file basename (hostname, ip address, S#cp) 
     to filter sshow files related to sshow_sys_section_file (same S#cp)"""
     
@@ -41,7 +33,7 @@ def get_sshow_basename(sshow_sys_section_file):
     return sshow_section_basename
     
 
-def count_ssave_section_files_stats(sshow_sys_section_file, sshow_filepath):
+def count_ssave_section_files_stats(sshow_sys_section_file, pattern_dct):
     """Function counts statistics for the sections from  SSHOW_SECTIONS list 
     with the same basename as sshow_sys_section_file in directory where sshow_sys_section_file is located"""
     
@@ -49,16 +41,13 @@ def count_ssave_section_files_stats(sshow_sys_section_file, sshow_filepath):
     sw_ssave_sections_stats_df = pd.DataFrame(index=SSHOW_SECTIONS, columns=['Quantity', 'Size_KB', 'Priority'])
     sw_ssave_sections_stats_df.index.name = 'Section_name'
     # create pattern to filter required sshow files
-    sshow_sys_section_basename = get_sshow_basename(sshow_sys_section_file)
+    sshow_sys_section_basename = get_sshow_basename(sshow_sys_section_file, pattern_dct)
     ssave_sections_dir = os.path.dirname(sshow_sys_section_file)
     pattern = fr"{sshow_sys_section_basename}-\d+\.({'|'.join(SSHOW_SECTIONS)})\.(?:txt.)?gz$"
-    
-
     # tmp
     ssave_sections_stats_columns = ['directory_path', 'directory_name', 'section_name', 
                                     'priority', 'ssave_filename', 'count', 'size_KB',  
-                                    'ssave_basename', 'sshow_filename']
-    
+                                    'ssave_basename']
     # section statistics dataframe used to concatenate sshow files
     ssave_sections_stats_current_df = pd.DataFrame(columns=ssave_sections_stats_columns)
 
@@ -86,10 +75,10 @@ def count_ssave_section_files_stats(sshow_sys_section_file, sshow_filepath):
                                                                                    section_name, priority, file, 
                                                                                    sw_ssave_sections_stats_df.loc[section_name, 'Quantity'],
                                                                                    sw_ssave_sections_stats_df.loc[section_name, 'Size_KB'],
-                                                                                   sshow_sys_section_basename,
-                                                                                   os.path.basename(sshow_filepath)]
+                                                                                   sshow_sys_section_basename]
     # add empty rows for the sections for which files are absent in the directory
-    absent_sections = [section for section in sw_ssave_sections_stats_df.index if not section in ssave_sections_stats_current_df['section_name'].values]
+    absent_sections = [section for section in sw_ssave_sections_stats_df.index 
+                        if not section in ssave_sections_stats_current_df['section_name'].values]
     absent_sections_proirity = [1  if section in HIGH_PRIORITY_SECTIONS else None for section in absent_sections ]
     # print(absent_sections)
     for section, priority in zip(absent_sections, absent_sections_proirity):
@@ -103,8 +92,6 @@ def filter_fault_sections(sw_ssave_sections_stats_df):
     """Function filters failed sections (sections with high piority with absent files or files with zero size,
     section with any piority and multiple files)"""
     
-
-    # print(sw_ssave_sections_stats_df)
     mask_quantity_failure = sw_ssave_sections_stats_df['Quantity'] != 1
     mask_high_priority = sw_ssave_sections_stats_df['Priority'] == 1
     mask_size_zero = sw_ssave_sections_stats_df['Size_KB'] == 0
@@ -112,7 +99,6 @@ def filter_fault_sections(sw_ssave_sections_stats_df):
     mask_failure = (mask_high_priority & mask_quantity_failure) | (mask_high_priority & mask_size_zero) | mask_multiple_files
     sw_fault_sections_df = sw_ssave_sections_stats_df.loc[mask_failure]
     multiple_sshow_section_files_warning_on = mask_multiple_files.any()
-
     return sw_fault_sections_df, multiple_sshow_section_files_warning_on
 
 
