@@ -11,10 +11,6 @@ import utilities.module_execution as meop
 from san_automation_constants import RELEASE
 
 
-# pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
-# 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
-# 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
-
 SSHOW_SECTIONS = ['SSHOW_PLOG', 'SSHOW_OS', 'SSHOW_EX', 'SSHOW_FABRIC', 
                   'SSHOW_CONDB', 'SSHOW_SERVICE', 'SSHOW_SEC', 'SSHOW_NET', 
                   'SSHOW_SYS', 'SSHOW_FICON', 'SSHOW_ISWITCH', 'SSHOW_ISCSI', 'SSHOW_ASICDB', 
@@ -30,7 +26,6 @@ def export_gzip_file(gzip_filepath, dest_filepath):
             for line in gzf:
                 tab_free_line = line.replace('\t', ' ')
                 dest_file.write(tab_free_line)
-            # dest_file.write(gzf.read())
             
 
 def export_tar_file(tar_filepath, dest_filepath):
@@ -51,7 +46,6 @@ def export_tar_file(tar_filepath, dest_filepath):
             for line in tar_file_content:
                 tab_free_line = line.replace('\t', ' ')
                 dest_file.write(tab_free_line)
-            # dest_file.write(tar_file_content)
 
 
 def export_single_section_file(input_filepath, output_filepath):
@@ -83,6 +77,7 @@ def build_sshow_file(ssave_sections_stat_current_df, sshow_filepath):
             insert_section_header(sshow_filepath, section_name)
             # write section content to sshow_filepath
             export_gzip_file(gzip_filepath=ssave_section_file, dest_filepath=sshow_filepath)
+    # insert footer to the end of the file
     insert_sshow_footer(sshow_filepath)
             
 

@@ -108,9 +108,7 @@ def import_requisites(max_title):
     customer_name, project_title, hardware configuration files folders"""
 
     report_requisites_df = sfop.dataframe_import('report_requisites', max_title, 'report_info.xlsx', display_status=False)
-
     report_requisites_sr = dfop.series_from_dataframe(report_requisites_df, index_column='name', value_column='value')
-
 
     # fields which shouldn't be empty
     entry_lst = ('customer_name', 'project_title', 'project_folder', 'supportsave_folder')
@@ -153,6 +151,7 @@ def create_service_folders(report_requisites_sr, max_title):
     
     print(f'\n\nPREREQUISITES 2. CREATING REQUIRED DIRECTORIES\n')
     print(f'Project folder {project_path}')
+    
     # define folder and subfolders to save configuration data (supportsave and ams_maps files)
     santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
     sshow_export_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')

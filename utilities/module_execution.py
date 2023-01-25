@@ -2,11 +2,12 @@
 checking if each step is required to run"""
 
 
+import sys
 from datetime import datetime
 from functools import wraps
 
 import utilities.data_structure_operations as dsop
-from san_automation_constants import MIDDLE_SPACE
+from san_automation_constants import LEFT_INDENT, MIDDLE_SPACE
 
 
 def status_info(status, max_title, len_info_string, shift=0):
@@ -178,6 +179,15 @@ def current_datetime(drop_seconds=False, join=False):
             return now.strftime("%d%m%Y_%H%M%S")
         else:
             return now.strftime("%d/%m/%Y %H:%M:%S")
+
+
+def display_continue_request():
+    """Function displays continue request"""
+
+    reply = reply_request(f'{" "*(LEFT_INDENT - 1)} Do you want to CONTINUE? (y)es/(n)o: ')
+    if reply == 'n':
+        sys.exit()
+
 
 
 

@@ -15,10 +15,6 @@ SSHOW_SECTIONS = ['SSHOW_PLOG', 'SSHOW_OS', 'SSHOW_EX', 'SSHOW_FABRIC',
 HIGH_PRIORITY_SECTIONS = ['SSHOW_EX', 'SSHOW_FABRIC', 'SSHOW_SERVICE', 
                           'SSHOW_SEC', 'SSHOW_SYS', 'SSHOW_AG', 'SSHOW_PORT']
 
-# pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
-#                 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
-#                 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
-
 
 def get_sshow_basename(sshow_sys_section_file, pattern_dct):
     """Function returns SSHOW_SYS file basename (hostname, ip address, S#cp) 
@@ -80,10 +76,11 @@ def count_ssave_section_files_stats(sshow_sys_section_file, pattern_dct):
     absent_sections = [section for section in sw_ssave_sections_stats_df.index 
                         if not section in ssave_sections_stats_current_df['section_name'].values]
     absent_sections_proirity = [1  if section in HIGH_PRIORITY_SECTIONS else None for section in absent_sections ]
-    # print(absent_sections)
+
     for section, priority in zip(absent_sections, absent_sections_proirity):
         ssave_sections_stats_current_df.loc[len(ssave_sections_stats_current_df), ['directory_path', 'directory_name', 'section_name', 'priority']] = \
             (ssave_sections_dir, os.path.basename(ssave_sections_dir), section, priority)
+        # add priority for absent sections
         sw_ssave_sections_stats_df.loc[section, 'Priority'] = priority
     return sw_ssave_sections_stats_df, ssave_sections_stats_current_df
 
@@ -92,12 +89,18 @@ def filter_fault_sections(sw_ssave_sections_stats_df):
     """Function filters failed sections (sections with high piority with absent files or files with zero size,
     section with any piority and multiple files)"""
     
+    # zero or multiple files for section in the folder
     mask_quantity_failure = sw_ssave_sections_stats_df['Quantity'] != 1
+    # sections with high priority
     mask_high_priority = sw_ssave_sections_stats_df['Priority'] == 1
+    # zero size section files
     mask_size_zero = sw_ssave_sections_stats_df['Size_KB'] == 0
+    # multiple files for section
     mask_multiple_files = sw_ssave_sections_stats_df['Quantity'] > 1
     mask_failure = (mask_high_priority & mask_quantity_failure) | (mask_high_priority & mask_size_zero) | mask_multiple_files
+    # sections with warnings
     sw_fault_sections_df = sw_ssave_sections_stats_df.loc[mask_failure]
+    # warning flag if any section have multiple files
     multiple_sshow_section_files_warning_on = mask_multiple_files.any()
     return sw_fault_sections_df, multiple_sshow_section_files_warning_on
 

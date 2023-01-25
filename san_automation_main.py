@@ -19,6 +19,7 @@ def main():
     project_constants_lst, software_path_sr, san_graph_grid_df, san_topology_constantants_sr = service_initialization()
     # supportsave parsing
     exported_sw_cfg_files_lst = san_switch_config.switch_configuration_discover(project_constants_lst, software_path_sr)
+    exit()
     # extract information from configuration files
     extracted_configuration_lst = san_parser.system_configuration_extract(exported_sw_cfg_files_lst, project_constants_lst, software_path_sr)
     # perform analysis of extracted configuraion data

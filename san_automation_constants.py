@@ -15,7 +15,7 @@ STORAGE_DESC = 'Storages'
 SERVER_DESC = 'Servers'
 SWITCH_GROUPS_DESC = 'Switch groups'
 
-# 
+# colours for Visiso scheme
 HPE_PALETTE = {
     'green': 'RGB(0,169,103)', 
     'red': 'RGB(255,141,109)', 

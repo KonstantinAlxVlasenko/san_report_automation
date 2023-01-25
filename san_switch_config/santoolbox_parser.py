@@ -48,9 +48,9 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
         # calling santoolbox_parser function which parses SHOW_SYS file with SANToolbox
         parsed_sshow_file = santoolbox_parser(switch_files_to_parse_lst[0], path_to_move_parsed_sshow, santoolbox_path, max_title, santoolbox_run_status_lst)
         
-        parsed_sshow_file = pull_switch_configuration_file_(switch_files_to_parse_lst[0], 
-                                                            path_to_move_parsed_sshow, 
-                                                            ssave_sections_stats_df, max_title, santoolbox_run_status_lst)
+        # parsed_sshow_file = pull_switch_configuration_file_(switch_files_to_parse_lst[0], 
+        #                                                     path_to_move_parsed_sshow, 
+        #                                                     ssave_sections_stats_df, max_title, santoolbox_run_status_lst)
         
         parsed_sshow_filename = os.path.basename(parsed_sshow_file)
         
@@ -61,9 +61,9 @@ def santoolbox_process(all_files_to_parse_lst, path_to_move_parsed_sshow, path_t
             for ams_maps_config in switch_files_to_parse_lst[1]:
                 # calling santoolbox_parser function which parses AMS_MAPS_LOG file with SANToolbox
                 parsed_amsmaps_file = santoolbox_parser(ams_maps_config, path_to_move_parsed_others, santoolbox_path, max_title, santoolbox_run_status_lst)
-                parsed_amsmaps_file = pull_switch_configuration_file_(ams_maps_config, 
-                                                    path_to_move_parsed_others, 
-                                                    ssave_sections_stats_df, max_title, santoolbox_run_status_lst)
+                # parsed_amsmaps_file = pull_switch_configuration_file_(ams_maps_config, 
+                #                                     path_to_move_parsed_others, 
+                #                                     ssave_sections_stats_df, max_title, santoolbox_run_status_lst)
 
                 # append filenames and filepaths to tmp lists
                 ams_maps_files_lst_tmp.append(parsed_amsmaps_file)

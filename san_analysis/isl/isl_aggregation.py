@@ -38,8 +38,6 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
         mask_ifl = isl_aggregated_df['ISL_number'].str.contains('ifl', case=False, na=False)
         isl_aggregated_df.loc[mask_ifl, 'ISL_number'] = np.nan
     
-    
-    
     # adding switchshow port information to isl aggregated DataFrame
     isl_aggregated_df, fcredge_df = porttype_join(switchshow_df, isl_aggregated_df, fcredge_df)
     # add link cost
@@ -186,9 +184,6 @@ def portshow_join(portshow_df, switchshow_df, isl_aggregated_df):
     
 def sfp_join(sfpshow_df, isl_aggregated_df, pattern_dct):
     """Adding sfp infromation for both ports of the ISL link"""
-
-    # regular expression patterns
-    # comp_keys, _, comp_dct = re_pattern_lst
 
     # column names list to slice sfphshow DataFrame and join with isl_aggregated Dataframe
     sfp_lst = ['SwitchName', 'switchWwn', 'slot', 'port', 'Transceiver_PN', 'Wavelength_nm', 
