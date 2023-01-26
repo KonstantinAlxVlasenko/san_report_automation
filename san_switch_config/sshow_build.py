@@ -24,6 +24,7 @@ def export_gzip_file(gzip_filepath, dest_filepath):
     with gzip.open(gzip_filepath, "rt", encoding='utf-8', errors='ignore') as gzf:
         with open(dest_filepath, "a+", encoding='utf-8', errors='ignore') as dest_file:
             for line in gzf:
+                # replace tabs with spaces in each line
                 tab_free_line = line.replace('\t', ' ')
                 dest_file.write(tab_free_line)
             
@@ -44,6 +45,7 @@ def export_tar_file(tar_filepath, dest_filepath):
         # write content to the dest_filepath
         with open(dest_filepath, "a+") as dest_file:
             for line in tar_file_content:
+                # replace tabs with spaces in each line
                 tab_free_line = line.replace('\t', ' ')
                 dest_file.write(tab_free_line)
 

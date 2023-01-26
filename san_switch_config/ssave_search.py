@@ -1,4 +1,4 @@
-"""Module to find sshow_sys and ams_maps files in ssave_path folder to build comprehesvie sshow file"""
+"""Module to find sshow_sys and ams_maps files in ssave_path folder to build comprehensvie sshow file"""
 
 import os
 import re
@@ -27,7 +27,7 @@ def search_ssave_files(ssave_path, pattern_dct, max_title):
         
         info = f"Searching sshow_sys in folder '{os.path.basename(root)}'"
         print(info, end =" ")
-
+        
         if not files:
             meop.status_info('empty', max_title, len(info))
             continue   
@@ -54,7 +54,7 @@ def search_ssave_files(ssave_path, pattern_dct, max_title):
     print(f'\nSSHOW_SYS: {sshow_num}, AMS_MAPS_LOG: {ams_maps_num}, Total: {sshow_num + ams_maps_num} configuration files.')
     
     if sshow_num == 0:
-        print('\nNo switch configuration data found')
+        print('\nNo sshow_sys files found')
         sys.exit()           
     return discovered_sw_cfg_files_lst
 

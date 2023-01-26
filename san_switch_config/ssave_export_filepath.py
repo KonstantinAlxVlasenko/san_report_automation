@@ -4,17 +4,12 @@
 import os
 import re
 
-# pattern_dct = {'sshow_sys_section': r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$', 
-# 'single_filename': '^(.+?.\.(\w+))\.(?:tar|txt).gz', 
-# 'amps_maps_section': r'^(.+?)\.AMS_MAPS_LOG\.(?:tar|txt).gz'}
-
 
 def get_sshow_filepath(sshow_sys_section_file, sshow_dir, pattern_dct):
     """Function takes sshow_sys configuration file and
     directory to export unpacked and concatenated sshow files as input parameters.
     Returns output filepath which is used later to export concatenated sshow files"""
     
-    # sshow_name_pattern = r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$'
     sshow_name_pattern = pattern_dct['sshow_sys_section']
     # get filename from absolute filepath
     sshow_sys_section_filename = os.path.basename(sshow_sys_section_file)
@@ -31,7 +26,6 @@ def get_single_section_output_filepath(input_filepath, output_dir, pattern_dct):
     """Function takes configuration file and directory to export unpacked file as input parameters.
     Returns output filepath which is used later to export file content"""
     
-    # input_filename_pattern = '^(.+?.\.(\w+))\.(?:tar|txt).gz'
     input_filename_pattern = pattern_dct['single_filename']
     output_filename = re.search(input_filename_pattern, os.path.basename(input_filepath)).group(1) + '.txt'
     output_filepath = os.path.normpath(os.path.join(output_dir, output_filename))

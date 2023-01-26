@@ -17,13 +17,10 @@ def distribute_ssave_files(ssave_path, pattern_dct, max_title):
     
     ssave_section_filename_pattern = pattern_dct['ssave_section_filename']
 
-    # going through all directories inside ssave folder to find configurutaion data
     for root, _, files in os.walk(ssave_path):               
-        
-        # print(files)
-
         info = f"Distributing files in folder '{os.path.basename(root)}'"
         
+        # if no files in the directory 
         if not files:
             print(info, end =" ")
             meop.status_info('empty', max_title, len(info))
@@ -32,7 +29,6 @@ def distribute_ssave_files(ssave_path, pattern_dct, max_title):
         # find file groups. group name is the combination of switchname and ip address
         files_group_set = find_files_groups(root, files, ssave_section_filename_pattern, max_title)
         if len(files_group_set) > 1:
-            # print('\n')
             print(info)
             create_group_folders(root, files_group_set, max_title)
             distribute_files_by_folders(root, files, ssave_section_filename_pattern, max_title)
@@ -67,9 +63,10 @@ def create_group_folders(root_directory, files_group_set, max_title):
 
 
 def distribute_files_by_folders(root_directory, files, ssave_section_filename_pattern, max_title):
-    """Function redistributes ssave files by corresponding folders with ssave file basename as folder names"""
+    """Function distributes ssave files by corresponding folders with ssave file basename as folder names"""
 
     for file in files:
+        # combination of switchname and ip address
         files_group_folder = extract_ssave_section_file_basename(file, ssave_section_filename_pattern)
         if files_group_folder:
             path_to_move = os.path.join(root_directory, files_group_folder)
@@ -90,12 +87,15 @@ def extract_ssave_section_file_basename(filename, ssave_section_filename_pattern
 
     if re.search(ssave_section_filename_pattern, filename):
         fid = re.search(ssave_section_filename_pattern, filename).group(3)
+        # if fid in filename
         if fid:
+            # extract switchname and ip address separately
             switchname = re.search(ssave_section_filename_pattern, filename).group(2)
             ip_address = re.search(ssave_section_filename_pattern, filename).group(4)
             ssave_section_file_basename = switchname
             if ip_address:
                 ssave_section_file_basename = ssave_section_file_basename + ip_address
         else:
+            # extract switchname and ip address from single pattern group
             ssave_section_file_basename = re.search(ssave_section_filename_pattern, filename).group(1)
         return ssave_section_file_basename
