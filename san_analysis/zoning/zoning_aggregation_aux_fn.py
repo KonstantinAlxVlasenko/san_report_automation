@@ -88,7 +88,8 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
                     'Device_Host_Name', 'Group_Name', 'Device_Port',
                     'Device_type', 'deviceType', 'deviceSubtype', 'portType',
                     'PortName', 'NodeName', 'Connected_portId',
-                    'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 'Index_slot_port']
+                    'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn', 
+                    'Index_slot_port', 'portIndex', 'slot', 'port']
 
     # connection information revealed by merging based on WWNP number
     # of connected device switch port  (PortName) and 

@@ -1,49 +1,25 @@
 """Module to create zoning configuration related reports"""
 
-import pandas as pd
-
-# from common_operations_dataframe import dataframe_segmentation
-# from common_operations_dataframe_presentation import (
-#     dataframe_slice_concatenate, drop_all_identical, drop_column_if_all_na,
-#     drop_equal_columns, drop_equal_columns_pairs, drop_zero,
-#     generate_report_dataframe, translate_header, translate_values)
-
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop    
 
 
 def zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df,
                         zonemember_statistics_df, alias_statistics_df, effective_cfg_statistics_df, 
-                            data_names, report_headers_df, report_columns_usage_dct):
+                            data_names, report_headers_df, report_columns_usage_sr):
     """Main function to create zoning report tables"""
 
-    # # report_steps_dct contains current step desciption and force and export tags
-    # # report_headers_df contains column titles, 
-    # # report_columns_usage_dct show if fabric_name, chassis_name and group_name of device ports should be used
-    # report_constant_lst, report_steps_dct, report_headers_df, report_columns_usage_dct = report_creation_info_lst
-    # # report_constant_lst contains information: customer_name, project directory, database directory, max_title
-    # *_, max_title = report_constant_lst
-
-
-    # report tables
-    # loading values to translate
-    # translate_dct = dct_from_columns('customer_report', max_title, 'Зонирование_перевод_eng', 
-    #                                     'Зонирование_перевод_ru', init_file = 'san_automation_info.xlsx')
-    zoning_report_df = create_report(zoning_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[6])
+    zoning_report_df = create_report(zoning_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[6])
     zoning_valid_df = valid_zoning(zoning_aggregated_df)
-    zoning_valid_report_df = create_report(zoning_valid_df, report_headers_df, report_columns_usage_dct, data_names[6])
+    zoning_valid_report_df = create_report(zoning_valid_df, report_headers_df, report_columns_usage_sr, data_names[6])
     zoning_compare_report_df = dfop.dataframe_slice_concatenate(zoning_valid_report_df, column='Подсеть')
-    alias_report_df = create_report(alias_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[7])
+    alias_report_df = create_report(alias_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[7])
     
     unzoned_device_report_df, no_alias_device_report_df = \
-        unzoned_device_report(portshow_zoned_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[9:11])
+        unzoned_device_report(portshow_zoned_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[9:11])
     zoning_absent_device_report_df = \
-        absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_dct, data_names[11])
+        absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[11])
+
     zonemember_statistics_report_df = statistics_report(zonemember_statistics_df, report_headers_df, data_names[12])
     dfop.drop_zero(zonemember_statistics_report_df)
     alias_statistics_report_df = statistics_report(alias_statistics_df, report_headers_df, data_names[13])
@@ -54,26 +30,22 @@ def zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned
                 alias_statistics_report_df, effective_cfg_statistics_report_df
 
 
-def create_report(aggregated_df, report_headers_df, report_columns_usage_dct, df_name):
+def create_report(aggregated_df, report_headers_df, report_columns_usage_sr, df_name):
     """
     Auxiliary function to remove unnecessary columns from aggregated DataFrame and
     extract required columns and create report dataframe
     """
 
     # pylint: disable=unbalanced-tuple-unpacking
-    cleaned_df = drop_excessive_columns(aggregated_df, report_columns_usage_dct)
+    cleaned_df = drop_excessive_columns(aggregated_df, report_columns_usage_sr)
+
     translated_columns = ['Fabric_device_status', 'Target_Initiator_note', 'Target_model_note', 
                             'Effective_cfg_usage_note', 'Pair_zone_note', 'Multiple_fabric_label_connection',
                             'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related', 'Mixed_zone_note']
-    # cleaned_df = dfop.translate_values(cleaned_df, translate_dct, translated_columns)
 
     cleaned_df = dfop.translate_values(cleaned_df, report_headers_df, 'Зонирование_перевод', translated_columns)
-
-    # take required data from aggregated DataFrame to create report
-    # report_df, = dataframe_segmentation(cleaned_df, data_name, report_columns_usage_dct, max_title)
-
-    report_df = dfop.generate_report_dataframe(cleaned_df, report_headers_df, report_columns_usage_dct, df_name)
-
+    report_df = dfop.generate_report_dataframe(cleaned_df, report_headers_df, report_columns_usage_sr, df_name)
+    dfop.drop_slot_value(report_df, report_columns_usage_sr)
     return report_df
 
 
@@ -124,9 +96,7 @@ def valid_zoning(zoning_aggregated_df):
     mask_valid_zone = ~zoning_aggregated_df['Target_Initiator_note'].isin(invalid_zone_tags)
 
     zoning_valid_df = zoning_aggregated_df.loc[mask_effective & mask_valid_zone].copy()
-
     zoning_valid_df.drop(columns=['Zone_name_device_names_ratio', 'Zone_name_device_names_related'], inplace=True)
-
     return zoning_valid_df
 
 
@@ -148,22 +118,12 @@ def unzoned_device_report(portshow_cfg_aggregated_df, report_headers_df, report_
     mask_not_zoned = portshow_cfg_aggregated_df['cfg_type'] != 'effective'
     # show_devices that have no aliases
     mask_no_alias = portshow_cfg_aggregated_df['alias'].isna()
-
+    
     unzoned_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_wwn_notna & mask_not_switch_vc & mask_not_zoned]
     unzoned_device_df.dropna(axis='columns', how='all')
-
     no_alias_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_wwn_notna & mask_not_switch_vc & mask_no_alias]
-
-    # no_alias_devices_df.dropna(axis='columns', how='all')
-    # create report DataFeame
-    # pylint: disable=unbalanced-tuple-unpacking
-    
-    # unzoned_device_report_df, = dataframe_segmentation(unzoned_device_df, data_names[0], report_columns_usage_dct, max_title)
-    # no_alias_device_report_df, = dataframe_segmentation(no_alias_device_df, data_names[1], report_columns_usage_dct, max_title)
-
     unzoned_device_report_df = dfop.generate_report_dataframe(unzoned_device_df, report_headers_df, report_columns_usage_dct, data_names[0])
     no_alias_device_report_df = dfop.generate_report_dataframe(no_alias_device_df, report_headers_df, report_columns_usage_dct, data_names[1])
-
     return unzoned_device_report_df, no_alias_device_report_df
 
 
@@ -179,7 +139,6 @@ def absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_
     absent_device_df = dfop.translate_values(absent_device_df, report_headers_df, 'Зонирование_перевод', translated_columns='Fabric_device_status')
     absent_device_df = dfop.drop_column_if_all_na(absent_device_df, columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'])
     zoning_absent_device_report_df = dfop.generate_report_dataframe(absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
-
     return zoning_absent_device_report_df
 
 
@@ -197,7 +156,6 @@ def statistics_report(statistics_df, report_headers_df, data_name):
         # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
         statistics_report_df = dfop.drop_all_identical(statistics_report_df, 
                                                     columns_values={'Wwnn_to_Wwnp_number_unpacked': 0}, dropna=True)
-
     # rename values in columns
     if data_name == 'Статистика_зон':
         translated_columns = ['Fabric_name', 'Fabric_device_status', 
@@ -213,15 +171,5 @@ def statistics_report(statistics_df, report_headers_df, data_name):
     
     if 'aliasmember_alias' in statistics_report_df.columns:
         statistics_report_df.drop(columns=['aliasmember_alias'], inplace=True)
-
-    # # column titles used to create dictionary to traslate column names
-    # statistic_columns_lst = [data_name + '_eng', data_name + '_ru']
-    # # dictionary used to translate column names
-    # statistic_columns_dct = dct_from_columns('customer_report', max_title, *statistic_columns_lst, \
-    #     init_file = 'san_automation_info.xlsx')
-    # # translate columns in fabric_statistics_report and statistics_subtotal_df DataFrames
-    # statistics_report_df.rename(columns = statistic_columns_dct, inplace = True)
-
     statistics_report_df = dfop.translate_header(statistics_report_df, report_headers_df, data_name)
-
     return statistics_report_df

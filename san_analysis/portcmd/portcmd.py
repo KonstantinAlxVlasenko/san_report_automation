@@ -74,7 +74,6 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                                 oui_df, fdmi_df, blade_module_df,  blade_servers_df, blade_vc_df, 
                                 synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df,
                                 pattern_dct)
-
         # after finish display status
         meop.status_info('ok', max_title, len(info))
         # show warning if any UNKNOWN device class founded, if any PortSymb or NodeSymb is not parsed,
@@ -94,6 +93,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df)
         # sort rows
         portshow_aggregated_df = sort_portshow(portshow_aggregated_df)
+        validate_report_columns_to_drop(portshow_aggregated_df, report_columns_usage_sr)
         # count device connection statistics
         info = f'Counting device connection statistics'
         print(info, end =" ")
@@ -119,8 +119,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)
         # save data to service file if it's required
-        dfop.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', project_constants_lst, force_flag = nsshow_unsplit_force_flag)
-        dfop.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', project_constants_lst, force_flag = expected_ag_links_force_flag)
+        dfop.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', project_constants_lst, force_flag=nsshow_unsplit_force_flag)
+        dfop.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', project_constants_lst, force_flag=expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
@@ -136,6 +136,20 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         if data_name != 'report_columns_usage_upd':
             dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
     return portshow_aggregated_df
+
+
+def validate_report_columns_to_drop(portshow_aggregated_df, report_columns_usage_sr):
+    
+    if portshow_aggregated_df['portIndex'].equals(portshow_aggregated_df['port']):
+        report_columns_usage_sr['port_index_usage'] = 0
+    else:
+        report_columns_usage_sr['port_index_usage'] = 1
+
+    if (portshow_aggregated_df['slot'] == '0').all():
+        report_columns_usage_sr['slot_usage'] = 0
+    else:
+        report_columns_usage_sr['slot_usage'] = 1
+
 
 
 def device_ports_per_group(portshow_aggregated_df):

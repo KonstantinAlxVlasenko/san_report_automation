@@ -91,7 +91,8 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df, portsho
                         'Fabric_device_status': 'Fabric_host_status'}
     storage_host_aggregated_df.rename(columns=rename_columns, inplace=bool)
     # add host information
-    host_columns = ['Fabric_name', 'Fabric_label', 'chassis_name', 'switchName', 'Index_slot_port', 'Connected_portId', 
+    host_columns = ['Fabric_name', 'Fabric_label', 'chassis_name', 'switchName', 
+                    'Index_slot_port', 'portIndex', 'slot', 'port',  'Connected_portId', 
                     'Device_Host_Name', 'Device_Port', 'Host_OS', 'Device_Location', 
                     'Device_Host_Name_per_fabric_name_and_label',	'Device_Host_Name_per_fabric_label', 
                     'Device_Host_Name_per_fabric_name', 'Device_Host_Name_total_fabrics']
@@ -211,7 +212,9 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_headers_d
                                                                 duplicates_subset=['configname', 'System_Name'])   
     # slice required columns and translate header
     storage_host_report_df = dfop.generate_report_dataframe(storage_host_report_df, report_headers_df, report_columns_usage_sr, data_names[1])
+    dfop.drop_slot_value(storage_host_report_df, report_columns_usage_sr)
     storage_host_valid_df = dfop.generate_report_dataframe(storage_host_valid_df, report_headers_df, report_columns_usage_sr, data_names[1])
+    dfop.drop_slot_value(storage_host_valid_df, report_columns_usage_sr)
     # translate values in columns
     storage_host_report_df = dfop.translate_values(storage_host_report_df)
     storage_host_valid_df = dfop.translate_values(storage_host_valid_df)

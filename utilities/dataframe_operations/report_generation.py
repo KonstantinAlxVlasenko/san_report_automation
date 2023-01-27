@@ -77,7 +77,9 @@ def header_cleanup(report_headers_df, header_name: str, report_columns_usage_sr)
     column_usage_flags = [
         ('chassis_info_usage', ['chassis_name', 'chassis_wwn']),
         ('fabric_name_usage', ['Fabric_name', 'Storage_Port_Partner_Fabric_name', 'zonemember_Fabric_name']),
-        ('group_name_usage', ['Group_Name'])
+        ('group_name_usage', ['Group_Name']),
+        ('slot_usage', ['slot', 'Connected_slot']),
+        ('port_index_usage', ['portIndex', 'Connected_portIndex'])
         ]
 
     if header_name not in report_headers_df.columns:
@@ -116,3 +118,13 @@ def statistics_report(statistics_df, report_headers_df, df_name, report_columns_
         # drop empty columns
         statistics_report_df.dropna(axis=1, how='all', inplace=True)
     return statistics_report_df
+
+
+def drop_slot_value(report_df, report_columns_usage_sr):
+    """Function drops slot column if no directors in san"""
+
+    if report_columns_usage_sr['slot_usage']:
+        report_df.drop(columns=['Порт_коммутатора'], inplace=True)
+    else:
+        report_df.drop(columns=['Порт коммутатора'], inplace=True)
+        report_df.rename(columns={'Порт_коммутатора': 'Порт коммутатора'}, inplace=True)

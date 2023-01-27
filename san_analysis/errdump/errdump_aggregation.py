@@ -1,21 +1,12 @@
 """Module to label errdump, extract information from error messages and
 verify match with portshow DataFrame"""
 
-
 import warnings
 
 import numpy as np
 import pandas as pd
+
 import utilities.dataframe_operations as dfop
-
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
-# from common_operations_dataframe import (dataframe_fabric_labeling,
-#                                          dataframe_fillna)
 
 
 def errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, portshow_aggregated_df, pattern_dct):
@@ -151,12 +142,6 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
     if errdump_aggregated_df[['slot', 'port']].notna().all(axis=1).any():
         errdump_aggregated_df = errdump_aggregated_df.merge(portshow_join_df, how='left', on=portshow_columns[:5])
     
-
-
-
-    # TO_REMOVE
-    # errdump_aggregated_df = dataframe_fillna(errdump_aggregated_df, portshow_aggregated_df, portshow_columns[:5], portshow_columns[5:], remove_duplicates=False, drop_na=False)
-
     # add empty columns if there was no merge with portshow_join_df
     add_empty_columns = [column for column in portshow_columns[3:] if not column in errdump_aggregated_df.columns]
     errdump_aggregated_df[add_empty_columns] = np.nan  
@@ -185,7 +170,6 @@ def errdump_portshow(errdump_aggregated_df, portshow_aggregated_df):
     # concatenate devce name and device port columns
     errdump_aggregated_df['Device_Host_Name_Port'] = \
         errdump_aggregated_df[['Device_Host_Name', 'Device_Port']].stack().groupby(level=0).agg(' port '.join)
-
     return errdump_aggregated_df
 
 
