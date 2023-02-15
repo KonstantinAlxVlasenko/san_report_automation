@@ -6,7 +6,7 @@ import utilities.dataframe_operations as dfop
 
 
 def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, 
-                        switch_models_df, ag_principal_df, pattern_dct):
+                        switch_models_df, switch_rack_df, ag_principal_df, pattern_dct):
     """Function to combine chassis, switch, maps parameters DataFrames and label it with fabric labels"""
 
     # complete fabric DataFrame with information from switch_params DataFrame
@@ -47,6 +47,13 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_models_df.switchType = switch_models_df.switchType.astype('float64', errors='ignore')
     # complete DataFrame with information from switch_models DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(switch_models_df, how='left', on='switchType')
+    # add switch location
+    switch_params_aggregated_df = dfop.dataframe_fillna(switch_params_aggregated_df, switch_rack_df, 
+                                                        join_lst=['switchWwn'], filled_lst=['Device_Rack'], 
+                                                        remove_duplicates=True, drop_na=True)
+    
+
+    
     # create column with switch models (hpe or brocade model)
     switch_params_aggregated_df['ModelName'] = switch_params_aggregated_df['HPE_modelName']
     switch_params_aggregated_df['ModelName'].replace(to_replace={'-': np.nan}, inplace=True)

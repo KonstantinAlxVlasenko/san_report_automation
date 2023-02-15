@@ -1,15 +1,14 @@
+import os
 import os.path
 import sys
 from datetime import date
+
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
+import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-import utilities.filesystem_operations as fsop
-import os
 
 
 def service_initialization():
@@ -30,6 +29,9 @@ def service_initialization():
 
     # create folders in SAN Assessment project folder and add it to the report_entry_sr
     create_service_folders(report_requisites_sr, max_title)
+    # check if device location file exists
+    if pd.notna(report_requisites_sr['device_rack_path']):
+        fsop.check_valid_path(report_requisites_sr['device_rack_path'])
 
     project_steps_df, io_data_names_df, report_headers_df, software_path_sr, san_graph_grid_df, san_topology_constantants_sr = import_service_dataframes(max_title)
     project_constants_lst = [project_steps_df, max_title, io_data_names_df, report_requisites_sr, report_headers_df]
@@ -123,7 +125,7 @@ def import_requisites(max_title):
 
     # normpath all folders in requisites and check if they exist
     for index, _ in report_requisites_sr.items():
-        if 'folder' in index:
+        if 'folder' in index or 'path' in index:
             if pd.notna(report_requisites_sr[index]):
                 report_requisites_sr[index] = os.path.normpath(report_requisites_sr[index])
                 fsop.check_valid_path(report_requisites_sr[index])

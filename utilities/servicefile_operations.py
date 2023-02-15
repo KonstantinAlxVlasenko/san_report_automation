@@ -52,7 +52,7 @@ def columns_import(sheet_title, max_title, *args,
     return columns_names
 
 
-def dataframe_import(sheet_title, max_title, init_file = 'san_automation_info.xlsx', 
+def dataframe_import(sheet_title, max_title, init_file='san_automation_info.xlsx', 
                         columns=None, index_name=None, header=2, display_status=True):
     """Function to import dataframe from exel file"""
 

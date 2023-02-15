@@ -33,8 +33,8 @@ def check_valid_path(path):
     """Function to check if folder exist"""
 
     path = os.path.normpath(path)
-    if not os.path.isdir(path):
-        print(f"{path} folder doesn't exist")
+    if not os.path.exists(path):
+        print(f"{path} doesn't exist")
         print('Code execution exit')
         sys.exit()
         

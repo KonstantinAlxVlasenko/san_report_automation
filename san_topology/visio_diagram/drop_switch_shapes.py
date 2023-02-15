@@ -1,6 +1,9 @@
 
 """Module drops switch and VC module pairs on Visio page"""
 
+import math
+from itertools import product
+
 from tqdm import tqdm
 
 import utilities.database_operations as dbop
@@ -8,6 +11,8 @@ import utilities.database_operations as dbop
 from .drop_connector_shape import drop_connector_shape, shape_font_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
 
+
+SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'MID', 'ENTP'], repeat=2)]
 
 def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn, visio_log_file, san_topology_constantants_sr, tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str):
     """Function to add swith and VC shapes to Visio document pages (fabric_name)""" 
@@ -82,6 +87,7 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
         if 'DIR' in switch_pair_sr['switchClass_mode']:
             shape.Text = shape_text[i] + "\n" + switch_pair_sr['ModelName']
             shape_font_change(shape, switch_font_size)
+            # shape.Cells("TxtWidth").FormulaU = "Width * 2.3"
         else:
             shape.Text = " "
     
@@ -94,6 +100,14 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
         else:
             bottom_shape.Text = switch_pair_sr['switchName_DID']
         shape_font_change(bottom_shape, switch_font_size)
+        if switch_pair_sr['switchClass_mode'] in SWITCH_CLASS_PRODUCT:
+            bottom_shape.Cells("TxtWidth").FormulaU = get_textbox_width(switch_pair_sr['switchName_DID'])
+        
+def get_textbox_width(text):
+
+    width_ratio = math.ceil(2.6*len(text)*10/74)/10 + 0.1
+    return f"Width * {width_ratio if width_ratio >= 1.5 else 1.5}"
+
 
 
 def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric_label_colours_dct, 

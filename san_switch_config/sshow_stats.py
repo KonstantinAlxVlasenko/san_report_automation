@@ -20,7 +20,6 @@ def get_sshow_basename(sshow_sys_section_file, pattern_dct):
     """Function returns SSHOW_SYS file basename (hostname, ip address, S#cp) 
     to filter sshow files related to sshow_sys_section_file (same S#cp)"""
     
-    # sshow_name_pattern = r'((.+S\d+(?:cp)?)-\d+)\.SSHOW_SYS.(?:txt.)?gz$'
     sshow_name_pattern = pattern_dct['sshow_sys_section']
     # get filename from absolute filepath
     sshow_sys_section_filename = os.path.basename(sshow_sys_section_file)

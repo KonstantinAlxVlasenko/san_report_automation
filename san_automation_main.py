@@ -28,7 +28,6 @@ def main():
     # create san topology in Visio
     san_topology.visualize_san_topology(analyzed_configuration_lst, project_constants_lst, software_path_sr, 
                                         san_graph_grid_df, san_topology_constantants_sr)
-    
     print("\nExecution successfully finished\n")
 
 

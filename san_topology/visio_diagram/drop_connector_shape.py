@@ -73,7 +73,6 @@ def set_connector_attributes(connector, link_sr, fabric_label_colours_dct, link_
 def shape_font_change(shape, font_size, default_font_size='12 pt'):
     """Function modifies shape font if it differs from default"""
 
-    # default_font_size = '12 pt'
     font_size = str(font_size) + ' pt'
 
     if font_size != default_font_size:

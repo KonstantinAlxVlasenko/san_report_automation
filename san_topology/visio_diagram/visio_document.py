@@ -16,8 +16,8 @@ def visio_document_init(software_path_sr, fabric_name_lst, report_requisites_sr)
     fabric_name"""
 
     # visio template and visio stencil path
-    visio_template_path = software_path_sr['viso_template_path']
-    visio_stencil_path = software_path_sr['viso_stencil_path']
+    visio_template_path = software_path_sr['visio_template_path']
+    visio_stencil_path = software_path_sr['visio_stencil_path']
     
     visio = win32com.client.Dispatch("Visio.Application")
     visio.Visible = 1

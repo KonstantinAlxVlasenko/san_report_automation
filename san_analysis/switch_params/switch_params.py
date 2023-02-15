@@ -4,7 +4,8 @@ Module to generate aggregated switch parameters table and
 'Switches parameters', 'Licenses' report tables
 """
 
-import numpy as np
+import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
@@ -19,7 +20,7 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
     """Main function to create aggregated switch parameters table and report tables"""
     
     # imported project constants required for module execution
-    project_steps_df, max_title, io_data_names_df, *_ = project_constants_lst
+    project_steps_df, max_title, io_data_names_df, report_requisites_sr, *_ = project_constants_lst
 
     # data titles obtained after module execution (output data)
     # data titles which module is dependent on (input data)
@@ -41,6 +42,12 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         pattern_dct, _ = sfop.regex_pattern_import('common_regex', max_title)
         # import data with switch models, firmware and etc
         switch_models_df = sfop.dataframe_import('switch_models', max_title)
+        if report_requisites_sr['device_rack_path']:
+            switch_rack_df = sfop.dataframe_import('switch_rack', max_title, 
+                                                    init_file=report_requisites_sr['device_rack_path'], header=0)
+        else:
+            switch_rack_df = pd.DataFrame(columns=['switchWwn', 'Device_Rack'])
+
 
         # current operation information string
         info = f'Generating aggregated switch parameters table'
@@ -49,8 +56,8 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         # create aggregated table by joining DataFrames
         switch_params_aggregated_df, report_columns_usage_sr = \
             switch_param_aggregation(fabric_clean_df, chassis_params_df, \
-                switch_params_df, maps_params_df, switch_models_df, ag_principal_df, pattern_dct)
-        
+                switch_params_df, maps_params_df, switch_models_df, switch_rack_df, ag_principal_df, pattern_dct)
+
         project_constants_lst.append(report_columns_usage_sr)
 
         # add 'Device_Location for Blade chassis switches
@@ -69,6 +76,9 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
             info = f'{missing_configs_num} switch configuration{"s" if missing_configs_num > 1 else ""} MISSING'
             print(info, end =" ")
             meop.status_info('warning', max_title, len(info))
+
+
+
 
         # create list with partitioned DataFrames
         data_lst = [report_columns_usage_sr, switch_params_aggregated_df]

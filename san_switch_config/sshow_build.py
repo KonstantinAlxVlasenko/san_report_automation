@@ -9,13 +9,7 @@ import pandas as pd
 import utilities.database_operations as dbop
 import utilities.module_execution as meop
 from san_automation_constants import RELEASE
-
-
-SSHOW_SECTIONS = ['SSHOW_PLOG', 'SSHOW_OS', 'SSHOW_EX', 'SSHOW_FABRIC', 
-                  'SSHOW_CONDB', 'SSHOW_SERVICE', 'SSHOW_SEC', 'SSHOW_NET', 
-                  'SSHOW_SYS', 'SSHOW_FICON', 'SSHOW_ISWITCH', 'SSHOW_ISCSI', 'SSHOW_ASICDB', 
-                  'SSHOW_AG', 'SSHOW_FCIP', 'SSHOW_APM', 'SSHOW_AMP', 'SSHOW_CRYP', 'SSHOW_PORT', 
-                  'SSHOW_DCEHSL', 'SSHOW_FLOW']
+from .sshow_stats import SSHOW_SECTIONS
 
 
 def export_gzip_file(gzip_filepath, dest_filepath):
