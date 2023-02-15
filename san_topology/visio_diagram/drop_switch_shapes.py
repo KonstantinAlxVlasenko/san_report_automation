@@ -12,7 +12,7 @@ from .drop_connector_shape import drop_connector_shape, shape_font_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
 
 
-SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'MID', 'ENTP'], repeat=2)]
+# SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'MID', 'ENTP'], repeat=2)]
 
 def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn, visio_log_file, san_topology_constantants_sr, tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str):
     """Function to add swith and VC shapes to Visio document pages (fabric_name)""" 
@@ -61,6 +61,9 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
     master_shapes = switch_pair_sr['master_shape'].split(', ')
     shape_names = switch_pair_sr['switchName_Wwn'].split(', ')
     shape_text = switch_pair_sr['switchName_DID'].split('/ ')[::-1]
+
+    sw_quantity = len(switch_pair_sr['switchClass_mode'].split(', '))
+    SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'MID', 'ENTP'], repeat=sw_quantity)]
     
     # first drop second switch of the switch_pair_sr to make the first switch visually overlap to the second switch 
     # two ENT swtiches sw1 and sw2 -> [(0, 'ENT', 'sw2'), (1, 'ENT', 'sw1')]
@@ -87,7 +90,6 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
         if 'DIR' in switch_pair_sr['switchClass_mode']:
             shape.Text = shape_text[i] + "\n" + switch_pair_sr['ModelName']
             shape_font_change(shape, switch_font_size)
-            # shape.Cells("TxtWidth").FormulaU = "Width * 2.3"
         else:
             shape.Text = " "
     
@@ -107,7 +109,6 @@ def get_textbox_width(text):
 
     width_ratio = math.ceil(2.6*len(text)*10/74)/10 + 0.1
     return f"Width * {width_ratio if width_ratio >= 1.5 else 1.5}"
-
 
 
 def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric_label_colours_dct, 
