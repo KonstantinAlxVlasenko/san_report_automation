@@ -83,7 +83,7 @@ def ssave_precheck(ssave_path, pattern_dct, max_title):
     validates each folder contains only one instance of sshow_sys Scp
     (only one ssave collection)"""
 
-    print(f'\n\nPREREQUISITES 2. SUPPORTSAVE CONFIGURATION FILES PRECHECK\n')
+    print(f'\n\nPREREQUISITES 3. SUPPORTSAVE CONFIGURATION FILES PRECHECK\n')
     print(f'Switch configurations folder \n{ssave_path}\n')
 
     # check if ssave_path folder exist

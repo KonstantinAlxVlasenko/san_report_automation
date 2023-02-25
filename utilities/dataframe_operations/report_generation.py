@@ -1,4 +1,4 @@
-""" """
+"""Module to generate excel report teables"""
 
 import pandas as pd
 

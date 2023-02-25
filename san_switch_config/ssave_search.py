@@ -15,7 +15,7 @@ def search_ssave_files(ssave_path, pattern_dct, max_title):
     Directors have two ".SSHOW_SYS.txt.gz" files. For Active and Standby CPs.
     Configuration file for Active CP has bigger size"""
     
-    print(f'\n\nPREREQUISITES 3. SEARCHING SUPPORTSAVE CONFIGURATION FILES TO EXPORT\n')
+    print(f'\n\nPREREQUISITES 4. SEARCHING SUPPORTSAVE CONFIGURATION FILES TO EXPORT\n')
     print(f'Switch configurations folder \n{ssave_path}\n')
     
     # list to save discovered ssave configuration files

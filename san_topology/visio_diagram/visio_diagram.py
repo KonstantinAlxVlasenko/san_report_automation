@@ -6,7 +6,7 @@ from datetime import date
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
-from san_automation_constants import (HPE_PALETTE, ISL_DESC, LEFT_INDENT,
+from san_automation_constants import (COLOUR_PALETTE, ISL_DESC, LEFT_INDENT,
                                       MIDDLE_SPACE, NPIV_DESC, RIGHT_INDENT,
                                       SERVER_DESC, STORAGE_DESC, SWITCH_DESC,
                                       SWITCH_GROUPS_DESC)
@@ -200,8 +200,9 @@ def get_label_colours(san_graph_switch_df):
     # fabric labels in san
     fabric_labels = sorted(list(san_graph_switch_df['Fabric_label'].unique()))
     # get colour codes for fabric labels (used for link colours)
-    hpe_pallete_lst = [HPE_PALETTE[colour] for colour in ('green', 'red', 'blue', 'purple')]
-    fabric_label_colours_dct = dict(zip(fabric_labels, hpe_pallete_lst))
+    # colour_pallete_lst = [COLOUR_PALETTE[colour] for colour in ('green', 'red', 'blue', 'purple')]
+    colour_pallete_lst = [COLOUR_PALETTE[colour] for colour in COLOUR_PALETTE]
+    fabric_label_colours_dct = dict(zip(fabric_labels, colour_pallete_lst))
     return fabric_label_colours_dct
 
 

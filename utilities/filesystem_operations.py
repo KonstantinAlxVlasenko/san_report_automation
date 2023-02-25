@@ -4,6 +4,9 @@
 import os
 import re
 import sys
+from zipfile import BadZipFile
+
+import pandas as pd
 
 from utilities.module_execution import status_info
 
@@ -39,9 +42,21 @@ def check_valid_path(path):
         sys.exit()
         
 
-def validate_files(*args):
+def validate_path_isfile(*args):
+    """Function returns list of existing files from args"""
 
     return [arg for arg in args if os.path.isfile(arg)]
+
+
+def validate_excel_file(file_path):
+    """Function checks if file is excel file"""
+
+    try:
+        pd.read_excel(file_path, engine='openpyxl')
+    except BadZipFile:
+        return False
+    else:
+        return True
 
 
 def find_files(folder, max_title, filename_contains='', filename_extension=''):

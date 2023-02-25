@@ -10,7 +10,7 @@ import san_parser
 import san_switch_config
 import san_topology
 import utilities.dataframe_operations as dfop
-from san_automation_init import service_initialization
+from service_init import service_initialization
 
 
 def main():

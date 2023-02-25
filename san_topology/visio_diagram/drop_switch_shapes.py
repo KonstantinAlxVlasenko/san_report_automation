@@ -12,9 +12,9 @@ from .drop_connector_shape import drop_connector_shape, shape_font_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
 
 
-# SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'MID', 'ENTP'], repeat=2)]
-
-def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn, visio_log_file, san_topology_constantants_sr, tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str):
+def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn, visio_log_file, 
+                            san_topology_constantants_sr, 
+                            tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str):
     """Function to add swith and VC shapes to Visio document pages (fabric_name)""" 
 
     fabric_name_prev = None
@@ -63,6 +63,7 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
     shape_text = switch_pair_sr['switchName_DID'].split('/ ')[::-1]
 
     sw_quantity = len(switch_pair_sr['switchClass_mode'].split(', '))
+    # all combinations of entry, middle and enterprise switch classes including duplicates
     SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'MID', 'ENTP'], repeat=sw_quantity)]
     
     # first drop second switch of the switch_pair_sr to make the first switch visually overlap to the second switch 
@@ -102,12 +103,21 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
         else:
             bottom_shape.Text = switch_pair_sr['switchName_DID']
         shape_font_change(bottom_shape, switch_font_size)
+        # for entry, middle and enterprise class switches set textbox width 
+        # so each switch description is on the separate line
         if switch_pair_sr['switchClass_mode'] in SWITCH_CLASS_PRODUCT:
-            bottom_shape.Cells("TxtWidth").FormulaU = get_textbox_width(switch_pair_sr['switchName_DID'])
+            bottom_shape.Cells("TxtWidth").FormulaU = get_textbox_width(switch_pair_sr['switchName_DID'], n=sw_quantity)
         
-def get_textbox_width(text):
 
-    width_ratio = math.ceil(2.6*len(text)*10/74)/10 + 0.1
+def get_textbox_width(text, n):
+    """Function returns textbox width so each segment of the text is on the separate line.
+    Text is segmented into n equal parts so n is the number of lines.
+    The standart is 74 symbols text is separated into 2 lines on 2.6 width ratio.
+    74/2 -> 2.6 width ratio, len(text)/n -> x width ratio.
+    'math.ceil(*10)/10' gives 0.1 accuracy.
+    Final '+ 0.1' shifts text width to the right."""
+
+    width_ratio = math.ceil(len(text)*2*2.6*10/(74*n))/10 + 0.1
     return f"Width * {width_ratio if width_ratio >= 1.5 else 1.5}"
 
 

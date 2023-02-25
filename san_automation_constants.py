@@ -23,6 +23,15 @@ HPE_PALETTE = {
     'purple': 'RGB(97,71,103)'
     }
 
+ROSTELECOM_PALETTE = {
+    'grey': 'RGB(123,147,155)',
+    'orange': 'RGB(255,79,18)',
+    'purple': 'RGB(119,0,255)',
+    'black': 'RGB(16,24,40)' 
+    }
+
+COLOUR_PALETTE = HPE_PALETTE
+
 # min connected device match ratio for the switch and the pair switch
 MIN_DEVICE_NUMBER_MATCH_RATIO = 0.5
 # min switch name match ratio for switch and the pair switch 

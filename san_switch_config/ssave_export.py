@@ -23,7 +23,7 @@ def export_ssave_files(san_ssave_files_lst, path_to_move_sshow, path_to_move_oth
     Config set for each switch is ssave_sys file and list of ssave_ams_maps files.
     Export ssave files to text configuration files"""
     
-    print('\n\nPREREQUISITES 4. EXPORTING SUPPORTSAVE FILES\n')
+    print('\n\nPREREQUISITES 5. EXPORTING SUPPORTSAVE FILES\n')
     print(f'Switch configuration files are exported to \n{os.path.dirname(path_to_move_sshow)}\n')
 
     # list to save parsed configuration data files with full path
@@ -96,7 +96,7 @@ def pull_switch_configuration_file(ssave_section_file, output_dir, ssave_section
         return '', ssave_sections_stats_df
 
     # check if exported file exists on main or secondary filepaths
-    config_exist_lst = fsop.validate_files(exported_switch_config_filepath, exported_switch_config_secondary_filepath)
+    config_exist_lst = fsop.validate_path_isfile(exported_switch_config_filepath, exported_switch_config_secondary_filepath)
     if config_exist_lst:
         print(info, end =" ")
         export_status_lst.append(meop.status_info('skip', max_title, len(info)))
@@ -118,7 +118,7 @@ def pull_switch_configuration_file(ssave_section_file, output_dir, ssave_section
 
     print(info, end =" ")
     # check if exported file exists
-    if fsop.validate_files(exported_switch_config_filepath):
+    if fsop.validate_path_isfile(exported_switch_config_filepath):
         export_status_lst.append(meop.status_info('ok', max_title, len(info)))
     else:
         export_status_lst.append(meop.status_info('fail', max_title, len(info)))

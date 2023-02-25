@@ -71,6 +71,14 @@ def reply_request(question: str, reply_options = ['y', 'yes', 'n', 'no'], show_r
         return reply
 
 
+def continue_request():
+    """Function to show request to progrma execution. Used if some minor data is missing"""
+
+    reply = reply_request('Do you want to continue? (y)es/(n)o: ')
+    if reply == 'n':
+        sys.exit()
+
+
 def force_extract_check(data_names, data_lst, force_extract_keys_lst, max_title):
     """
     Function to check if force data extract key is ON

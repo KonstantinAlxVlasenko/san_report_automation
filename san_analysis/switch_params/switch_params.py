@@ -1,8 +1,8 @@
-"""
-Module to generate aggregated switch parameters table and 
+"""Module to generate aggregated switch parameters table and 
 'Switches list', 'Fabric list', 'Fabric global parameters', 
-'Switches parameters', 'Licenses' report tables
-"""
+'Switches parameters', 'Licenses' report tables"""
+
+import sys
 
 import pandas as pd
 
@@ -12,7 +12,7 @@ import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 
 from .switch_aggregation import switch_param_aggregation
-from .switch_statistics import fabric_switch_statistics
+# from .switch_statistics import fabric_switch_statistics
 
 
 def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df, 
@@ -42,16 +42,11 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         pattern_dct, _ = sfop.regex_pattern_import('common_regex', max_title)
         # import data with switch models, firmware and etc
         switch_models_df = sfop.dataframe_import('switch_models', max_title)
-        if report_requisites_sr['device_rack_path']:
-            switch_rack_df = sfop.dataframe_import('switch_rack', max_title, 
-                                                    init_file=report_requisites_sr['device_rack_path'], header=0)
-        else:
-            switch_rack_df = pd.DataFrame(columns=['switchWwn', 'Device_Rack'])
-
+        switch_rack_df = get_switch_rack_details(report_requisites_sr['device_rack_path'], max_title)
 
         # current operation information string
         info = f'Generating aggregated switch parameters table'
-        print(info, end =" ") 
+        print(info, end =" ")
 
         # create aggregated table by joining DataFrames
         switch_params_aggregated_df, report_columns_usage_sr = \
@@ -77,9 +72,6 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
             print(info, end =" ")
             meop.status_info('warning', max_title, len(info))
 
-
-
-
         # create list with partitioned DataFrames
         data_lst = [report_columns_usage_sr, switch_params_aggregated_df]
         # writing data to sql
@@ -99,14 +91,6 @@ def fabric_clean(fabricshow_ag_labels_df):
 
     # create copy of fabricshow_ag_labels DataFrame
     fabric_clean_df = fabricshow_ag_labels_df.copy()
-    # remove switches which are not part of research 
-    # (was not labeled during Fabric labeling procedure)
-    # fabric_clean_df.dropna(subset=['Fabric_name', 'Fabric_label'], inplace = True)
-
-    # # remove Front and Translate Domain switches
-    # mask = fabric_clean_df.Enet_IP_Addr != '0.0.0.0'
-    # fabric_clean_df = fabric_clean_df.loc[mask]
-
     # reset fabrics DataFrame index after droping switches
     fabric_clean_df.reset_index(inplace=True, drop=True)
     # extract required columns
@@ -114,6 +98,29 @@ def fabric_clean(fabricshow_ag_labels_df):
     # rename columns as in switch_params DataFrame
     fabric_clean_df.rename(columns={'Worldwide_Name': 'switchWwn', 'Name': 'switchName'}, inplace=True)
     return fabric_clean_df
+
+
+def get_switch_rack_details(device_rack_path, max_title):
+    """Function imports device rack details dataframe.
+    If it has valid format (contains 'switchWwn' and 'Device_Rack') columns functions returns df.
+    If path is not exist or file format is invalid then fn returns empty file"""
+
+    switch_rack_sheet = 'switch_rack'
+
+    if device_rack_path:
+        switch_rack_df = sfop.dataframe_import(switch_rack_sheet, max_title, 
+                                                init_file=device_rack_path, header=0)
+        # check if dataframe has valid format
+        if dfop.verify_columns_in_dataframe(switch_rack_df, columns=['switchWwn', 'Device_Rack']):
+            return switch_rack_df
+        else:
+            print('Switch rack details dataframe has invalid format and will be deleted')
+            meop.continue_request()
+    else:
+        info = f'Importing {switch_rack_sheet} dataframe'
+        print(info, end = ' ')
+        meop.status_info('skip', max_title, len(info))
+    return pd.DataFrame(columns=['switchWwn', 'Device_Rack'])
 
 
 def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
@@ -133,53 +140,5 @@ def fill_device_location(switch_params_aggregated_df, blade_module_loc_df):
             switch_params_aggregated_df.reindex(columns = [*switch_params_aggregated_df.columns.to_list(), 'Device_Location'])
     return switch_params_aggregated_df
 
-
-# def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_df, report_headers_df, report_columns_usage_sr, data_names):
-#     """Function to create switch related report tables"""
-
-#     switches_report_df, fabric_report_df,  \
-#         switches_parameters_report_df, maps_report_df, licenses_report_df = \
-#             dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names[3:-2])
-
-#     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
-
-#     # global parameters are equal for all switches in one fabric thus checking Principal switches only
-#     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
-#     mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
-#     switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
-#     global_fabric_parameters_report_df = dfop.generate_report_dataframe(switch_params_principal_df, report_headers_df, 
-#                                                                 report_columns_usage_sr, data_names[-2])
-
-#     # drop rows with empty switch names columns
-#     fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-#     fabric_report_df = dfop.translate_values(fabric_report_df, report_headers_df, 'Коммутаторы_перевод')
-#     fabric_report_df = dfop.drop_column_if_all_na(fabric_report_df, ['Примечение. Номер домена', 'Примечение. Время работы'])
-
-#     switches_parameters_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-#     print('\n!!!!!!!!!!!!!!')
-#     licenses_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-#     licenses_report_df = dfop.drop_fd_xd_switch(licenses_report_df)
-    
-#     switches_parameters_report_df = dfop.drop_column_if_all_na(switches_parameters_report_df, 'FC-FC Маршрутизация')
-#     switches_parameters_report_df = dfop.drop_fd_xd_switch(switches_parameters_report_df)
-
-#     # drop fabric_id if all have same value
-#     if fabric_report_df['Fabric ID'].dropna().nunique() == 1:
-#         fabric_report_df.drop(columns=['Fabric ID'], inplace=True)
-#     # drop Fabric_Name (not Fabric_name) if column is empty
-#     if fabric_report_df['Название фабрики'].isna().all():
-#         fabric_report_df.drop(columns=['Название фабрики'], inplace=True)
-       
-#     global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)
-
-#     # fabric switch statistics                                         
-#     fabric_switch_statistics_report_df = dfop.translate_dataframe(fabric_switch_statistics_df, report_headers_df, 
-#                                                             df_name='Статистика_коммутаторов_перевод')
-#     # drop allna columns
-#     fabric_switch_statistics_report_df.dropna(axis=1, how='all', inplace=True)
-#     dfop.drop_zero(fabric_switch_statistics_report_df)
-
-#     return switches_report_df, fabric_report_df, switches_parameters_report_df, \
-#                 maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df
 
 
