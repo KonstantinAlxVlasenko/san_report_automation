@@ -4,10 +4,11 @@ out of portshow_aggregated_df and switchshow_ports_df DataFrame
 """
 
 import re
+
 import numpy as np
 import pandas as pd
+
 import utilities.dataframe_operations as dfop
-# from pandas.core.dtypes.missing import notna
 
 
 def port_statisctics_aggregated(portshow_aggregated_df):
@@ -25,7 +26,6 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     for stat_df in stat_lst[1:]:
         port_statistics_df = port_statistics_df.merge(stat_df, how='left', left_index=True, right_index=True)
     port_statistics_df.reset_index(inplace=True)
-    
     # count summary for fabric_name and fabric_label levels
     port_statistics_summary_df = dfop.count_summary(port_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
     # count row All with total values for all fabris

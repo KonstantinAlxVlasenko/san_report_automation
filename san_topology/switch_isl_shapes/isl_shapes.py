@@ -42,17 +42,23 @@ def get_san_graph_isl_from_isl_statistics(isl_statistics_df, pattern_dct):
                    'Connected_SwitchName', 'Connected_switchWwn', 'Connection_ID',
                    'switchPair_id', 'Connected_switchPair_id',
                    'Logical_link_quantity', 'Physical_link_quantity']
-    if not 'LISL' in san_graph_isl_df.columns:
-        san_graph_isl_df['LISL'] = 0
+    # if not 'LISL' in san_graph_isl_df.columns:
+    #     san_graph_isl_df['LISL'] = 0
+    for column in ['LISL', 'Transceiver_mode_lw']:
+        if not column in san_graph_isl_df.columns:
+            san_graph_isl_df[column] = 0
     speed_columns = dfop.find_columns(san_graph_isl_df, pattern_dct['speed'])
     distance_columns = dfop.find_columns(san_graph_isl_df, pattern_dct['distance'])
     ls_mode_columns = dfop.find_columns(san_graph_isl_df, pattern_dct['ls_mode'])
     link_quantity_columns = dfop.find_columns(san_graph_isl_df, pattern_dct['link_quantity'])
     
     san_graph_isl_df = san_graph_isl_df[
-        [*isl_columns, 'LISL', 'IFL', *speed_columns, *distance_columns, *ls_mode_columns, *link_quantity_columns]
+        [*isl_columns, 'LISL', 'IFL', *speed_columns, *distance_columns, *ls_mode_columns, 'Transceiver_mode_lw', *link_quantity_columns]
         ].copy()
-    san_graph_isl_df.rename(columns={'SwitchName': 'switchName', 'Connected_SwitchName': 'Connected_switchName'}, inplace=True)
+    san_graph_isl_df.rename(columns={
+        'SwitchName': 'switchName', 
+        'Connected_SwitchName': 'Connected_switchName', 
+        'Transceiver_mode_lw': 'SFP_lw'}, inplace=True)
     return san_graph_isl_df
 
 
@@ -134,9 +140,9 @@ def add_isl_link_description(san_graph_isl_df, isl_aggregated_df, pattern_dct):
     ls_mode_columns = dfop.rename_columns(san_graph_isl_df, pattern_dct['ls_mode'])
     distance_columns = dfop.rename_columns(san_graph_isl_df, pattern_dct['distance'])
     link_quantity_columns = dfop.find_columns(san_graph_isl_df, pattern_dct['link_quantity'])
-    column_grps = [speed_columns, ls_mode_columns, distance_columns,  ['LISL']]
+    column_grps = [speed_columns, ls_mode_columns, distance_columns,  ['SFP_lw', 'LISL']]
     
-    summary_column_names = ['speed_string', 'ls_mode_string', 'distance_string', 'lisl_string']
+    summary_column_names = ['speed_string', 'ls_mode_string', 'distance_string', 'SFP_lw_string', 'lisl_string']
     
     # create summary string with joined values for each group of columns from column_grps
     for summary_column_name, column_grp in zip(summary_column_names, column_grps):

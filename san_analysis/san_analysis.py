@@ -34,8 +34,6 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
                                         blade_module_df, blade_servers_df, blade_vc_df,\
                                             synergy_module_df, synergy_servers_df,\
                                                 system_3par_df, port_3par_df, host_3par_df = extracted_configuration_lst
-    
-
     # set fabric names and labels
     fabricshow_ag_labels_df = \
         fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, project_constants_lst)
@@ -49,50 +47,36 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
     isl_aggregated_df, fcredge_aggregated_df = \
         isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df, isl_df, trunk_df, lsdb_df, 
                             fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, project_constants_lst)
-
     portshow_aggregated_df = \
         portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, 
                                 nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
                                 ag_principal_df, porttrunkarea_df, alias_df, fdmi_df, blade_module_df, 
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
                                 system_3par_df, port_3par_df, project_constants_lst)
-
     fcr_xd_proxydev_df = fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
                                                 fcrproxydev_df, fcrxlateconfig_df, project_constants_lst)
-
     fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, project_constants_lst)
 
     switch_pair_df, npv_ag_connected_devices_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, project_constants_lst)
-
-
 
     switch_params_aggregated_df = switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, project_constants_lst)
 
     isl_aggregated_df, isl_statistics_df = isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df, project_constants_lst)
 
-
-
     portshow_sfp_aggregated_df =  port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df, project_constants_lst)
 
     portshow_npiv_df, npiv_statistics_df = maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregated_df, 
                                                 isl_statistics_df, blade_module_loc_df, switch_pair_df, project_constants_lst)
-
-    
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 
                             cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, project_constants_lst)
-
     storage_host_aggregated_df = storage_host_analysis(host_3par_df, system_3par_df, port_3par_df, 
                                                             portshow_aggregated_df, zoning_aggregated_df, project_constants_lst)
-
     sensor_aggregated_df = sensor_analysis(sensor_df, switch_params_aggregated_df, project_constants_lst)
 
     errdump_aggregated_df, raslog_counter_df = \
         errdump_analysis(errdump_df, switchshow_ports_df, switch_params_aggregated_df, portshow_aggregated_df, project_constants_lst)
-
-
     analyzed_configuration_lst = [switch_params_aggregated_df, switch_pair_df, 
                                     isl_aggregated_df, isl_statistics_df, npiv_statistics_df, 
                                     portshow_aggregated_df, npv_ag_connected_devices_df, fcr_xd_proxydev_df]
-
     return analyzed_configuration_lst

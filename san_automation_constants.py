@@ -23,7 +23,7 @@ HPE_PALETTE = {
     'purple': 'RGB(97,71,103)'
     }
 
-ROSTELECOM_PALETTE = {
+RT_PALETTE = {
     'grey': 'RGB(123,147,155)',
     'orange': 'RGB(255,79,18)',
     'purple': 'RGB(119,0,255)',

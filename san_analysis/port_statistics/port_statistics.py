@@ -1,14 +1,9 @@
 """Module to count Fabric statistics (quantity of port_types)"""
 
-import pandas as pd
 
-import utilities.dataframe_operations as dfop
 import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
 
 from .port_statistics_aggregation import port_statisctics_aggregated
 

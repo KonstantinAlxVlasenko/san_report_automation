@@ -53,7 +53,7 @@ def count_summary(df, group_columns: list, count_columns: list=None, fn: str='su
     """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
     on each iteration. Count columns defines column names for which total need to be calculated.
     Function in string representation defines aggregation function to find summary values"""
-
+    
     if not count_columns:
         count_columns = df.columns.tolist()
     elif isinstance(count_columns, str):
@@ -61,7 +61,10 @@ def count_summary(df, group_columns: list, count_columns: list=None, fn: str='su
     
     summary_df = pd.DataFrame()
     for _ in range(len(group_columns)):
-        current_df = df.groupby(by=group_columns)[count_columns].agg(fn)
+        if fn == 'sum':
+            current_df = df.groupby(by=group_columns)[count_columns].agg(fn, numeric_only=True)
+        else:
+            current_df = df.groupby(by=group_columns)[count_columns].agg(fn)
         current_df.reset_index(inplace=True)
         if summary_df.empty:
             summary_df = current_df.copy()
