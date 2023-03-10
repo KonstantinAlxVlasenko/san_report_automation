@@ -146,7 +146,8 @@ def add_isl_link_description(san_graph_isl_df, isl_aggregated_df, pattern_dct):
     
     # create summary string with joined values for each group of columns from column_grps
     for summary_column_name, column_grp in zip(summary_column_names, column_grps):
-        san_graph_isl_df[summary_column_name] = san_graph_isl_df.apply(lambda series: dfop.concatenate_row_values_with_headers(series, column_grp), axis=1)
+        san_graph_isl_df[summary_column_name] = san_graph_isl_df.apply(
+            lambda series: dfop.concatenate_row_values_with_headers(series, column_grp), axis=1)
     
     # create IFL summary string
     if 'Connected_Edge_FID' in isl_aggregated_df.columns and isl_aggregated_df['Connected_Edge_FID'].notna().any():

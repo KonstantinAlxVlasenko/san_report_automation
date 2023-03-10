@@ -1,14 +1,13 @@
 """Module to generate 'InterSwitch links', 'InterFabric links' customer report tables"""
 
 
-import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 
 from .isl_aggregation import isl_aggregated
-from .isl_statistics import isl_statistics
 
 
 def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,  

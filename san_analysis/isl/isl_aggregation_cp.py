@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import utilities.dataframe_operations as dfop
 
-from .isl_aggregation_conclusions import (attenuation_calc,
+from .isl_aggregation.isl_characteristics import (attenuation_calc,
                                           verify_isl_cfg_equality)
 
 
@@ -32,6 +32,12 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     isl_df = pd.concat([isl_df, fcredge_cp_df], ignore_index=True)
     # outer join of isl + ifl with trunk DataFrames 
     isl_aggregated_df = trunk_join(isl_df, trunk_df)
+    
+    # print('\n')
+    # print(isl_aggregated_df)
+    # exit()
+    
+    
     # add ISL number in case of trunk presence and remove ifl tag
     isl_aggregated_df['ISL_number'].fillna(method='ffill', inplace=True)
     if isl_aggregated_df['ISL_number'].notna().any():
@@ -101,7 +107,9 @@ def max_isl_speed(isl_aggregated_df):
     
     # minimum of four speed columns
     mask_speed_notna = isl_aggregated_df[speed_lst].notna().all(axis=1)
-    isl_aggregated_df.loc[mask_speed_notna, 'Link_speedMax'] = isl_aggregated_df.loc[mask_speed_notna, speed_lst].min(axis=1, numeric_only=True)
+    # isl_aggregated_df.loc[mask_speed_notna, 'Link_speedMax'] = isl_aggregated_df.loc[mask_speed_notna, speed_lst].min(axis=1, numeric_only=True)
+    
+    isl_aggregated_df['Link_speedMax'] = isl_aggregated_df.loc[mask_speed_notna, speed_lst].min(axis=1, numeric_only=True)
     # actual link speed
     isl_aggregated_df['Link_speedActual'] = isl_aggregated_df['speed'].str.extract(r'(\d+)').astype('float64')
     # mask to check speed in columns are not None values

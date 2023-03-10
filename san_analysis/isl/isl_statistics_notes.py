@@ -1,18 +1,12 @@
 """Module to add notes to isl_statistics_df DataFrame"""
 
 import re
+
 import numpy as np
 import pandas as pd
 
-
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
-# from common_operations_dataframe import сoncatenate_columns
 
 def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, pattern_dct):
     """Function to add notes to isl_statistics_df DataFrame"""

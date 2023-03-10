@@ -1,18 +1,37 @@
-"""Module to count isl link attenuation and 
+"""Module to count isl link attenuation, find maximum speed link and 
 find unequal port configuration parameters from both sides of isl link""" 
 
+
 import numpy as np
-# import pandas as pd
+import pandas as pd
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
 
-# from common_operations_dataframe import dataframe_fillna, сoncatenate_columns
+def max_isl_speed(isl_aggregated_df):
+    """
+    Function to evaluate maximum available port speed
+    and check if ISL link operates on maximum speed.
+    Maximum available link speed is calculated as minimum of next values 
+    speed_chassis1, speed_chassis2, max_sfp_speed_switch1, max_sfp_speed_switch2
+    """
+
+    # columns to check speed
+    speed_lst = ['Transceiver_speedMax', 'Connected_Transceiver_speedMax', 
+                 'switch_speedMax', 'Connected_switch_speedMax']
+    
+    # minimum of four speed columns
+    mask_speed_notna = isl_aggregated_df[speed_lst].notna().all(axis=1)
+    # isl_aggregated_df.loc[mask_speed_notna, 'Link_speedMax'] = isl_aggregated_df.loc[mask_speed_notna, speed_lst].min(axis=1, numeric_only=True)
+    isl_aggregated_df['Link_speedMax'] = isl_aggregated_df.loc[mask_speed_notna, speed_lst].min(axis=1, numeric_only=True)
+    # actual link speed
+    isl_aggregated_df['Link_speedActual'] = isl_aggregated_df['speed'].str.extract(r'(\d+)').astype('float64')
+    # mask to check speed in columns are not None values
+    mask_speed = isl_aggregated_df[['Link_speedActual', 'Link_speedMax']].notna().all(1)
+    # compare values in Actual and Maximum speed columns
+    isl_aggregated_df.loc[mask_speed, 'Link_speedActualMax']  = \
+        pd.Series(np.where(isl_aggregated_df['Link_speedActual'].eq(isl_aggregated_df['Link_speedMax']), 'Yes', 'No'))
+    return isl_aggregated_df
 
 
 def attenuation_calc(isl_aggregated_df):
@@ -60,7 +79,6 @@ def attenuation_calc(isl_aggregated_df):
 
 def verify_isl_cfg_equality(isl_aggregated_df):
     """Function to find port configuratin parameters which are not equal for both sides of ISL connection"""
-
 
     isl_cp_df = isl_aggregated_df.copy()
     # '..' means service or setting is in OFF state
