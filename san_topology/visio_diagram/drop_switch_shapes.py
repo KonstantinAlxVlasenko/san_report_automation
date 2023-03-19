@@ -176,7 +176,6 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, visio_log_file,
             active_window.DeselectAll()
             # select all switches from switch_pair
             for shape_name in shape_names:
-                # print(shape_name)
                 active_window.Select(page.Shapes.ItemU(shape_name), 2)
             # group all switches from switch_pair
             active_window.Selection.Group()

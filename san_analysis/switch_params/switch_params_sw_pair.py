@@ -164,6 +164,5 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
     # drop allna columns
     fabric_switch_statistics_report_df.dropna(axis=1, how='all', inplace=True)
     dfop.drop_zero(fabric_switch_statistics_report_df)
-
     return switches_report_df, fabric_report_df, switches_parameters_report_df, \
                 maps_report_df, licenses_report_df, global_fabric_parameters_report_df, fabric_switch_statistics_report_df

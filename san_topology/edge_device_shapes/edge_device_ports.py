@@ -27,7 +27,6 @@ def find_connected_devices(portshow_aggregated_df, npv_ag_connected_devices_df, 
     fcr_xd_proxydev_cp_df = fcr_xd_proxydev_df.reindex(columns=dev_columns).copy()
     # translate domain device connection speed is na
     fcr_xd_proxydev_cp_df['speed'] = None
-    
     # concatenate dataframes wwns connected to all switches except confirmed AG and NPV switches,
     # wwns connected to confirmed AG and NPV switches and wwns connected to translate domains
     connected_devices_df = pd.concat([connected_devices_df, npv_ag_connected_devices_cp_df, fcr_xd_proxydev_cp_df])

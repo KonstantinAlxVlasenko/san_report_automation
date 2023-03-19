@@ -49,8 +49,7 @@ def add_visio_device_shapes(san_links_df, visio, stn, fabric_label_colours,
         if fabric_name_current != fabric_name_prev:
             x_coordinate = x_start
             fabric_name_prev = fabric_name_current
-        
-        # print(fabric_name_current, device_sr['Device_shapeText'])   
+
         # drop shape on active page
         drop_device_shape(device_sr, page, stn, x_coordinate, device_font_size)
         # filter device_shapename links for the dropped shape
@@ -59,7 +58,6 @@ def add_visio_device_shapes(san_links_df, visio, stn, fabric_label_colours,
         shape_links_df = find_device_shape_links(device_sr, san_links_df)
         dbop.add_log_entry(visio_log_file, shape_links_df.to_string())
         
-        # print(shape_links_df)
         for _, link_sr in shape_links_df.iterrows():
             # drop device_shapename -> switch links
             drop_connector_shape(link_sr, page, stn, fabric_label_colours, link_font_size, 

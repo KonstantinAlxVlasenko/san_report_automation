@@ -7,7 +7,7 @@ import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 
-from .portcmd_domain_manual import choose_domain_to_remove
+from .portcmd_domain_manual import choose_domain_to_remove, display_domain_name_remove_scheme, get_separator_len
 
 REMOVE_MARK_COLUMN = 'Remove'
 REMOVE_MARK_STR = 'V'
@@ -56,8 +56,10 @@ def get_domain_to_remove(portshow_aggregated_df, domain_name_remove_df,
     domain_name_df = find_domain_names(portshow_aggregated_df, pattern_dct)
     domain_num = len(domain_name_df.index)
 
+    
     if domain_name_df.empty:
         return domain_name_df
+
 
     # if domain removal scheme exist and there is no request for change of 
     # domain removal scheme or data its dependent on
@@ -73,7 +75,14 @@ def get_domain_to_remove(portshow_aggregated_df, domain_name_remove_df,
     elif force_change_data_lst:
         print(f"Request to force change of {', '.join(force_change_data_lst)} data was received.\n")
     
+    
+    # find printed domain_name_remove_df upper border length to create visual separator
+    separator_len  = get_separator_len(domain_name_df, remove_mark_column=REMOVE_MARK_COLUMN)
+    display_domain_name_remove_scheme(domain_name_df, show_domain_remove_scheme=True, separator_len=separator_len)
+
     print(f'{domain_num} domain{"s" if domain_num>1 else ""} found.')
+    print('\n')
+
     reply = meop.reply_request(f'Do you want to REMOVE DOMAIN{"S" if domain_num>1 else ""}? (y)es/(n)o: ')
     if reply == 'y':
         # if domain removal scheme doesn't exist (1st iteration)
@@ -88,8 +97,14 @@ def get_domain_to_remove(portshow_aggregated_df, domain_name_remove_df,
                 if reply == 'y':
                     # use existing domain removal scheme
                     return domain_name_remove_df
-            # change saved domain removal scheme
-            domain_name_remove_df = choose_domain_to_remove(domain_name_remove_df, REMOVE_MARK_COLUMN, REMOVE_MARK_STR)
+            
+            if domain_name_df.index.equals(domain_name_remove_df.index):
+                domain_name_remove_df = choose_domain_to_remove(domain_name_remove_df, REMOVE_MARK_COLUMN, REMOVE_MARK_STR)
+            else:
+                domain_name_remove_df = choose_domain_to_remove(domain_name_df, REMOVE_MARK_COLUMN, REMOVE_MARK_STR)
+            
+            # # change saved domain removal scheme
+            # domain_name_remove_df = choose_domain_to_remove(domain_name_remove_df, REMOVE_MARK_COLUMN, REMOVE_MARK_STR)
     else:
         # if user refuse to remove domains then domain removal scheme is empty (no marks)
         domain_name_remove_df = domain_name_df.copy()

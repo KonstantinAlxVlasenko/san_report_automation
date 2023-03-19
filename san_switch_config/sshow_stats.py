@@ -58,13 +58,11 @@ def count_ssave_section_files_stats(sshow_sys_section_file, pattern_dct):
                 sw_ssave_sections_stats_df.loc[section_name, 'Quantity'] = 1
             else:
                 sw_ssave_sections_stats_df.loc[section_name, 'Quantity'] += 1
-            # print(ssave_sections_stats_df.loc[section_name, 'Quantity'])
             # sshow section file size in KB
             sw_ssave_sections_stats_df.loc[section_name, 'Size_KB'] = round(os.path.getsize(os.path.join(ssave_sections_dir, file)) / 1024, 2)
             # section_names used to san audit have priority 1
             priority = 1 if section_name in HIGH_PRIORITY_SECTIONS else np.nan
             sw_ssave_sections_stats_df.loc[section_name, 'Priority'] = priority
-            # print(ssave_sections_stats_df.loc[section_name, 'Size_KB'])
             # fill values for the ssave section file in dataframe used to concatenate files later
             ssave_sections_stats_current_df.loc[len(ssave_sections_stats_current_df)] = [ssave_sections_dir, os.path.basename(ssave_sections_dir),
                                                                                    section_name, priority, file, 

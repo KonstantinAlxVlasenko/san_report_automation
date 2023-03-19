@@ -31,13 +31,7 @@ def isl_aggregated(fabric_labels_df, switch_params_aggregated_df,
     fcredge_cp_df.rename(columns={'Connected_FID': 'Connected_Edge_FID'}, inplace=True)
     isl_df = pd.concat([isl_df, fcredge_cp_df], ignore_index=True)
     # outer join of isl + ifl with trunk DataFrames 
-    isl_aggregated_df = trunk_join(isl_df, trunk_df)
-    
-    # print('\n')
-    # print(isl_aggregated_df)
-    # exit()
-    
-    
+    isl_aggregated_df = trunk_join(isl_df, trunk_df)    
     # add ISL number in case of trunk presence and remove ifl tag
     isl_aggregated_df['ISL_number'].fillna(method='ffill', inplace=True)
     if isl_aggregated_df['ISL_number'].notna().any():

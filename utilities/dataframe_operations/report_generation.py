@@ -123,8 +123,9 @@ def statistics_report(statistics_df, report_headers_df, df_name, report_columns_
 def drop_slot_value(report_df, report_columns_usage_sr):
     """Function drops slot column if no directors in san"""
 
-    if report_columns_usage_sr['slot_usage']:
-        report_df.drop(columns=['Порт_коммутатора'], inplace=True)
-    else:
-        report_df.drop(columns=['Порт коммутатора'], inplace=True)
-        report_df.rename(columns={'Порт_коммутатора': 'Порт коммутатора'}, inplace=True)
+    if 'Порт_коммутатора' in report_df.columns:
+        if report_columns_usage_sr['slot_usage']:
+            report_df.drop(columns=['Порт_коммутатора'], inplace=True)
+        else:
+            report_df.drop(columns=['Порт коммутатора'], inplace=True)
+            report_df.rename(columns={'Порт_коммутатора': 'Порт коммутатора'}, inplace=True)

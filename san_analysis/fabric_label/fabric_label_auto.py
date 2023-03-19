@@ -1,17 +1,12 @@
 
 """Module to set fabric names and labels automatically"""
 
-import pandas as pd
-import numpy as np
 import sys
 
+import numpy as np
+import pandas as pd
 
 import utilities.dataframe_operations as dfop
-# import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
-# import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
 # auxiliary global variables for auto_fabrics_labeling function
 # variables changed globally each time function called

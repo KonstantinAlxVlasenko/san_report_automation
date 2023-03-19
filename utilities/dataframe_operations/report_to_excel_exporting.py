@@ -18,9 +18,6 @@ def dataframe_to_excel(data_frame, sheet_title, project_constants_lst,
     """Check if excel file exists, write DataFrame, create or update table of contents,
     change DataFrame text and presentation format."""
     
-    # report_constant_lst, report_steps_dct, *_ = report_creation_info_lst
-    # customer_name, report_path, _, max_title = report_constant_lst
-
     project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
 
     data_frame = data_frame.apply(pd.to_numeric, errors='ignore')
@@ -152,6 +149,7 @@ def write_dataframe_to_worksheet(writer, df, sheet_title):
     # writing DataFrame with single Index
     df_flat.to_excel(writer, sheet_name=sheet_title,  startrow=2, index=False)
     writer.save()
+    # writer.close()
 
 
 def table_of_contents_generation(writer, file_mode, sheet_title, df_decription):
@@ -215,11 +213,6 @@ def create_hyperlink(ws, at_cell, sheet_name, cell_ref='A1', display_name=None):
 
 def report_format_completion(project_constants_lst, current_date=str(date.today())):
     """Function to reorder sheets and items in table of contents"""
-
-    # report_constant_lst, *_ = report_creation_info_lst
-    # customer_name, report_path, _, max_title = report_constant_lst
-    # report_mark = 'SAN_Assessment_Tables'
-
 
     project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
     

@@ -48,8 +48,6 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
         isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df, isl_df, trunk_df, lsdb_df, 
                             fcredge_df, portshow_df, sfpshow_df, portcfgshow_df, switchshow_ports_df, project_constants_lst)
     
-    exit()
-    
     portshow_aggregated_df = \
         portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, isl_aggregated_df, 
                                 nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 

@@ -2,18 +2,16 @@
 
 
 import os
-from datetime import date
 
-import pandas as pd
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
+import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
-import utilities.filesystem_operations as fsop
 
 from .switch_pair_auto import auto_switch_pairing
-from .switch_pair_verification import *
 from .switch_pair_correction import *
+from .switch_pair_verification import *
 
 
 def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, project_constants_lst):
@@ -118,6 +116,11 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
         
         # create list with partitioned DataFrames
         data_lst = [switch_pair_df, npv_ag_connected_devices_df, sw_wwn_occurrence_stats_df]
+        # if switch_pair change was cancelled and npv_ag_connected_devices_df was loaded from db 
+        # remove 'NO DATA FOUND' tag from npv_ag_connected_devices_df if it's empty
+        if not npv_ag_connected_devices_df.empty:
+            data_lst = dbop.verify_read_data(max_title, data_names, *data_lst, show_status=False)
+            _, npv_ag_connected_devices_df, *_ = data_lst
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
     # verify if loaded data is empty and replace information string with empty DataFrame

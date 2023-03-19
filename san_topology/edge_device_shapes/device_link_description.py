@@ -157,7 +157,6 @@ def create_fabric_swpair_device_link_description(connected_devices_df, device_li
     # add link description ('2A: 2xN16, 2x16G, 2xNPIV')
     sw_device_connection_columns = ['Fabric_name', 'Fabric_label', 'switchWwn', 'switchPair_id', 'Device_Host_Name', 'deviceType']
     connected_devices_df = pd.merge(connected_devices_df, device_links_df, how='left', on=sw_device_connection_columns)
-    
     # join link_description for all device connections to find devices with the samelink_description in the fabric_name
     connected_devices_df['Link_description_fabric_name_level'] = connected_devices_df.groupby(
         by=['Fabric_name', 'deviceType', 'Device_Host_Name'])['Link_description_sw_pair_level'].transform('; '.join)
