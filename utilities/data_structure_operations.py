@@ -35,3 +35,11 @@ def list_is_empty(lst):
     return all(map(list_is_empty, lst)) if isinstance(lst, list) else True if lst is None else False
 
 
+def flatten(arg):
+    """Function returns flat list out of list of lists"""
+
+    if not isinstance(arg, list): # if not list
+        return [arg]
+    return [x for sub in arg for x in flatten(sub)]
+
+

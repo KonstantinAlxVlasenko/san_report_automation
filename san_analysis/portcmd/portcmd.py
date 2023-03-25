@@ -38,7 +38,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
     # flag to forcible save portshow_aggregated_df if required
-    portshow_force_flag = False    
+    portshow_force_flag = False
+    exit_after_save_flag = False    
     
     device_rename_df = data_lst[3]
     if not device_rename_df is None:
@@ -78,7 +79,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         meop.status_info('ok', max_title, len(info))
         # show warning if any UNKNOWN device class founded, if any PortSymb or NodeSymb is not parsed,
         # if new switch founded
-        portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag = \
+        portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag, exit_after_save_flag = \
             warning_notification(portshow_aggregated_df, switch_params_aggregated_df, 
             nsshow_unsplit_df, expected_ag_links_df, project_steps_df, max_title)        
         # remove domain names
@@ -135,6 +136,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
             force_flag = portshow_force_flag
         if data_name != 'report_columns_usage_upd':
             dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
+    # check if stop programm execution flag is on
+    meop.validate_stop_program_flag(exit_after_save_flag)
     return portshow_aggregated_df
 
 
@@ -193,10 +196,11 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
     if any PortSymb or NodeSymb was not parsed or if new switch founded which was
     not previously discovered"""
 
-    # *_, max_title, report_steps_dct = report_constant_lst
+
     portshow_force_flag = False
     nsshow_unsplit_force_flag = False
     expected_ag_links_force_flag = False
+    exit_after_save_flag = False
 
     portshow_export_flag = project_steps_df.loc['portshow_aggregated', 'export_to_excel']
     nsshow_unsplit_export_flag = project_steps_df.loc['nsshow_unsplit', 'export_to_excel']
@@ -214,6 +218,7 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
             print('\n')
             if reply == 'y':
                 portshow_force_flag = True
+        exit_after_save_flag = meop.display_stop_request(exit_after_save_flag)
     # warning if any values in PortSymb or NodeSymb were not parsed
     if not nsshow_unsplit_df.empty:
         portsymb_unsplit_count = nsshow_unsplit_df['PortSymb'].notna().sum()
@@ -228,7 +233,8 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
             reply = meop.reply_request("\nDo you want to save 'nsshow_unsplit'? (y)es/(n)o: ")
             print('\n')
             if reply == 'y':
-                nsshow_unsplit_force_flag = True        
+                nsshow_unsplit_force_flag = True
+        exit_after_save_flag = meop.display_stop_request(exit_after_save_flag)        
     # warning if unknown switches was found
     switch_name_set = set(switch_params_aggregated_df['switchName'])
     # all founded switches in portshow_aggregated_df
@@ -258,7 +264,7 @@ def warning_notification(portshow_aggregated_df, switch_params_aggregated_df, ns
             print('\n')
             if reply == 'y':
                 expected_ag_links_force_flag = True
-    return portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag
+    return portshow_force_flag, nsshow_unsplit_force_flag, expected_ag_links_force_flag, exit_after_save_flag
 
 
 def device_names_per_port(portshow_aggregated_df):

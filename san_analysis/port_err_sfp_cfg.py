@@ -21,6 +21,7 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
     # imported project constants required for module execution
     project_steps_df, max_title, io_data_names_df, _, report_headers_df, report_columns_usage_sr, *_ = project_constants_lst
     
+    exit_after_save_flag = False
     portshow_sfp_force_flag = False
     portshow_sfp_export_flag = project_steps_df.loc['portshow_sfp_aggregated', 'export_to_excel']
 
@@ -62,7 +63,7 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
                 reply = meop.reply_request("Do you want to save 'portshow_sfp_aggregated'? (y)es/(n)o: ")
                 if reply == 'y':
                     portshow_sfp_force_flag = True
-
+            exit_after_save_flag = meop.display_stop_request(exit_after_save_flag)
         # create report tables from port_complete_df DataFrtame
         report_lst = portshow_report_main(portshow_sfp_aggregated_df, data_names, report_headers_df, report_columns_usage_sr)
         data_lst = [portshow_sfp_aggregated_df, *report_lst, *filtered_error_lst]
@@ -79,6 +80,8 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
         if data_name == 'portshow_sfp_aggregated':
             force_flag = portshow_sfp_force_flag
         dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
+    # check if stop programm execution flag is on
+    meop.validate_stop_program_flag(exit_after_save_flag)
     return portshow_sfp_aggregated_df
 
 

@@ -255,7 +255,7 @@ def isl_statistics_summary(isl_statistics_df):
         if column in port_summary_columns:
             port_summary_columns.remove(column)
     # count sum statistics for each fabric
-    isl_port_total_df = dfop.count_summary(isl_statistics_df, grp_columns.copy(), port_summary_columns, sum)
+    isl_port_total_df = dfop.count_summary(isl_statistics_df, grp_columns.copy(), port_summary_columns, fn='sum')
     
 
     """In order to count total ISL bandwidth it is required to allocate unique ISLs only. 
@@ -267,10 +267,10 @@ def isl_statistics_summary(isl_statistics_df):
     # count sum bandwidth statistics for each fabric
     unique_isl_statistics_df['Bandwidth_Gbps'] = \
         unique_isl_statistics_df['Bandwidth_Gbps'].astype('int64', errors='ignore')
-    unique_isl_bandwidth_total_df = dfop.count_summary(unique_isl_statistics_df, grp_columns.copy(), 'Bandwidth_Gbps', sum)
+    unique_isl_bandwidth_total_df = dfop.count_summary(unique_isl_statistics_df, grp_columns.copy(), 'Bandwidth_Gbps', fn='sum')
 
     unique_link_statistics_df = dfop.count_summary(unique_isl_statistics_df, grp_columns.copy(), 
-                                                count_columns=['Logical_link_quantity', 'Physical_link_quantity'], fn=sum)
+                                                count_columns=['Logical_link_quantity', 'Physical_link_quantity'], fn='sum')
     
     # switch_connection_quantity summary (all links between two switches considered as one connection)
     unique_isl_statistics_df = dfop.concatenate_columns(unique_isl_statistics_df, summary_column='Link_Wwns', merge_columns=['sort_column_1', 'sort_column_2'])

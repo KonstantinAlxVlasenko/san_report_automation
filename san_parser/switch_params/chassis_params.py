@@ -148,8 +148,19 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
                                                     extract_pattern_name='license',
                                                     stop_pattern_name='switchcmd_end')
             # licenses section end
+            # licenseshow fos9x section start
+            elif re.search(pattern_dct['chassiscmd_license_fos9x'], line):
+                collected['licenses'] = True
+                license_fos9x_lst = []
+                line = reop.extract_list_from_line(license_fos9x_lst, pattern_dct, 
+                                                    line, file,
+                                                    extract_pattern_name='license_fos9x',
+                                                    stop_pattern_name='switchcmd_end')
+                license_fos9x_lst = dsop.flatten(license_fos9x_lst)
+                license_lst.extend([lic for lic in license_fos9x_lst if lic])
+            # licenseshow fos9x section end
             # licenseport section start
-            elif re.search(pattern_dct['chassiscmd_licenseport'], line):
+            elif re.search(pattern_dct['chassiscmd_licenseport'], line) or re.search(pattern_dct['chassiscmd_licenseshowport'], line):
                 collected['licenseport'] = True
                 line = reop.extract_list_from_line(san_licenseport_lst, pattern_dct, 
                                                     line, file,
@@ -182,7 +193,7 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
 
     # list to show collection status
     ch_params_lst = [chassis_params_dct.get(chassis_param) for chassis_param in chassis_params]
-
+    
     # remove duplicates from list
     vf_id_lst = sorted(set(vf_id_lst))
     snmp_target_lst = sorted(set(snmp_target_lst))
