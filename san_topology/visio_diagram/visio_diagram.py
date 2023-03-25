@@ -3,6 +3,8 @@
 import os
 from datetime import date
 
+import psutil
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
@@ -47,7 +49,7 @@ def visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df,
     if force_run:
 
         first_run = True if data_lst[0] is None else False
-        # aggregated DataFrames
+
         visio = visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df, 
                                                     san_graph_isl_df, san_graph_npiv_df, 
                                                     storage_shape_links_df, server_shape_links_df, 
@@ -108,6 +110,8 @@ def visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df,
     # imported project constants required for module execution
     _, max_title, _, report_requisites_sr, *_ = project_constants_lst
     
+    close_visio_process_request()
+            
     # fabic names (pages) for the Visio document
     fabric_name_lst = list(san_graph_sw_pair_df['Fabric_name'].unique())
     # colour codes for links
@@ -222,3 +226,26 @@ def clone_switch_diagram(visio, fabric_name_duplicated_sr, fabric_name_dev_sr):
     for fabric_name_duplicated, fabric_name_device in zip(fabric_name_duplicated_lst, fabric_name_dev_lst):
         duplicate_visio_page(visio, source_page=fabric_name_duplicated, destination_page=fabric_name_device)
 
+
+
+def close_visio_process_request():
+    """Function requests to close Visio if it's running"""
+
+    if visio_is_opened():
+        reply = None
+        while visio_is_opened():
+            print(f"\nVisio is {'still' if reply else ''} running. Please close Visio to proceed")
+            query = "Did you close Visio? (y)es/(i)gnore: "
+            reply = meop.reply_request(query, reply_options=['y', 'yes', 'i'])
+            if reply == 'i':
+                break
+        print('\n')
+
+
+def visio_is_opened():
+    """Function check if visio.exe process is opened"""
+
+    for process in psutil.process_iter():
+        if process.name().lower() == 'visio.exe':
+            return True
+    return False
