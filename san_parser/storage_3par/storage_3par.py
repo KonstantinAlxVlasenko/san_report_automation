@@ -5,10 +5,12 @@ extract configuaration information from downloaded and local files"""
 import os
 
 import pandas as pd
+
 import utilities.data_structure_operations as dsop
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .storage_3par_download import configs_download
@@ -96,7 +98,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
         system_3par_df, port_3par_df, host_3par_df = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return system_3par_df, port_3par_df, host_3par_df
 
 

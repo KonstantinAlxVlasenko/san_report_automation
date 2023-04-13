@@ -1,13 +1,16 @@
 """Module to draw SAN topology Visio diagram"""
 
 import os
+import sys
 from datetime import date
 
 import psutil
 
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
+import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 from san_automation_constants import (COLOUR_PALETTE, ISL_DESC, LEFT_INDENT,
                                       MIDDLE_SPACE, NPIV_DESC, RIGHT_INDENT,
                                       SERVER_DESC, STORAGE_DESC, SWITCH_DESC,
@@ -30,10 +33,7 @@ def visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df,
     """Function to initialize SAN topology drawing in Visio"""
     
     # imported project constants required for module execution
-    # project_steps_df, max_title, io_data_names_df, *_ = project_constants_lst
     project_steps_df, max_title, io_data_names_df, report_requisites_sr, *_ = project_constants_lst
-
-
     # data titles obtained after module execution
     data_names = dfop.list_from_dataframe(io_data_names_df, 'visio_diagram')
     # module information
@@ -41,22 +41,34 @@ def visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df,
     # read data from database if they were saved on previos program execution iteration
     data_lst = dbop.read_database(project_constants_lst, *data_names)
     
-
     # force run when any output data from data_lst is not found in database or 
     # procedure execution explicitly requested (force_run flag is on) for any output data  
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
 
     if force_run:
-
         first_run = True if data_lst[0] is None else False
+        reply = None
+        # on the first iteration ask if Visio diagram need be created
+        # on next iterations visio_diagram force key need to be set to create diagram
+        if first_run:
+            print('\n')
+            query = "Do you want to create Visio diagram? (y)es/(n)o: "
+            reply = meop.reply_request(query)
+            if reply == 'n':
+                visio = None
+            else:
+                print('\n')
 
-        visio = visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df, 
-                                                    san_graph_isl_df, san_graph_npiv_df, 
-                                                    storage_shape_links_df, server_shape_links_df, 
-                                                    san_graph_sw_pair_group_df, 
-                                                    fabric_name_duplicated_sr, fabric_name_dev_sr, 
-                                                    project_constants_lst, software_path_sr, 
-                                                    san_topology_constantants_sr, first_run)
+        if not first_run or reply == 'y':
+            fsop.create_folder(report_requisites_sr['today_report_folder'], max_title, display_status=False)
+            close_visio_process_request()
+            visio = visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df, 
+                                                san_graph_isl_df, san_graph_npiv_df, 
+                                                storage_shape_links_df, server_shape_links_df, 
+                                                san_graph_sw_pair_group_df, 
+                                                fabric_name_duplicated_sr, fabric_name_dev_sr, 
+                                                project_constants_lst, software_path_sr, 
+                                                san_topology_constantants_sr, first_run)        
         # current operation information string
         info = f'Creating Visio Diagram'
         print(info, end =" ") 
@@ -84,7 +96,7 @@ def visio_diagram_init(san_graph_switch_df, san_graph_sw_pair_df,
     
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return visio_diagram_sr
 
 
@@ -96,22 +108,10 @@ def visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df,
                             project_constants_lst, software_path_sr, 
                             san_topology_constantants_sr, first_run):
     """Aggregated function to create SAN topology Visio diagram"""
-    
-    # on the first iteration ask if Visio diagram need be created
-    # on next iterations visio_diagram force key need to be set to create diagram
-    if first_run:
-        print('\n')
-        query = "Do you want to create Visio diagram? (y)es/(n)o: "
-        reply = meop.reply_request(query)
-        if reply == 'n':
-            return None
-        print('\n')    
-    
+        
     # imported project constants required for module execution
     _, max_title, _, report_requisites_sr, *_ = project_constants_lst
     
-    close_visio_process_request()
-            
     # fabic names (pages) for the Visio document
     fabric_name_lst = list(san_graph_sw_pair_df['Fabric_name'].unique())
     # colour codes for links
@@ -121,7 +121,7 @@ def visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df,
     visio_log_file = get_log_file_path(report_requisites_sr)
     # add start line log for the current iteration
     start_time = f'start: {meop.current_datetime()}'
-    dbop.add_log_entry(visio_log_file, '*'*40, start_time)
+    report.add_log_entry(visio_log_file, '*'*40, start_time)
 
     # get maximum length of the tqdm description string (progress bar title)
     tqdm_max_desc_len = get_tqdm_max_desc_len(san_graph_isl_df, san_graph_npiv_df)
@@ -136,15 +136,15 @@ def visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df,
     # after finish display status
     meop.status_info('ok', max_title, len(info))
 
-    # drop swith and vc shapes
+    # drop swith and vc shapes to the draw
     add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn, 
                             visio_log_file, san_topology_constantants_sr, 
                             tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=SWITCH_DESC)
-    # drop isl links
+    # drop isl links to the draw
     add_visio_inter_switch_connections(san_graph_isl_df, visio, stn, fabric_label_colours_dct,
                                         visio_log_file, san_topology_constantants_sr, 
                                         tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=ISL_DESC)
-    # drop npiv links
+    # drop npiv links to the draw
     add_visio_inter_switch_connections(san_graph_npiv_df, visio, stn, fabric_label_colours_dct,
                                         visio_log_file, san_topology_constantants_sr, 
                                         tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str=NPIV_DESC)
@@ -164,7 +164,7 @@ def visio_diagram_aggregated(san_graph_switch_df, san_graph_sw_pair_df,
     
     # add finish line log for the current iteration
     finish_time = f'finish: {meop.current_datetime()}'
-    dbop.add_log_entry(visio_log_file,  '\n', finish_time, '^'*40, )
+    report.add_log_entry(visio_log_file,  '\n', finish_time, '^'*40, )
     return visio
 
 
@@ -227,7 +227,6 @@ def clone_switch_diagram(visio, fabric_name_duplicated_sr, fabric_name_dev_sr):
         duplicate_visio_page(visio, source_page=fabric_name_duplicated, destination_page=fabric_name_device)
 
 
-
 def close_visio_process_request():
     """Function requests to close Visio if it's running"""
 
@@ -235,10 +234,12 @@ def close_visio_process_request():
         reply = None
         while visio_is_opened():
             print(f"\nVisio is {'still' if reply else ''} running. Please close Visio to proceed")
-            query = "Did you close Visio? (y)es/(i)gnore: "
-            reply = meop.reply_request(query, reply_options=['y', 'yes', 'i'])
+            query = "Did you close Visio? (y)es/(i)gnore/(q)uit: "
+            reply = meop.reply_request(query, reply_options=['y', 'yes', 'i', 'q'])
             if reply == 'i':
                 break
+            elif reply == 'q':
+                sys.exit()
         print('\n')
 
 

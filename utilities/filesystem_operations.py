@@ -11,25 +11,29 @@ import pandas as pd
 from utilities.module_execution import status_info
 
 
-def create_folder(path, max_title):
+def create_folder(path, max_title, display_status=True):
     """Function to create any folder with path"""
 
     info = f'Making directory {os.path.basename(path)}'
-    print(info, end = ' ')
+    if display_status:
+        print(info, end = ' ')
     # if folder not exist create 
     if not os.path.exists(path):        
         try:
             os.makedirs(path)
         except OSError:
-            status_info('fail', max_title, len(info))
-            print(f'Not possible create directory {path}.')
+            if display_status:
+                status_info('fail', max_title, len(info))
+            print(f'\nNot possible create directory {path}.')
             print('Code execution finished')
             sys.exit()
         else:
-            status_info('ok', max_title, len(info))
+            if display_status:
+                status_info('ok', max_title, len(info))
     # otherwise print 'SKIP' status
     else:
-        status_info('skip', max_title, len(info))
+        if display_status:
+            status_info('skip', max_title, len(info))
         
      
 def check_valid_path(path):

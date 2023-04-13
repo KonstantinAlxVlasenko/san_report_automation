@@ -245,7 +245,7 @@ def summarize_statistics(statistics_df, count_columns, connection_symmetry_colum
                 count_columns.remove(column)
     # summary_statistics for fabric_name and fabric_label, fabric_name
     statistics_summary_df = \
-        count_summary(statistics_df, group_columns=['Fabric_name', 'Fabric_label'], count_columns=count_columns, fn=sum)
+        count_summary(statistics_df, group_columns=['Fabric_name', 'Fabric_label'], count_columns=count_columns, fn='sum')
     # verify if fabrics are symmetrical from connection_symmetry_columns point of view
     statistics_summary_df = \
         verify_group_symmetry(statistics_summary_df, symmetry_grp=['Fabric_name'], symmetry_columns=connection_symmetry_columns)

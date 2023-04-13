@@ -201,7 +201,7 @@ def display_stop_request(stop_flag):
     """Function display stop request and returns stop_flag"""
 
     if not stop_flag:
-        reply = reply_request("\nDo you want to stop program execution after database save? (y)es/(n)o: ")
+        reply = reply_request("Do you want to stop program execution after database save? (y)es/(n)o: ")
         print('\n')
         if reply == 'y':
             stop_flag = True
@@ -212,7 +212,7 @@ def validate_stop_program_flag(stop_flag):
     """Function checks stop flag is in and exiting if it's on"""
 
     if stop_flag:
-        print('Programm execution STOP flag is ON')
+        print('\nProgramm execution STOP flag is ON')
         print('Exiting ...')
         sys.exit()
 

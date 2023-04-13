@@ -11,6 +11,7 @@ import numpy as np
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 
 
 def configs_download(ns_3par_df, pattern_dct, project_constants_lst, software_path_sr):
@@ -278,7 +279,7 @@ def download_summary(ns_3par_df, project_constants_lst):
     query = 'Do you want to SAVE download SUMMARY? (y)es/(n)o: '
     reply = meop.reply_request(query)
     if reply == 'y':
-        dfop.dataframe_to_excel(ns_3par_df, 'stats_summary', project_constants_lst, force_flag=True)
+        report.dataframe_to_excel(ns_3par_df, 'stats_summary', project_constants_lst, force_flag=True)
 
 
 

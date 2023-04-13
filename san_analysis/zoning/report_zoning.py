@@ -2,6 +2,7 @@
 
 
 import utilities.dataframe_operations as dfop
+import utilities.report_operations as report
 
 
 def zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df,
@@ -44,7 +45,7 @@ def create_report(aggregated_df, report_headers_df, report_columns_usage_sr, df_
                             'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related', 'Mixed_zone_note']
 
     cleaned_df = dfop.translate_values(cleaned_df, report_headers_df, 'Зонирование_перевод', translated_columns)
-    report_df = dfop.generate_report_dataframe(cleaned_df, report_headers_df, report_columns_usage_sr, df_name)
+    report_df = report.generate_report_dataframe(cleaned_df, report_headers_df, report_columns_usage_sr, df_name)
     dfop.drop_slot_value(report_df, report_columns_usage_sr)
     return report_df
 
@@ -122,8 +123,8 @@ def unzoned_device_report(portshow_cfg_aggregated_df, report_headers_df, report_
     unzoned_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_wwn_notna & mask_not_switch_vc & mask_not_zoned]
     unzoned_device_df.dropna(axis='columns', how='all')
     no_alias_device_df = portshow_cfg_aggregated_df.loc[mask_native & mask_online & mask_wwn_notna & mask_not_switch_vc & mask_no_alias]
-    unzoned_device_report_df = dfop.generate_report_dataframe(unzoned_device_df, report_headers_df, report_columns_usage_dct, data_names[0])
-    no_alias_device_report_df = dfop.generate_report_dataframe(no_alias_device_df, report_headers_df, report_columns_usage_dct, data_names[1])
+    unzoned_device_report_df = report.generate_report_dataframe(unzoned_device_df, report_headers_df, report_columns_usage_dct, data_names[0])
+    no_alias_device_report_df = report.generate_report_dataframe(no_alias_device_df, report_headers_df, report_columns_usage_dct, data_names[1])
     return unzoned_device_report_df, no_alias_device_report_df
 
 
@@ -138,7 +139,7 @@ def absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_
     
     absent_device_df = dfop.translate_values(absent_device_df, report_headers_df, 'Зонирование_перевод', translated_columns='Fabric_device_status')
     absent_device_df = dfop.drop_column_if_all_na(absent_device_df, columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'])
-    zoning_absent_device_report_df = dfop.generate_report_dataframe(absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
+    zoning_absent_device_report_df = report.generate_report_dataframe(absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
     return zoning_absent_device_report_df
 
 

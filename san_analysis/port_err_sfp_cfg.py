@@ -6,12 +6,11 @@ and add this information to aggregated_portcmd_df DataFrame
 import numpy as np
 import pandas as pd
 
-import utilities.dataframe_operations as dfop
 import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
 
 
 def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df,
@@ -79,7 +78,7 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
         force_flag = False
         if data_name == 'portshow_sfp_aggregated':
             force_flag = portshow_sfp_force_flag
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
     # check if stop programm execution flag is on
     meop.validate_stop_program_flag(exit_after_save_flag)
     return portshow_sfp_aggregated_df
@@ -156,7 +155,7 @@ def portshow_report_main(port_complete_df, data_names, report_headers_df, report
     # add speed value column for fillword verification in errors_report_df
     port_complete_df['speed_fillword'] = port_complete_df['speed']
     errors_report_df, sfp_report_df, portcfg_report_df = \
-        dfop.generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_sr, *data_names[1:])
+        report.generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_sr, *data_names[1:])
     # drop empty columns
     errors_report_df.dropna(axis=1, how = 'all', inplace=True)
     sfp_report_df.dropna(axis=1, how = 'all', inplace=True)

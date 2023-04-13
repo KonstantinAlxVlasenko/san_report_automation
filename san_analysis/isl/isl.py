@@ -6,6 +6,8 @@ import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
+import utilities.report_operations as report
+
 
 from .isl_aggregation import isl_aggregated
 
@@ -66,5 +68,5 @@ def isl_analysis(fabricshow_ag_labels_df, switch_params_aggregated_df,
         isl_aggregated_df, fcredge_aggregated_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return isl_aggregated_df, fcredge_aggregated_df

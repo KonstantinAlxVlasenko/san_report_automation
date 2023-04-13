@@ -2,10 +2,13 @@
 
 
 import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
+
 from .isl_statistics import isl_statistics
 
 
@@ -43,13 +46,13 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df,
         # after finish display status
         meop.status_info('ok', max_title, len(info))      
 
-        isl_report_df = dfop.generate_report_dataframe(isl_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[3]) 
+        isl_report_df = report.generate_report_dataframe(isl_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[3]) 
         isl_report_df = dfop.translate_values(isl_report_df, translate_dct={'Yes': 'Да', 'No': 'Нет'})
         isl_report_df = dfop.drop_column_if_all_na(isl_report_df, columns=['Идентификатор транка', 'Deskew', 'Master', 'Идентификатор IFL'])
         # check if IFL table required
         if not fcredge_aggregated_df.empty:
             # ifl_report_df, = dataframe_segmentation(fcredge_df, [data_names[3]], report_columns_usage_sr, max_title)
-            ifl_report_df = dfop.generate_report_dataframe(fcredge_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[4]) 
+            ifl_report_df = report.generate_report_dataframe(fcredge_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[4]) 
         else:
             ifl_report_df = fcredge_aggregated_df.copy()
 
@@ -66,20 +69,17 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df,
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return isl_aggregated_df, isl_statistics_df
 
 
 def isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_usage_sr):
     """Function to create report table out of isl_statistics_df DataFrame"""
 
-    # isl_statistics_df_report_df = pd.DataFrame('Фабрика', 'Подсеть',	'Имя шасси', 'Имя коммутатора')
     isl_statistics_df_report_df = pd.DataFrame()
 
     if not isl_statistics_df.empty:
         chassis_column_usage = report_columns_usage_sr.get('chassis_info_usage')
-        # translate_dct = dct_from_columns('customer_report', max_title, 'Статистика_ISL_перевод_eng', 
-        #                                 'Статистика_ISL_перевод_ru', init_file = 'san_automation_info.xlsx')
         isl_statistics_df_report_df = isl_statistics_df.copy()
         # identify columns to drop and drop columns
         drop_columns = ['switchWwn', 'Connected_switchWwn', 'sort_column_1', 'sort_column_2', 'Connection_ID']
@@ -96,6 +96,5 @@ def isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_u
         # drop empty columns
         isl_statistics_df_report_df.dropna(axis=1, how='all', inplace=True)
         # remove zeroes to clean view
-        # isl_statistics_df_report_df.replace({0: np.nan}, inplace=True)
         dfop.drop_zero(isl_statistics_df_report_df)
     return isl_statistics_df_report_df

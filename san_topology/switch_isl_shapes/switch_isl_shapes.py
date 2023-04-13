@@ -6,12 +6,13 @@ These shape tables are used to create SAN topology in Visio."""
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
-from .switch_shapes import create_san_graph_switch, create_san_graph_sw_pair
-from .meta_san import add_meta_san_graph_sw_pair, add_meta_san_graph_isl
 from .isl_shapes import create_san_graph_isl
+from .meta_san import add_meta_san_graph_isl, add_meta_san_graph_sw_pair
 from .npiv_link_shapes import create_san_graph_npiv_links
+from .switch_shapes import create_san_graph_sw_pair, create_san_graph_switch
 
 
 def switch_isl_shapes_compilation_init(switch_params_aggregated_df, switch_pair_df, 
@@ -58,7 +59,7 @@ def switch_isl_shapes_compilation_init(switch_params_aggregated_df, switch_pair_
         san_graph_switch_df, san_graph_sw_pair_df, san_graph_isl_df, san_graph_npiv_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return san_graph_switch_df, san_graph_sw_pair_df, san_graph_isl_df, san_graph_npiv_df
 
 

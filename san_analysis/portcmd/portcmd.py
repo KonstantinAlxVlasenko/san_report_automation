@@ -2,17 +2,19 @@
 
 import numpy as np
 import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .portcmd_aggregation import portshow_aggregated
 from .portcmd_device_connection_statistics import device_connection_statistics
 from .portcmd_devicename_correction import devicename_correction_main
+from .portcmd_domain import hostname_domain_remove
 from .portcmd_storage_statistics import storage_connection_statistics
 from .report_portcmd import portcmd_report_main
-from .portcmd_domain import hostname_domain_remove
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -120,8 +122,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)
         # save data to service file if it's required
-        dfop.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', project_constants_lst, force_flag=nsshow_unsplit_force_flag)
-        dfop.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', project_constants_lst, force_flag=expected_ag_links_force_flag)
+        report.dataframe_to_excel(nsshow_unsplit_df, 'nsshow_unsplit', project_constants_lst, force_flag=nsshow_unsplit_force_flag)
+        report.dataframe_to_excel(expected_ag_links_df, 'expected_ag_links', project_constants_lst, force_flag=expected_ag_links_force_flag)
     # verify if loaded data is empty and replace information string with empty DataFrame
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
@@ -135,7 +137,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         if data_name == 'portshow_aggregated':
             force_flag = portshow_force_flag
         if data_name != 'report_columns_usage_upd':
-            dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
+            report.dataframe_to_excel(data_frame, data_name, project_constants_lst, force_flag=force_flag)
     # check if stop programm execution flag is on
     meop.validate_stop_program_flag(exit_after_save_flag)
     return portshow_aggregated_df

@@ -4,6 +4,15 @@
 
 import re
 import pandas as pd
+from datetime import date
+
+
+
+current_date=str(date.today())
+
+
+file_txt = 'oui_' + current_date + '.txt'
+file_xlsx = 'oui_' + current_date + '.xlsx'
 
 oui_file = 'oui.txt'
 pattern = re.compile(

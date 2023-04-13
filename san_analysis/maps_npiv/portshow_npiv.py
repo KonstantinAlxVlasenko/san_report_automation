@@ -189,6 +189,7 @@ def npiv_statistics(portshow_npiv_df, pattern_dct):
     portshow_npiv_cp_df = prior_prepearation(portshow_npiv_df, pattern_dct)
     # count statistics for stat columns
     stat_columns = ['logical_link', 'physical_link', 'port', 'Link', 'Virtual_Channel', *service_columns, 'Link_speedActualMax', *cfg_columns]
+    
     npiv_statistics_df = dfop.count_statistics(portshow_npiv_cp_df, link_group_columns, stat_columns, 
                                             port_qunatity_column = 'port', speed_column = 'speed')
     npiv_statistics_df.fillna(0, inplace=True)

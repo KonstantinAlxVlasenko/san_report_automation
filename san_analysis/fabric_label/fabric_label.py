@@ -4,9 +4,11 @@
 from datetime import date
 
 import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 
 from .fabric_label_auto import auto_fabrics_labeling
 from .fabric_label_manual import manual_fabrics_labeling
@@ -59,7 +61,7 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
         reply = meop.reply_request(query)
         if reply == 'y':
             # saving DataFrame to Excel to check during manual labeling if required
-            dfop.dataframe_to_excel(fabricshow_summary_df, 'fabricshow_summary', project_constants_lst, force_flag=True)
+            report.dataframe_to_excel(fabricshow_summary_df, 'fabricshow_summary', project_constants_lst, force_flag=True)
             fabricshow_summary_df = manual_fabrics_labeling(fabricshow_summary_df, fabricshow_summary_automatic_df, info_labels)
         
         # takes all switches working in Native and AG switches
@@ -82,7 +84,7 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
         fabricshow_ag_labels_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return fabricshow_ag_labels_df 
 
 

@@ -5,14 +5,16 @@ import os
 
 import numpy as np
 import pandas as pd
+
 import utilities.data_structure_operations as dsop
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
-from .synergy_sections import server_mezz_extract, interconnect_module_extract
+from .synergy_sections import interconnect_module_extract, server_mezz_extract
 
 
 def synergy_system_extract(project_constants_lst):
@@ -88,7 +90,7 @@ def synergy_system_extract(project_constants_lst):
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return synergy_module_aggregated_df, synergy_servers_aggregated_df
 
 

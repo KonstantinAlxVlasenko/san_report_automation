@@ -9,6 +9,7 @@ import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.regular_expression_operations as reop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .zoning_sections import (peer_zoning_section_extract,
@@ -78,7 +79,7 @@ def zoning_extract(switch_params_df, project_constants_lst):
         cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return cfg_df, zone_df, alias_df, cfg_effective_df, zone_effective_df, peerzone_df, peerzone_effective_df
 
 

@@ -91,7 +91,9 @@ def get_domain_to_remove(portshow_aggregated_df, domain_name_remove_df,
             domain_name_remove_df = choose_domain_to_remove(domain_name_df, REMOVE_MARK_COLUMN, REMOVE_MARK_STR)
         else:
             # if there is request for change for data which domain removal scheme is dependent on
-            if force_change_data_lst and not force_domain_remove_schema_update_flag:
+            if force_change_data_lst and not force_domain_remove_schema_update_flag and not domain_name_remove_df.empty:
+                print('\nSAVED domain removal scheme')
+                display_domain_name_remove_scheme(domain_name_remove_df, show_domain_remove_scheme=True, separator_len=separator_len)
                 reply = meop.reply_request('Do you want to APPLY SAVED domain removal scheme? (y)es/(n)o: ')
                 print('\n')
                 if reply == 'y':

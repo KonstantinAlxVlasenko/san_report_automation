@@ -4,6 +4,7 @@
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 
 from .port_statistics_aggregation import port_statisctics_aggregated
 
@@ -49,7 +50,7 @@ def port_statistics_analysis(portshow_aggregated_df, project_constants_lst):
         port_statistics_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return port_statistics_df
 
 

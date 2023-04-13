@@ -6,6 +6,7 @@ import re
 from tqdm import tqdm
 
 import utilities.database_operations as dbop
+import utilities.report_operations as report
 from san_automation_constants import SERVER_DESC, STORAGE_DESC
 
 from .drop_connector_shape import drop_connector_shape, shape_font_change
@@ -29,7 +30,7 @@ def add_visio_device_shapes(san_links_df, visio, stn, fabric_label_colours,
     elif tqdm_desc_str == STORAGE_DESC:
         device_font_size = san_topology_constantants_sr['storage_font_size']
 
-    dbop.add_log_entry(visio_log_file, '\nEdge devices')
+    report.add_log_entry(visio_log_file, '\nEdge devices')
     tqdm_desc_indented = get_tqdm_desc_indented(tqdm_desc_str, tqdm_max_desc_len)
     
     
@@ -40,7 +41,7 @@ def add_visio_device_shapes(san_links_df, visio, stn, fabric_label_colours,
         tqdm(range(len(san_device_shapes_df.index)), desc=tqdm_desc_indented, ncols=tqdm_ncols_num), 
         san_device_shapes_df.iterrows()):
         
-        dbop.add_log_entry(visio_log_file, '\n', '-'*30, device_sr.to_string())
+        report.add_log_entry(visio_log_file, '\n', '-'*30, device_sr.to_string())
         fabric_name_current = device_sr['Fabric_name']
         # activate page with shape to be dropped 
         page = activate_visio_page(visio, page_name=fabric_name_current)
@@ -56,7 +57,7 @@ def add_visio_device_shapes(san_links_df, visio, stn, fabric_label_colours,
         # each row is switch -> device_shapename link with link quantity
         # device_shapename is single device or list of devices groped on fabric connection description
         shape_links_df = find_device_shape_links(device_sr, san_links_df)
-        dbop.add_log_entry(visio_log_file, shape_links_df.to_string())
+        report.add_log_entry(visio_log_file, shape_links_df.to_string())
         
         for _, link_sr in shape_links_df.iterrows():
             # drop device_shapename -> switch links

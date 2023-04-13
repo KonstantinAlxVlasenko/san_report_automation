@@ -1,21 +1,16 @@
 """Module to create zoning configuration related DataFrames"""
 
-import numpy as np
-import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
-# import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 
 from .report_zoning import zoning_report_main
 from .zoning_aggregation import verify_cfg_type, zoning_aggregated
-from .zoning_cfg_dashboard import cfg_dashborad
 from .zoning_alias_dashboard import alias_dashboard
+from .zoning_cfg_dashboard import cfg_dashborad
 from .zoning_statistics import zonemember_statistics
-
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
-
 
 
 def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
@@ -87,7 +82,7 @@ def zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df,
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df
 
 

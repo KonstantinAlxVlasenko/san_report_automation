@@ -3,12 +3,12 @@
 
 import re
 
-import utilities.data_structure_operations as dsop
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
+
 from .portcmd_sections import port_fc_portcmd_section_extract
 
 
@@ -60,7 +60,7 @@ def portcmd_extract(chassis_params_df, project_constants_lst):
         portshow_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return portshow_df
 
 

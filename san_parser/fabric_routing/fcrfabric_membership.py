@@ -10,6 +10,7 @@ import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 import utilities.regular_expression_operations as reop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .fcrfabric_membership_sections import (fcrfabricshow_section_extract,
@@ -88,7 +89,7 @@ def fcr_membership_extract(switch_params_df, project_constants_lst):
         fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return fcrfabric_df, fcrproxydev_df, fcrphydev_df, lsan_df, fcredge_df, fcrresource_df, fcrxlateconfig_df
 
 

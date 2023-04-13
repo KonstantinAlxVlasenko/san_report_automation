@@ -8,7 +8,9 @@ import pandas as pd
 
 import utilities.database_operations as dbop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 from san_automation_constants import RELEASE
+
 from .sshow_stats import SSHOW_SECTIONS
 
 
@@ -95,7 +97,7 @@ def insert_sshow_header(ssave_sections_stat_current_df, sshow_filepath):
     # horizontal borders
     border_str = "+" + "-" * (max_str_len + 2) + "+" 
     # insert header to the sshow_filepath
-    dbop.add_log_entry(sshow_filepath, border_str, *str_lst[:3], border_str, *str_lst[3:], border_str, '')
+    report.add_log_entry(sshow_filepath, border_str, *str_lst[:3], border_str, *str_lst[3:], border_str, '')
 
 
 def insert_section_header(sshow_filepath, section_name):
@@ -103,7 +105,7 @@ def insert_section_header(sshow_filepath, section_name):
     
     section_header_str = "| Section: " + section_name + " |"
     border_str = "+" + "-" * (len(section_header_str) - 2) + "+"
-    dbop.add_log_entry(sshow_filepath, border_str, section_header_str, border_str, '\n')
+    report.add_log_entry(sshow_filepath, border_str, section_header_str, border_str, '\n')
 
 
 def insert_sshow_footer(sshow_filepath):
@@ -111,4 +113,4 @@ def insert_sshow_footer(sshow_filepath):
     
     footer_str = "| ... rebuilt finished |"
     border_str = "+" + "-" * (len(footer_str) - 2) + "+"
-    dbop.add_log_entry(sshow_filepath, border_str, footer_str, border_str, '\n')
+    report.add_log_entry(sshow_filepath, border_str, footer_str, border_str, '\n')

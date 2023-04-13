@@ -7,6 +7,7 @@ from datetime import date
 import openpyxl
 import pandas as pd
 
+import utilities.filesystem_operations as fsop
 from utilities.module_execution import status_info
 
 from .worksheet_operations import format_workbook, hyperlink_content
@@ -19,7 +20,7 @@ def dataframe_to_excel(df, sheet_title, project_constants_lst,
     
     project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
     report_type, export_flag, df_decription = project_steps_df.loc[sheet_title, ['report_type', 'export_to_excel', 'description']].values
-
+    
     # check DataFrame report type to save
     if report_type == 'report':
         report_mark = report_requisites_sr['project_title'] + '_tables'
@@ -37,6 +38,7 @@ def dataframe_to_excel(df, sheet_title, project_constants_lst,
     # save DataFrame to excel file if export_to_excel trigger is ON
     # and DataFrame is not empty
     if (force_flag or export_flag) and not df.empty:
+        fsop.create_folder(report_requisites_sr['today_report_folder'], max_title, display_status=False)
         file_mode = 'a' if os.path.isfile(file_path) else 'w'
         df = df.apply(pd.to_numeric, errors='ignore')
         try:

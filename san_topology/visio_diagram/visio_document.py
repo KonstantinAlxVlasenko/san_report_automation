@@ -83,7 +83,7 @@ def save_visio_document(visio, report_requisites_sr, current_datetime=meop.curre
 
 
 def get_tqdm_desc_indented(tqdm_desc_str, max_desc_len):
-    """Function returns indented tqdm description strings for progress bar"""
+    """Function returns indented tqdm description string for progress bar"""
 
     return ' '*LEFT_INDENT + tqdm_desc_str.ljust(max_desc_len)
 

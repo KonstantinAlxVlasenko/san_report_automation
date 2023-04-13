@@ -1,14 +1,10 @@
 """Module to create sensor related DataFrames"""
 
-import numpy as np
-import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
-# import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
-
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
+import utilities.report_operations as report
 
 
 def sensor_analysis(sensor_df, switch_params_aggregated_df, project_constants_lst):
@@ -49,12 +45,9 @@ def sensor_analysis(sensor_df, switch_params_aggregated_df, project_constants_ls
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         sensor_aggregated_df, *_ = data_lst
-
-
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return sensor_aggregated_df
 
 
@@ -69,22 +62,18 @@ def sensor_aggregation(sensor_df, switch_params_aggregated_df):
     switchparams_lst = ['configname', 'chassis_name', 'chassis_wwn', 
                         'switchName', 'switchWwn', 
                         'Fabric_name', 'Fabric_label', 'Generation', 'switchType']
-    
     # dictionary of functions to use for aggregating the data.
     agg_fn_dct = {key: lambda x: ', '.join(sorted(set(x))) for key in switchparams_lst[3:-1]}
     agg_fn_dct['switchType'] = 'first'
-    
     # group switch information for each chassis to avoid sensor information duplication 
     switchparams_aggregated_join_df = switch_params_aggregated_df.groupby(by=switchparams_lst[:3]).agg(agg_fn_dct)
     switchparams_aggregated_join_df.reset_index(inplace=True)
-    
     # add chassis and switch information to sensor DataFrame
     sensor_aggregated_df = sensor_df.merge(switchparams_aggregated_join_df, how = 'left', on = switchparams_lst[:3])
 
     sort_sensor_lst = ['Fabric_label', 'Fabric_name', 'Generation', 'switchType', 'chassis_name']
     sensor_aggregated_df.sort_values(by=sort_sensor_lst, \
         ascending=[True, True, False, False, True], inplace=True)
-
     return sensor_aggregated_df
 
 
@@ -92,7 +81,7 @@ def sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_
     """Function to create report Datafrmae from sensor_aggregated_df 
     (slice and reorder columns, translate values in columns)"""
 
-    sensor_report_df = dfop.generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[1])
+    sensor_report_df = report.generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[1])
     sensor_report_df = dfop.translate_values(sensor_report_df, report_headers_df, data_names[1], 
                                         translated_columns = ['Type', 'Status', 'Value', 'Unit'])
     return sensor_report_df

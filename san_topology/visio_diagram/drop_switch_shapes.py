@@ -7,6 +7,7 @@ from itertools import product
 from tqdm import tqdm
 
 import utilities.database_operations as dbop
+import utilities.report_operations as report
 
 from .drop_connector_shape import drop_connector_shape, shape_font_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
@@ -23,7 +24,7 @@ def add_visio_switch_shapes(san_graph_sw_pair_df, visio, stn, visio_log_file,
     x_start = int(san_topology_constantants_sr['x_start'])
     switch_font_size = san_topology_constantants_sr['switch_font_size']
 
-    dbop.add_log_entry(visio_log_file, '\nSwitches\n', 'Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate')
+    report.add_log_entry(visio_log_file, '\nSwitches\n', 'Fabric, switchName, switchWwn, swithNumber_in_pair, x-coordinate, y-coordinate')
         
     tqdm_desc_indented = get_tqdm_desc_indented(tqdm_desc_str, tqdm_max_desc_len)
 
@@ -80,7 +81,7 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
                 
         # add enrty to visio graph creation log
         log_entry = ' '.join([switch_pair_sr['Fabric_name'], shape_name, str(i), str(x), str(y)])
-        dbop.add_log_entry(visio_log_file, log_entry)
+        report.add_log_entry(visio_log_file, log_entry)
         
         # add switch shape to the Visio page
         shape = page.Drop(master, x, y)
@@ -132,7 +133,7 @@ def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric
     link_font_size = san_topology_constantants_sr['link_font_size']
 
     # log entry header
-    dbop.add_log_entry(visio_log_file, '\nLinks\n', 'Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn')
+    report.add_log_entry(visio_log_file, '\nLinks\n', 'Fabric, switchName, switchWwn ----> Connected_switchName, Connected_switchWwn')
     tqdm_desc_indented = get_tqdm_desc_indented(tqdm_desc_str, tqdm_max_desc_len)
     
     for _, (_, link_sr) in zip(
@@ -141,7 +142,7 @@ def add_visio_inter_switch_connections(inter_switch_links_df, visio, stn, fabric
 
         # add connection log entry
         log_entry =  ' '.join([link_sr['Fabric_name'], link_sr['shapeName'], '  ---->  ', link_sr['Connected_shapeName']])
-        dbop.add_log_entry(visio_log_file, log_entry)
+        report.add_log_entry(visio_log_file, log_entry)
         
         # activate page with shapes to be connected 
         fabric_name_current = link_sr['Fabric_name']
@@ -155,7 +156,7 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, visio_log_file,
                         tqdm_max_desc_len, tqdm_ncols_num, tqdm_desc_str):
     """Function to create Visio groups for each switch pair"""
     
-    dbop.add_log_entry(visio_log_file, '\nSwitch groups')
+    report.add_log_entry(visio_log_file, '\nSwitch groups')
     tqdm_desc_indented = get_tqdm_desc_indented(tqdm_desc_str, tqdm_max_desc_len)
     
     
@@ -164,7 +165,7 @@ def group_switch_pairs(san_graph_sw_pair_df, visio, visio_log_file,
         tqdm(range(len(san_graph_sw_pair_df.index)), desc=tqdm_desc_indented, ncols=tqdm_ncols_num), 
         san_graph_sw_pair_df.iterrows()):
         
-        dbop.add_log_entry(visio_log_file, '\n', switch_pair_sr.to_string())
+        report.add_log_entry(visio_log_file, '\n', switch_pair_sr.to_string())
         fabric_name_current = switch_pair_sr['Fabric_name']
         # activate page with shapes to be grouped 
         page = activate_visio_page(visio, page_name=fabric_name_current)

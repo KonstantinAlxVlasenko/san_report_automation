@@ -7,6 +7,7 @@ import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .switch_pair_auto import auto_switch_pairing
@@ -76,7 +77,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
                     switch_pair_df = dfop.move_column(switch_pair_df, cols_to_move='switchWwn_pair_MANUAL', ref_col='switchWwn_pair') 
                     # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
                     sheet_title = 'switch_pair_manual'
-                    file_path = dfop.dataframe_to_excel(switch_pair_df, sheet_title, project_constants_lst, force_flag=True)
+                    file_path = report.dataframe_to_excel(switch_pair_df, sheet_title, project_constants_lst, force_flag=True)
                     file_name = os.path.basename(file_path)
                     file_directory = os.path.dirname(file_path)
                     print(f"\nPut REQUIRED to be changed switch wwn to switchWwn_pair_MANUAL column of the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")
@@ -129,7 +130,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
         switch_pair_df, npv_ag_connected_devices_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return switch_pair_df, npv_ag_connected_devices_df 
 
 

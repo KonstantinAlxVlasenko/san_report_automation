@@ -3,9 +3,11 @@
 
 import numpy as np
 import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .switch_statistics import fabric_switch_statistics
@@ -70,7 +72,7 @@ def switch_params_sw_pair_update(switch_params_aggregated_df, switch_pair_df, pr
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return switch_params_aggregated_df
 
 
@@ -124,7 +126,7 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
 
     switches_report_df, fabric_report_df,  \
         switches_parameters_report_df, maps_report_df, licenses_report_df = \
-            dfop.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names[2:-2])
+            report.generate_report_dataframe(switch_params_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names[2:-2])
 
     maps_report_df.replace(to_replace={'No FV lic': np.nan}, inplace=True)
 
@@ -132,7 +134,7 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
     mask_principal = switch_params_aggregated_df['switchRole'] == 'Principal'
     mask_valid_fabric = ~switch_params_aggregated_df['Fabric_name'].isin(['x', '-'])
     switch_params_principal_df = switch_params_aggregated_df.loc[mask_principal & mask_valid_fabric].copy()
-    global_fabric_parameters_report_df = dfop.generate_report_dataframe(switch_params_principal_df, report_headers_df, 
+    global_fabric_parameters_report_df = report.generate_report_dataframe(switch_params_principal_df, report_headers_df, 
                                                                 report_columns_usage_sr, data_names[-2])
 
     # drop rows with empty switch names columns

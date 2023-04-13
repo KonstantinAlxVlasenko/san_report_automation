@@ -4,12 +4,15 @@ import os
 import re
 
 import pandas as pd
+
 import utilities.data_structure_operations as dsop
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
+
 from .bladesystem_sections import *
 
 
@@ -94,7 +97,7 @@ def blade_system_extract(project_constants_lst):
         
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return blade_module_df, blade_servers_df, blade_vc_df
 
 

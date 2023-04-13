@@ -2,17 +2,16 @@
 'Switches list', 'Fabric list', 'Fabric global parameters', 
 'Switches parameters', 'Licenses' report tables"""
 
-import sys
 
 import pandas as pd
 
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .switch_aggregation import switch_param_aggregation
-# from .switch_statistics import fabric_switch_statistics
 
 
 def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df, 
@@ -82,7 +81,7 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         report_columns_usage_sr, switch_params_aggregated_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names[1:], data_lst[1:]):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return report_columns_usage_sr, switch_params_aggregated_df, fabric_clean_df
 
 

@@ -95,7 +95,8 @@ def create_service_folders(report_requisites_sr, max_title):
     # define folder san_assessment_report to save excel file with parsed configuration data
     san_assessment_report_dir = f'report_{customer_title}_' + current_date
     san_assessment_report_path = os.path.join(os.path.normpath(project_path), san_assessment_report_dir)   
-    fsop.create_folder(san_assessment_report_path, max_title)
+    # TO_REMOVE report folder is created if any excel file need to be saved
+    # fsop.create_folder(san_assessment_report_path, max_title)
     report_requisites_sr['today_report_folder'] = san_assessment_report_path
     
     # define folder to save obects extracted from configuration files

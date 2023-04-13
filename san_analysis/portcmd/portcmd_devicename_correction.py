@@ -5,11 +5,11 @@ import os
 import numpy as np
 import pandas as pd
 
-import utilities.dataframe_operations as dfop
 import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
-
 
 
 def devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst):
@@ -99,7 +99,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
             if not manual_device_rename_df.empty:
                 # save manual_device_rename_df DataFrame to excel file to use at as form to fill 
                 sheet_title = 'device_rename_form'
-                file_path = dfop.dataframe_to_excel(manual_device_rename_df, sheet_title, project_constants_lst, force_flag = True)
+                file_path = report.dataframe_to_excel(manual_device_rename_df, sheet_title, project_constants_lst, force_flag = True)
                 file_name = os.path.basename(file_path)
                 file_directory = os.path.dirname(file_path)
                 print(f"\nTo rename devices put new names into the '{file_name}' file, '{sheet_title}' sheet in\n'{file_directory}' directory")

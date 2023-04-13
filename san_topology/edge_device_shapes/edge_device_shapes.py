@@ -6,6 +6,7 @@ import pandas as pd
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .device_link_description import create_device_link_description
@@ -63,7 +64,7 @@ def edge_device_shapes_compilation_init(portshow_aggregated_df, npv_ag_connected
     
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return (storage_shape_links_df, server_shape_links_df, 
             san_graph_sw_pair_group_df, fabric_name_duplicated_sr, fabric_name_dev_sr)
 

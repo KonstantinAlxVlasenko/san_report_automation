@@ -3,13 +3,12 @@
 import os.path
 import re
 
-
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
-import utilities.filesystem_operations as fsop
 
 
 def maps_params_extract(all_config_data, project_constants_lst):
@@ -78,7 +77,7 @@ def maps_params_extract(all_config_data, project_constants_lst):
         maps_params_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return maps_params_df
 
 

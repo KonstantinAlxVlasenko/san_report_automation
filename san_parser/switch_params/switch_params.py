@@ -3,12 +3,13 @@
 
 import re
 
-import utilities.dataframe_operations as dfop
-import utilities.database_operations as dbop
 import utilities.data_structure_operations as dsop
+import utilities.database_operations as dbop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
-import utilities.servicefile_operations as sfop
 import utilities.regular_expression_operations as reop
+import utilities.report_operations as report
+import utilities.servicefile_operations as sfop
 
 
 def switch_params_extract(chassis_params_df, project_constants_lst):
@@ -62,7 +63,7 @@ def switch_params_extract(chassis_params_df, project_constants_lst):
         switch_params_df, switchshow_ports_df = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return switch_params_df, switchshow_ports_df
 
 

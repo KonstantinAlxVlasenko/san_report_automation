@@ -9,11 +9,10 @@ import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.regular_expression_operations as reop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 from san_automation_constants import DIRECTOR_TYPE
 
-# TO_REMOVE used DIRECTOR_TYPE constant
-# director_type = [42, 62, 77, 120, 121, 165, 166, 179, 180]
 
 def chassis_params_extract(all_config_data, project_constants_lst):
     """Function to extract chassis parameters"""
@@ -68,7 +67,7 @@ def chassis_params_extract(all_config_data, project_constants_lst):
         chassis_params_df, slot_status_df, licenseport_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return chassis_params_df, slot_status_df, licenseport_df
 
 
@@ -148,7 +147,7 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
                                                     extract_pattern_name='license',
                                                     stop_pattern_name='switchcmd_end')
             # licenses section end
-            # licenseshow fos9x section start
+            # licenses fos9x section start
             elif re.search(pattern_dct['chassiscmd_license_fos9x'], line):
                 collected['licenses'] = True
                 license_fos9x_lst = []
@@ -158,7 +157,7 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
                                                     stop_pattern_name='switchcmd_end')
                 license_fos9x_lst = dsop.flatten(license_fos9x_lst)
                 license_lst.extend([lic for lic in license_fos9x_lst if lic])
-            # licenseshow fos9x section end
+            # licenses fos9x section end
             # licenseport section start
             elif re.search(pattern_dct['chassiscmd_licenseport'], line) or re.search(pattern_dct['chassiscmd_licenseshowport'], line):
                 collected['licenseport'] = True
@@ -182,7 +181,7 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
                                                     extract_pattern_name='slot_status', line_add_values=[sshow_file, switch_name])
             # slot_status section end
             # director control section start
-            # if switch is not director it doesn't contain chassiscmd_slotshow pattern
+            # if switch is not a director it doesn't contain chassiscmd_slotshow pattern
             # to avoid complete check of sshow file    
             elif re.search(pattern_dct['switch_type'], line):
                 switch_type = re.match(pattern_dct['switch_type'], line).group(1).strip()

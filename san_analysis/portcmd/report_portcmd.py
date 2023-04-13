@@ -6,9 +6,8 @@ Module to create tables
 """
 
 
-import pandas as pd
-
 import utilities.dataframe_operations as dfop
+import utilities.report_operations as report
 
 
 def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df, 
@@ -21,7 +20,7 @@ def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df
     # partition aggregated DataFrame to required tables
     servers_report_df, storage_report_df, library_report_df, hba_report_df, \
         storage_connection_df,  library_connection_df, server_connection_df = \
-        dfop.generate_report_dataframe(portshow_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names)
+        report.generate_report_dataframe(portshow_aggregated_df, report_headers_df, report_columns_usage_sr, *data_names)
 
     # clean and sort DataFrames
     # device report

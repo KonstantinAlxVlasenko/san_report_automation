@@ -5,9 +5,11 @@ Verify if all switches and vc-fc of the same blade systems bay parity group are 
 
 import numpy as np
 import pandas as pd
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .portshow_maps_ports import maps_db_ports
@@ -78,7 +80,7 @@ def maps_npiv_ports_analysis(portshow_sfp_aggregated_df, switch_params_aggregate
         _, portshow_npiv_df, npiv_statistics_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return portshow_npiv_df, npiv_statistics_df
 
 
@@ -125,7 +127,7 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     maps_ports_report_df = dfop.drop_all_identical(maps_ports_df, 
                                                 {'portState': 'Online', 'Connected_through_AG': 'No'},
                                                 dropna=True)                   
-    maps_ports_report_df = dfop.generate_report_dataframe(maps_ports_report_df, report_headers_df, report_columns_usage_sr, data_names[5])    
+    maps_ports_report_df = report.generate_report_dataframe(maps_ports_report_df, report_headers_df, report_columns_usage_sr, data_names[5])    
     maps_ports_report_df.dropna(axis=1, how = 'all', inplace=True)
     maps_ports_report_df = dfop.translate_values(maps_ports_report_df)
 
@@ -142,7 +144,7 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
                                                                 ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
                                                                 ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
     npiv_report_df = dfop.translate_values(npiv_report_df)
-    npiv_report_df = dfop.generate_report_dataframe(npiv_report_df, report_headers_df, report_columns_usage_sr, data_names[6])
+    npiv_report_df = report.generate_report_dataframe(npiv_report_df, report_headers_df, report_columns_usage_sr, data_names[6])
     # npiv statistics report
     npiv_statistics_report_df = dfop.statistics_report(npiv_statistics_df, report_headers_df, 'Статистика_ISL_перевод', 
                                                     report_columns_usage_sr, drop_columns=['switchWwn', 'NodeName'])
@@ -155,7 +157,7 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     # switch connection statistics
     report_columns_usage_cp_dct = report_columns_usage_sr.copy()
     report_columns_usage_cp_dct['fabric_name_usage'] = True
-    sw_connection_statistics_report_df = dfop.generate_report_dataframe(sw_connection_statistics_df, report_headers_df, 
+    sw_connection_statistics_report_df = report.generate_report_dataframe(sw_connection_statistics_df, report_headers_df, 
                                                                     report_columns_usage_cp_dct, data_names[8])
     sw_connection_statistics_report_df = dfop.translate_values(sw_connection_statistics_report_df, report_headers_df, data_names[8])   
     # drop allna columns
@@ -169,6 +171,6 @@ def blademodule_report(blade_module_loc_df, data_names, report_headers_df, repor
     # report_columns_usage_sr = {'fabric_name_usage': False, 'chassis_info_usage': False}
 
     blade_module_report_df = dfop.drop_column_if_all_na(blade_module_loc_df, columns='Mixed_bay_parity_note')
-    blade_module_report_df = dfop.generate_report_dataframe(blade_module_loc_df, report_headers_df, report_columns_usage_sr, data_names[9])
+    blade_module_report_df = report.generate_report_dataframe(blade_module_loc_df, report_headers_df, report_columns_usage_sr, data_names[9])
     blade_module_report_df = dfop.translate_values(blade_module_report_df, report_headers_df, data_names[9])
     return blade_module_report_df

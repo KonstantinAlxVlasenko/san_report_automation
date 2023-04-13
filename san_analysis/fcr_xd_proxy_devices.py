@@ -1,10 +1,9 @@
 """Module to create sensor related DataFrames"""
 
-import numpy as np
-import pandas as pd
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 
 
 def fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
@@ -47,7 +46,7 @@ def fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df,
         fcr_xd_proxydev_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return fcr_xd_proxydev_df
 
 

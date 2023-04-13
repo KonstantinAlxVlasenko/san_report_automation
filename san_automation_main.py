@@ -11,6 +11,8 @@ import san_switch_config
 import san_topology
 import utilities.dataframe_operations as dfop
 from service_init import service_initialization
+import utilities.report_operations as report
+
 
 
 def main():
@@ -24,7 +26,7 @@ def main():
     # perform analysis of extracted configuraion data
     analyzed_configuration_lst = san_analysis.system_configuration_analysis(extracted_configuration_lst, project_constants_lst)
     # sort sheets and table of contents in excel report
-    dfop.report_format_completion(project_constants_lst)
+    report.report_format_completion(project_constants_lst)
     # create san topology in Visio
     san_topology.visualize_san_topology(analyzed_configuration_lst, project_constants_lst, software_path_sr, 
                                         san_graph_grid_df, san_topology_constantants_sr)

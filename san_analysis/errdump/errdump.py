@@ -4,11 +4,11 @@ within a period of six month prior to the switch configuration collection date "
 
 import numpy as np
 import pandas as pd
-# import utilities.data_structure_operations as dsop
+
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
-# import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
+import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 from .errdump_aggregation import errdump_aggregated
@@ -63,7 +63,7 @@ def errdump_analysis(errdump_df, switchshow_df, switch_params_aggregated_df,
         errdump_aggregated_df, raslog_counter_df, *_ = data_lst
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return errdump_aggregated_df, raslog_counter_df
 
 
@@ -189,7 +189,7 @@ def raslog_report(raslog_frequent_df, data_names, report_headers_df, report_colu
             # change keep chassis_name column tag to True 
             report_columns_usage_upd_sr['chassis_info_usage'] = True
 
-    raslog_report_df = dfop.generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_sr, data_names[2])
+    raslog_report_df = report.generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_sr, data_names[2])
     raslog_report_df.dropna(axis=1, how = 'all', inplace=True)
     dfop.drop_slot_value(raslog_report_df, report_columns_usage_sr)
     return raslog_report_df

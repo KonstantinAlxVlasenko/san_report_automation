@@ -17,9 +17,14 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     # to find out if there are any ports without license except qflex ports
     portshow_aggregated_df['qflex_port_no_license'] = \
         portshow_aggregated_df['connection_details'].str.extract('(No QFLEX Ports on Demand license)', flags = re.IGNORECASE)
+    
+    # mark device_class with npiv tag for devices connected via npiv
+    mask_npiv = portshow_aggregated_df['Device_type'].str.contains('NPIV', na=False)
+    portshow_aggregated_df['deviceType_npiv']  = portshow_aggregated_df.loc[mask_npiv, 'deviceType'] + '_NPIV'
+    portshow_aggregated_df['deviceType_npiv'].fillna(portshow_aggregated_df['deviceType'], inplace=True)
 
     # count statistics for columns
-    stat_columns = ['portState', 'license', 'qflex_port_no_license', 'portPhys', 'speed', 'deviceType', 'Device_type', 'portType', 'zoning_enforcement']
+    stat_columns = ['portState', 'license', 'qflex_port_no_license', 'portPhys', 'speed', 'deviceType_npiv', 'Device_type', 'portType', 'zoning_enforcement']
     stat_lst = [count_column_statistics(portshow_aggregated_df, column) for column in stat_columns]
     # merge all statistics DataFrames in aggregated DataFrame
     port_statistics_df = stat_lst[0].copy()
@@ -52,7 +57,7 @@ def count_column_statistics(portshow_aggregated_df, column: str):
     portshow_cp_df = portshow_aggregated_df.copy()
 
     # drop duplicated ports if statistics is counted for unique ports only
-    if not column in ['Device_type', 'deviceType']:
+    if not column in ['Device_type', 'deviceType', 'deviceType_npiv']:
         portshow_cp_df.drop_duplicates(subset=['configname', 'chassis_name', 'chassis_wwn', 
                                                         'switchName', 'switchWwn', 'slot', 'port'], inplace=True)
     if column == 'license':

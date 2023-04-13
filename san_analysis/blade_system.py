@@ -6,13 +6,10 @@ and add Device_Location column to blade modules DataFrame
 
 import pandas as pd
 
-
-import utilities.dataframe_operations as dfop
 import utilities.database_operations as dbop
-# import utilities.data_structure_operations as dsop
+import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
-# import utilities.servicefile_operations as sfop
-# import utilities.filesystem_operations as fsop
+import utilities.report_operations as report
 
 
 def blade_system_analysis(blade_module_df, synergy_module_df, project_constants_lst):
@@ -45,12 +42,6 @@ def blade_system_analysis(blade_module_df, synergy_module_df, project_constants_
         # after finish display status
         meop.status_info('ok', max_title, len(info))
         
-        # # create Blade chassis report table
-        # blade_module_report_df = blademodule_report(blade_module_loc_df, report_headers_df, data_names)
-        # blade_module_report_df = blademodule_report(blade_module_df, data_names, max_title)
-        # create list with partitioned DataFrames
-        # data_lst = [blade_module_loc_df, blade_module_report_df]
-
         data_lst = [blade_module_loc_df]
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
@@ -61,7 +52,7 @@ def blade_system_analysis(blade_module_df, synergy_module_df, project_constants_
 
     # save data to service file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
-        dfop.dataframe_to_excel(data_frame, data_name, project_constants_lst)
+        report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return blade_module_loc_df
 
 
@@ -91,19 +82,7 @@ def blademodule_location(blade_module_df, synergy_module_df):
             blade_module_loc_df = pd.concat([blade_module_loc_df, synergy_module_df], ignore_index=True)
         else:
             blade_module_loc_df = synergy_module_df
-
     return blade_module_loc_df
-
-
-# def blademodule_report(blade_module_loc_df, report_headers_df, data_names):
-#     """Function to create Blade IO modules report table"""
-
-#     report_columns_usage_dct = {'fabric_name_usage': False, 'chassis_info_usage': False}
-
-#     # pylint: disable=unbalanced-tuple-unpacking
-#     # blade_module_report_df, = dataframe_segmentation(blade_module_loc_df, data_names[1:], report_columns_usage_dct, max_title)
-#     blade_module_report_df = dfop.generate_report_dataframe(blade_module_loc_df, report_headers_df, report_columns_usage_dct, data_names[1])
-#     return blade_module_report_df
 
 
 def vc_name_fillna(blade_module_loc_df):
