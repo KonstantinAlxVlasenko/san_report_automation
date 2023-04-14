@@ -39,9 +39,17 @@ def hostname_domain_remove(portshow_aggregated_df, domain_name_remove_df, projec
         # filter domains which need to be removed and which to be kept
         domain_remove_lst, domain_keep_lst = \
             separate_keep_and_remove_domains(domain_name_remove_df, REMOVE_MARK_COLUMN, REMOVE_MARK_STR)
-        remove_domain(portshow_aggregated_df, domain_remove_lst, domain_keep_lst, hostname_column='Device_Host_Name', )
+        remove_domain(portshow_aggregated_df, domain_remove_lst, domain_keep_lst, hostname_column='Device_Host_Name')
         meop.status_info('ok', max_title, len(info))
+        portshow_aggregated_df, freezed_domain_flag = freeze_domain(portshow_aggregated_df)
+        info = f'Freezing domains to the duplicated hostnames'
+        print(info, end =" ")
+        if freezed_domain_flag:
+            meop.status_info('ok', max_title, len(info))
+        else:
+            meop.status_info('skip', max_title, len(info))
     else:
+        portshow_aggregated_df['Device_Host_Name_w_domain'] = portshow_aggregated_df['Device_Host_Name']
         meop.status_info('skip', max_title, len(info))
     return portshow_aggregated_df, domain_name_remove_df
 
@@ -149,6 +157,8 @@ def remove_domain(df, domain_drop_lst, domain_keep_lst, hostname_column):
     # create column with drop status
     domain_drop_status_column = 'Domain_drop_status'
     df[domain_drop_status_column] = np.nan
+    # create column with dropped domain names
+    df['Domain_name_dropped'] = np.nan
     
     # copy hostnames with domains which are in domain_keep_lst
     for domain in domain_keep_lst:
@@ -161,10 +171,15 @@ def remove_domain(df, domain_drop_lst, domain_keep_lst, hostname_column):
     for domain in domain_drop_lst:
         # pattern extracts domain free hostname
         drop_domain_pattern = '(.+?)' + domain.replace('.', '\.')
+        # pattern extracts domain name
+        domain_pattern = '.+?' + '(' + domain.replace('.', '\.') + ')'
         # extract current domain free hostname to the tmp column
         df['Domain_free_tmp'] = df[hostname_domain_column].str.extract(drop_domain_pattern)
+        # extract domain
+        df['Domain_name_dropped_tmp'] = df[hostname_domain_column].str.extract(domain_pattern)
         # fill empty values in hostname_column with values in tmp column
         df[hostname_column].fillna(df['Domain_free_tmp'], inplace=True)
+        df['Domain_name_dropped'].fillna(df['Domain_name_dropped_tmp'], inplace=True)
     
     domain_drop_status(df, hostname_column, domain_drop_status_column, status='domain_dropped')
     # fill empty values in hostname_column with values with no domains or 
@@ -172,7 +187,7 @@ def remove_domain(df, domain_drop_lst, domain_keep_lst, hostname_column):
     df[hostname_column].fillna(df[hostname_domain_column], inplace=True)
     domain_drop_status(df, hostname_column, domain_drop_status_column, status='domain_absent')
     # remove tmp column
-    df.drop(columns=['Domain_free_tmp'], inplace=True)
+    df.drop(columns=['Domain_free_tmp', 'Domain_name_dropped_tmp'], inplace=True)
 
 
 def domain_drop_status(df, hostname_column, domain_drop_status_column, status):
@@ -181,3 +196,20 @@ def domain_drop_status(df, hostname_column, domain_drop_status_column, status):
     mask_hostname_filled = df[hostname_column].notna()
     mask_domain_status_na = df[domain_drop_status_column].isna()
     df.loc[mask_hostname_filled & mask_domain_status_na, domain_drop_status_column] = status
+
+
+def freeze_domain(portshow_aggregated_df):
+    """Function detects if there are multiple hostnames with different domains within SAN.
+    Domain is freezed for that hostnames"""
+
+    # count domain names removed for each hostname
+    portshow_aggregated_df['Domain_name_dropped_quantity'] = \
+        portshow_aggregated_df.groupby(['Device_Host_Name'])['Domain_name_dropped'].transform('nunique')
+    # leave domain names for ports with the same hostname but different domain names 
+    mask_domain_name_freeze = portshow_aggregated_df['Domain_name_dropped_quantity'] > 1
+    # set domain name drop  status
+    portshow_aggregated_df.loc[mask_domain_name_freeze, 'Domain_drop_status'] = 'domain_freezed'
+    # keep hostnames with multiple domains original hostnames 
+    portshow_aggregated_df.loc[mask_domain_name_freeze, 'Device_Host_Name'] = \
+        portshow_aggregated_df.loc[mask_domain_name_freeze, 'Device_Host_Name_w_domain']
+    return portshow_aggregated_df, mask_domain_name_freeze.any()

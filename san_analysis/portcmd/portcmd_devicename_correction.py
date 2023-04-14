@@ -198,11 +198,20 @@ def device_rename(portshow_aggregated_df, device_rename_df):
     # add new manual device names based on automatic device names and device class in each fabric 
     portshow_aggregated_df = \
         portshow_aggregated_df.merge(device_rename_join_df, how = 'left', on = device_rename_columns[:4])
+    
+    portshow_aggregated_df['Device_Host_Name_w_domain_rename'] = portshow_aggregated_df['Device_Host_Name_rename']
+    
     # copy all unchanged names and rename new column name
     portshow_aggregated_df['Device_Host_Name_rename'] = \
         portshow_aggregated_df['Device_Host_Name_rename'].fillna(portshow_aggregated_df['Device_Host_Name'])
+    
+    portshow_aggregated_df['Device_Host_Name_w_domain_rename'] = \
+        portshow_aggregated_df['Device_Host_Name_w_domain_rename'].fillna(portshow_aggregated_df['Device_Host_Name_w_domain'])
+    
     portshow_aggregated_df.rename(columns={'Device_Host_Name': 'Device_Host_Name_old', 
-                                            'Device_Host_Name_rename': 'Device_Host_Name'}, inplace=True)
+                                            'Device_Host_Name_rename': 'Device_Host_Name',
+                                            'Device_Host_Name_w_domain': 'Device_Host_Name_w_domain_old', 
+                                            'Device_Host_Name_w_domain_rename': 'Device_Host_Name_w_domain'}, inplace=True)
 
     return portshow_aggregated_df
 
