@@ -40,13 +40,15 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     port_statistics_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn'], inplace=True)
     # concatenate All row so it's at the bottom of statistics DataFrame
     port_statistics_df = pd.concat([port_statistics_df, port_statistics_all_df], ignore_index=True)
+    # count available ports
+    port_statistics_df['Available_licensed'] = port_statistics_df['Licensed'] - port_statistics_df['Online']
     # count percantage of occupied ports for each switch as ratio of Online ports(occupied) number to Licensed ports number
     port_statistics_df['%_occupied'] = round(port_statistics_df['Online'].div(port_statistics_df['Licensed'])*100, 1)
     # count N:E ratio
     port_ne_df = n_e_statistics(portshow_aggregated_df)
     port_statistics_df = port_statistics_df.merge(port_ne_df, how='left', on=['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn'])
     # move columns
-    port_statistics_df = dfop.move_column(port_statistics_df, cols_to_move=['Total_ports_number', 'Online', 'Licensed', '%_occupied'],
+    port_statistics_df = dfop.move_column(port_statistics_df, cols_to_move=['Total_ports_number', 'Online', 'Licensed', 'Available_licensed', '%_occupied'],
                                         ref_col='switchWwn')
     return port_statistics_df
 

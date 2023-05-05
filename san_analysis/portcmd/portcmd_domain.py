@@ -26,7 +26,6 @@ def hostname_domain_remove(portshow_aggregated_df, domain_name_remove_df, projec
     force_change_data_lst = [data_name for data_name in analyzed_data_names[1:] if project_steps_df.loc[data_name, 'force_run']]
     # data imported from init file (regular expression patterns) to extract values from data columns
     pattern_dct, *_ = sfop.regex_pattern_import('common_regex', max_title)
-
     # define domain remove scheme
     domain_name_remove_df = get_domain_to_remove(portshow_aggregated_df, domain_name_remove_df, 
                                                 force_domain_remove_schema_update_flag, force_change_data_lst, pattern_dct)

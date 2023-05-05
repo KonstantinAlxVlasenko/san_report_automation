@@ -40,8 +40,6 @@ def port_statistics_analysis(portshow_aggregated_df, project_constants_lst):
         port_statistics_report_df = port_statistics_report(port_statistics_df, report_headers_df, report_columns_usage_sr)
         # create list with partitioned DataFrames
         data_lst = [port_statistics_df, port_statistics_report_df]
-        # saving data to json or csv file
-        # save_data(report_constant_lst, data_names, *data_lst)
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)      
     # verify if loaded data is empty and replace information string with empty DataFrame
