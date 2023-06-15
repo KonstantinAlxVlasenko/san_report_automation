@@ -89,8 +89,6 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
     nsshow_join_df = nsshow_labeled_df.loc[:, nsshow_lst]
     nsshow_join_df.fillna(np.nan, inplace=True)
     
-    # nsshow_join_df['PortSymbOrig'] = nsshow_join_df['PortSymb']
-    # nsshow_join_df['NodeSymbOrig'] = nsshow_join_df['NodeSymb']
     # columns to clean
     symb_columns = ['PortSymb', 'NodeSymb']
 
@@ -107,7 +105,8 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
             # replace cells with one digit or whatespaces only with None value
             nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
             # remove whitespace from the right and left side
-            nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
+            if nsshow_join_df[symb_column].notna().any():
+                nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
             # hostname_clean_comp
             nsshow_join_df[symb_column].replace(to_replace = pattern_dct['hostname_clean'], value = np.nan, regex=True, inplace = True)
     return nsshow_join_df

@@ -98,7 +98,12 @@ def drop_device_shape(device_sr, page, stn, x_coordinate, device_font_size):
     device_shape.Text = shape_text
     
     shape_font_change(device_shape, device_font_size)
-    
+
+    # if unknown server is found make text field wider
+    if re.search('SRV ([\da-f:]+)', shape_text):
+        device_shape.Cells("TxtWidth").FormulaU = f"Width * 3.2"
+
+
     # if device_font_size != default_font_size:
     #     device_shape.Cells("Char.Size").FormulaU = device_font_size
     
