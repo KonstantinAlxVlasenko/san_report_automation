@@ -1,7 +1,5 @@
-"""
-Module to create porterr, SFP and portcfg report tables
-and add this information to aggregated_portcmd_df DataFrame
-"""
+"""Module to create porterr, SFP and portcfg report tables
+and add this information to aggregated_portcmd_df DataFrame"""
 
 import numpy as np
 import pandas as pd

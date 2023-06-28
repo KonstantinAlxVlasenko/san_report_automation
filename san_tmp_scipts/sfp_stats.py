@@ -140,5 +140,8 @@ readings_lst = [['RX_Power_dBm', -6, 2, 2, True],
 
 for redings_column in readings_lst:
     find_redings_intervals(*redings_column)
-        
+
+
+# supported and not supported column
+mask_supported = portshow_sfp_aggregated_cp_df['Transceiver_Supported'].isin(['Yes', 'Да'], na=False)
 
