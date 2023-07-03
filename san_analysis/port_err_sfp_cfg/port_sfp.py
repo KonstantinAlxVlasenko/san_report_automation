@@ -80,7 +80,7 @@ def find_readings_intervals(portshow_sfp_aggregated_df, pattern_dct, readings_co
     mask_online = portshow_sfp_aggregated_df['portState'] == 'Online'
     # filter ports with transceivers
     mask_sfp_present = (portshow_sfp_aggregated_df['portPhys'] != 'No_Module') & \
-        (portshow_sfp_aggregated_df['Transceiver_Name'] != 'No SFP module')
+        (portshow_sfp_aggregated_df['Transceiver_Name'] != 'No SFP installed in port')
     # summary port filter
     mask_filtered_ports = mask_online & mask_sfp_present if filter_online else mask_sfp_present
     

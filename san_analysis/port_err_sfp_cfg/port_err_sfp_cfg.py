@@ -128,4 +128,5 @@ def sfp_statistics_report(sfp_statistics_df, report_headers_df, report_columns_u
                                                     report_columns_usage_sr, drop_columns=['chassis_wwn', 'switchWwn'])
     # remove zeroes to clean view
     dfop.drop_zero(sfp_statistics_report_df)
+    sfp_statistics_report_df.dropna(axis=1, how = 'all', inplace=True)
     return sfp_statistics_report_df

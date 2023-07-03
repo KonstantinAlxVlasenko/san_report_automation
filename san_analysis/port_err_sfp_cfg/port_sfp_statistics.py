@@ -27,11 +27,11 @@ def sfp_prior_preparation(portshow_sfp_aggregated_df, pattern_dct):
                                                     sep=' ', drop_merge_columns=False, sort_summary=False)
     # merge port state with transceiver details
     # add 'No_SFP_module' tag for cu media in blade switches to mark portPhys status
-    mask_vendor_no_sfp_module = sfp_aggregated_modified_df['Transceiver_Name'] == 'No SFP module'
-    mask_portphys_no_module = sfp_aggregated_modified_df['portPhys'] == 'No_Module'
-    sfp_aggregated_modified_df.loc[~mask_portphys_no_module & mask_vendor_no_sfp_module, 'No_SFP_module'] = 'No_SFP_module'
+    # mask_vendor_no_sfp_module = sfp_aggregated_modified_df['Transceiver_Name'] == 'No SFP module'
+    # mask_portphys_no_module = sfp_aggregated_modified_df['portPhys'] == 'No_Module'
+    # sfp_aggregated_modified_df.loc[~mask_portphys_no_module & mask_vendor_no_sfp_module, 'No_SFP_module'] = 'No_SFP_module'
     sfp_aggregated_modified_df = dfop.merge_columns(sfp_aggregated_modified_df, summary_column='PortPhys_transceiver', 
-                                                    merge_columns=['portPhys', 'Transceiver_speed_mode_extracted', 'No_SFP_module'], 
+                                                    merge_columns=['portPhys', 'Transceiver_speed_mode_extracted'], 
                                                     sep=' ', drop_merge_columns=False, sort_summary=False)
     # add annotation to the intervals
     comment_sfp_readings_interval(sfp_aggregated_modified_df)   
@@ -134,6 +134,15 @@ def count_sfp_statistics(portshow_sfp_aggregated_df, pattern_dct):
     # count statistics on switch level
     sfp_statistics_switch_df = dfop.count_statistics(
         sfp_aggregated_modified_df, connection_grp_columns=switch_columns, stat_columns=sfp_stats_columns)
+    # count licensed ports wo transceiverS
+    if  'Port does not use an SFP or is disabled' in sfp_statistics_switch_df.columns:
+        sfp_statistics_switch_df['Port does not use an SFP or is disabled'].fillna(0, inplace=True)
+        sfp_statistics_switch_df['Licensed_wo_SFP'] = \
+            sfp_statistics_switch_df['Licensed'] - sfp_statistics_switch_df[['Transceiver_quantity', 'Port does not use an SFP or is disabled']].sum(axis=1)
+    else:
+        sfp_statistics_switch_df['Licensed_wo_SFP'] = \
+            sfp_statistics_switch_df['Licensed'] - sfp_statistics_switch_df['Transceiver_quantity']
+    
     # count statistics on fabric name and fabric label levels
     sfp_statistics_summary_df = dfop.count_summary(sfp_statistics_switch_df, group_columns=['Fabric_name', 'Fabric_label'])
     # count statistics for total ports
@@ -142,5 +151,7 @@ def count_sfp_statistics(portshow_sfp_aggregated_df, pattern_dct):
     sfp_statistics_df = dfop.concat_statistics(
         sfp_statistics_switch_df, sfp_statistics_summary_df, sfp_statistics_all_df, sort_columns=switch_columns)
     # move sfp free ports column
-    sfp_statistics_df = dfop.move_column(sfp_statistics_df, cols_to_move=['No_Module', 'No SFP module'], ref_col='Transceiver_quantity')
+    sfp_statistics_df = dfop.move_column(sfp_statistics_df, 
+                                         cols_to_move=['Licensed_wo_SFP', 'No_Module', 'No SFP installed in port', 
+                                                       'Port does not use an SFP or is disabled'], ref_col='Transceiver_quantity')
     return sfp_statistics_df
