@@ -127,7 +127,8 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     maps_ports_report_df = dfop.drop_all_identical(maps_ports_df, 
                                                 {'portState': 'Online', 'Connected_through_AG': 'No'},
                                                 dropna=True)                   
-    maps_ports_report_df = report.generate_report_dataframe(maps_ports_report_df, report_headers_df, report_columns_usage_sr, data_names[5])    
+    maps_ports_report_df = report.generate_report_dataframe(
+        maps_ports_report_df, report_headers_df, report_columns_usage_sr, data_names[5])    
     maps_ports_report_df.dropna(axis=1, how = 'all', inplace=True)
     maps_ports_report_df = dfop.translate_values(maps_ports_report_df)
 

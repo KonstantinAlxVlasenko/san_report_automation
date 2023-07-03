@@ -76,25 +76,25 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df,
 def isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_usage_sr):
     """Function to create report table out of isl_statistics_df DataFrame"""
 
-    isl_statistics_df_report_df = pd.DataFrame()
+    isl_statistics_report_df = pd.DataFrame()
 
     if not isl_statistics_df.empty:
         chassis_column_usage = report_columns_usage_sr.get('chassis_info_usage')
-        isl_statistics_df_report_df = isl_statistics_df.copy()
+        isl_statistics_report_df = isl_statistics_df.copy()
         # identify columns to drop and drop columns
         drop_columns = ['switchWwn', 'Connected_switchWwn', 'sort_column_1', 'sort_column_2', 'Connection_ID']
         if not chassis_column_usage:
             drop_columns.append('chassis_name')
         drop_columns = [column for column in drop_columns if column in isl_statistics_df.columns]
-        isl_statistics_df_report_df.drop(columns=drop_columns, inplace=True)
+        isl_statistics_report_df.drop(columns=drop_columns, inplace=True)
 
         # translate values in columns and headers
         translated_columns = [column for column in isl_statistics_df.columns if 'note' in column and isl_statistics_df[column].notna().any()]
         translated_columns.extend(['Fabric_name', 'Trunking_lic_both_switches'])
-        isl_statistics_df_report_df = dfop.translate_dataframe(isl_statistics_df_report_df, report_headers_df, 
+        isl_statistics_report_df = dfop.translate_dataframe(isl_statistics_report_df, report_headers_df, 
                                                             'Статистика_ISL_перевод', translated_columns)
         # drop empty columns
-        isl_statistics_df_report_df.dropna(axis=1, how='all', inplace=True)
+        isl_statistics_report_df.dropna(axis=1, how='all', inplace=True)
         # remove zeroes to clean view
-        dfop.drop_zero(isl_statistics_df_report_df)
-    return isl_statistics_df_report_df
+        dfop.drop_zero(isl_statistics_report_df)
+    return isl_statistics_report_df

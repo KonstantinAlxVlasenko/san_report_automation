@@ -388,3 +388,166 @@ def current_datetime(drop_seconds=False, join=False):
             return now.strftime("%d%m%Y_%H%M%S")
         else:
             return now.strftime("%d/%m/%Y %H:%M:%S")
+        
+        
+def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabric_label'], margin_column_row:tuple=None):
+    """Auxiliary function to count values in groups for columns in count_columns.
+    Parameter margin_column_row is tuple of doubled booleans tuples ((False, True), (True, False), etc). 
+    It defines if margin for column and row should be calculated for column values from count_columns list.
+    By default column All is dropped and row All is kept. If margin_column_row is defined as tuple of booleans pair
+    than it's repeated for all columns from count_columns"""
+
+    if margin_column_row and len(margin_column_row) == 2:
+        if all([isinstance(element, bool) for element in margin_column_row]):
+            # margin_column_row =  ((False, False),) * len(count_columns)
+            margin_column_row = (margin_column_row, ) * len(count_columns)
+
+    # by default keep summary row but remove summary column
+    if not margin_column_row:
+        margin_column_row =  ((False, True),) * len(count_columns)
+    if len(count_columns) != len(margin_column_row):
+        print('\n')
+        print('Parameters count_columns and margin_column_row in count_frequency function have different length')
+        exit()
+
+    index_lst = [df[column] for column in group_columns if column in df.columns and df[column].notna().any()]
+    frequency_df = pd.DataFrame()
+
+    for column, (margin_column, margin_row) in zip(count_columns, margin_column_row):
+        if column in df.columns and df[column].notna().any():
+            df[column].fillna(np.nan, inplace=True)
+            current_df = pd.crosstab(index=index_lst, columns=df[column], margins=any((margin_column, margin_row)))
+            current_df = current_df.sort_index()
+            if any((margin_column, margin_row)):
+                # drop column All
+                if not margin_column:
+                    current_df.drop(columns=['All'], inplace=True)
+                # drop row All
+                if not margin_row:
+                    current_df.drop(index=['All'], inplace=True)
+            if frequency_df.empty:
+                frequency_df = current_df.copy()
+            else:
+                frequency_df = frequency_df.merge(current_df, how='outer', on=group_columns)
+
+    frequency_df.fillna(0, inplace=True)            
+    frequency_df.reset_index(inplace=True)                
+    return frequency_df
+
+
+def move_all_down(df):
+    """Function to move total row All to the bottom of the DataFrame"""
+    
+    mask_all = df['Fabric_name'] == 'All'
+    # df = df[~mask_all].append(df[mask_all]).reset_index(drop=True)
+    df = pd.concat([df[~mask_all], df[mask_all]], ignore_index=True)
+    return df
+
+
+
+def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_qunatity_column: str=None, speed_column: str=None):
+    """Function to count statistics for each pair of switches connection.
+    stat_columns is the list of columns for whish statistics is counted for,
+    speed_column - column name containing link speed connecion to count
+    connection bandwidth. connection_grp_columns is the list of columns defining 
+    individual connection to count statistics and bandwidth for that connection."""
+
+    statistics_df = pd.DataFrame()
+    if speed_column:
+        bandwidth_df = count_bandwidth(df, speed_column, connection_grp_columns)
+    
+    # drop empty columns from the list
+    stat_columns = [column for column in stat_columns if df[column].notna().any()]
+    # index list to groupby switches connection on to count statistics
+    index_lst = [df[column] for column in connection_grp_columns]
+
+    # in case some values in first columns of stat_columns is none
+    df['tmp_column'] = 'tmp'
+
+    # count statistcics for each column from stat_columns in df DataFrame
+    for column in ['tmp_column', *stat_columns]:
+        # count statistics for current column
+        current_statistics_df = pd.crosstab(index = index_lst,
+                                columns = df[column])
+
+        # add connection bandwidth column after column with port quantity 
+        if port_qunatity_column and speed_column and column == port_qunatity_column:
+            current_statistics_df = current_statistics_df.merge(bandwidth_df, how='left',
+                                                                left_index=True, right_index=True)
+        # add current_statistics_df DataFrame to statistics_df DataFrame
+        if statistics_df.empty:
+            statistics_df = current_statistics_df.copy()
+        else:
+            statistics_df = statistics_df.merge(current_statistics_df, how='left', 
+                                                left_index=True, right_index=True)
+    
+    if 'tmp' in statistics_df.columns:
+        statistics_df.drop(columns=['tmp'], inplace=True)
+    statistics_df.reset_index(inplace=True)
+    return statistics_df
+
+
+def count_bandwidth(df, speed_column, connection_grp_columns):
+    pass
+
+
+def count_summary(df, group_columns: list, count_columns: list=None, fn: str='sum'):
+    """Function to count total for DataFrame groups. Group columns reduced by one column from the end 
+    on each iteration. Count columns defines column names for which total need to be calculated.
+    Function in string representation defines aggregation function to find summary values"""
+    
+    if not count_columns:
+        count_columns = df.columns.tolist()
+    elif isinstance(count_columns, str):
+            count_columns = [count_columns]
+    
+    summary_df = pd.DataFrame()
+    for _ in range(len(group_columns)):
+        if fn == 'sum':
+            current_df = df.groupby(by=group_columns)[count_columns].agg(fn, numeric_only=True)
+        else:
+            current_df = df.groupby(by=group_columns)[count_columns].agg(fn)
+        current_df.reset_index(inplace=True)
+        if summary_df.empty:
+            summary_df = current_df.copy()
+        else:
+            summary_df = pd.concat([summary_df, current_df])
+        # increase group size
+        group_columns.pop()
+    return summary_df
+
+def count_all_row(statistics_summary_df):
+    """Function to count row with index All containing total values of statistics_summary_df
+    for all fabrics"""
+    
+    # extract row containing total values for Fabric_name
+    mask_empty_fabric_label = statistics_summary_df['Fabric_label'].isna()
+    statistics_total_df = statistics_summary_df.loc[mask_empty_fabric_label].copy()
+    # sum values
+    statistics_total_df.loc['All']= statistics_total_df.sum(numeric_only=True, axis=0)
+    # rename Fabric_name to All
+    statistics_total_df.loc['All', 'Fabric_name'] = 'All'
+    # drop all rows except 'All'
+    mask_fabric_name_all = statistics_total_df['Fabric_name'] == 'All'
+    statistics_total_df = statistics_total_df.loc[mask_fabric_name_all].copy()
+    statistics_total_df.reset_index(inplace=True, drop=True)
+    return statistics_total_df
+
+
+def concat_statistics(statistics_df, summary_df, total_df, sort_columns):
+    """Function to concatenate statistics DataFrames. 
+    statistics_df - statistics for each connection,
+    summary_df statistics for fabric_name, fabric_label and fabric_name,
+    total_df - total statistics for All fabrics.
+    sort_columns used to sort concatenated statistics_df and summary_df
+    to place summary statistics after corresponding fabric rows of statistics_df.
+    """
+    
+    # concatenate statistics dataframes
+    statistics_df = pd.concat([statistics_df, summary_df])
+    statistics_df.sort_values(by=sort_columns, inplace=True)
+    statistics_df = pd.concat([statistics_df, total_df])
+    # reset indexes in final statistics DataFrame
+    statistics_df.reset_index(inplace=True, drop=True)
+    return statistics_df
+

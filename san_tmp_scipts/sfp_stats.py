@@ -92,12 +92,12 @@ def find_redings_intervals(readings_column: str, lower_threshold: int, upper_thr
     mask_online = portshow_sfp_aggregated_cp_df['portState'] == 'Online'
     mask_sfp_present = portshow_sfp_aggregated_cp_df['portPhys'] != 'No_Module'
     
-    # less then lower_threshold
+    # less then lower threshold
     lower_threshold_mask = portshow_sfp_aggregated_cp_df[float_readings_column] < lower_threshold
     mask_lower = mask_online & mask_sfp_present & lower_threshold_mask if filter_online else mask_sfp_present & lower_threshold_mask
     portshow_sfp_aggregated_cp_df.loc[mask_lower, interval_readings_column] = 'x < ' + str(lower_threshold)
     
-    # readingss intervals
+    # readings intervals
     current_lower_threshold = lower_threshold
     while current_lower_threshold < upper_threshold:
         current_upper_threshold = current_lower_threshold + step

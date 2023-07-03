@@ -52,6 +52,9 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     # verify if relocated columns are in df
     cols_to_move = [column for column in cols_to_move if column in df.columns]
     
+    if not cols_to_move:
+        return df
+    
     cols = df.columns.tolist()    
     if place == 'after':
         seg1 = cols[:list(cols).index(ref_col) + 1]

@@ -152,3 +152,11 @@ def switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df):
     portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Device_Host_Name_tmp'], inplace=True)
     portshow_aggregated_df.drop(columns=['Device_Host_Name_tmp'], inplace=True)
     return portshow_aggregated_df
+
+
+def verify_port_license(portshow_aggregated_df):
+    """Function to check if switch pi=ort is licensed"""
+
+    mask_not_licensed = portshow_aggregated_df['connection_details'].str.contains('no (?:pod|(?:qflex )?ports on demand) license', case=False)
+    mask_connection_detail_notna = portshow_aggregated_df['connection_details'].notna()
+    portshow_aggregated_df['Port_license'] = np.where(mask_connection_detail_notna & mask_not_licensed, 'Not_licensed', 'Licensed')

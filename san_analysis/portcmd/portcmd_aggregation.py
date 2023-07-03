@@ -15,7 +15,7 @@ from .portcmd_gateway import verify_gateway_link, verify_trunkarea_link
 from .portcmd_nameserver import nsshow_analysis_main
 from .portcmd_storage import storage_3par_fillna
 from .portcmd_switch import (fill_isl_link, fill_switch_info,
-                             switchparams_join, switchshow_join)
+                             switchparams_join, switchshow_join, verify_port_license)
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
@@ -34,6 +34,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_df.Connected_portWwn = portshow_df.Connected_portWwn.str.lower()
     # add switch information (switchName, portType, portSpeed) to portshow DataFrame
     portshow_aggregated_df = switchshow_join(portshow_df, switchshow_ports_df)
+    verify_port_license(portshow_aggregated_df)
+    
     # add fabric information (FabricName, FabricLabel)
     portshow_aggregated_df = dfop.dataframe_fabric_labeling(portshow_aggregated_df, switch_params_aggregated_df)
     # add switchMode to portshow_aggregated DataFrame

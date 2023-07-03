@@ -27,8 +27,8 @@ def port_sfp_join(portshow_aggregated_df, sfpshow_df, sfp_model_df, pattern_dct)
                     ['Temperature_Centigrade', 30, 60, 30, False],
                     ['Pwr_On_Time_years', 1, 3, 2, False]]
 
-    for redings_column in readings_lst:
-        find_redings_intervals(port_complete_df, pattern_dct, *redings_column)
+    for readings_column in readings_lst:
+        find_readings_intervals(port_complete_df, pattern_dct, *readings_column)
     
     port_complete_df.drop_duplicates(inplace=True)
     return port_complete_df
@@ -62,7 +62,7 @@ def extract_floats(df, source_column: str, destination_column: str, pattern_dct)
     df[destination_column] = df[destination_column].astype('float64')
 
 
-def find_redings_intervals(portshow_sfp_aggregated_df, pattern_dct, readings_column: str, 
+def find_readings_intervals(portshow_sfp_aggregated_df, pattern_dct, readings_column: str, 
                            lower_threshold: int, upper_threshold: int, step: int, 
                            filter_online: bool=True) -> pd.DataFrame:
     """Function to mark sfp redings with intervals in which they fall from lower_threshold

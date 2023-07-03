@@ -10,6 +10,7 @@ import utilities.servicefile_operations as sfop
 
 from .port_err_cfg import port_cfg_join, port_error_filter
 from .port_sfp import port_sfp_join
+from .port_sfp_statistics import count_sfp_statistics
 
 
 def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df,
@@ -41,14 +42,25 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
         # data imported from init file (regular expression patterns) to extract values from data columns
         pattern_dct, *_ = sfop.regex_pattern_import('common_regex', max_title)        
         # current operation information string
-        info = f'Updating connected devices table and searching NPIV links'
+        info = 'Updating connected devices table with port cfg and sfp'
         print(info, end =" ") 
         
         # add portcfg information
         portshow_sfp_aggregated_df = port_cfg_join(portshow_aggregated_df, portcfgshow_df)
         # add sfp readings, sfp model details, sfp redings intervals
         portshow_sfp_aggregated_df = port_sfp_join(portshow_sfp_aggregated_df, sfpshow_df, sfp_model_df, pattern_dct)
-        
+        # after finish display status
+        meop.status_info('ok', max_title, len(info))
+
+        # current operation information string
+        info = 'Counting sfp statistics'
+        print(info, end =" ") 
+        sfp_statistics_df = count_sfp_statistics(portshow_sfp_aggregated_df, pattern_dct)
+        meop.status_info('ok', max_title, len(info))
+
+        # current operation information string
+        info = 'Filtering ports with exceeding error thresholds'
+        print(info, end =" ")
         # find ports which exceed error threshold 
         filtered_error_lst = port_error_filter(portshow_sfp_aggregated_df)
         # after finish display status
@@ -71,8 +83,12 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
                     portshow_sfp_force_flag = True
             exit_after_save_flag = meop.display_stop_request(exit_after_save_flag)
         # create report tables from port_complete_df DataFrtame
-        report_lst = portshow_report_main(portshow_sfp_aggregated_df, data_names, report_headers_df, report_columns_usage_sr)
-        data_lst = [portshow_sfp_aggregated_df, *report_lst, *filtered_error_lst]
+        port_err_sfp_cfg_report_lst = port_err_sfp_cfg_report(
+            portshow_sfp_aggregated_df, data_names[2:5], report_headers_df, report_columns_usage_sr)
+        sfp_statistics_report_df = sfp_statistics_report(sfp_statistics_df, report_headers_df, report_columns_usage_sr)
+        
+        data_lst = [portshow_sfp_aggregated_df, sfp_statistics_df, *port_err_sfp_cfg_report_lst, 
+                    sfp_statistics_report_df, *filtered_error_lst]
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
     # verify if loaded data is empty and reset DataFrame if yes
@@ -91,18 +107,25 @@ def port_err_sfp_cfg_analysis(portshow_aggregated_df, sfpshow_df, portcfgshow_df
     return portshow_sfp_aggregated_df
 
 
-def portshow_report_main(port_complete_df, data_names, report_headers_df, report_columns_usage_sr):
+def port_err_sfp_cfg_report(port_complete_df, data_names, report_headers_df, report_columns_usage_sr):
     """Function to create required report DataFrames out of aggregated DataFrame"""
 
-    data_names = ['portshow_sfp_aggregated', 'Ошибки', 'Параметры_SFP', 'Параметры_портов']
     # add speed value column for fillword verification in errors_report_df
     port_complete_df['speed_fillword'] = port_complete_df['speed']
     errors_report_df, sfp_report_df, portcfg_report_df = \
-        report.generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_sr, *data_names[1:])
+        report.generate_report_dataframe(port_complete_df, report_headers_df, report_columns_usage_sr, *data_names)
+    port_err_sfp_cfg_report_lst = [errors_report_df, sfp_report_df, portcfg_report_df]
     # drop empty columns
-    errors_report_df.dropna(axis=1, how = 'all', inplace=True)
-    sfp_report_df.dropna(axis=1, how = 'all', inplace=True)
-    portcfg_report_df.dropna(axis=1, how = 'all', inplace=True)
+    for report_df in port_err_sfp_cfg_report_lst:
+        report_df.dropna(axis=1, how = 'all', inplace=True)
+    return port_err_sfp_cfg_report_lst
 
-    report_lst = [errors_report_df, sfp_report_df, portcfg_report_df]
-    return report_lst
+
+def sfp_statistics_report(sfp_statistics_df, report_headers_df, report_columns_usage_sr):
+
+    # npiv statistics report
+    sfp_statistics_report_df = dfop.statistics_report(sfp_statistics_df, report_headers_df, 'Статистика_SFP_перевод', 
+                                                    report_columns_usage_sr, drop_columns=['chassis_wwn', 'switchWwn'])
+    # remove zeroes to clean view
+    dfop.drop_zero(sfp_statistics_report_df)
+    return sfp_statistics_report_df
