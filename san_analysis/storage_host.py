@@ -209,12 +209,12 @@ def storage_host_report(storage_host_aggregated_df, data_names, report_headers_d
                                                                 duplicates_subset=['configname', 'System_Name'])   
     # slice required columns and translate header
     storage_host_report_df = report.generate_report_dataframe(storage_host_report_df, report_headers_df, report_columns_usage_sr, data_names[1])
-    dfop.drop_slot_value(storage_host_report_df, report_columns_usage_sr)
+    report.drop_slot_value(storage_host_report_df, report_columns_usage_sr)
     storage_host_valid_df = report.generate_report_dataframe(storage_host_valid_df, report_headers_df, report_columns_usage_sr, data_names[1])
-    dfop.drop_slot_value(storage_host_valid_df, report_columns_usage_sr)
+    report.drop_slot_value(storage_host_valid_df, report_columns_usage_sr)
     # translate values in columns
-    storage_host_report_df = dfop.translate_values(storage_host_report_df)
-    storage_host_valid_df = dfop.translate_values(storage_host_valid_df)
+    storage_host_report_df = report.translate_values(storage_host_report_df)
+    storage_host_valid_df = report.translate_values(storage_host_valid_df)
     # create comparision storage_host DataFrame based on Fabric_labels
     slice_column = 'Подсеть' if 'Подсеть' in storage_host_valid_df.columns else 'Подсеть порта массива'
     storage_host_compare_report_df = dfop.dataframe_slice_concatenate(storage_host_valid_df, column=slice_column)

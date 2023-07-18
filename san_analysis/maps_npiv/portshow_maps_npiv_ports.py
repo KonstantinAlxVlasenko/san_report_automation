@@ -130,7 +130,7 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     maps_ports_report_df = report.generate_report_dataframe(
         maps_ports_report_df, report_headers_df, report_columns_usage_sr, data_names[5])    
     maps_ports_report_df.dropna(axis=1, how = 'all', inplace=True)
-    maps_ports_report_df = dfop.translate_values(maps_ports_report_df)
+    maps_ports_report_df = report.translate_values(maps_ports_report_df)
 
     # npiv ports report
     npiv_report_df = portshow_npiv_df.copy()
@@ -144,10 +144,10 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     npiv_report_df = dfop.drop_equal_columns(npiv_report_df, columns_pairs=[
                                                                 ('Device_Host_Name_per_fabric_name_and_label', 'Device_Host_Name_per_fabric_label'),
                                                                 ('Device_Host_Name_total_fabrics', 'Device_Host_Name_per_fabric_name')])
-    npiv_report_df = dfop.translate_values(npiv_report_df)
+    npiv_report_df = report.translate_values(npiv_report_df)
     npiv_report_df = report.generate_report_dataframe(npiv_report_df, report_headers_df, report_columns_usage_sr, data_names[6])
     # npiv statistics report
-    npiv_statistics_report_df = dfop.statistics_report(npiv_statistics_df, report_headers_df, 'Статистика_ISL_перевод', 
+    npiv_statistics_report_df = report.statistics_report(npiv_statistics_df, report_headers_df, 'Статистика_ISL_перевод', 
                                                     report_columns_usage_sr, drop_columns=['switchWwn', 'NodeName'])
     # add switch names if NPIV device connected to multiple switches
     npiv_statistics_report_df = dfop.merge_columns(npiv_statistics_report_df, summary_column='Примечание. Подключение NPIV устройства к нескольким коммутаторам',
@@ -160,7 +160,7 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     report_columns_usage_cp_dct['fabric_name_usage'] = True
     sw_connection_statistics_report_df = report.generate_report_dataframe(sw_connection_statistics_df, report_headers_df, 
                                                                     report_columns_usage_cp_dct, data_names[8])
-    sw_connection_statistics_report_df = dfop.translate_values(sw_connection_statistics_report_df, report_headers_df, data_names[8])   
+    sw_connection_statistics_report_df = report.translate_values(sw_connection_statistics_report_df, report_headers_df, data_names[8])   
     # drop allna columns
     sw_connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)
     return maps_ports_report_df, npiv_report_df, npiv_statistics_report_df, sw_connection_statistics_report_df
@@ -173,5 +173,5 @@ def blademodule_report(blade_module_loc_df, data_names, report_headers_df, repor
 
     blade_module_report_df = dfop.drop_column_if_all_na(blade_module_loc_df, columns='Mixed_bay_parity_note')
     blade_module_report_df = report.generate_report_dataframe(blade_module_loc_df, report_headers_df, report_columns_usage_sr, data_names[9])
-    blade_module_report_df = dfop.translate_values(blade_module_report_df, report_headers_df, data_names[9])
+    blade_module_report_df = report.translate_values(blade_module_report_df, report_headers_df, data_names[9])
     return blade_module_report_df

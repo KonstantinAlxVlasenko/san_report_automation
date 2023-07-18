@@ -13,9 +13,11 @@ from .portcmd_bladesystem import (blade_server_fillna, blade_vc_fillna,
 from .portcmd_devicetype import oui_join, type_check
 from .portcmd_gateway import verify_gateway_link, verify_trunkarea_link
 from .portcmd_nameserver import nsshow_analysis_main
-from .portcmd_storage import storage_3par_fillna
+from .portcmd_storage import (construct_infinidat_node_port_from_wwn,
+                              storage_3par_fillna)
 from .portcmd_switch import (fill_isl_link, fill_switch_info,
-                             switchparams_join, switchshow_join, verify_port_license)
+                             switchparams_join, switchshow_join,
+                             verify_port_license)
 
 
 def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, switch_params_aggregated_df, 
@@ -83,6 +85,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df.Device_Port = \
         portshow_aggregated_df.apply(lambda series: find_msa_port(series) \
         if (pd.notna(series['PortName']) and  series['deviceSubtype'] == 'MSA') else series['Device_Port'], axis=1)   
+    # extract node ports from wwn and construct node port names
+    portshow_aggregated_df = construct_infinidat_node_port_from_wwn(portshow_aggregated_df, pattern_dct)
+    
     # verify access gateway links
     portshow_aggregated_df, expected_ag_links_df = \
         verify_gateway_link(portshow_aggregated_df, switch_params_aggregated_df, ag_principal_df, switch_models_df)

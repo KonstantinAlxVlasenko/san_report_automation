@@ -66,7 +66,7 @@ def port_statistics_report(port_statistics_df, report_headers_df, report_columns
     if not report_columns_usage_sr['chassis_info_usage']:
         port_statistics_report_df.drop(columns = ['chassis_name'], inplace=True)
     # port_statistics_report_df = dfop.translate_header(port_statistics_report_df, report_headers_df, 'Статистика_портов')
-    port_statistics_report_df = dfop.translate_dataframe(port_statistics_report_df, report_headers_df, 'Статистика_портов')
+    port_statistics_report_df = report.translate_dataframe(port_statistics_report_df, report_headers_df, 'Статистика_портов')
     # drop visual uninformative zeroes
     dfop.drop_zero(port_statistics_report_df)
     return port_statistics_report_df

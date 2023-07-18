@@ -191,5 +191,5 @@ def raslog_report(raslog_frequent_df, data_names, report_headers_df, report_colu
 
     raslog_report_df = report.generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_sr, data_names[2])
     raslog_report_df.dropna(axis=1, how = 'all', inplace=True)
-    dfop.drop_slot_value(raslog_report_df, report_columns_usage_sr)
+    report.drop_slot_value(raslog_report_df, report_columns_usage_sr)
     return raslog_report_df

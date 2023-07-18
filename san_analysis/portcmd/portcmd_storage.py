@@ -77,4 +77,39 @@ def storage_port_partner(system_port_3par_df, portshow_aggregated_df):
     return system_port_3par_df
 
 
+def filter_empty_storage_ports(portshow_aggregated_df, storage_type: str):
+    """Function to filter ports of storages defined with storage_type.
+    Filterd ports have no 'Device_port' extracted from switch or storage configuration files"""
+    
+    mask_storage = (portshow_aggregated_df[['deviceType', 'deviceSubtype']] == ('STORAGE', storage_type)).all(axis=1)
+    mask_port_na = portshow_aggregated_df['Device_Port'].isna()
+    storage_ports_df = portshow_aggregated_df.loc[mask_storage & mask_port_na].copy()
+    return storage_ports_df
+
+
+def construct_infinidat_node_port_from_wwn(portshow_aggregated_df, pattern_dct):
+    """Function to extract node, port number from WWPN 8th octet.
+    Construct Node Port in INFINIDAT format N#FC# from extracted values"""
+
+    # filter INFINIDAT ports
+    storage_ports_df = filter_empty_storage_ports(portshow_aggregated_df, storage_type='INFINIDAT')
+    # extract node and port numbers
+    storage_ports_df[['Node_extracted', 'Port_extracted']] = storage_ports_df['Connected_portWwn'].str.extract(pattern_dct['wwn_8th_octet']).values
+    # merge node number and port number with 'FC' tag
+    storage_ports_df = dfop.merge_columns(storage_ports_df, summary_column='Node_Port_extracted', 
+                                          merge_columns=['Node_extracted', 'Port_extracted'], sep='FC', drop_merge_columns=False)
+    # add 'N' tag to the non empty device ports 
+    mask_node_notna = storage_ports_df['Node_Port_extracted'].notna()
+    storage_ports_df.loc[mask_node_notna, ['Node_tag']] = 'N'
+    storage_ports_df = dfop.merge_columns(storage_ports_df, summary_column='Device_Port', 
+                                          merge_columns=['Node_tag', 'Node_Port_extracted'], sep='', drop_merge_columns=False)
+    # add extacted and constructed 'Device_Port' to the aggregated port DataFrame
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, storage_ports_df, 
+                                                   join_lst=['Fabric_name', 'Fabric_label', 'Connected_portWwn'], 
+                                                   filled_lst=['Device_Port'])
+    return portshow_aggregated_df
+
+
+
+
 

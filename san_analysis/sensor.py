@@ -82,6 +82,6 @@ def sensor_report(sensor_aggregated_df, report_headers_df, report_columns_usage_
     (slice and reorder columns, translate values in columns)"""
 
     sensor_report_df = report.generate_report_dataframe(sensor_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[1])
-    sensor_report_df = dfop.translate_values(sensor_report_df, report_headers_df, data_names[1], 
+    sensor_report_df = report.translate_values(sensor_report_df, report_headers_df, data_names[1], 
                                         translated_columns = ['Type', 'Status', 'Value', 'Unit'])
     return sensor_report_df

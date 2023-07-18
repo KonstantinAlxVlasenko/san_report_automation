@@ -47,7 +47,7 @@ def isl_sw_pair_update(isl_aggregated_df, fcredge_aggregated_df, switch_pair_df,
         meop.status_info('ok', max_title, len(info))      
 
         isl_report_df = report.generate_report_dataframe(isl_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[3]) 
-        isl_report_df = dfop.translate_values(isl_report_df, translate_dct={'Yes': 'Да', 'No': 'Нет'})
+        isl_report_df = report.translate_values(isl_report_df, translate_dct={'Yes': 'Да', 'No': 'Нет'})
         isl_report_df = dfop.drop_column_if_all_na(isl_report_df, columns=['Идентификатор транка', 'Deskew', 'Master', 'Идентификатор IFL'])
         # check if IFL table required
         if not fcredge_aggregated_df.empty:
@@ -91,7 +91,7 @@ def isl_statistics_report(isl_statistics_df, report_headers_df, report_columns_u
         # translate values in columns and headers
         translated_columns = [column for column in isl_statistics_df.columns if 'note' in column and isl_statistics_df[column].notna().any()]
         translated_columns.extend(['Fabric_name', 'Trunking_lic_both_switches'])
-        isl_statistics_report_df = dfop.translate_dataframe(isl_statistics_report_df, report_headers_df, 
+        isl_statistics_report_df = report.translate_dataframe(isl_statistics_report_df, report_headers_df, 
                                                             'Статистика_ISL_перевод', translated_columns)
         # drop empty columns
         isl_statistics_report_df.dropna(axis=1, how='all', inplace=True)

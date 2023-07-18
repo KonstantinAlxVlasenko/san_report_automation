@@ -19,10 +19,15 @@ import general_cmd_module as dfop
 
 
 
-# DataLine OST
-db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN NORD\NOV2022\database_DataLine_Nord"
-db_file = r"DataLine_Nord_analysis_database.db"
+# # DataLine OST
+# db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN NORD\NOV2022\database_DataLine_Nord"
+# db_file = r"DataLine_Nord_analysis_database.db"
 
+# DataLine SPb
+db_path = r"D:\Documents\01.CUSTOMERS\DataLine\SAN SPB\JUL2023\database_DataLine_SPb"
+db_file = r"DataLine_SPb_analysis_database.db"
+
+ 
 
 data_names = ['portshow_sfp_aggregated']
 data_lst = dfop.read_database(db_path, db_file, *data_names)

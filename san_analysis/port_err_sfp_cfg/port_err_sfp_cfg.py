@@ -124,7 +124,7 @@ def port_err_sfp_cfg_report(port_complete_df, data_names, report_headers_df, rep
 def sfp_statistics_report(sfp_statistics_df, report_headers_df, report_columns_usage_sr):
 
     # npiv statistics report
-    sfp_statistics_report_df = dfop.statistics_report(sfp_statistics_df, report_headers_df, 'Статистика_SFP_перевод', 
+    sfp_statistics_report_df = report.statistics_report(sfp_statistics_df, report_headers_df, 'Статистика_SFP_перевод', 
                                                     report_columns_usage_sr, drop_columns=['chassis_wwn', 'switchWwn'])
     # remove zeroes to clean view
     dfop.drop_zero(sfp_statistics_report_df)

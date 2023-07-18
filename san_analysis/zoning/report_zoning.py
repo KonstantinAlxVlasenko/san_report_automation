@@ -44,9 +44,9 @@ def create_report(aggregated_df, report_headers_df, report_columns_usage_sr, df_
                             'Effective_cfg_usage_note', 'Pair_zone_note', 'Multiple_fabric_label_connection',
                             'Zone_and_Pairzone_names_related', 'Zone_name_device_names_related', 'Mixed_zone_note']
 
-    cleaned_df = dfop.translate_values(cleaned_df, report_headers_df, 'Зонирование_перевод', translated_columns)
+    cleaned_df = report.translate_values(cleaned_df, report_headers_df, 'Зонирование_перевод', translated_columns)
     report_df = report.generate_report_dataframe(cleaned_df, report_headers_df, report_columns_usage_sr, df_name)
-    dfop.drop_slot_value(report_df, report_columns_usage_sr)
+    report.drop_slot_value(report_df, report_columns_usage_sr)
     return report_df
 
 
@@ -137,9 +137,12 @@ def absent_device(zoning_aggregated_df, report_headers_df, report_columns_usage_
     absent_device_df = zoning_aggregated_df.loc[mask_absent, absent_columns]
     absent_device_df = absent_device_df.groupby(absent_columns[:-1], as_index = False, dropna=False).agg({'zone': ', '.join})
     
-    absent_device_df = dfop.translate_values(absent_device_df, report_headers_df, 'Зонирование_перевод', translated_columns='Fabric_device_status')
-    absent_device_df = dfop.drop_column_if_all_na(absent_device_df, columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'])
-    zoning_absent_device_report_df = report.generate_report_dataframe(absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
+    absent_device_df = report.translate_values(
+        absent_device_df, report_headers_df, 'Зонирование_перевод', translated_columns='Fabric_device_status')
+    absent_device_df = dfop.drop_column_if_all_na(
+        absent_device_df, columns=['zonemember_Fabric_name', 'zonemember_Fabric_label'])
+    zoning_absent_device_report_df = report.generate_report_dataframe(
+        absent_device_df, report_headers_df, report_columns_usage_dct, data_name)
     return zoning_absent_device_report_df
 
 
@@ -151,7 +154,8 @@ def statistics_report(statistics_df, report_headers_df, data_name):
     statistics_report_df = statistics_df.copy()
 
     if data_name == 'Статистика_зон':
-        possible_allna_columns = ['zone_duplicated', 'zone_absorber', 'Target_Initiator_note', 'Effective_cfg_usage_note', 'Mixed_zone_note']
+        possible_allna_columns = ['zone_duplicated', 'zone_absorber', 
+                                  'Target_Initiator_note', 'Effective_cfg_usage_note', 'Mixed_zone_note']
         statistics_report_df = dfop.drop_column_if_all_na(statistics_report_df, possible_allna_columns)
 
         # drop 'Wwnn_to_Wwnp_number_unpacked' column if all values are zero
@@ -168,9 +172,9 @@ def statistics_report(statistics_df, report_headers_df, data_name):
         translated_columns = ['Fabric_name']
     
     statistics_report_df = \
-        dfop.translate_values(statistics_report_df, report_headers_df, 'Зонирование_перевод', translated_columns)
+        report.translate_values(statistics_report_df, report_headers_df, 'Зонирование_перевод', translated_columns)
     
     if 'aliasmember_alias' in statistics_report_df.columns:
         statistics_report_df.drop(columns=['aliasmember_alias'], inplace=True)
-    statistics_report_df = dfop.translate_header(statistics_report_df, report_headers_df, data_name)
+    statistics_report_df = report.translate_header(statistics_report_df, report_headers_df, data_name)
     return statistics_report_df

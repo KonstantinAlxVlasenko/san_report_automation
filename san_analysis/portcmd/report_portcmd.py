@@ -33,13 +33,13 @@ def portcmd_report_main(portshow_aggregated_df, storage_connection_statistics_df
     # device connection reports
     storage_connection_df = _clean_dataframe(storage_connection_df, 'stor', clean=True)
     storage_connection_df = device_name_duplicates_free_column(storage_connection_df)
-    storage_connection_df = dfop.translate_values(storage_connection_df)
+    storage_connection_df = report.translate_values(storage_connection_df)
     library_connection_df = _clean_dataframe(library_connection_df, 'lib', clean=True)
     library_connection_df = device_name_duplicates_free_column(library_connection_df)
-    library_connection_df = dfop.translate_values(library_connection_df)
+    library_connection_df = report.translate_values(library_connection_df)
     server_connection_df = _clean_dataframe(server_connection_df, 'srv', clean=True)
     server_connection_df = device_name_duplicates_free_column(server_connection_df)
-    server_connection_df = dfop.translate_values(server_connection_df)
+    server_connection_df = report.translate_values(server_connection_df)
     
     storage_connection_statistics_report_df = connection_statistics_report(storage_connection_statistics_df, report_headers_df)
     device_connection_statistics_report_df = connection_statistics_report(device_connection_statistics_df, report_headers_df)
@@ -164,7 +164,7 @@ def connection_statistics_report(connection_statistics_df, report_headers_df):
     columns = [column for column in connection_statistics_df.columns if 'note' in column and connection_statistics_df[column].notna().any()]
     columns.append('Fabric_name')
 
-    connection_statistics_report_df = dfop.translate_dataframe(connection_statistics_report_df, report_headers_df, 
+    connection_statistics_report_df = report.translate_dataframe(connection_statistics_report_df, report_headers_df, 
                                                             'Статистика_подключения_устройств_перевод', translated_columns=columns)
     # drop empty columns
     connection_statistics_report_df.dropna(axis=1, how='all', inplace=True)

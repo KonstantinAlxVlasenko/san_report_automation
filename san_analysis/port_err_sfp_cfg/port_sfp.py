@@ -1,7 +1,9 @@
 """Module to add sfp readings, sfp model details and find sfp redings intervals"""
 
-import pandas as pd
+import re
+
 import numpy as np
+import pandas as pd
 
 
 def port_sfp_join(portshow_aggregated_df, sfpshow_df, sfp_model_df, pattern_dct):
@@ -27,7 +29,13 @@ def port_sfp_join(portshow_aggregated_df, sfpshow_df, sfp_model_df, pattern_dct)
                     ['Temperature_Centigrade', 30, 60, 30, False],
                     ['Pwr_On_Time_years', 1, 3, 2, False]]
 
+    pwr_column_pattern = r"(.+?)_(?:dBm|uW)"
+
     for readings_column in readings_lst:
+        # fill empty RX, TX with Not Available
+        if re.search(pwr_column_pattern, readings_column[0]):
+            na_power_column = re.search(pwr_column_pattern, readings_column[0]).group(1)
+            port_complete_df[readings_column[0]].fillna(port_complete_df[na_power_column], inplace=True)
         find_readings_intervals(port_complete_df, pattern_dct, *readings_column)
     
     port_complete_df.drop_duplicates(inplace=True)

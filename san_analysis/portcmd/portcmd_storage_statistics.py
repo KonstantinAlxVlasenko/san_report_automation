@@ -13,9 +13,6 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
     verify if storages connected properly (ports distrubuted symmetrically, odd and even port
     indexes are in different Fabrics)"""
 
-    # regular expression patterns TO_REMOVE
-    # comp_keys, _, comp_dct = re_pattern_lst
-
     # find storages (3PAR, MSA) with non-empty ports numbers in portshow_aggregated_df
     mask_storage_type = portshow_aggregated_df['deviceSubtype'].str.lower().isin(['3par', 'msa', 'emc'])
     mask_storage_port = portshow_aggregated_df['Device_Port'].notna()

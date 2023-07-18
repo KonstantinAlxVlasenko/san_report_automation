@@ -139,7 +139,7 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
 
     # drop rows with empty switch names columns
     fabric_report_df.dropna(subset = ['Имя коммутатора'], inplace = True)
-    fabric_report_df = dfop.translate_values(fabric_report_df, report_headers_df, 'Коммутаторы_перевод')
+    fabric_report_df = report.translate_values(fabric_report_df, report_headers_df, 'Коммутаторы_перевод')
     fabric_report_df = dfop.drop_column_if_all_na(fabric_report_df, 
                                                     ['Примечение. Номер домена', 'Примечение. Время работы', 
                                                     'Примечание. Парный коммутатор', 'Примечание. Микрокод парных коммутаторов', 'Стойка'])
@@ -161,7 +161,7 @@ def switchs_params_report(switch_params_aggregated_df, fabric_switch_statistics_
     global_fabric_parameters_report_df.reset_index(inplace=True, drop=True)
 
     # fabric switch statistics                                         
-    fabric_switch_statistics_report_df = dfop.translate_dataframe(fabric_switch_statistics_df, report_headers_df, 
+    fabric_switch_statistics_report_df = report.translate_dataframe(fabric_switch_statistics_df, report_headers_df, 
                                                             df_name='Статистика_коммутаторов_перевод')
     # drop allna columns
     fabric_switch_statistics_report_df.dropna(axis=1, how='all', inplace=True)

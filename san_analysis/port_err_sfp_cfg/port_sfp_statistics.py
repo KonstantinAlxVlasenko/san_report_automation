@@ -66,9 +66,8 @@ def comment_sfp_readings_interval(sfp_aggregated_modified_df):
                         ['Temperature_Centigrade', False],
                         ['Pwr_On_Time_years', False]
                         ]
-
+    
     for readings_column, include_sfp_mode in readings_columns:
-        
         # column with intervals without comments
         interval_readings_column = readings_column + '_interval'
         # column with commented intervals
@@ -76,6 +75,9 @@ def comment_sfp_readings_interval(sfp_aggregated_modified_df):
 
         # not empty interval filter
         mask_interval_notna = sfp_aggregated_modified_df[interval_readings_column].notna()
+        if not mask_interval_notna.any():
+            sfp_aggregated_modified_df[stat_readings_column] = np.nan
+            continue
         if include_sfp_mode:
             sfp_aggregated_modified_df[stat_readings_column] = readings_column + " interval " + \
                 "(sfp " + sfp_aggregated_modified_df.loc[mask_interval_notna, 'Transceiver_mode_extracted'] + ") " +\
