@@ -112,13 +112,12 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     mask_device_type_not_sw_vc = ~portshow_aggregated_df['deviceType'].isin(['SWITCH', 'VC'])
     portshow_alias_df = portshow_aggregated_df.loc[mask_device_type_not_sw_vc, ['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portWwn', 'alias']]
     portshow_alias_df.rename(columns={'alias': 'Device_Host_Name'}, inplace=True)
-    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, portshow_alias_df, join_lst=['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portWwn'], 
+    portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, portshow_alias_df, 
+                                                   join_lst=['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portWwn'], 
                                                     filled_lst=['Device_Host_Name'])
-    
     # fill portshow_aggregated DataFrame Device_Host_Name column null values for VC modules 
     # with combination of 'VC' and serial number
     portshow_aggregated_df = vc_name_fillna(portshow_aggregated_df)
-
     # if Device_Host_Name is still empty fill empty values in portshow_aggregated_df Device_Host_Name column 
     # with combination of device class and it's wwnp
     portshow_aggregated_df.Device_Host_Name = \
@@ -196,10 +195,8 @@ def device_name_fillna(series):
 
 
 def vc_id(portshow_aggregated_df):
-    """
-    Function to calculate virtual channel id for medium priority traffic.
-    VC2, VC3, VC4, VC5
-    """
+    """Function to calculate virtual channel id for medium priority traffic.
+    VC2, VC3, VC4, VC5"""
 
     portshow_aggregated_df = portshow_aggregated_df.copy()
     # extract AreaID from PortID address

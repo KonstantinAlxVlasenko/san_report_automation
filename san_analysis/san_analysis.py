@@ -22,7 +22,6 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
     """Main function of san_analysis package. Performs analysis of extracted configuration data, 
     save data to database and report file"""
 
-
     chassis_params_df, slot_status_df, licenseport_df, maps_params_df, \
         switch_params_df, switchshow_ports_df,\
             fabricshow_df, ag_principal_df, \
@@ -34,7 +33,9 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
                                     sensor_df, errdump_df,\
                                         blade_module_df, blade_servers_df, blade_vc_df,\
                                             synergy_module_df, synergy_servers_df,\
-                                                system_3par_df, port_3par_df, host_3par_df = extracted_configuration_lst
+                                                system_3par_df, port_3par_df, host_3par_df, \
+                                                    system_oceanstor_df, port_oceanstor_df, host_oceanstor_df,\
+                                                        host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df = extracted_configuration_lst
     # set fabric names and labels
     fabricshow_ag_labels_df = \
         fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, project_constants_lst)

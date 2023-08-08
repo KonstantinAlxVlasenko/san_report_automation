@@ -87,7 +87,7 @@ def blade_system_extract(project_constants_lst):
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 'enclosure_columns', 'blade_columns', 'blade_vc_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, san_module_lst, san_blade_lst, san_blade_vc_lst)
         blade_module_df, blade_servers_df, blade_vc_df, *_ = data_lst 
-        # save_data(report_constant_lst, data_names, *data_lst)
+        # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)  
 
     # verify if loaded data is empty after first iteration and replace information string with empty list

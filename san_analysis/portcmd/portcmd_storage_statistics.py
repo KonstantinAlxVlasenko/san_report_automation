@@ -14,7 +14,7 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
     indexes are in different Fabrics)"""
 
     # find storages (3PAR, MSA) with non-empty ports numbers in portshow_aggregated_df
-    mask_storage_type = portshow_aggregated_df['deviceSubtype'].str.lower().isin(['3par', 'msa', 'emc'])
+    mask_storage_type = portshow_aggregated_df['deviceSubtype'].str.lower().isin(['3par', 'msa', 'emc', 'infinidat'])
     mask_storage_port = portshow_aggregated_df['Device_Port'].notna()
     storage_columns = ['Fabric_name', 'Fabric_label', 'Device_Host_Name', 'Device_Port', 'deviceSubtype', 'Device_type', 'Connected_portWwn']
     storage_ports_df = portshow_aggregated_df.loc[mask_storage_type & mask_storage_port, storage_columns ].copy()
@@ -26,7 +26,8 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
     # extract controller, slot, port indexes
     pattern_columns_lst = [(pattern_dct['3par_ctrl_slot_port'], ['Controller', 'Slot', 'Port']),
                             (pattern_dct['emc_ctrl_slot_port'], ['Controller', 'Slot', 'Port']), 
-                            (pattern_dct['msa_ctrl_port'], ['Controller', 'Port']),]
+                            (pattern_dct['msa_ctrl_port'], ['Controller', 'Port']),
+                            (pattern_dct['infinidat_ctrl_port'], ['Controller', 'Port'])]
     storage_ports_df = dfop.extract_values_from_column(storage_ports_df, 'Device_Port', pattern_columns_lst)
     # drop rows without controller and slot
     mask_controller_port_notna = storage_ports_df[['Controller', 'Port']].notna().all(axis=1)
@@ -92,8 +93,8 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
             storage_connection_statistics_df['Group_type'].str.extract(f'^(.+)_({component_sublevel_suffix_lst[0]}|{component_sublevel_suffix_lst[1]})$').values
 
         # sort port groups levels in corresponding order
-        sort_priority = {'storage': 1, 
-                            'port_parity': 2, 'port': 3, 'controller': 4, 'controller_slot': 5, 'slot': 6, 'device_type': 7}
+        sort_priority = {'storage': 1, 'port_parity': 2, 'port': 3, 'controller': 4, 
+                         'controller_slot': 5, 'slot': 6, 'device_type': 7}
         storage_connection_statistics_df.sort_values(by=['deviceSubtype', 'Device_Host_Name', 'Group_type', 'Group_level'], 
                                                     key=lambda col: col.replace(sort_priority), inplace=True)
         storage_connection_statistics_df.reset_index(drop=True, inplace=True)

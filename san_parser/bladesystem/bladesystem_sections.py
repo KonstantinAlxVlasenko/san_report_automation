@@ -38,19 +38,6 @@ def vc_enclosure_section(pattern_dct, file, enclosure_params):
             line = reop.extract_key_value_from_line(enclosure_current_dct, pattern_dct, line, file, 
                                                     extract_pattern_name='name_value_pair', stop_pattern_name='part_number_line', 
                                                     first_line_skip=False)
-
-
-            # while not re.search(r'Part Number',line):
-            #     # dictionary with match names as keys and match result of current line with all imported regular expressions as values
-            #     match_dct = {pattern_name: pattern_dct[pattern_name].match(line) for pattern_name in pattern_dct.keys()}
-            #     # name_value_pair_match
-            #     if match_dct['name_value_pair']:
-            #         result = match_dct['name_value_pair']
-            #         enclosure_current_dct[result.group(1).strip()] = result.group(2).strip()
-            #     line = file.readline()      
-            #     if not line:
-            #         break
-            
             # rename Description key to Enclosure Type key for VC
             if enclosure_current_dct.get('Description'):
                 enclosure_current_dct['Enclosure Type'] = enclosure_current_dct.pop('Description')

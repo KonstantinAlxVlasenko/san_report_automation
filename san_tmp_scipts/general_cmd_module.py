@@ -6,6 +6,7 @@ Created on Thu Jan 27 16:19:32 2022
 """
 
 import os
+import re
 import sqlite3
 import pandas as pd
 import numpy as np
@@ -551,3 +552,53 @@ def concat_statistics(statistics_df, summary_df, total_df, sort_columns):
     statistics_df.reset_index(inplace=True, drop=True)
     return statistics_df
 
+
+
+def find_files(folder, max_title, filename_contains='', filename_extension=''):
+    """
+    Function to create list with files. Takes directory, regex_pattern to verify if filename
+    contains that pattern (default empty string) and filename extension (default is empty string)
+    as parameters. If filename extension is None then filename shouldn't contain any extension. 
+    Returns list of files with the extension deteceted in root folder defined as
+    folder parameter and it's nested folders. If both parameters are default functions returns
+    list of all files in directory
+    """
+
+    info = f'Checking {os.path.basename(folder)} folder for configuration files'
+    print(info, end =" ") 
+
+    # check if ssave_path folder exist
+    check_valid_path(folder)
+   
+    # list to save configuration data files
+    files_lst = []
+
+    # going through all directories inside folder to find configuration data
+    for root, _, files in os.walk(folder):
+        for file in files:
+            # filename contains filename_contains atr but not hidden file
+            if re.search(filename_contains, file) and not re.search('^~\$.+', file):
+                file_path = os.path.normpath(os.path.join(root, file))
+                if filename_extension and file.endswith(filename_extension):
+                    files_lst.append(file_path)
+                # when file extension flag is None and file name doesn't contain extension (.7zip, .exe, .log, .3g2)
+                elif filename_extension is None and not re.search('.+\.(\d)?[A-Za-z]+(\d)?$', file):
+                    files_lst.append(file_path)
+                elif filename_extension=='':
+                    files_lst.append(file_path)
+
+
+    if len(files_lst) == 0:
+        status_info('no data', max_title, len(info))
+    else:
+        status_info('ok', max_title, len(info))        
+    return files_lst
+
+def check_valid_path(path):
+    """Function to check if folder exist"""
+
+    path = os.path.normpath(path)
+    if not os.path.exists(path):
+        print(f"{path} doesn't exist")
+        print('Code execution exit')
+        sys.exit()

@@ -5,6 +5,7 @@ from .fabric_routing import (fabric_membership_extract, fcr_membership_extract,
                              interswitch_connection_extract)
 from .fabric_services import connected_devices_extract, zoning_extract
 from .storage_3par import storage_3par_extract
+from .storage_oceanstor import storage_oceanstor_extract
 from .switch_monitoring import log_extract, sensor_extract
 from .switch_params import (chassis_params_extract, maps_params_extract,
                             switch_params_extract)
@@ -48,6 +49,11 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
     system_3par_df, port_3par_df, host_3par_df = \
             storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, software_path_sr)
 
+    # Huawei OceanStor storage system configuration download and parsing
+    system_oceanstor_df, port_oceanstor_df, host_oceanstor_df, \
+        host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df \
+            = storage_oceanstor_extract(project_constants_lst)
+    
     extracted_configuration_lst = [chassis_params_df, slot_status_df, licenseport_df, maps_params_df, 
                                     switch_params_df, switchshow_ports_df,
                                     fabricshow_df, ag_principal_df, 
@@ -59,6 +65,8 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
                                     sensor_df, errdump_df,
                                     blade_module_df, blade_servers_df, blade_vc_df,
                                     synergy_module_df, synergy_servers_df,
-                                    system_3par_df, port_3par_df, host_3par_df]
+                                    system_3par_df, port_3par_df, host_3par_df,
+                                    system_oceanstor_df, port_oceanstor_df, host_oceanstor_df,
+                                    host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df]
     return extracted_configuration_lst
         

@@ -35,7 +35,7 @@ def storage_3par_extract(nsshow_df, nscamshow_df, project_constants_lst, softwar
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, max_title)
     
     if force_run:
-        # nested list(s) to store required values of the module in defined order for all switches in SAN
+        # nested list(s) to store required values of the module in defined order for all 3PARs in SAN
         # list containing system parameters
         san_system_3par_lst = []
         # list containing 3par FC port information
