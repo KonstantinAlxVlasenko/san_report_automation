@@ -602,3 +602,14 @@ def check_valid_path(path):
         print(f"{path} doesn't exist")
         print('Code execution exit')
         sys.exit()
+        
+        
+def  convert_wwn(df, wwn_columns: list):
+    """Function to convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)"""
+
+    for wwn_column in wwn_columns:
+        if wwn_column in df.columns and df[wwn_column].notna().any():
+            mask_wwn = df[wwn_column].notna()
+            df.loc[mask_wwn, wwn_column] = df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
+            df[wwn_column] = df[wwn_column].str.lower()
+    return df

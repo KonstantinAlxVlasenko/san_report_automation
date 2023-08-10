@@ -55,7 +55,8 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
                                 nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
                                 ag_principal_df, porttrunkarea_df, alias_df, fdmi_df, blade_module_df, 
                                 blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
-                                system_3par_df, port_3par_df, project_constants_lst)
+                                system_3par_df, port_3par_df, system_oceanstor_df, port_oceanstor_df, 
+                                project_constants_lst)
     fcr_xd_proxydev_df = fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
                                                 fcrproxydev_df, fcrxlateconfig_df, project_constants_lst)
     fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, project_constants_lst)

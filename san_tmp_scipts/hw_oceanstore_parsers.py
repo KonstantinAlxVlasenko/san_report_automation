@@ -46,7 +46,7 @@ def storage_oceanstor_extract(hw_oceanstor_folder):
             info = f'[{i+1} of {configs_num}]: {configname} file.'
             print(info, end =" ")
     
-            system_summary_lst, fcport_lst, host_id_name_lst, host_id_fcinitiator_lst, host_lst, info  = storage_params_extract(storage_config, san_extracted_oceanstor_dct, system_params, pattern_dct, info)
+            system_summary_lst, fcport_lst, host_id_name_lst, host_id_fcinitiator_lst, host_lst, info, duplicated_config_flag  = storage_params_extract(storage_config, san_extracted_oceanstor_dct, system_params, pattern_dct, info)
             san_system_oceanstor_lst.extend(system_summary_lst)
             san_fcport_oceanstor_lst.extend(fcport_lst)
             if host_id_name_lst:
@@ -212,6 +212,10 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct, system_p
     
     host_lst = []
 
+
+ 
+    # config_datetime = None
+    duplicated_config_flag = False
     
     with open(storage_config, encoding='utf-8', errors='ignore') as file:
         line = file.readline()
@@ -234,7 +238,14 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct, system_p
                                                 extract_pattern_name='parameter_value_pair', 
                                                 stop_pattern_name='license_header')
                 controllers_number = int(system_summary_dct['Number of total controllers'])
-                
+                sn = system_summary_dct['Product Serial Number']
+                if not sn in san_extracted_oceanstor_dct:
+                    san_extracted_oceanstor_dct[sn] = configname
+                else:
+                    duplicated_config_flag = True
+                    system_summary_dct = {}
+                    break
+                    
                 # print(f'{controllers_number=}')
                 # system_summary_lst.append([system_summary_dct.get(param) for param in system_params])
             elif re.search(pattern_dct['mgmt_eth_id'], line):
@@ -381,10 +392,11 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct, system_p
             
         # print(f'{mgmt_ip_addr_number=}')
         # print(line)
-        ip_addr = ', '.join(mgmt_ip_addr_lst) if mgmt_ip_addr_lst else None
-        system_summary_values = (configname, ip_addr, config_datetime)
+
     
         if system_summary_dct:
+            ip_addr = ', '.join(mgmt_ip_addr_lst) if mgmt_ip_addr_lst else None
+            system_summary_values = (configname, ip_addr, config_datetime)
             # adding additional parameters and values to the parameters dct
             reop.update_dct(system_params_add, system_summary_values, system_summary_dct)                                                
             # creating list with REQUIRED parameters for the current system.
@@ -405,7 +417,7 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct, system_p
         
         
                 
-        return system_summary_lst, fcport_lst, host_id_name_lst, host_id_fcinitiator_lst, host_lst, info
+        return system_summary_lst, fcport_lst, host_id_name_lst, host_id_fcinitiator_lst, host_lst, info, duplicated_config_flag
 
 san_system_oceanstor_lst, san_fcport_oceanstor_lst, san_host_oceanstor_lst, san_host_id_name_oceanstor_lst, san_host_id_fcinitiator_oceanstor_lst = storage_oceanstor_extract(hw_oceanstor_folder)
 

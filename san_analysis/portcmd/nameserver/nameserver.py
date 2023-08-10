@@ -8,10 +8,10 @@ import numpy as np
 
 import utilities.dataframe_operations as dfop
 
-from .portcmd_nameserver_split import nsshow_symb_split
+from .nameserver_split import nsshow_symb_split
 
 
-def nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, pattern_dct):
+def nsshow_analysis(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, pattern_dct):
 
     # label DataFrames
     nsshow_labeled_df, nscamshow_labeled_df, fdmi_labeled_df = fabric_labels(nsshow_df, nscamshow_df, fdmi_df, fabric_labels_df)

@@ -5,7 +5,7 @@ and add notes if some criteria are not fullfilled"""
 import numpy as np
 import pandas as pd
 
-from .portcmd_device_connection_statistics_notes import add_notes
+from .device_connection_statistics_notes import add_notes
 
 unique_vc_str ='Unique_VC_quantity_'
 bandwidth_str = 'Bandwidth_'
@@ -40,7 +40,6 @@ def device_connection_statistics(portshow_aggregated_df):
     reorder_stat_columns = [*device_columns, *stat_columns[5:]]
     device_connection_statistics_df = device_connection_statistics_df[reorder_stat_columns]
     device_connection_statistics_df.fillna(np.nan, inplace=True)
-    
     return device_connection_statistics_df
 
 

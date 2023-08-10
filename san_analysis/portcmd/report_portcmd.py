@@ -52,13 +52,12 @@ def _clean_dataframe(df, mask_type,
                         duplicates = ['Фабрика', 'Имя устройства', 'Имя группы псевдонимов', 
                                         'Класс устройства', 'Тип устройства'], 
                         clean = False):
-    """
-    Auxiliary function to sort, remove duplicates and 
-    drop columns in cases they are not required in report DataFrame
-    """
+    """Auxiliary function to sort, remove duplicates and 
+    drop columns in cases they are not required in report DataFrame"""
 
+    columns_empty = ['Медленное устройство', 'Подключено через AG', 
+                     'Real device behind AG', 'Максимальная скорость порта устройства, Гб/c']
     # list of columns to check if they are empty
-    columns_empty = ['Медленное устройство', 'Подключено через AG', 'Real device behind AG']
     # list of columns to check if all values are equal
     columns_unique = ['Режим коммутатора', 'LSAN', 'Connected_NPIV', 'FC4s', 'FCoE']
     # list of columns to sort DataFrame on

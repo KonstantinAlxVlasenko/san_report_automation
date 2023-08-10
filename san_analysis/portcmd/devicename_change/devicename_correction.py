@@ -12,7 +12,7 @@ import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
 
-def devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst):
+def devicename_correction(portshow_aggregated_df, device_rename_df, project_constants_lst):
     """Main function to rename devices"""
 
     project_steps_df, max_title, io_data_names_df, _, _, report_columns_usage_sr, *_ = project_constants_lst
@@ -68,7 +68,7 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
         print('\n')
         if force_change_data_lst:
             print(f"Request to force change of {', '.join(force_change_data_lst)} data was received.")
-        reply = meop.reply_request('Do you want to CHANGE AUTO assigned device names? (y)es/(n)o: ')
+        reply = meop.reply_request('Do you want to CHANGE AUTO ASSIGNED device names? (y)es/(n)o: ')
         if reply == 'y':
             # if device_rename_df DataFrame doesn't exist (1st iteration)
             if device_rename_df is None:
@@ -123,11 +123,9 @@ def define_device_to_rename(portshow_aggregated_df, device_rename_df, max_title,
 
 
 def create_device_rename_form(portshow_aggregated_df):
-    """
-    Auxiliary function for define_device_to_rename function. 
+    """Auxiliary function for define_device_to_rename function. 
     Creates manual_device_rename_df DataFrame from portshow_aggregated_df DataFrame
-    to use it as form to complete with new device names
-    """
+    to use it as form to complete with new device names"""
 
     mask_columns_lst = ['Fabric_name', 'Device_Host_Name', 'Group_Name', 
                         'deviceType', 'deviceSubtype', 'Host_Name', 
@@ -139,13 +137,14 @@ def create_device_rename_form(portshow_aggregated_df):
     # if no Device_Host_Name defined then no device connected
     mask_device_host_name = portshow_aggregated_df['Device_Host_Name'].notna()
     
-    # no need to rename 3PARs with parsed configs
-    mask_3par = portshow_aggregated_df['deviceSubtype'].str.lower() == '3par'
+    # no need to rename 3PARs  and Huawei with parsed configs 
     mask_device_name = portshow_aggregated_df['Device_Name'].notna()
+    mask_3par = portshow_aggregated_df['deviceSubtype'].str.lower() == '3par'
     mask_3par_parsed = mask_3par & mask_device_name
-
+    mask_huawei_oceanstor = (portshow_aggregated_df[['deviceType', 'deviceSubtype']] == ('STORAGE', 'HUAWEI')).all(axis=1)
+    mask_huawei_oceanstor_parsed = mask_huawei_oceanstor & mask_device_name
     # join all masks
-    mask_complete =  mask_device_class & mask_empty_host_name & mask_device_host_name & ~mask_3par_parsed
+    mask_complete =  mask_device_class & mask_empty_host_name & mask_device_host_name & ~mask_3par_parsed & ~mask_huawei_oceanstor_parsed
 
     manual_device_rename_df = portshow_aggregated_df.loc[mask_complete , mask_columns_lst].copy()
     manual_device_rename_df.drop_duplicates(inplace=True)
@@ -182,7 +181,6 @@ def create_device_rename_form(portshow_aggregated_df):
     sort_columns = ['Fabric_name', 'deviceType', 'deviceSubtype', 'Device_Host_Name']
     manual_device_rename_df.sort_values(by=sort_columns, inplace=True)
     manual_device_rename_df.reset_index(drop=True, inplace=True)
-
     return manual_device_rename_df
 
 
@@ -212,7 +210,6 @@ def device_rename(portshow_aggregated_df, device_rename_df):
                                             'Device_Host_Name_rename': 'Device_Host_Name',
                                             'Device_Host_Name_w_domain': 'Device_Host_Name_w_domain_old', 
                                             'Device_Host_Name_w_domain_rename': 'Device_Host_Name_w_domain'}, inplace=True)
-
     return portshow_aggregated_df
 
 

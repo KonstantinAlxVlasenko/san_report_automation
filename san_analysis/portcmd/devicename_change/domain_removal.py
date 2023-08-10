@@ -7,7 +7,7 @@ import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.servicefile_operations as sfop
 
-from .portcmd_domain_manual import choose_domain_to_remove, display_domain_name_remove_scheme, get_separator_len
+from .domain_manual_selection import choose_domain_to_remove, display_domain_name_remove_scheme, get_separator_len
 
 REMOVE_MARK_COLUMN = 'Remove'
 REMOVE_MARK_STR = 'V'

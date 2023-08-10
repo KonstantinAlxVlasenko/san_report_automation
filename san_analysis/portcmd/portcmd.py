@@ -9,12 +9,11 @@ import utilities.module_execution as meop
 import utilities.report_operations as report
 import utilities.servicefile_operations as sfop
 
+from .devicename_change import devicename_correction, hostname_domain_remove
 from .portcmd_aggregation import portshow_aggregated
-from .portcmd_device_connection_statistics import device_connection_statistics
-from .portcmd_devicename_correction import devicename_correction_main
-from .portcmd_domain import hostname_domain_remove
-from .portcmd_storage_statistics import storage_connection_statistics
 from .report_portcmd import portcmd_report_main
+from .statistics import (device_connection_statistics,
+                         storage_connection_statistics)
 
 
 def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df, 
@@ -24,7 +23,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                         alias_df, fdmi_df, blade_module_df, 
                         blade_servers_df, blade_vc_df, 
                         synergy_module_df, synergy_servers_df, 
-                        system_3par_df, port_3par_df, 
+                        system_3par_df, port_3par_df, system_oceanstor_df, port_oceanstor_df,
                         project_constants_lst):
     """Main function to add connected devices information to portshow DataFrame"""
 
@@ -75,7 +74,8 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
                                 nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
                                 ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, 
                                 oui_df, fdmi_df, blade_module_df,  blade_servers_df, blade_vc_df, 
-                                synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df,
+                                synergy_module_df, synergy_servers_df, 
+                                system_3par_df, port_3par_df, system_oceanstor_df, port_oceanstor_df,
                                 pattern_dct)
         # after finish display status
         meop.status_info('ok', max_title, len(info))
@@ -89,7 +89,7 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
             hostname_domain_remove(portshow_aggregated_df, domain_name_remove_df, project_constants_lst)
         # correct device names manually
         portshow_aggregated_df, device_rename_df = \
-            devicename_correction_main(portshow_aggregated_df, device_rename_df, project_constants_lst)
+            devicename_correction(portshow_aggregated_df, device_rename_df, project_constants_lst)
         # merge 'Device_Host_Name' and 'Device_port', create column with all Device_Host_Name for port each port
         portshow_aggregated_df = device_names_per_port(portshow_aggregated_df)
         # count Device_Host_Name instances for fabric_label, label and total in fabric

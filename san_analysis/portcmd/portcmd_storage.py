@@ -25,10 +25,8 @@ def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):
         system_port_3par_df.rename(columns=rename_columns, inplace=True)
         system_port_3par_df['Device_Host_Name'] = system_port_3par_df['Device_Name']
 
-
+        # add 3PAR port partner (faiolver port) Wwnp and fabric connection information
         system_port_3par_df = storage_port_partner(system_port_3par_df, portshow_aggregated_df)
-
-
         # add 3PAR information to portshow_aggregated_df
         fillna_wwnn_columns = ['Device_Name', 'Device_Host_Name', 'Device_Model', 'Device_SN', 'IP_Address', 'Device_Location']
         portshow_aggregated_df = \
@@ -77,14 +75,43 @@ def storage_port_partner(system_port_3par_df, portshow_aggregated_df):
     return system_port_3par_df
 
 
-def filter_empty_storage_ports(portshow_aggregated_df, storage_type: str):
-    """Function to filter ports of storages defined with storage_type.
-    Filterd ports have no 'Device_port' extracted from switch or storage configuration files"""
+def storage_oceanstore_fillna(portshow_aggregated_df, system_oceanstor_df, port_oceanstor_df):
+    """Function to add Huawei OceanStore information collected from configuration files to
+    portshow_aggregated_df"""
     
-    mask_storage = (portshow_aggregated_df[['deviceType', 'deviceSubtype']] == ('STORAGE', storage_type)).all(axis=1)
-    mask_port_na = portshow_aggregated_df['Device_Port'].isna()
-    storage_ports_df = portshow_aggregated_df.loc[mask_storage & mask_port_na].copy()
-    return storage_ports_df
+    if not port_oceanstor_df.empty and not system_oceanstor_df.empty:
+        # system information
+        system_columns = ['configname', 'Product_Model', 'System_Name', 
+                            'Product_Serial_Number', 'IP_Address', 'Point Release', 'System_Location']
+        system_oceanstor_cp_df = system_oceanstor_df[system_columns].copy()
+        system_oceanstor_cp_df.drop_duplicates(inplace=True)
+    
+        # add system information to 3PAR ports DataFrame
+        system_port_oceanstor_df = port_oceanstor_df.merge(system_oceanstor_cp_df, how='left', on=['configname'])
+        # convert Wwnn and Wwnp to regular represenatation (lower case with colon delimeter)
+        system_port_oceanstor_df = dfop.convert_wwn(system_port_oceanstor_df, ['WWN'])
+        # max speed
+        system_port_oceanstor_df['Device_portSpeed_max'] = \
+            system_port_oceanstor_df['Max_Speed(Mbps)'].astype('float', errors='ignore')/1000 
+        
+        system_port_oceanstor_df['Device_portSpeed_max'] = \
+            system_port_oceanstor_df['Device_portSpeed_max'].astype('int32', errors='ignore').astype('str', errors='ignore')
+        
+        # rename columns to correspond portshow_aggregated_df
+        rename_columns = {'System_Name': 'Device_Name',	'Product_Model': 'Device_Model', 
+                            'Product_Serial_Number': 'Device_SN', 'System_Location': 'Device_Location',
+                            'Point Release': 'Device_Fw', 'ID': 'Device_Port', 'WWN': 'PortName',
+                            'Type': 'Storage_Port_Type', 'Role': 'Storage_Port_Mode'}
+        system_port_oceanstor_df.rename(columns=rename_columns, inplace=True)
+        system_port_oceanstor_df['Device_Host_Name'] = system_port_oceanstor_df['Device_Name']
+        # add OceanStore information to portshow_aggregated_df
+        fillna_wwpn_columns = ['Device_Name', 'Device_Host_Name', 'Device_Model', 'Device_SN', 
+                               'Device_Location', 'Device_Fw', 'Device_Port', 'IP_Address', 
+                               'Storage_Port_Type', 'Storage_Port_Mode', 'Device_portSpeed_max']        
+        portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, system_port_oceanstor_df, 
+                                                       join_lst=['PortName'], 
+                                                       filled_lst=fillna_wwpn_columns)
+    return portshow_aggregated_df
 
 
 def construct_infinidat_node_port_from_wwn(portshow_aggregated_df, pattern_dct):
@@ -109,6 +136,15 @@ def construct_infinidat_node_port_from_wwn(portshow_aggregated_df, pattern_dct):
                                                    filled_lst=['Device_Port'])
     return portshow_aggregated_df
 
+
+def filter_empty_storage_ports(portshow_aggregated_df, storage_type: str):
+    """Function to filter ports of storages defined with storage_type.
+    Filterd ports have no 'Device_port' extracted from switch or storage configuration files"""
+    
+    mask_storage = (portshow_aggregated_df[['deviceType', 'deviceSubtype']] == ('STORAGE', storage_type)).all(axis=1)
+    mask_port_na = portshow_aggregated_df['Device_Port'].isna()
+    storage_ports_df = portshow_aggregated_df.loc[mask_storage & mask_port_na].copy()
+    return storage_ports_df
 
 
 

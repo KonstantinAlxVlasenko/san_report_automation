@@ -12,9 +12,9 @@ from .portcmd_bladesystem import (blade_server_fillna, blade_vc_fillna,
                                   vc_name_fillna)
 from .portcmd_devicetype import oui_join, type_check
 from .portcmd_gateway import verify_gateway_link, verify_trunkarea_link
-from .portcmd_nameserver import nsshow_analysis_main
+from .nameserver import nsshow_analysis
 from .portcmd_storage import (construct_infinidat_node_port_from_wwn,
-                              storage_3par_fillna)
+                              storage_3par_fillna, storage_oceanstore_fillna)
 from .portcmd_switch import (fill_isl_link, fill_switch_info,
                              switchparams_join, switchshow_join,
                              verify_port_license)
@@ -24,7 +24,8 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
                         isl_aggregated_df, 
                         nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df, 
                         ag_principal_df, porttrunkarea_df, switch_models_df, alias_df, oui_df, fdmi_df, 
-                        blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, system_3par_df, port_3par_df, 
+                        blade_module_df, blade_servers_df, blade_vc_df, synergy_module_df, synergy_servers_df, 
+                        system_3par_df, port_3par_df, system_oceanstor_df, port_oceanstor_df,
                         pattern_dct):
     """
     Function to fill portshow DataFrame with information from DataFrames passed as params
@@ -48,7 +49,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
         alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df, portshow_aggregated_df)
     # retrieve storage, host, HBA information from Name Server service and FDMI data
     nsshow_join_df, nsshow_unsplit_df = \
-        nsshow_analysis_main(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, pattern_dct)
+        nsshow_analysis(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabric_labels_df, pattern_dct)
     # add nsshow and alias informormation to portshow_aggregated_df DataFrame
     portshow_aggregated_df = \
         alias_nsshow_join(portshow_aggregated_df, alias_wwnp_df, nsshow_join_df)
@@ -64,6 +65,9 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     # fillna portshow_aggregated DataFrame null values with values from collected 3PAR configs
     portshow_aggregated_df = \
         storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df)
+    # fillna portshow_aggregated DataFrame null values with values from collected Huawei OceanStore configs
+    portshow_aggregated_df = \
+        storage_oceanstore_fillna(portshow_aggregated_df, system_oceanstor_df, port_oceanstor_df)
     # calculate virtual channel id for medium priority traffic
     portshow_aggregated_df = vc_id(portshow_aggregated_df)
     # add 'deviceType', 'deviceSubtype' columns
