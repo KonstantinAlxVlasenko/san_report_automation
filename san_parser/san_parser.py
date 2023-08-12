@@ -51,7 +51,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
 
     # Huawei OceanStor storage system configuration download and parsing
     system_oceanstor_df, port_oceanstor_df, host_oceanstor_df, \
-        host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df \
+        host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df, hostid_ctrlportid_oceanstor_df \
             = storage_oceanstor_extract(project_constants_lst)
     
     extracted_configuration_lst = [chassis_params_df, slot_status_df, licenseport_df, maps_params_df, 
@@ -67,6 +67,6 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
                                     synergy_module_df, synergy_servers_df,
                                     system_3par_df, port_3par_df, host_3par_df,
                                     system_oceanstor_df, port_oceanstor_df, host_oceanstor_df,
-                                    host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df]
+                                    host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df, hostid_ctrlportid_oceanstor_df]
     return extracted_configuration_lst
         

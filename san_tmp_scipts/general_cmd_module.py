@@ -202,7 +202,7 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=
     # if required (deafult) drop duplicates values from join columns 
     # to avoid rows duplication in left DataDrame
     if remove_duplicates:
-        right_join_df.drop_duplicates(subset = join_lst, inplace = True)
+        right_join_df.drop_duplicates(subset=join_lst, inplace = True)
     # rename columns with filled values for right DataFrame
     filled_join_lst = [name+'_join' for name in filled_lst]
     right_join_df.rename(columns = dict(zip(filled_lst, filled_join_lst)), inplace = True)
@@ -613,3 +613,49 @@ def  convert_wwn(df, wwn_columns: list):
             df.loc[mask_wwn, wwn_column] = df.loc[mask_wwn, wwn_column].apply(lambda wwn: ':'.join(re.findall('..', wwn)))
             df[wwn_column] = df[wwn_column].str.lower()
     return df
+
+
+def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list, fabric_columns: list=[]):
+    """Function to replace wwnn in wwn_column (column with presumably mixed wwnn and wwnp values) 
+    of wwn_df DataFrame with corresponding wwnp value if wwnn is present. wwnn_wwnp_df DataFrame contains strictly defined 
+    wwnn and wwnp values in corresponding columns which passed as wwnn_wwnp_columns parameter.
+    fabric_columns contains additional columns if required find wwnp for wwnn in certain fabric only."""
+    
+    wwnn_column, wwnp_column = wwnn_wwnp_columns
+    join_columns = [*fabric_columns, wwnn_column]
+
+    if wwnp_column in wwn_df.columns:
+        wwn_df[wwnp_column] = np.nan
+
+    # assume that all values in wwn_column are wwnns
+    wwn_df[wwnn_column] = wwn_df[wwn_column]
+    # find corresponding wwnp value from wwnn_wwnp_df for each presumed wwnn in wwn_df
+    # rows with filled values in wwnp_column have confirmed wwnn value in  wwnn_column column of wwn_df
+    wwn_df = dataframe_fillna(wwn_df, wwnn_wwnp_df, 
+                                    join_lst=join_columns, 
+                                    filled_lst=[wwnp_column], remove_duplicates=False)
+    # when rows have empty values in wwnp_column mean wwn doesn't exist in fabric or it is wwnp
+    wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True)
+    wwn_df.drop(columns=[wwnn_column], inplace=True)
+    return wwn_df
+
+
+def explode_columns(df, *args, sep=', '):
+    """Function to split values in columns defined in args on separator and
+    and present it as rows (explode)"""
+    
+    common_exploded_df = pd.DataFrame()
+    # filter columns which are present in df and containing values
+    exploded_columns = [column for column in args if column in df and df[column].notna().any()]
+    for column in exploded_columns:
+        mask_notna = df[column].notna()
+        current_exploded_df = df.loc[mask_notna].copy()
+        current_exploded_df[column] = current_exploded_df[column].str.strip()
+        # explode values in column as separate rows to Exploded_values column
+        current_exploded_df = current_exploded_df.assign(Exploded_values=current_exploded_df[column].str.split(sep)).explode('Exploded_values')
+        # tag exploded column name
+        current_exploded_df['Exploded_column'] = column
+        # drop columns containing values to explode to avoid appearance in common exploded DataFrame
+        current_exploded_df.drop(columns=exploded_columns, inplace=True)
+        common_exploded_df = pd.concat([common_exploded_df, current_exploded_df], ignore_index=True)
+    return common_exploded_df

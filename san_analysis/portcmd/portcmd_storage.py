@@ -57,7 +57,6 @@ def storage_port_partner(system_port_3par_df, portshow_aggregated_df):
     system_port_3par_df = dfop.dataframe_fillna(system_port_3par_df, system_port_partner_3par_df, 
                                             filled_lst=['Storage_Port_Partner_Wwnp'], 
                                             join_lst=['configname', 'Storage_Port_Partner'])
-
     # DataDrame containing all Wwnp in san
     fabric_wwnp_columns = ['Fabric_name', 'Fabric_label', 'PortName']
     portshow_fabric_wwnp_df = portshow_aggregated_df[fabric_wwnp_columns].copy()

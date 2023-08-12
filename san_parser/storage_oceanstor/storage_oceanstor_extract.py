@@ -17,8 +17,8 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
     # file name
     configname = os.path.basename(storage_config)
     # search control dictionary. continue to check file until all parameters groups are found
-    collected = {'system': False, 'ip_addr': False, 'fcport': False, "host": False, "fcinitiator": False}
-    
+    collected = {'system': False, 'ip_addr': False, 'fcport': False, 
+                 "host": False, "fcinitiator": False, 'relation_hostid_ctrlport': False}
     # initialize structures to store collected data for the current storage
     # dictionary to store all DISCOVERED parameters
     system_summary_dct = {}
@@ -42,6 +42,8 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
     host_id_name_lst = []
     # extracted hosts id, wwn
     host_id_fcinitiator_lst = []
+    # extracted relation hostid, controller portid and lunid
+    hostid_ctrlportid_lst = []
     
     # configname which current config is duplicat of
     duplicated_configname = None
@@ -106,8 +108,10 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                             fcport_lst.append([configname] + [fcport_dct.get(param) for param in fcport_params])
             # hosts section start
             elif re.search(pattern_dct['host_header'], line):
+                line = file.readline()
                 collected['host'] = True
-                while not re.search(pattern_dct['hostgroup_or_power_header'], line):
+                # while not re.search(pattern_dct['hostgroup_or_power_header'], line):
+                while not re.search(pattern_dct['section_header'], line):
                     line = file.readline()
                     if not line:
                         break
@@ -142,8 +146,10 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                                 host_lst.append([*host_details_lst, wwn])
             # hosts fcinitiator section start
             elif re.search(pattern_dct['fcinitiator_header'], line):
+                line = file.readline()
                 collected['fcinitiator'] = True
-                while not re.search(pattern_dct['sfp_header'], line):
+                # while not re.search(pattern_dct['sfp_header'], line):
+                while not re.search(pattern_dct['section_header'], line):
                     line = file.readline()
                     if not line:
                         break
@@ -151,6 +157,20 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                         line = reop.extract_list_from_line(host_id_fcinitiator_lst, pattern_dct, 
                                                     line, file, 
                                                     extract_pattern_name= 'host_id_fcinitiator_line', 
+                                                    stop_pattern_name='blank_line', 
+                                                    first_line_skip=False, line_add_values=configname)
+            # relation hostid, ctrl portid and lunid section start
+            elif re.search(pattern_dct['relation_hostid_port_lun_header'], line):
+                line = file.readline()
+                collected['relation_hostid_ctrlport'] = True
+                while not re.search(pattern_dct['section_header'], line):
+                    line = file.readline()
+                    if not line:
+                        break
+                    if re.search(pattern_dct['relation_hostid_port_lun_line'], line):
+                        line = reop.extract_list_from_line(hostid_ctrlportid_lst, pattern_dct, 
+                                                    line, file, 
+                                                    extract_pattern_name= 'relation_hostid_port_lun_line', 
                                                     stop_pattern_name='blank_line', 
                                                     first_line_skip=False, line_add_values=configname)
             else:
@@ -168,5 +188,5 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
             # and appending this list to the list of all systems             
             system_summary_lst.append([system_summary_dct.get(param) for param in system_params])
         
-        storage_oceanstore_lst = [system_summary_lst, fcport_lst, host_lst, host_id_name_lst, host_id_fcinitiator_lst]
+        storage_oceanstore_lst = [system_summary_lst, fcport_lst, host_lst, host_id_name_lst, host_id_fcinitiator_lst, hostid_ctrlportid_lst]
         return storage_oceanstore_lst, info, duplicated_configname

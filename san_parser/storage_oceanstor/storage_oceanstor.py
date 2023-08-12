@@ -43,6 +43,8 @@ def storage_oceanstor_extract(project_constants_lst):
         san_host_id_fcinitiator_oceanstor_lst = []
         # extracted storage configs (sn: configname) to avoid duplicates
         san_extracted_oceanstor_dct = {}
+        # extracted relation hostid, controller portid and lunid
+        san_hostid_ctrlportid_oceanstor_lst = []
         
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('oceanstor', max_title)
@@ -70,7 +72,8 @@ def storage_oceanstor_extract(project_constants_lst):
                     # add current storage config data to the total storage configs
                     for current_storage_lst, san_storage_lst in zip(storage_oceanstore_lst, 
                                                                     [san_system_oceanstor_lst, san_fcport_oceanstor_lst, san_host_oceanstor_lst,
-                                                                     san_host_id_name_oceanstor_lst, san_host_id_fcinitiator_oceanstor_lst]):
+                                                                     san_host_id_name_oceanstor_lst, san_host_id_fcinitiator_oceanstor_lst,
+                                                                     san_hostid_ctrlportid_oceanstor_lst]):
                         if current_storage_lst:
                             san_storage_lst.extend(current_storage_lst)
                     
@@ -89,12 +92,14 @@ def storage_oceanstor_extract(project_constants_lst):
         # convert list to DataFrame
         headers_lst = dfop.list_from_dataframe(re_pattern_df, 
                                                'system_columns', 'fcport_columns', 'host_columns', 
-                                               'hostid_name_columns', 'hostid_fcinitiator_columns')
+                                               'hostid_name_columns', 'hostid_fcinitiator_columns',
+                                               'hostid_ctrlport_relation_columns')
         data_lst = dfop.list_to_dataframe(headers_lst, 
                                           san_system_oceanstor_lst, san_fcport_oceanstor_lst, san_host_oceanstor_lst, 
-                                          san_host_id_name_oceanstor_lst, san_host_id_fcinitiator_oceanstor_lst)
+                                          san_host_id_name_oceanstor_lst, san_host_id_fcinitiator_oceanstor_lst, 
+                                          san_hostid_ctrlportid_oceanstor_lst)
         san_system_oceanstor_df, san_fcport_oceanstor_df, san_host_oceanstor_df, \
-            san_host_id_name_oceanstor_df, san_host_id_fcinitiator_oceanstor_df, *_ = data_lst 
+            san_host_id_name_oceanstor_df, san_host_id_fcinitiator_oceanstor_df, san_hostid_ctrlportid_oceanstor_df, *_ = data_lst 
         
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst) 
@@ -102,11 +107,11 @@ def storage_oceanstor_extract(project_constants_lst):
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
         san_system_oceanstor_df, san_fcport_oceanstor_df, san_host_oceanstor_df, \
-            san_host_id_name_oceanstor_df, san_host_id_fcinitiator_oceanstor_df = data_lst
+            san_host_id_name_oceanstor_df, san_host_id_fcinitiator_oceanstor_df, san_hostid_ctrlportid_oceanstor_df = data_lst
     
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         report.dataframe_to_excel(data_frame, data_name, project_constants_lst)            
     return san_system_oceanstor_df, san_fcport_oceanstor_df, san_host_oceanstor_df, \
-        san_host_id_name_oceanstor_df, san_host_id_fcinitiator_oceanstor_df
+        san_host_id_name_oceanstor_df, san_host_id_fcinitiator_oceanstor_df, san_hostid_ctrlportid_oceanstor_df
             

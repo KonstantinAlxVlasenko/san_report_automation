@@ -35,7 +35,7 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
                                             synergy_module_df, synergy_servers_df,\
                                                 system_3par_df, port_3par_df, host_3par_df, \
                                                     system_oceanstor_df, port_oceanstor_df, host_oceanstor_df,\
-                                                        host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df = extracted_configuration_lst
+                                                        host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df, hostid_ctrlportid_oceanstor_df = extracted_configuration_lst
     # set fabric names and labels
     fabricshow_ag_labels_df = \
         fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, ag_principal_df, project_constants_lst)
@@ -76,8 +76,12 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
     zoning_aggregated_df, alias_aggregated_df, portshow_zoned_aggregated_df = \
         zoning_analysis(switch_params_aggregated_df, portshow_aggregated_df, cfg_df, zone_df, alias_df, 
                             cfg_effective_df, fcrfabric_df, lsan_df, peerzone_df, project_constants_lst)
-    storage_host_aggregated_df = storage_host_analysis(host_3par_df, system_3par_df, port_3par_df, 
-                                                            portshow_aggregated_df, zoning_aggregated_df, project_constants_lst)
+    storage_host_aggregated_df = storage_host_analysis(host_3par_df, system_3par_df, port_3par_df,
+                                                    system_oceanstor_df, port_oceanstor_df, host_oceanstor_df, 
+                                                    host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df, 
+                                                    hostid_ctrlportid_oceanstor_df,
+                                                    portshow_aggregated_df, zoning_aggregated_df, 
+                                                    project_constants_lst)
     sensor_aggregated_df = sensor_analysis(sensor_df, switch_params_aggregated_df, project_constants_lst)
 
     errdump_aggregated_df, raslog_counter_df = \

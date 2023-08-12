@@ -1,1 +1,2 @@
-version 0.5 - Huawei OceanStor configuration filres parsing.
+v0.5 - Huawei OceanStor configuration files parsing.
+v0.6 - Huawei OceanStor presentation.
