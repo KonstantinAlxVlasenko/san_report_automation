@@ -6,6 +6,8 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from .dataframe_presentation import swap_columns
+
 
 def concatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', drop_merge_columns=True):
     """Function to concatenate values in several columns (merge_columns) into summary_column 
@@ -74,8 +76,31 @@ def extract_values_from_column(df, extracted_column: str, pattern_column_lst: li
         # pattern contains groups but str.cotains used to identify mask
         # supress warning message
         warnings.filterwarnings("ignore", 'This pattern has match groups')
-        mask = df[extracted_column].str.contains(pattern, regex=True)
+        mask = df[extracted_column].str.contains(pattern, regex=True, na=False)
         df.loc[mask, columns] = df.loc[mask, extracted_column].str.extract(pattern).values
+    return df
+
+
+def remove_substring(df, column, pattern):
+    """Function to remove substring from the string in column values
+    applying regex pattern"""
+    
+    # get column name with values after substring removal
+    cleaned_column = column + '_cleaned'
+    while cleaned_column in df.columns:
+        cleaned_column += '_cleaned'
+
+    # extract values without substring
+    df = extract_values_from_column(df, extracted_column=column, 
+                                    pattern_column_lst=[(pattern, [cleaned_column])])
+    # copy values which don't contain removed substring
+    df[cleaned_column].fillna(df[column], inplace=True)
+    # swap locations of the original column and column with removed substring
+    df = swap_columns(df, column, cleaned_column)
+    # drop original column
+    df.drop(columns=column, inplace=True)
+    # rename column with removed substring to original column name
+    df.rename(columns={cleaned_column: column}, inplace=True)
     return df
 
 

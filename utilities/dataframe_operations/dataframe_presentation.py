@@ -5,6 +5,7 @@ create new columns with processed data or create new DataFrame"""
 import re
 import pandas as pd
 
+from .dataframe_details import verify_columns_in_dataframe
 
 def dataframe_slice_concatenate(df, column: str, char: str=' '):
     """Function to create comparision DataFrame. 
@@ -66,6 +67,22 @@ def move_column(df, cols_to_move, ref_col: str, place='after'):
     seg1 = [i for i in seg1 if i not in seg2]
     seg3 = [i for i in cols if i not in seg1 + seg2]
     return df[seg1 + seg2 + seg3].copy()
+
+
+def swap_columns(df, column1, column2):
+    """Function to swap two columns locations on DataFrame"""
+     
+    if not verify_columns_in_dataframe(df, columns=[column1, column2]):
+        return df
+    
+    columns_lst = df.columns.to_list()
+    # find columns indexes
+    column1_idx, column2_idx = columns_lst.index(column1), columns_lst.index(column2)
+    # swap column names in list
+    columns_lst[column2_idx], columns_lst[column1_idx] = columns_lst[column1_idx], columns_lst[column2_idx]
+    # reorder DataFrame columns
+    df = df[columns_lst].copy()
+    return df
 
 
 def rename_columns(df, column_name_pattern):

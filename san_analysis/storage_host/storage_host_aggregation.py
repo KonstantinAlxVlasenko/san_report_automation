@@ -1,3 +1,6 @@
+"Module to combine storage hosts and controller ports"
+
+
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
@@ -25,21 +28,22 @@ def storage_host_aggregation(host_3par_df, system_3par_df, port_3par_df,
                                                         portshow_aggregated_df, zoning_aggregated_df)
     # combine hosts from all storages
     storage_host_aggregated_df = pd.concat([storage_host_3par_df, storage_host_oceanstor_df], ignore_index=True)
-    # verify if host and storage ports are in the same fabric
-    storage_host_aggregated_df = dfop.sequential_equality_note(storage_host_aggregated_df, 
-                                                            ['Host_Fabric_name', 'Host_Fabric_label'], 
-                                                            ['Storage_Fabric_name', 'Storage_Fabric_label'],
-                                                            'Host_Storage_Fabric_equal')
-    # verify persona (host mode) is defined in coreespondence with host os
-    storage_host_aggregated_df = verify_host_mode(storage_host_aggregated_df)
-    # verify if storage port and host port are zoned
-    storage_host_aggregated_df = verify_storage_host_zoning(storage_host_aggregated_df, zoning_aggregated_df)
-    # sort aggregated DataFrame
-    sort_columns = ['System_Name', 'Host_Id', 'Host_Name', 'Storage_Port']
-    storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
-    # create storage name column free of duplicates
-    storage_host_aggregated_df = dfop.remove_duplicates_from_column(storage_host_aggregated_df, 'System_Name',
-                                                                duplicates_subset=['configname', 'System_Name'], ) 
+    if not storage_host_aggregated_df.empty:
+        # verify if host and storage ports are in the same fabric
+        storage_host_aggregated_df = dfop.sequential_equality_note(storage_host_aggregated_df, 
+                                                                ['Host_Fabric_name', 'Host_Fabric_label'], 
+                                                                ['Storage_Fabric_name', 'Storage_Fabric_label'],
+                                                                'Host_Storage_Fabric_equal')
+        # verify persona (host mode) is defined in coreespondence with host os
+        storage_host_aggregated_df = verify_host_mode(storage_host_aggregated_df)
+        # verify if storage port and host port are zoned
+        storage_host_aggregated_df = verify_storage_host_zoning(storage_host_aggregated_df, zoning_aggregated_df)
+        # sort aggregated DataFrame
+        sort_columns = ['System_Name', 'Host_Id', 'Host_Name', 'Storage_Port']
+        storage_host_aggregated_df.sort_values(by=sort_columns, inplace=True)
+        # create storage name column free of duplicates
+        storage_host_aggregated_df = dfop.remove_duplicates_from_column(storage_host_aggregated_df, 'System_Name',
+                                                                    duplicates_subset=['configname', 'System_Name'], ) 
     return storage_host_aggregated_df
 
 
@@ -84,7 +88,7 @@ def generate_dorado_v3_hosts(port_oceanstor_df, host_oceanstor_df):
     host__old_columns = ['configname', 'Host_Id', 'Host_Name', 'Os_Type', 'Host_IP', 'Host_Wwn']
     storage_host_dorado_v3_df = host_oceanstor_df[host__old_columns].copy()
     # add controllers ports
-    # dorado v3 doesn't have host and controllers port relation in config filr
+    # dorado v3 doesn't have host and controllers port relation in config file
     # so to each host all controller fcports in 'Up' state is added
     mask_online_port = port_oceanstor_df['Running_Status'].str.contains('up', case=False, na=None)
     port_oceanstor_cp_df = port_oceanstor_df.loc[mask_online_port].copy()
@@ -142,7 +146,6 @@ def explode_hostid_portid_relation(hostid_ctrlportid_oceanstor_df):
     # rename portid column
     hostid_ctrlportid_oceanstor_expl_df.rename(columns={'Exploded_values': 'Storage_Port'}, inplace=True)
     return hostid_ctrlportid_oceanstor_expl_df
-
 
 
 def generate_3par_hosts(host_3par_df, system_3par_df, port_3par_df, 

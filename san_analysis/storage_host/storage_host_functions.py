@@ -1,3 +1,4 @@
+"Module with auxiliary functions to combine storage host DaraFrame"
 
 import numpy as np
 import pandas as pd
@@ -60,14 +61,28 @@ def drop_unequal_fabrics_ports(storage_host_df):
 def verify_host_mode(storage_host_aggregated_df):
     """Function to verify if persona (storage host mode) is defined in correspondence with host os"""
 
-    os_lst = ['vmware', 'windows', 'linux']
+    # os_lst = ['vmware', 'windows', 'linux']
+    # # cumulative host mode mask
+    # mask_persona_correct = None
+    # for os_type in os_lst:
+    #     # host mode matches os name except for linux
+    #     os_mode = os_type if os_type != 'linux' else 'generic'
+    #     # mask for current os
+    #     mask_os = (storage_host_aggregated_df['Persona'].str.lower().str.contains(os_mode) & \
+    #                 storage_host_aggregated_df['Host_OS'].str.lower().str.contains(os_type))
+    #     # add current mask to cumulative mask
+    #     if mask_persona_correct is None:
+    #         mask_persona_correct = mask_os
+    #     else:
+    #         mask_persona_correct = mask_persona_correct | mask_os
+
+    os_type_lst = ['vmware', 'windows', 'linux', 'linux']
+    host_mode_lst = ['vmware', 'windows', 'linux', 'generic']
     # cumulative host mode mask
     mask_persona_correct = None
-    for os_type in os_lst:
-        # host mode matches os name except for linux
-        os_mode = os_type if os_type != 'linux' else 'generic'
+    for os_type, host_mode in zip(os_type_lst, host_mode_lst):
         # mask for current os
-        mask_os = (storage_host_aggregated_df['Persona'].str.lower().str.contains(os_mode) & \
+        mask_os = (storage_host_aggregated_df['Persona'].str.lower().str.contains(host_mode) & \
                     storage_host_aggregated_df['Host_OS'].str.lower().str.contains(os_type))
         # add current mask to cumulative mask
         if mask_persona_correct is None:
@@ -81,7 +96,6 @@ def verify_host_mode(storage_host_aggregated_df):
         np.select([mask_os_notna & mask_persona_correct, mask_os_notna & ~mask_persona_correct], ['Yes', 'No'], default=pd.NA)
     # replace pd.NA values
     storage_host_aggregated_df.fillna(np.nan, inplace=True)
-    
     return storage_host_aggregated_df
 
 

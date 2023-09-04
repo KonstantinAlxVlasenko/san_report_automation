@@ -5,6 +5,7 @@ Created on Thu Jan 27 16:19:32 2022
 @author: vlasenko
 """
 
+import warnings
 import os
 import re
 import sqlite3
@@ -659,3 +660,45 @@ def explode_columns(df, *args, sep=', '):
         current_exploded_df.drop(columns=exploded_columns, inplace=True)
         common_exploded_df = pd.concat([common_exploded_df, current_exploded_df], ignore_index=True)
     return common_exploded_df
+
+
+def extract_values_from_column(df, extracted_column: str, pattern_column_lst: list):
+    """Function to extract values from column. df and column are location from which data extracted.
+    pattern_column_lst is the list containing tuples with two elements. Fist one is the regex pattern 
+    with groups to be extracted. Second is the list of columns (groups) in which extracted values
+    should be stored. Number of groups in pattern and column names have to be equal within tuple
+    but may differ for different tuples.
+    pattern_columns_lst = [(pattern1, ['ColumnA', 'ColumnB', 'ColumnC']), 
+                           (pattern2, [''ColumnA', 'ColumnD'])]
+    """
+    
+    for pattern, columns in pattern_column_lst:
+        # pattern contains groups but str.cotains used to identify mask
+        # supress warning message
+        warnings.filterwarnings("ignore", 'has match groups')
+        mask = df[extracted_column].str.contains(pattern, regex=True, na=False)
+        df.loc[mask, columns] = df.loc[mask, extracted_column].str.extract(pattern).values
+    return df
+
+
+def add_swclass_weight(swclass_df):
+    """Function to add switch class weight column based on switch class column.
+    Director has highest weight"""
+    
+    swclass_df['switchClass_weight'] = swclass_df['switchClass']
+    switchClass_weight_dct = {'DIR': 1, 'ENTP': 2, 'MID': 3, 'ENTRY': 4, 'EMB': 5, 'EXT': 6}
+    mask_assigned_switch_class = swclass_df['switchClass'].isin(switchClass_weight_dct.keys())
+    swclass_df.loc[~mask_assigned_switch_class, 'switchClass_weight'] = np.nan
+    swclass_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
+    swclass_df['switchClass_weight'].fillna(7, inplace=True)
+    
+
+def sort_fabric_swclass_swtype_swname(switch_df, switch_columns, fabric_columns=['Fabric_name', 'Fabric_label']):
+    """Function to sort swithes in fabric. SwitchType (model) is sorted in descending order
+    so newest models are on the top of the list"""
+    
+    sort_columns = fabric_columns + ['switchClass_weight', 'switchType'] + switch_columns
+    ascending_flags = [True] * len(fabric_columns) + [True, False] + [True] * len(switch_columns)
+    switch_df.sort_values(by=sort_columns, ascending=ascending_flags, inplace=True)
+    
+    
