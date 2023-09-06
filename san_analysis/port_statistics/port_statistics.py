@@ -5,11 +5,13 @@ import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
 import utilities.module_execution as meop
 import utilities.report_operations as report
+import utilities.servicefile_operations as sfop
 
+from .licenseport_aggregation import licenseport_statisctics_aggregated
 from .port_statistics_aggregation import port_statisctics_aggregated
 
 
-def port_statistics_analysis(portshow_aggregated_df, project_constants_lst):
+def port_statistics_analysis(licenseport_df, portshow_aggregated_df, switch_params_aggregated_df, project_constants_lst):
     """Main function to count Fabrics statistics"""
 
     # imported project constants required for module execution
@@ -29,17 +31,29 @@ def port_statistics_analysis(portshow_aggregated_df, project_constants_lst):
     force_run = meop.verify_force_run(data_names, data_lst, project_steps_df, 
                                             max_title, analyzed_data_names)
     if force_run:
+        # data imported from init file (regular expression patterns) to extract values from data columns
+        pattern_dct, *_ = sfop.regex_pattern_import('port_statistics', max_title)
+        
         # current operation information string
-        info = f'Counting up Fabrics statistics'
-        print(info, end =" ")  
-
-        port_statistics_df = port_statisctics_aggregated(portshow_aggregated_df)
+        info = f'Counting up license port statistics'
+        print(info, end =" ") 
+        licenseport_statistics_df, logical_sw_usage = licenseport_statisctics_aggregated(
+            licenseport_df, portshow_aggregated_df, switch_params_aggregated_df, pattern_dct)
         # after finish display status
         meop.status_info('ok', max_title, len(info))
+        
+        # current operation information string
+        info = f'Counting up fabric ports statistics'
+        print(info, end =" ")  
+        port_statistics_df = port_statisctics_aggregated(portshow_aggregated_df, licenseport_statistics_df, logical_sw_usage)
+        # after finish display status
+        meop.status_info('ok', max_title, len(info))
+        
         # get report DataFrame
+        licenseport_statistics_report_df = licenseport_statistics_report(licenseport_statistics_df, report_headers_df)
         port_statistics_report_df = port_statistics_report(port_statistics_df, report_headers_df, report_columns_usage_sr)
         # create list with partitioned DataFrames
-        data_lst = [port_statistics_df, port_statistics_report_df]
+        data_lst = [licenseport_statistics_df, port_statistics_df, licenseport_statistics_report_df, port_statistics_report_df]
         # writing data to sql
         dbop.write_database(project_constants_lst, data_names, *data_lst)      
     # verify if loaded data is empty and replace information string with empty DataFrame
@@ -50,6 +64,16 @@ def port_statistics_analysis(portshow_aggregated_df, project_constants_lst):
     for data_name, data_frame in zip(data_names, data_lst):
         report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
     return port_statistics_df
+
+
+def licenseport_statistics_report(licenseport_statistics_df, report_headers_df):
+    """Function to create report table out of licenseport_statistics DataFrame"""
+
+    licenseport_statistics_report_df = licenseport_statistics_df.copy()
+    licenseport_statistics_report_df.drop(columns = ['configname', 'chassis_wwn'], inplace=True)
+    licenseport_statistics_report_df = report.translate_dataframe(licenseport_statistics_report_df, report_headers_df, 'Лицензии_портов_перевод')
+    return licenseport_statistics_report_df
+
 
 
 def port_statistics_report(port_statistics_df, report_headers_df, report_columns_usage_sr):

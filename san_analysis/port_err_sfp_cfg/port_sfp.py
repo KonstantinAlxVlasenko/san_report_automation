@@ -26,7 +26,7 @@ def port_sfp_join(portshow_aggregated_df, sfpshow_df, sfp_model_df, pattern_dct)
                     ['TX_Power_dBm', -6, 2, 2, True],
                     ['RX_Power_uW', 200, 1100, 200, True],
                     ['TX_Power_uW', 200, 1100, 200, True],
-                    ['Temperature_Centigrade', 30, 60, 30, False],
+                    ['Temperature_Centigrade', 40, 70, 20, False],
                     ['Pwr_On_Time_years', 1, 3, 2, False]]
 
     pwr_column_pattern = r"(.+?)_(?:dBm|uW)"

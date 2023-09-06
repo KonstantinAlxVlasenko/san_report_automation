@@ -11,12 +11,16 @@ import pandas as pd
 import utilities.dataframe_operations as dfop
 
 
-def port_statisctics_aggregated(portshow_aggregated_df):
+def port_statisctics_aggregated(portshow_aggregated_df, licenseport_statistics_df, logical_sw_usage):
     """Function to create aggregated statistics table by merging DataFrames"""
 
-    # to find out if there are any ports without license except qflex ports
-    portshow_aggregated_df['qflex_port_no_license'] = \
-        portshow_aggregated_df['connection_details'].str.extract('(No QFLEX Ports on Demand license)', flags = re.IGNORECASE)
+    # qflex ports license counting is moved to the licenseport_statistics
+    # # to find out if there are any ports without license except qflex ports
+    # portshow_aggregated_df['qflex_port_no_license'] = \
+    #     portshow_aggregated_df['connection_details'].str.extract('(No QFLEX Ports on Demand license)', flags = re.IGNORECASE)
+    
+    # verify if all switch ports in san have licenses 
+    all_ports_licensed = verify_all_ports_licensed(licenseport_statistics_df)
     
     # mark device_class with npiv tag for devices connected via npiv
     mask_npiv = portshow_aggregated_df['Device_type'].str.contains('NPIV', na=False)
@@ -24,7 +28,10 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     portshow_aggregated_df['deviceType_npiv'].fillna(portshow_aggregated_df['deviceType'], inplace=True)
 
     # count statistics for columns
-    stat_columns = ['portState', 'license', 'qflex_port_no_license', 'portPhys', 'speed', 'deviceType_npiv', 'Device_type', 'portType', 'zoning_enforcement']
+    stat_columns = ['portState', 'portPhys', 'speed', 'deviceType_npiv', 'Device_type', 'portType', 'zoning_enforcement']
+    # # qflex ports license counting is moved to the licenseport_statistics
+    # stat_columns = ['portState', 'license', 'qflex_port_no_license', 'portPhys', 'speed', 'deviceType_npiv', 'Device_type', 'portType', 'zoning_enforcement']
+
     stat_lst = [count_column_statistics(portshow_aggregated_df, column) for column in stat_columns]
     # merge all statistics DataFrames in aggregated DataFrame
     port_statistics_df = stat_lst[0].copy()
@@ -40,16 +47,31 @@ def port_statisctics_aggregated(portshow_aggregated_df):
     port_statistics_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn'], inplace=True)
     # concatenate All row so it's at the bottom of statistics DataFrame
     port_statistics_df = pd.concat([port_statistics_df, port_statistics_all_df], ignore_index=True)
-    # count available ports
-    port_statistics_df['Available_licensed'] = port_statistics_df['Licensed'] - port_statistics_df['Online']
-    # count percantage of occupied ports for each switch as ratio of Online ports(occupied) number to Licensed ports number
-    port_statistics_df['%_occupied'] = round(port_statistics_df['Online'].div(port_statistics_df['Licensed'])*100, 1)
+    
+    # count available ports only if all ports in the fabric are licensed
+    if all_ports_licensed:
+        # count available ports
+        port_statistics_df['Available_ports'] = port_statistics_df['Total_ports_number'] - port_statistics_df['Online']
+        # count percantage of occupied ports for each switch as ratio of Online ports(occupied) number to Licensed ports number
+        port_statistics_df['%_occupied'] = round(port_statistics_df['Online'].div(port_statistics_df['Total_ports_number'])*100, 1)        
+
+    # counting licensed available ports moved to licenseport_statistics
+    # # count available ports
+    # port_statistics_df['Available_licensed'] = port_statistics_df['Licensed'] - port_statistics_df['Online']
+    # # count percantage of occupied ports for each switch as ratio of Online ports(occupied) number to Licensed ports number
+    # port_statistics_df['%_occupied'] = round(port_statistics_df['Online'].div(port_statistics_df['Licensed'])*100, 1)
+    
     # count N:E ratio
     port_ne_df = n_e_statistics(portshow_aggregated_df)
     port_statistics_df = port_statistics_df.merge(port_ne_df, how='left', on=['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn'])
     # move columns
-    port_statistics_df = dfop.move_column(port_statistics_df, cols_to_move=['Total_ports_number', 'Online', 'Licensed', 'Available_licensed', '%_occupied'],
-                                        ref_col='switchWwn')
+    port_statistics_df = dfop.move_column(port_statistics_df, 
+                                          cols_to_move=['Total_ports_number', 'Online', 'Licensed', 'Available_ports', '%_occupied'], 
+                                          ref_col='switchWwn')    
+    
+    # counting licensed available ports moved to licenseport_statistics
+    # port_statistics_df = dfop.move_column(port_statistics_df, cols_to_move=['Total_ports_number', 'Online', 'Licensed', 'Available_licensed', '%_occupied'],
+    #                                     ref_col='switchWwn')
     return port_statistics_df
 
 
@@ -170,3 +192,14 @@ def n_e(group):
 
     columns_names = ['N:E_int', 'N:E_num', 'N:E_bw_int', 'N:E_bw']
     return pd.Series([ne_num, ne_num_str, ne_bw, ne_bw_str], index= columns_names)
+
+
+def verify_all_ports_licensed(licenseport_statistics_df):
+    """Function to verify if all ports in san have licenses"""
+
+    licenseport_chassis_df = licenseport_statistics_df.dropna(subset='configname')
+    mask_dropped_fabric = licenseport_statistics_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
+    licenseport_chassis_df = licenseport_chassis_df.loc[~mask_dropped_fabric]
+    licenseport_chassis_df.columns.to_list()
+    all_ports_licensed =  licenseport_chassis_df['Ports are available in this switch'].equals(licenseport_chassis_df['Port assignments are provisioned for use in this switch'])
+    return all_ports_licensed

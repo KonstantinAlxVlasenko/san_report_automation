@@ -76,6 +76,7 @@ def extract_values_from_column(df, extracted_column: str, pattern_column_lst: li
         # pattern contains groups but str.cotains used to identify mask
         # supress warning message
         warnings.filterwarnings("ignore", 'This pattern has match groups')
+        warnings.filterwarnings("ignore", 'This pattern is interpreted as a regular expression, and has match groups')
         mask = df[extracted_column].str.contains(pattern, regex=True, na=False)
         df.loc[mask, columns] = df.loc[mask, extracted_column].str.extract(pattern).values
     return df

@@ -59,7 +59,7 @@ def system_configuration_analysis(extracted_configuration_lst, project_constants
                                 project_constants_lst)
     fcr_xd_proxydev_df = fcr_xd_device_analysis(switch_params_aggregated_df, portshow_aggregated_df, 
                                                 fcrproxydev_df, fcrxlateconfig_df, project_constants_lst)
-    fabric_port_statistics_df = port_statistics_analysis(portshow_aggregated_df, project_constants_lst)
+    fabric_port_statistics_df = port_statistics_analysis(licenseport_df, portshow_aggregated_df, switch_params_aggregated_df, project_constants_lst)
 
     switch_pair_df, npv_ag_connected_devices_df = switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df, project_constants_lst)
 

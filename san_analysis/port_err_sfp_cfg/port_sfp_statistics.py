@@ -38,9 +38,11 @@ def sfp_prior_preparation(portshow_sfp_aggregated_df, pattern_dct):
     # transceiver support
     comment_sfp_support(sfp_aggregated_modified_df)
     # transceiver form factor (qsfp, dsfp)
-    comment_specific_sfp(sfp_aggregated_modified_df, sfp_specification_column='Transceiver_form_factor', sfp_specification_name='Form factor', normal_value='sfp', upper_case_spec=True)
+    comment_specific_sfp(sfp_aggregated_modified_df, sfp_specification_column='Transceiver_form_factor', 
+                         sfp_specification_name='Form factor', normal_value='sfp', upper_case_spec=True)
     # long distance sfps
-    comment_specific_sfp(sfp_aggregated_modified_df, sfp_specification_column='Transceiver_distanceMax', sfp_specification_name='Distance', normal_value='normal')
+    comment_specific_sfp(sfp_aggregated_modified_df, sfp_specification_column='Transceiver_distanceMax', 
+                         sfp_specification_name='Distance', normal_value='normal')
     # merge vendor, part number and transcever details (speed and mode)    
     sfp_aggregated_modified_df = dfop.merge_columns(
         sfp_aggregated_modified_df, summary_column='Transceiver_Name_PN', 
@@ -126,29 +128,38 @@ def count_sfp_statistics(portshow_sfp_aggregated_df, pattern_dct):
     # columns to distinguish single switch
     switch_columns = ['Fabric_name', 'Fabric_label', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn']
     # columns to count values statistics in
-    sfp_stats_columns = ['Port_quantity', 'Port_license', 'Transceiver_quantity', 
+    sfp_stats_columns = ['Port_quantity', 'Transceiver_quantity', 
                          'Transceiver_Supported_stats', 'Transceiver_form_factor_stats', 'Transceiver_distanceMax_stats', 
                         'Transceiver_speed_mode_extracted', 'Transceiver_Name_PN',
                         'PortPhys_transceiver',
                         'RX_Power_dBm_stats', 'TX_Power_dBm_stats', 'RX_Power_uW_stats', 'TX_Power_uW_stats',
                         'Temperature_Centigrade_stats', 'Pwr_On_Time_years_stats']
+    
+    # counting licensed ports removed
+    # sfp_stats_columns = ['Port_quantity', 'Port_license', 'Transceiver_quantity', 
+    #                      'Transceiver_Supported_stats', 'Transceiver_form_factor_stats', 'Transceiver_distanceMax_stats', 
+    #                     'Transceiver_speed_mode_extracted', 'Transceiver_Name_PN',
+    #                     'PortPhys_transceiver',
+    #                     'RX_Power_dBm_stats', 'TX_Power_dBm_stats', 'RX_Power_uW_stats', 'TX_Power_uW_stats',
+    #                     'Temperature_Centigrade_stats', 'Pwr_On_Time_years_stats']
 
     # count statistics on switch level
     sfp_statistics_switch_df = dfop.count_statistics(
         sfp_aggregated_modified_df, connection_grp_columns=switch_columns, stat_columns=sfp_stats_columns)
-    # count licensed ports wo transceiverS
     
-    if  'Port does not use an SFP or is disabled' in sfp_statistics_switch_df.columns:
-        sfp_statistics_switch_df['Port does not use an SFP or is disabled'].fillna(0, inplace=True)
-        # number of licensed ports greater of equal port wo sfp
-        mask_lic_ge_nosfp = sfp_statistics_switch_df['Licensed'].ge(sfp_statistics_switch_df[['Transceiver_quantity', 'Port does not use an SFP or is disabled']].sum(axis=1))
-        sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed_wo_SFP'] = \
-            sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed'] - sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, ['Transceiver_quantity', 'Port does not use an SFP or is disabled']].sum(axis=1)
-    else:
-        # number of licensed ports greater of equal port wo sfp
-        mask_lic_ge_nosfp = sfp_statistics_switch_df['Licensed'].ge(sfp_statistics_switch_df['Transceiver_quantity'])
-        sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed_wo_SFP'] = \
-            sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed'] - sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Transceiver_quantity']
+    # counting licensed ports wo transceiver removed
+    # # count licensed ports wo transceiver
+    # if  'Port does not use an SFP or is disabled' in sfp_statistics_switch_df.columns:
+    #     sfp_statistics_switch_df['Port does not use an SFP or is disabled'].fillna(0, inplace=True)
+    #     # number of licensed ports greater of equal port wo sfp
+    #     mask_lic_ge_nosfp = sfp_statistics_switch_df['Licensed'].ge(sfp_statistics_switch_df[['Transceiver_quantity', 'Port does not use an SFP or is disabled']].sum(axis=1))
+    #     sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed_wo_SFP'] = \
+    #         sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed'] - sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, ['Transceiver_quantity', 'Port does not use an SFP or is disabled']].sum(axis=1)
+    # else:
+    #     # number of licensed ports greater of equal port wo sfp
+    #     mask_lic_ge_nosfp = sfp_statistics_switch_df['Licensed'].ge(sfp_statistics_switch_df['Transceiver_quantity'])
+    #     sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed_wo_SFP'] = \
+    #         sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Licensed'] - sfp_statistics_switch_df.loc[mask_lic_ge_nosfp, 'Transceiver_quantity']
     
     # count statistics on fabric name and fabric label levels
     sfp_statistics_summary_df = dfop.count_summary(sfp_statistics_switch_df, group_columns=['Fabric_name', 'Fabric_label'])
@@ -159,6 +170,11 @@ def count_sfp_statistics(portshow_sfp_aggregated_df, pattern_dct):
         sfp_statistics_switch_df, sfp_statistics_summary_df, sfp_statistics_all_df, sort_columns=switch_columns)
     # move sfp free ports column
     sfp_statistics_df = dfop.move_column(sfp_statistics_df, 
-                                         cols_to_move=['Licensed_wo_SFP', 'No_Module', 'No SFP installed in port', 
+                                         cols_to_move=['No_Module', 'No SFP installed in port', 
                                                        'Port does not use an SFP or is disabled'], ref_col='Transceiver_quantity')
+    # counting licensed ports removed
+    # sfp_statistics_df = dfop.move_column(sfp_statistics_df, 
+    #                                      cols_to_move=['Licensed_wo_SFP', 'No_Module', 'No SFP installed in port', 
+    #                                                    'Port does not use an SFP or is disabled'], ref_col='Transceiver_quantity')
+
     return sfp_statistics_df

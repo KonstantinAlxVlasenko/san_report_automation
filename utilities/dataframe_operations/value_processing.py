@@ -39,3 +39,15 @@ def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list,
     wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True)
     wwn_df.drop(columns=[wwnn_column], inplace=True)
     return wwn_df
+
+
+def add_swclass_weight(swclass_df):
+    """Function to add switch class weight column based on switch class column.
+    Director has highest weight"""
+    
+    swclass_df['switchClass_weight'] = swclass_df['switchClass']
+    switchClass_weight_dct = {'DIR': 1, 'ENTP': 2, 'MID': 3, 'ENTRY': 4, 'EMB': 5, 'EXT': 6}
+    mask_assigned_switch_class = swclass_df['switchClass'].isin(switchClass_weight_dct.keys())
+    swclass_df.loc[~mask_assigned_switch_class, 'switchClass_weight'] = np.nan
+    swclass_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
+    swclass_df['switchClass_weight'].fillna(7, inplace=True)

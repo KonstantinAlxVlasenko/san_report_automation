@@ -104,3 +104,12 @@ def rename_columns(df, column_name_pattern):
     rename_dct = dict(zip(original_columns, renamed_columns))
     df.rename(columns=rename_dct, inplace=True)
     return renamed_columns
+
+
+def sort_fabric_swclass_swtype_swname(switch_df, switch_columns, fabric_columns=['Fabric_name', 'Fabric_label']):
+    """Function to sort swithes in fabric. SwitchType (model) is sorted in descending order
+    so newest models are on the top of the list"""
+    
+    sort_columns = fabric_columns + ['switchClass_weight', 'switchType'] + switch_columns
+    ascending_flags = [True] * len(fabric_columns) + [True, False] + [True] * len(switch_columns)
+    switch_df.sort_values(by=sort_columns, ascending=ascending_flags, inplace=True)
