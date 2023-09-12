@@ -3,49 +3,9 @@
 import numpy as np
 import pandas as pd
 
+from .dataframe_presentation import sort_fabric_swclass_swtype_swname
 from .value_presentation import concatenate_columns
 from .value_processing import count_bandwidth
-
-
-# def count_statistics(df, connection_grp_columns: list, stat_columns: list, port_qunatity_column: str, speed_column: str):
-#     """Function to count statistics for each pair of switches connection.
-#     stat_columns is the list of columns for whish statistics is counted for,
-#     speed_column - column name containing link speed connecion to count
-#     connection bandwidth. connection_grp_columns is the list of columns defining 
-#     individual connection to count statistics and bandwidth for that connection."""
-
-#     statistics_df = pd.DataFrame()
-#     bandwidth_df = count_bandwidth(df, speed_column, connection_grp_columns)
-    
-#     # drop empty columns from the list
-#     stat_columns = [column for column in stat_columns if df[column].notna().any()]
-#     # index list to groupby switches connection on to count statistics
-#     index_lst = [df[column] for column in connection_grp_columns]
-
-#     # in case some values in first columns of stat_columns is none
-#     df['tmp_column'] = 'tmp'
-
-#     # count statistcics for each column from stat_columns in df DataFrame
-#     for column in ['tmp_column', *stat_columns]:
-#         # count statistics for current column
-#         current_statistics_df = pd.crosstab(index = index_lst,
-#                                 columns = df[column])
-
-#         # add connection bandwidth column after column with port quantity 
-#         if column == port_qunatity_column:
-#             current_statistics_df = current_statistics_df.merge(bandwidth_df, how='left',
-#                                                                 left_index=True, right_index=True)
-#         # add current_statistics_df DataFrame to statistics_df DataFrame
-#         if statistics_df.empty:
-#             statistics_df = current_statistics_df.copy()
-#         else:
-#             statistics_df = statistics_df.merge(current_statistics_df, how='left', 
-#                                                 left_index=True, right_index=True)
-    
-#     if 'tmp' in statistics_df.columns:
-#         statistics_df.drop(columns=['tmp'], inplace=True)
-#     statistics_df.reset_index(inplace=True)
-#     return statistics_df
 
 
 def count_statistics(df, connection_grp_columns: list, stat_columns: list, 
@@ -116,6 +76,22 @@ def count_summary(df, group_columns: list, count_columns: list=None, fn: str='su
         # increase group size
         group_columns.pop()
     return summary_df
+
+
+def add_fname_flabel_stats_summary(statistics_df, switch_columns, drop_columns=['switchClass', 'switchClass_weight', 'switchType']):
+    """Function to add fabric_name - fabric_label levels statistics summary to the statistics_df.
+    statistics_df must have 'switchClass_weight', 'switchType' columns"""
+    
+    # count summary for fabric_name and fabric_label levels
+    stats_cp_df = statistics_df.copy()
+    stats_cp_df.drop(columns=['switchClass_weight', 'switchType'], inplace=True)
+    statistics_summary_df = count_summary(stats_cp_df, group_columns=['Fabric_name', 'Fabric_label'])
+    # concatenate chassis and fname_flabel_summary statistics DataFrames
+    statistics_df = pd.concat([statistics_df, statistics_summary_df], ignore_index=True)
+    sort_fabric_swclass_swtype_swname(statistics_df, switch_columns)
+    if drop_columns:
+        statistics_df.drop(columns=drop_columns, inplace=True)
+    return statistics_df, statistics_summary_df
 
 
 def count_all_row(statistics_summary_df):

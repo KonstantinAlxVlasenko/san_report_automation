@@ -1,3 +1,7 @@
+"""Module to extract port quantity related with license port statistics, count available ports
+and occupied ports percantage"""
+
+
 import re
 
 import numpy as np
@@ -43,7 +47,7 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
     licenseport_statistics_df.loc[mask_director, 'Port assignments are provisioned for use in this switch'] = \
         licenseport_statistics_df['Total_ports_number']
     # add fabric_name - fabric_label levels statistics summary
-    licenseport_statistics_df, licenseport_statistics_summary_df = add_fname_flabel_stats_summary(licenseport_statistics_df)
+    licenseport_statistics_df, licenseport_statistics_summary_df = dfop.add_fname_flabel_stats_summary(licenseport_statistics_df, switch_columns=['chassis_name'])
     # add summary statistics row for all fabrics (metasan)
     licenseport_statistics_df = add_metasan_summary(licenseport_statistics_df, licenseport_statistics_summary_df, logical_sw_usage)
     # count free ports for which license is available, ports for which license is not availble
@@ -225,19 +229,6 @@ def add_fname_flabel(licenseport_statistics_df, portshow_aggregated_df, switch_p
     return licenseport_statistics_df, logical_sw_usage
 
 
-def add_fname_flabel_stats_summary(licenseport_statistics_df):
-    """Function to add fabric_name - fabric_label levels statistics summary to the licenseport_statistics_df"""
-    
-    # count summary for fabric_name and fabric_label levels
-    licenseport_stats_cp_df = licenseport_statistics_df.copy()
-    licenseport_stats_cp_df.drop(columns=['switchClass_weight', 'switchType'], inplace=True)
-    licenseport_statistics_summary_df = dfop.count_summary(licenseport_stats_cp_df, group_columns=['Fabric_name', 'Fabric_label'])
-    # concatenate chassis and fname_flabel_summary statistics DataFrames
-    licenseport_statistics_df = pd.concat([licenseport_statistics_df, licenseport_statistics_summary_df], ignore_index=True)
-    dfop.sort_fabric_swclass_swtype_swname(licenseport_statistics_df, switch_columns=['chassis_name'])
-    return licenseport_statistics_df, licenseport_statistics_summary_df
-
-
 def add_metasan_summary(licenseport_statistics_df, licenseport_statistics_summary_df, logical_sw_usage):
     """Function to add summary statistics row for all fabrics (metasan).
     If switches are not groupped by fabric names (logical switches are present) 
@@ -246,7 +237,8 @@ def add_metasan_summary(licenseport_statistics_df, licenseport_statistics_summar
     than total row is counted and added to the licenseport_statistics_df"""
 
     if logical_sw_usage:
-        licenseport_statistics_df.drop(columns=['Fabric_name', 'switchClass',  'switchClass_weight', 'switchType'], inplace=True)
+        licenseport_statistics_df.drop(columns=['Fabric_name'], inplace=True)
+        # licenseport_statistics_df.drop(columns=['Fabric_name', 'switchClass',  'switchClass_weight', 'switchType'], inplace=True) dropping moved to main fn remove
         # mark All Fabric label
         licenseport_statistics_df['Fabric_label'].fillna('All', inplace=True)
     else:
@@ -254,7 +246,7 @@ def add_metasan_summary(licenseport_statistics_df, licenseport_statistics_summar
         licenseport_statistics_all_df = dfop.count_all_row(licenseport_statistics_summary_df)
         # concatenate All row so it's at the bottom of statistics DataFrame
         licenseport_statistics_df = pd.concat([licenseport_statistics_df, licenseport_statistics_all_df], ignore_index=True)
-        licenseport_statistics_df.drop(columns=['switchClass',  'switchClass_weight', 'switchType'], inplace=True)
+        # licenseport_statistics_df.drop(columns=['switchClass',  'switchClass_weight', 'switchType'], inplace=True) dropping moved to main fn remove
     return licenseport_statistics_df
 
 

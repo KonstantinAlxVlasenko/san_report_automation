@@ -60,14 +60,16 @@ patterns = ['(\d+) +(.+in +this +switch)',
             '(\d+) +(.+to +the +base +switch +allowance +or +installed licenses *[a-z ]*)',
             '(\d+) +(license +(?:reservations?|assignments?).+)',
             '(.+?) +POD +method',
-            '(.+?) +\(indicated by \*\)']
+            '(.+?) +\(indicated by \*\)',
+            '(.+) +license is installed']
 
 
 pattern_names = ['ports_in_this_switch',
                 'ports_assigned',
                 'license_reservations',
                 'pod_method',
-                'inicated_by']
+                'inicated_by',
+                'license_installed']
 
 
     
@@ -86,6 +88,8 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
     licenseport_extracted_df = straighten_licenseport_titles(licenseport_extracted_df, pattern_dct)
     # filter portquantity related rows and find total ports for the same title of the same switch
     licenseport_num_df = get_portquantity(licenseport_extracted_df)
+    # filter licenses installed
+    licenseport_installed_df = get_installed_licenses(licenseport_extracted_df)
     # filter licence pod method
     licenseport_pod_df = licenseport_extracted_df.dropna(subset=['POD_method']).copy()
     # create statistics df using license port titles  as columns and ports quantity for each title as values 
@@ -117,6 +121,10 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
     licenseport_statistics_df = dfop.dataframe_fillna(licenseport_statistics_df, licenseport_pod_df, 
                                                       join_lst=['configname', 'chassis_name'], 
                                                       filled_lst=['POD_method'])
+    # add installed licenses
+    licenseport_statistics_df = dfop.dataframe_fillna(licenseport_statistics_df, licenseport_installed_df, 
+                                                      join_lst=['configname', 'chassis_name'], 
+                                                      filled_lst=['License_installed'])    
     return licenseport_statistics_df
     
     
@@ -131,9 +139,10 @@ def extract_licenseport_values(licenseport_df, pattern_dct):
                                                                    (pattern_dct['ports_in_this_switch'], ['Value', 'Name']),
                                                                    (pattern_dct['ports_assigned'], ['Value', 'Name']),
                                                                    (pattern_dct['license_reservations'], ['Value', 'Name']),
-                                                                   (pattern_dct['pod_method'], ['POD_method'])
+                                                                   (pattern_dct['pod_method'], ['POD_method']),
+                                                                   (pattern_dct['license_installed'], ['License_installed'])
                                                                    ])
-    licenseport_extracted_df.dropna(subset=['Value', 'Name', 'POD_method'], how='all', inplace=True)
+    licenseport_extracted_df.dropna(subset=['Value', 'Name', 'POD_method', 'License_installed'], how='all', inplace=True)
     licenseport_extracted_df.drop(columns=['licenseport'], inplace=True)
     return licenseport_extracted_df
 
@@ -192,6 +201,9 @@ def straighten_licenseport_titles(licenseport_extracted_df, pattern_dct):
     rplcmnt_dct = {'License assignment is held by an offline port': 'License assignments are held by offline ports',
                    'License reservation is still available for use by unassigned ports': 'License reservations are still available for use by unassigned ports'}
     licenseport_extracted_df.replace({'Name': rplcmnt_dct}, inplace=True)
+    # remove from installed licenses information how mane ports may be add by installing pod license
+    mask_more_assignments = licenseport_extracted_df['License_installed'].str.contains('more assignments are added if', na=False)
+    licenseport_extracted_df.loc[mask_more_assignments, 'License_installed'] = np.nan    
     return licenseport_extracted_df
 
 # # extract license port title, ports quantity related to the title and POD methiod
@@ -212,10 +224,23 @@ def get_portquantity(licenseport_extracted_df):
     licenseport_num_df = licenseport_num_df.reset_index()
     return licenseport_num_df
 
+def get_installed_licenses(licenseport_extracted_df):
+    """Function to filter installed licenses related rows from licenseport_extracted_df
+    and join licenses for the same switch"""
+    
+    licenseport_installed_df = licenseport_extracted_df.dropna(subset=['License_installed']).copy()
+    if not licenseport_installed_df.empty:
+        licenseport_installed_df = licenseport_installed_df.groupby(['configname', 'chassis_name'])['License_installed'].apply(lambda x: ', '.join(x)).reset_index()
+    return licenseport_installed_df
+
+
 # # filter portquantity related rows and find total ports for the same title of the same switch
 # licenseport_num_df = get_portquantity(licenseport_extracted_df)
+# # filter licenses installed
+# licenseport_installed_df = get_installed_licenses(licenseport_extracted_df)
 # # filter licence pod method
 # licenseport_pod_df = licenseport_extracted_df.dropna(subset=['POD_method']).copy()
+
 
 
 
@@ -420,3 +445,8 @@ def count_ports(licenseport_statistics_df):
 licenseport_statistics_df = licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df, 
                                        switch_params_aggregated_df, pattern_dct)
 
+licenseport_chassis_df = licenseport_statistics_df.dropna(subset='configname')
+mask_dropped_fabric = licenseport_statistics_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
+licenseport_chassis_df = licenseport_chassis_df.loc[~mask_dropped_fabric]
+licenseport_chassis_df.columns.to_list()
+all_ports_licensed =  licenseport_chassis_df['Ports are available in this switch'].equals(licenseport_chassis_df['Port assignments are provisioned for use in this switch'])

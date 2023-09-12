@@ -1,9 +1,8 @@
 """
 Module to get aggreagated connected ports statistics DataFrame 
-out of portshow_aggregated_df and switchshow_ports_df DataFrame 
+out of portshow_aggregated_df DataFrame 
 """
 
-import re
 
 import numpy as np
 import pandas as pd
@@ -38,13 +37,16 @@ def port_statisctics_aggregated(portshow_aggregated_df, licenseport_statistics_d
     for stat_df in stat_lst[1:]:
         port_statistics_df = port_statistics_df.merge(stat_df, how='left', left_index=True, right_index=True)
     port_statistics_df.reset_index(inplace=True)
+    # add switch class
+    port_statistics_df = dfop.dataframe_fillna(port_statistics_df, portshow_aggregated_df, 
+                                                     join_lst=['switchWwn'], 
+                                                     filled_lst=['switchClass', 'switchType'])
+    # add switch class weight to sort switches
+    dfop.add_swclass_weight(port_statistics_df)    
     # count summary for fabric_name and fabric_label levels
-    port_statistics_summary_df = dfop.count_summary(port_statistics_df, group_columns=['Fabric_name', 'Fabric_label'])
+    port_statistics_df, port_statistics_summary_df = dfop.add_fname_flabel_stats_summary(port_statistics_df, switch_columns=['chassis_name', 'switchName'])    
     # count row All with total values for all fabris
     port_statistics_all_df = dfop.count_all_row(port_statistics_summary_df)
-    # concatenate all statistics DataFrames
-    port_statistics_df = pd.concat([port_statistics_df, port_statistics_summary_df], ignore_index=True)
-    port_statistics_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchName', 'switchWwn'], inplace=True)
     # concatenate All row so it's at the bottom of statistics DataFrame
     port_statistics_df = pd.concat([port_statistics_df, port_statistics_all_df], ignore_index=True)
     
@@ -99,7 +101,6 @@ def count_column_statistics(portshow_aggregated_df, column: str):
                                                 portshow_cp_df.chassis_name,
                                                 portshow_cp_df.switchName, portshow_cp_df.switchWwn], 
                                     columns = portshow_cp_df[column])
-    
     if column == 'portState':
         column_statistics_df['Total_ports_number'] = column_statistics_df.sum(axis=1)
     elif column == 'license' and not 'Not_licensed' in column_statistics_df.columns:
@@ -107,7 +108,7 @@ def count_column_statistics(portshow_aggregated_df, column: str):
     elif column == 'speed':
         # speed columns dictionary to rename DataFrame columns for correct sorting order
         speed_columns = {'2G': 'A', 'N2': 'B', '4G': 'C', 'N4': 'D', '8G': 'E', 'N8': 'F', 
-                            '16G': 'G', 'N16': 'H', '32G': 'I', 'N32': 'J',  '64G': 'K', 'N64': 'L'}
+                            '16G': 'G', 'N16': 'H', '32G': 'I', 'N32': 'J',  '64G': 'K', 'N64': 'L', '128G': 'M', 'N128': 'N'}
         # invert speed columns dictionary to rename back DataFrame columns after sorting 
         speed_columns_invert = {value: key for key, value in speed_columns.items()}
         column_statistics_df = column_statistics_df.rename(columns=speed_columns).sort_index(axis=1).rename(columns=speed_columns_invert)
