@@ -16,7 +16,7 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
     """Main function to extract system configuration files"""
 
     # chassis parameters parsing
-    chassis_params_df, slot_status_df, licenseport_df = chassis_params_extract(parsed_sshow_maps_lst, project_constants_lst)
+    chassis_params_df, slot_status_df, licenseport_df, chassisshow_df = chassis_params_extract(parsed_sshow_maps_lst, project_constants_lst)
     # maps parameters parsing
     maps_params_df = maps_params_extract(parsed_sshow_maps_lst, project_constants_lst)
     # switch parameters parsing
@@ -54,8 +54,8 @@ def system_configuration_extract(parsed_sshow_maps_lst, project_constants_lst, s
         host_id_name_oceanstor_df, host_id_fcinitiator_oceanstor_df, hostid_ctrlportid_oceanstor_df \
             = storage_oceanstor_extract(project_constants_lst)
     
-    extracted_configuration_lst = [chassis_params_df, slot_status_df, licenseport_df, maps_params_df, 
-                                    switch_params_df, switchshow_ports_df,
+    extracted_configuration_lst = [chassis_params_df, slot_status_df, licenseport_df, chassisshow_df, 
+                                    maps_params_df, switch_params_df, switchshow_ports_df,
                                     fabricshow_df, ag_principal_df, 
                                     portshow_df, sfpshow_df, portcfgshow_df,
                                     fdmi_df, nsshow_df, nscamshow_df, nsshow_dedicated_df, nsportshow_df,

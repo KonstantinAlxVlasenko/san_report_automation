@@ -21,6 +21,7 @@ def extract_key_value_from_line(global_filled_dct, pattern_dct,
     if save_local:
         # list to store current function call result
         local_filled_dct = []
+
     
     while not re.search(pattern_dct[stop_pattern_name],line):
         if first_line_skip:

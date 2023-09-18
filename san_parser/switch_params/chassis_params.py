@@ -39,9 +39,12 @@ def chassis_params_extract(all_config_data, project_constants_lst):
         san_chassis_params_lst = []
         san_slot_status_lst = []
         san_licenseport_lst = []
+        san_chassisshow_lst = []
 
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('chassis', max_title)
-        chassis_params,  chassis_params_add = dfop.list_from_dataframe(re_pattern_df, 'chassis_params', 'chassis_params_add')
+        chassis_params,  chassis_params_add,  chassisshow_params = dfop.list_from_dataframe(
+            re_pattern_df, 'chassis_params', 'chassis_params_add', 'chassisshow_params')
+
         
         # all_confg_data format ([swtch_name, supportshow file, (ams_maps_log files, ...)])
         # checking each config set(supportshow file) for chassis level parameters
@@ -51,28 +54,28 @@ def chassis_params_extract(all_config_data, project_constants_lst):
             # current operation information string
             info = f'[{i+1} of {switch_num}]: {switch_name} chassis parameters'
             print(info, end =" ")
-            ch_params_lst = current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_licenseport_lst, pattern_dct, 
-                                                                switch_config_data, chassis_params, chassis_params_add)
+            ch_params_lst = current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_licenseport_lst, san_chassisshow_lst, 
+                                                   pattern_dct, switch_config_data, chassis_params, chassis_params_add, chassisshow_params)
             meop.show_collection_status(ch_params_lst, max_title, len(info))
         
         # convert list to DataFrame
-        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'chassis_columns', 'chassis_slot_columns', 'licenseport_columns')
-        data_lst = dfop.list_to_dataframe(headers_lst, san_chassis_params_lst, san_slot_status_lst, san_licenseport_lst)
-        chassis_params_df, slot_status_df, licenseport_df, *_ = data_lst
+        headers_lst = dfop.list_from_dataframe(re_pattern_df, 'chassis_columns', 'chassis_slot_columns', 'licenseport_columns', 'chassisshow_columns')
+        data_lst = dfop.list_to_dataframe(headers_lst, san_chassis_params_lst, san_slot_status_lst, san_licenseport_lst, san_chassisshow_lst)
+        chassis_params_df, slot_status_df, licenseport_df, chassisshow_df, *_ = data_lst
         # write data to sql db
         dbop.write_database(project_constants_lst, data_names, *data_lst)     
     # verify if loaded data is empty after first iteration and replace information string with empty list
     else:
         data_lst = dbop.verify_read_data(max_title, data_names, *data_lst)
-        chassis_params_df, slot_status_df, licenseport_df, *_ = data_lst
+        chassis_params_df, slot_status_df, licenseport_df, chassisshow_df, *_ = data_lst
     # save data to excel file if it's required
     for data_name, data_frame in zip(data_names, data_lst):
         report.dataframe_to_excel(data_frame, data_name, project_constants_lst)
-    return chassis_params_df, slot_status_df, licenseport_df
+    return chassis_params_df, slot_status_df, licenseport_df, chassisshow_df
 
 
-def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_licenseport_lst, pattern_dct, 
-                            switch_config_data, chassis_params, chassis_params_add):
+def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_licenseport_lst, san_chassisshow_lst,
+                           pattern_dct, switch_config_data, chassis_params, chassis_params_add, chassisshow_params):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
 
@@ -81,7 +84,8 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
 
     # search control dictionary. continue to check sshow_file until all parameters groups are found
     collected = {'configshow': False, 'uptime_cpu': False, 'flash': False, 'memory': False, 
-                    'dhcp': False, 'licenses': False, 'licenseport': False, 'vf_id': False, 'slotshow': False}
+                    'dhcp': False, 'licenses': False, 'licenseport': False, 'vf_id': False, 
+                    'slotshow': False, 'chassisshow': False}
     
     # dictionary to store all DISCOVERED chassis parameters
     # collecting data only for the chassis in the current loop
@@ -91,6 +95,7 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
     syslog_lst = list()
     license_lst = list()
     vf_id_lst = list()
+    chassisshow_lst = list()
     uptime, cpu_load, memory, flash = ('not found',)*4
 
     with open(sshow_file, encoding='utf-8', errors='ignore') as file:
@@ -188,7 +193,35 @@ def current_config_extract(san_chassis_params_lst, san_slot_status_lst, san_lice
                 switch_type = int(switch_type)
                 if not switch_type in DIRECTOR_TYPE:
                     collected['slotshow'] = True
-            # director control section end                                         
+            # director control section end
+            # chassishsow section start
+            elif re.search(pattern_dct['sscmd_chassisshow'], line) and not collected['chassisshow']:
+                collected['chassisshow'] = True
+                while not re.search(pattern_dct['switchcmd_end'], line):
+                    if re.search(pattern_dct['chassisshow_slot_unit'], line):
+                        chassisshow_unit_dct = {}
+                        slot_unit_lst = dsop.line_to_list(pattern_dct['chassisshow_slot_unit'], line)
+                        line = file.readline()
+                        line = reop.extract_key_value_from_line(chassisshow_unit_dct, pattern_dct, line, file, 
+                                                        extract_pattern_name='param_value_pair', 
+                                                        stop_pattern_name='sscmd_chassisshow_unit_end', first_line_skip=False)
+                        if chassisshow_unit_dct:
+                            chassisshow_unit_lst = [chassisshow_unit_dct.get(chassisshow_param) for chassisshow_param in chassisshow_params]
+                            chassisshow_unit_lst = [sshow_file, switch_name] + slot_unit_lst + chassisshow_unit_lst
+                            # append chassis serial
+                            chassisshow_unit_lst.append(None)
+                            chassisshow_lst.append(chassisshow_unit_lst)
+                    elif re.search(pattern_dct['chassis_factory_serial'], line):
+                        chassis_serial = re.search(pattern_dct['chassis_factory_serial'], line).group(1)
+                        line = file.readline()
+                        # add chassis serial to all units and slots (replace None)
+                        for slot_unit_lst in chassisshow_lst:
+                            slot_unit_lst[-1] = chassis_serial
+                        
+                    else:
+                        line = file.readline()
+                san_chassisshow_lst.extend(chassisshow_lst)
+            # chassishsow section end                                          
 
     # list to show collection status
     ch_params_lst = [chassis_params_dct.get(chassis_param) for chassis_param in chassis_params]

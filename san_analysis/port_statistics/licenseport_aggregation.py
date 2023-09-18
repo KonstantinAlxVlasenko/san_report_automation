@@ -38,7 +38,8 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
         licenseport_statistics_df = count_chassis_ports(portshow_aggregated_df)
     
     # add switchClass, switchType, switch class weight
-    licenseport_statistics_df = add_swclass_sw_type(licenseport_statistics_df, portshow_aggregated_df)
+    licenseport_statistics_df = dfop.add_swclass_swtype_swweight(licenseport_statistics_df, portshow_aggregated_df, 
+                                                                    sw_columns=['configname', 'chassis_name', 'chassis_wwn'])
     # add fabric information
     licenseport_statistics_df, logical_sw_usage = add_fname_flabel(
         licenseport_statistics_df, portshow_aggregated_df, switch_params_aggregated_df)
@@ -193,16 +194,17 @@ def count_chassis_ports(portshow_aggregated_df):
     return chassis_ports_statistics_df
 
 
-def add_swclass_sw_type(licenseport_statistics_df, portshow_aggregated_df):
-    """Function to add switchClass, switchType to the licenseport_statistics_df"""
+# REMOVE
+# def add_swclass_swtype(licenseport_statistics_df, portshow_aggregated_df):
+#     """Function to add switchClass, switchType to the licenseport_statistics_df"""
 
-    # add switch class
-    licenseport_statistics_df = dfop.dataframe_fillna(licenseport_statistics_df, portshow_aggregated_df, 
-                                                     join_lst=['configname', 'chassis_name', 'chassis_wwn'], 
-                                                     filled_lst=['switchClass', 'switchType'])
-    # add switch class weight to sort switches
-    dfop.add_swclass_weight(licenseport_statistics_df)
-    return licenseport_statistics_df
+#     # add switch class
+#     licenseport_statistics_df = dfop.dataframe_fillna(licenseport_statistics_df, portshow_aggregated_df, 
+#                                                      join_lst=['configname', 'chassis_name', 'chassis_wwn'], 
+#                                                      filled_lst=['switchClass', 'switchType'])
+#     # add switch class weight to sort switches
+#     dfop.add_swclass_weight(licenseport_statistics_df)
+#     return licenseport_statistics_df
     
 
 def add_fname_flabel(licenseport_statistics_df, portshow_aggregated_df, switch_params_aggregated_df):

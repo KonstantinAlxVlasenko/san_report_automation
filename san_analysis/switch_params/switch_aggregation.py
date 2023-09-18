@@ -1,12 +1,16 @@
 """Module to combine chassis, switch, maps parameters DataFrames and label it with fabric labels"""
 
+
+import re
+
 import numpy as np
 import pandas as pd
+
 import utilities.dataframe_operations as dfop
 
 
-def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_df, maps_params_df, 
-                        switch_models_df, switch_rack_df, ag_principal_df, pattern_dct):
+def switch_param_aggregation(fabric_clean_df, chassis_params_df, chassisshow_df, switch_params_df, maps_params_df, 
+                                switch_models_df, switch_rack_df, ag_principal_df, pattern_dct):
     """Function to combine chassis, switch, maps parameters DataFrames and label it with fabric labels"""
 
     # complete fabric DataFrame with information from switch_params DataFrame
@@ -15,7 +19,8 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'], inplace=True)
     switch_params_aggregated_df['boot.ipa'].fillna(switch_params_aggregated_df['Enet_IP_Addr'], inplace=True)
     switch_params_aggregated_df['switchMode'].fillna(switch_params_aggregated_df['SwitchMode'], inplace=True)
-
+    # fill empty sn, add factory sn and oem id
+    chassis_params_df = add_chassis_sn_oemid(chassis_params_df, chassisshow_df)
     # complete DataFrame with information from chassis_params DataFrame
     switch_params_aggregated_df = switch_params_aggregated_df.merge(chassis_params_df, how = 'left', on=['configname', 'chassis_name', 'chassis_wwn'])
     switch_params_aggregated_df = dfop.concatenate_columns(switch_params_aggregated_df, summary_column='timezone_hm', 
@@ -51,9 +56,6 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, switch_params_d
     switch_params_aggregated_df = dfop.dataframe_fillna(switch_params_aggregated_df, switch_rack_df, 
                                                         join_lst=['switchWwn'], filled_lst=['Device_Rack'], 
                                                         remove_duplicates=True, drop_na=True)
-    
-
-    
     # create column with switch models (hpe or brocade model)
     switch_params_aggregated_df['ModelName'] = switch_params_aggregated_df['HPE_modelName']
     switch_params_aggregated_df['ModelName'].replace(to_replace={'-': np.nan}, inplace=True)
@@ -106,10 +108,8 @@ def sort_switches(switch_params_aggregated_df):
 
 
 def ag_switch_info(switch_params_aggregated_df, ag_principal_df):
-    """
-    Function to add AG switches and VC's switchtype, fw version collected 
-    from Principal switch configuration to switch_params_aggrefated_df DataFrame
-    """
+    """Function to add AG switches and VC's switchtype, fw version collected 
+    from Principal switch configuration to switch_params_aggrefated_df DataFrame"""
 
     # extract required columns from ag_principal_df DataFrame and translate it's
     # titles to correspond columns in switch_params_aggregated_df DataFrame
@@ -128,9 +128,6 @@ def ag_switch_info(switch_params_aggregated_df, ag_principal_df):
 
 def verify_sddq_reserve(switch_params_aggregated_df, pattern_dct):
     """Function to count sddq ports and verify if sddq limit is reached"""
-
-    # regular expression patterns
-    # *_, comp_dct = re_pattern_lst
 
     if 'Quarantined_Ports' in switch_params_aggregated_df.columns:
         # clean value if it doesn't contain port information
@@ -204,3 +201,38 @@ def verify_ls_type(switch_params_aggregated_df):
     switch_params_aggregated_df.loc[mask_router, 'LS_type_report'] = \
         switch_params_aggregated_df.loc[mask_router, 'LS_type_report'] + ', router'
     return switch_params_aggregated_df
+
+
+def add_chassis_sn_oemid(chassis_params_df, chassisshow_df):
+    """Function to fill empty sn, add factory sn and oem id"""
+
+    # filter chassis/wwn slots
+    mask_slot_wwn = chassisshow_df['Slot_Unit_name'].str.contains(pat='wwn', regex=True, flags=re.IGNORECASE, na=None)
+    chassisshow_wwn_df = chassisshow_df.loc[mask_slot_wwn].copy()
+    # clean 'none' ssn
+    mask_sn_none = chassis_params_df['ssn'] == 'none'
+    chassis_params_df.loc[mask_sn_none, 'ssn'] = None
+    # chassis/wwn sn (OEM switches with sn)
+    chassis_params_df = chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column='Serial_Num', filled_column='ssn')
+    # chassis factory sn (directors)
+    chassis_params_df = chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column='Chassis_Factory_Serial_Num', filled_column='factory_sn')
+    # chassis/wwn factory sn (Brocade switches with factory sn)
+    chassis_params_df = chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column='Factory_Serial_Num', filled_column='factory_sn')
+    # add OEM_ID
+    chassis_params_df = chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column='OEM_ID', filled_column='OEM_ID')
+    return chassis_params_df
+
+
+def chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column, filled_column):
+    """Function to fill chassisshow_column in chassis_params_df dataframe with values
+    from filled_column of chassisshow_wwn_df dataframe"""
+    
+    # drop rows with empty values in chassisshow_column
+    chassisshow_wwn_nafree_df = chassisshow_wwn_df.dropna(subset=[chassisshow_column]).copy()
+    # for directors join slot factory serial numbers
+    if chassisshow_wwn_nafree_df[chassisshow_column].notna().any():
+        chassisshow_wwn_nafree_df = chassisshow_wwn_nafree_df.groupby('configname')[chassisshow_column].agg(', '.join).reset_index()
+    # fill empty values in chassis_params_df
+    chassisshow_wwn_nafree_df[filled_column] = chassisshow_wwn_nafree_df[chassisshow_column]
+    chassis_params_df = dfop.dataframe_fillna(chassis_params_df, chassisshow_wwn_nafree_df, join_lst=['configname'], filled_lst=[filled_column])
+    return chassis_params_df

@@ -1,9 +1,6 @@
 """ """
 
-
-# import numpy as np
-# import pandas as pd
-
+import numpy as np
 
 def dataframe_join(left_df, right_df, columns_lst, columns_join_index=None):
     """
@@ -83,3 +80,25 @@ def dataframe_fabric_labeling(df, switch_params_aggregated_df):
     # portshow_aggregated_df and switchparams_join_df DataFrames join operation
     df_labeled = df.merge(fabric_label_df, how = 'left', on = switchparams_lst[:5])
     return df_labeled
+
+
+def add_swclass_swtype_swweight(df, swclass_swtype_df, sw_columns):
+    """Function to add switchClass, switchType to the df based on sw_columns"""
+
+    # add switch class
+    df = dataframe_fillna(df, swclass_swtype_df, join_lst=sw_columns, filled_lst=['switchClass', 'switchType'])
+    # add switch class weight to sort switches
+    add_swclass_weight(df)
+    return df
+
+
+def add_swclass_weight(swclass_df):
+    """Function to add switch class weight column based on switch class column.
+    Director has highest weight"""
+    
+    swclass_df['switchClass_weight'] = swclass_df['switchClass']
+    switchClass_weight_dct = {'DIR': 1, 'ENTP': 2, 'MID': 3, 'ENTRY': 4, 'EMB': 5, 'EXT': 6}
+    mask_assigned_switch_class = swclass_df['switchClass'].isin(switchClass_weight_dct.keys())
+    swclass_df.loc[~mask_assigned_switch_class, 'switchClass_weight'] = np.nan
+    swclass_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
+    swclass_df['switchClass_weight'].fillna(7, inplace=True)

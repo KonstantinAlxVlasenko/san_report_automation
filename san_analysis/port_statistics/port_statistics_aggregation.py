@@ -37,12 +37,8 @@ def port_statisctics_aggregated(portshow_aggregated_df, licenseport_statistics_d
     for stat_df in stat_lst[1:]:
         port_statistics_df = port_statistics_df.merge(stat_df, how='left', left_index=True, right_index=True)
     port_statistics_df.reset_index(inplace=True)
-    # add switch class
-    port_statistics_df = dfop.dataframe_fillna(port_statistics_df, portshow_aggregated_df, 
-                                                     join_lst=['switchWwn'], 
-                                                     filled_lst=['switchClass', 'switchType'])
-    # add switch class weight to sort switches
-    dfop.add_swclass_weight(port_statistics_df)    
+    # add switchClass, switchType, switch class weight
+    port_statistics_df = dfop.add_swclass_swtype_swweight(port_statistics_df, portshow_aggregated_df, sw_columns=['switchWwn'])
     # count summary for fabric_name and fabric_label levels
     port_statistics_df, port_statistics_summary_df = dfop.add_fname_flabel_stats_summary(port_statistics_df, switch_columns=['chassis_name', 'switchName'])    
     # count row All with total values for all fabris

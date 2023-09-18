@@ -86,6 +86,8 @@ def verify_isl_cfg_equality(isl_aggregated_df):
     # join QOS_Port and QOS_E_Port columns
     isl_cp_df['QOS_Port'] = isl_cp_df['QOS_Port'].fillna(isl_cp_df['QOS_E_Port'])
     isl_cp_df['Connected_QOS_Port'] = isl_cp_df['Connected_QOS_Port'].fillna(isl_cp_df['Connected_QOS_E_Port'])
+    
+    isl_cp_df = isl_cp_df.copy()
     # list of port setting to be vrified for equality from both sides of isl
     cfg_columns = ['Speed_Cfg', 'Trunk_Port',	'Long_Distance', 'VC_Link_Init', 
                     'Locked_E_Port', 'ISL_R_RDY_Mode',	'RSCN_Suppressed', 
@@ -93,6 +95,7 @@ def verify_isl_cfg_equality(isl_aggregated_df):
                     'Credit_Recovery', 'Compression', 'Encryption', '10G/16G_FEC', 
                     'Fault_Delay', 'TDZ_mode', 'Fill_Word(Current)', 'FEC', 'Wavelength_nm', 'Distance']
 
+    
     for cfg in cfg_columns:
         # column names with current main port and connected port configuration parameter of the switch
         connected_cfg = 'Connected_' + cfg
@@ -105,11 +108,8 @@ def verify_isl_cfg_equality(isl_aggregated_df):
         mask_differnt_cfg = isl_cp_df[cfg] !=  isl_cp_df[connected_cfg]
         # add parameter name and it's value to column with name containing parameter name 
         # and 'unequal' tag for main and connected ports
-        isl_cp_df.loc[mask_notna & mask_differnt_cfg, unequal_cfg] = \
-            cfg + ': ' + isl_cp_df[cfg].astype('str')
-        isl_cp_df.loc[mask_notna & mask_differnt_cfg, connected_unequal_cfg] = \
-            cfg + ': ' + isl_cp_df[connected_cfg].astype('str')
-        
+        isl_cp_df.loc[mask_notna & mask_differnt_cfg, unequal_cfg] = cfg + ': ' + isl_cp_df[cfg].astype('str')
+        isl_cp_df.loc[mask_notna & mask_differnt_cfg, connected_unequal_cfg] = cfg + ': ' + isl_cp_df[connected_cfg].astype('str')
     # column names with unequal paremater names and values for main and connected ports
     unequal_cfg_columns = [cfg + '_unequal' for cfg in cfg_columns]
     connected_unequal_cfg_columns = ['Connected_' + cfg for cfg in unequal_cfg_columns]

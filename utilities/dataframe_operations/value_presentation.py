@@ -13,6 +13,7 @@ def concatenate_columns(df, summary_column: str, merge_columns: list, sep=', ', 
     """Function to concatenate values in several columns (merge_columns) into summary_column 
     as comma separated values"""
     
+    df = df.copy()
     # create summary column if not exist
     if summary_column not in df.columns:
         df[summary_column] = np.nan

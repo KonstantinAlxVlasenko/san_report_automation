@@ -14,7 +14,7 @@ import utilities.servicefile_operations as sfop
 from .switch_aggregation import switch_param_aggregation
 
 
-def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df, 
+def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df, chassisshow_df,
                                 switch_params_df, maps_params_df, blade_module_loc_df, ag_principal_df, project_constants_lst):
     """Main function to create aggregated switch parameters table and report tables"""
     
@@ -48,9 +48,10 @@ def switch_params_analysis(fabricshow_ag_labels_df, chassis_params_df,
         print(info, end =" ")
 
         # create aggregated table by joining DataFrames
-        switch_params_aggregated_df, report_columns_usage_sr = \
-            switch_param_aggregation(fabric_clean_df, chassis_params_df, \
-                switch_params_df, maps_params_df, switch_models_df, switch_rack_df, ag_principal_df, pattern_dct)
+        switch_params_aggregated_df, report_columns_usage_sr = switch_param_aggregation(
+            fabric_clean_df, chassis_params_df, chassisshow_df, 
+            switch_params_df, maps_params_df, switch_models_df, 
+            switch_rack_df, ag_principal_df, pattern_dct)
 
         project_constants_lst.append(report_columns_usage_sr)
 
