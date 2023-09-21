@@ -2,3 +2,4 @@ v0.5 - Huawei OceanStor configuration files parsing
 v0.6 - Huawei OceanStor presentation
 v0.7 - License port statistics
 v0.8 - Factory SN and OED ID
+v0.81 - License port statistics total ports counting if total column is missing

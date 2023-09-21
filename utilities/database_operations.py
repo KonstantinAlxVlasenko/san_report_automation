@@ -104,7 +104,9 @@ def write_sql(db_path, data_name, df, max_title, info):
             if 'database is locked' in e.args[0]:
                 print(f"\nCan't write {data_name} to {os.path.basename(db_path)}. DB is locked. Close it to proceed.\n")
             else:
+                
                 print('\n', e)
+                print(df)
         finally:
             if conn is not None:
                 conn.close()
@@ -118,23 +120,11 @@ def read_database(project_constants_lst, *args):
     Returns list of loaded DataFrames or None if no data found.
     """
 
-
     project_steps_df, max_title, _, report_requisites_sr, *_ = project_constants_lst
-
-    # if len(report_constant_lst) == 3:
-    #     customer_name, _, db_dir, max_title, _ = report_constant_lst
-    # else:
-    #     customer_name, _, db_dir, max_title, *_ = report_constant_lst
-
     # list to store loaded data
     data_imported = []
-    # conn = sqlite3.connect(db_path)
-
 
     for data_name in args:
-
-        # db_type = report_steps_dct[data_name][2]
-
         db_type = project_steps_df.loc[data_name, 'report_type']
         db_name = report_requisites_sr['customer_name'] + '_' + db_type + '_database.db'
         
