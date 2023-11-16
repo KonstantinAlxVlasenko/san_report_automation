@@ -59,13 +59,17 @@ def modify_zoning(zoning_aggregated_df):
     # add tdz_tag
     zoning_modified_df = verify_tdz(zoning_modified_df)
     # add qos zone tag
-    mask_qos = zoning_modified_df['zone_duplicates_free'].str.contains(r'^QOS[LMH]\d?')
-    zoning_modified_df.loc[~mask_zone_name & mask_qos, 'qos_tag'] = 'qos_tag'
+    if zoning_modified_df['zone_duplicates_free'].notna().any():
+        mask_qos = zoning_modified_df['zone_duplicates_free'].str.contains(r'^QOS[LMH]\d?', na=False)
+        zoning_modified_df.loc[~mask_zone_name & mask_qos, 'qos_tag'] = 'qos_tag'
 
     # verify duplicated zones (zones with the same set of PortWwns)
     zoning_duplicated_df = verify_duplicated_zones(zoning_aggregated_df)
     zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone_duplicates_free', 'zone_duplicated_tag']
     # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
+    
+    print(zoning_duplicated_df)
+    # if not zoning_duplicated_df.empty:
     zoning_modified_df = \
         dfop.dataframe_fillna(zoning_modified_df, zoning_duplicated_df, join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
 

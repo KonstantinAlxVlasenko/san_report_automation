@@ -43,6 +43,9 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=
     if add_columns_lst:
         left_df = left_df.reindex(columns = [*left_df_columns_lst, *add_columns_lst])
 
+    if left_df[join_lst].empty:
+        return left_df
+
     # cut off unnecessary columns from right DataFrame
     right_join_df = right_df.loc[:, join_lst + filled_lst].copy()
     # drop rows with null values in columns to join on
@@ -56,6 +59,7 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=
     filled_join_lst = [name+'_join' for name in filled_lst]
     right_join_df.rename(columns = dict(zip(filled_lst, filled_join_lst)), inplace = True)
     # left join left and right DataFrames on join_lst columns
+
     left_df = left_df.merge(right_join_df, how = 'left', on = join_lst)
     # for each columns pair (w/o (null values) and w _join prefix (filled values)
     for filled_name, filled_join_name in zip(filled_lst, filled_join_lst):

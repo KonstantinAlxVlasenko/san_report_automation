@@ -1,6 +1,8 @@
 """Module to create zoning configuration related reports"""
 
 
+import pandas as pd
+
 import utilities.dataframe_operations as dfop
 import utilities.report_operations as report
 
@@ -10,6 +12,9 @@ def zoning_report_main(zoning_aggregated_df, alias_aggregated_df, portshow_zoned
                             data_names, report_headers_df, report_columns_usage_sr):
     """Main function to create zoning report tables"""
 
+    if zoning_aggregated_df.empty:
+        return [pd.DataFrame()] * 9
+    
     zoning_report_df = create_report(zoning_aggregated_df, report_headers_df, report_columns_usage_sr, data_names[6])
     zoning_valid_df = valid_zoning(zoning_aggregated_df)
     zoning_valid_report_df = create_report(zoning_valid_df, report_headers_df, report_columns_usage_sr, data_names[6])

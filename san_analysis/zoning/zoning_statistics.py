@@ -14,6 +14,9 @@ invalid_zone_tags = ['no_initiator', 'no_target', 'no_target, no_initiator', 'no
 def zonemember_statistics(zoning_aggregated_df):
     """Main function to create zonemembers statistics"""
 
+    if zoning_aggregated_df.empty:
+        return pd.DataFrame(), pd.DataFrame()
+
     zoning_modified_df, zoning_duplicated_df, zoning_pairs_df, zoning_absorbed_df = modify_zoning(zoning_aggregated_df)
     # get statistics DataFrames for zone and cfgtype level statistics
     zonemember_zonelevel_stat_df = count_zonemember_statistics(zoning_modified_df)

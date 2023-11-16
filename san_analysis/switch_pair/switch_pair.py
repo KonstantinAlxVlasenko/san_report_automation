@@ -54,7 +54,7 @@ def switch_pair_analysis(switch_params_aggregated_df, portshow_aggregated_df, fc
 
         while True:
             if first_while_run and not first_run:
-                print('Summary for switch pairs loaded from database:')
+                print('Summary for switch pairs LOADED from the DATABASE:')
                 first_while_run = False
             show_switch_wwn_pair_summary(switch_pair_df)
             reply = meop.reply_request('Do you want to CHANGE switch pairs? (y)es/(n)o: ')

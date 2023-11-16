@@ -125,7 +125,6 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                                                     first_line_skip=False, line_add_values=configname)
                     # single host section start
                     elif re.search(pattern_dct['host_id_header'], line):
-                        print(line)
                         # host parameters collection
                         host_details_dct = {}
                         # host wwns list
@@ -136,8 +135,6 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                         line = reop.extract_key_value_from_line(host_details_dct, pattern_dct, line, file, 
                                                         extract_pattern_name='parameter_value_pair', 
                                                         stop_pattern_name='host_mapping_group_header')
-                        print(host_details_dct)
-                        print(line)
                         # extract host wwns
                         line = reop.extract_value_from_line(hostport_wwn_lst, pattern_dct, line, file, 
                                                         extract_pattern_name='hostport_wwn', 

@@ -91,6 +91,9 @@ def statistics_to_aggregated_zoning(zoning_aggregated_df, zonemember_zonelevel_s
     Function to compliment zoning_aggregated_df DataFrame with 'Target_Initiator'and 'Target_model' notes 
     obtained from zone statistics DataFrame analysis
     """
+
+    if zoning_aggregated_df.empty:
+        return zoning_aggregated_df
     
     # create DataFrame with note columns only
     zone_columns = ['Fabric_name', 'Fabric_label', 'cfg', 'cfg_type', 'zone']

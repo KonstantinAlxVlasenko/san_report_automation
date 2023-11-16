@@ -104,9 +104,7 @@ def write_sql(db_path, data_name, df, max_title, info):
             if 'database is locked' in e.args[0]:
                 print(f"\nCan't write {data_name} to {os.path.basename(db_path)}. DB is locked. Close it to proceed.\n")
             else:
-                
                 print('\n', e)
-                print(df)
         finally:
             if conn is not None:
                 conn.close()

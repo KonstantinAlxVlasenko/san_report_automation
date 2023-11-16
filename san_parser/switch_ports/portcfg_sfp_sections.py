@@ -43,10 +43,14 @@ def sfpshow_section_extract(sfpshow_lst, pattern_dct,
                 # sfp free port
                 elif match_dct['no_sfp_installed']:
                         sfpshow_dct['Vendor Name'] = match_dct['no_sfp_installed'].group(1).rstrip()
-                # cu port in the blade switch
+                # cu port in the blade switch or regular switch
                 elif match_dct['no_sfp_usage']:
+                        # print('\n')
+                        # print(line)
+                        # sfpshow_dct['Vendor Name'] = \
+                        #     match_dct['no_sfp_installed'].group(1).rstrip() + match_dct['no_sfp_installed'].group(2).rstrip()
                         sfpshow_dct['Vendor Name'] = \
-                            match_dct['no_sfp_installed'].group(1).rstrip() + match_dct['no_sfp_installed'].group(2).rstrip()
+                            match_dct['no_sfp_usage'].group(1).rstrip() + match_dct['no_sfp_usage'].group(2).rstrip()
                 # not_available_match
                 elif match_dct['info_na']:
                         sfpshow_dct[match_dct['info_na'].group(1).rstrip()] = match_dct['info_na'].group(2).rstrip()

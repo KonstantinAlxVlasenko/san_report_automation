@@ -14,6 +14,9 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
                                        switch_params_aggregated_df, pattern_dct):
     """Function to create licenseport statistics DataFrame"""
 
+    print('\n')
+    print(licenseport_df)
+    
     if not licenseport_df.empty:
         # extract license port title, ports quantity related to the title and POD methiod
         licenseport_extracted_df = extract_licenseport_values(licenseport_df, pattern_dct)
@@ -32,6 +35,8 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
         licenseport_statistics_df  = calculate_total_ports_in_group(licenseport_statistics_df)
         # count total and online ports for each chassis
         chassis_ports_statistics_df = count_chassis_ports(portshow_aggregated_df)
+        # changes for b300
+
         # join chassis port statistics and licenseport statistics
         licenseport_statistics_df = chassis_ports_statistics_df.merge(licenseport_statistics_df, how='left', on=['configname', 'chassis_name'])
     else:
@@ -51,9 +56,16 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
     licenseport_statistics_df, licenseport_statistics_summary_df = add_fname_flabel_stats_summary(licenseport_statistics_df, switch_columns=['chassis_name'])
     # add summary statistics row for all fabrics (metasan)
     licenseport_statistics_df = add_metasan_summary(licenseport_statistics_df, licenseport_statistics_summary_df, logical_sw_usage)
+    
+    # add columns to count available ports if licenseport output is absent
+    if licenseport_df.empty:
+        licenseport_statistics_df['Ports are available in this switch'] = licenseport_statistics_df['Total_ports_number']
+        licenseport_statistics_df['Port assignments are provisioned for use in this switch'] = licenseport_statistics_df['Port is licensed']
+
     # count free ports for which license is available, ports for which license is not availble
     # and % of online ports from licensed ports
     licenseport_statistics_df = count_ports(licenseport_statistics_df)
+
     if not licenseport_df.empty:
         # add pod method
         licenseport_statistics_df = dfop.dataframe_fillna(licenseport_statistics_df, licenseport_pod_df, 
@@ -208,7 +220,7 @@ def count_chassis_ports(portshow_aggregated_df):
     # count total ports and online ports
     chassis_ports_statistics_df = dfop.count_statistics(portshow_cp_df, 
                                                          connection_grp_columns=['configname', 'chassis_name', 'chassis_wwn'], 
-                                                         stat_columns=['Port_quantity', 'portState'])
+                                                         stat_columns=['Port_quantity', 'portState', 'POD_Port'])
     return chassis_ports_statistics_df
 
 

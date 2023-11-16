@@ -4,3 +4,4 @@ v0.7 - License port statistics
 v0.8 - Factory SN and OED ID
 v0.81 - License port statistics total ports counting if total column is missing
 v0.82 - OceanStor host extract for 5500 series correction
+v0.83 - All ports are licensed verification and sfp missing port parsing correction

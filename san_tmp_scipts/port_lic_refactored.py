@@ -35,6 +35,11 @@ data_lst = dfop.verify_read_data(20, data_names, *data_lst,  show_status=True)
 licenseport_df, *_ = data_lst
 
 
+mask_qsfp = licenseport_df['licenseport_'].str.contains('QSFP')
+licenseport_df.loc[mask_qsfp, 'test'] = 'tst'
+
+None in licenseport_df.columns
+
 # available_ports_pattern = r'(\d+) +((?:.+-based +)*ports +are +available.+'
 
 
@@ -450,3 +455,9 @@ mask_dropped_fabric = licenseport_statistics_df[['Fabric_name', 'Fabric_label']]
 licenseport_chassis_df = licenseport_chassis_df.loc[~mask_dropped_fabric]
 licenseport_chassis_df.columns.to_list()
 all_ports_licensed =  licenseport_chassis_df['Ports are available in this switch'].equals(licenseport_chassis_df['Port assignments are provisioned for use in this switch'])
+
+
+
+
+
+set(['Fabric_name', 'configname']).issubset(licenseport_df.columns)

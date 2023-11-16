@@ -195,8 +195,8 @@ def verify_all_ports_licensed(licenseport_statistics_df):
     """Function to verify if all ports in san have licenses"""
 
     licenseport_chassis_df = licenseport_statistics_df.dropna(subset='configname')
-    mask_dropped_fabric = licenseport_statistics_df[['Fabric_name', 'Fabric_label']].isin(['x', '-']).any(axis=1)
+    fname_flabel_columns = [column for column in ['Fabric_name', 'Fabric_label'] if column in licenseport_chassis_df.columns]
+    mask_dropped_fabric = licenseport_chassis_df[fname_flabel_columns].isin(['x', '-']).any(axis=1)
     licenseport_chassis_df = licenseport_chassis_df.loc[~mask_dropped_fabric]
-    licenseport_chassis_df.columns.to_list()
     all_ports_licensed =  licenseport_chassis_df['Ports are available in this switch'].equals(licenseport_chassis_df['Port assignments are provisioned for use in this switch'])
     return all_ports_licensed

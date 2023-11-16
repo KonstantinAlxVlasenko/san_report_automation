@@ -17,6 +17,9 @@ import utilities.dataframe_operations as dfop
 def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning_aggregated_df, alias_aggregated_df):
     """Main function to count effective zoning configuration statistics."""
 
+    if zoning_aggregated_df.empty:
+        return pd.DataFrame()
+
     def split_statistics(zonemember_statistics_df):
         """Function to split up zonemember_statistics_df into three DataFrames: 
         zonelevel statistics for effective zones only,

@@ -27,6 +27,9 @@ def create_san_graph_switch(switch_params_aggregated_df, switch_pair_df, isl_sta
     san_graph_switch_df = concat_switch_name_did(san_graph_switch_df, switch_params_aggregated_df)
     # create combination of switchName and switchWwn for shape Name
     create_shape_name(san_graph_switch_df, 'switchName', 'switchWwn', 'switchName_Wwn')
+    
+
+
     return san_graph_switch_df
 
 
