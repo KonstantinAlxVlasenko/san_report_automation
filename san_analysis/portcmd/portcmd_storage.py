@@ -126,6 +126,7 @@ def construct_infinidat_node_port_from_wwn(portshow_aggregated_df, pattern_dct):
                                           merge_columns=['Node_extracted', 'Port_extracted'], sep='FC', drop_merge_columns=False)
     # add 'N' tag to the non empty device ports 
     mask_node_notna = storage_ports_df['Node_Port_extracted'].notna()
+    dfop.column_to_object(storage_ports_df, 'Node_tag')
     storage_ports_df.loc[mask_node_notna, ['Node_tag']] = 'N'
     storage_ports_df = dfop.merge_columns(storage_ports_df, summary_column='Device_Port', 
                                           merge_columns=['Node_tag', 'Node_Port_extracted'], sep='', drop_merge_columns=False)

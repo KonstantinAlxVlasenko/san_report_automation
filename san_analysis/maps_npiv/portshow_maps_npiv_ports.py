@@ -157,7 +157,7 @@ def maps_npiv_report(maps_ports_df, portshow_npiv_df, npiv_statistics_df, sw_con
     dfop.drop_zero(npiv_statistics_report_df)
     # switch connection statistics
     report_columns_usage_cp_dct = report_columns_usage_sr.copy()
-    report_columns_usage_cp_dct['fabric_name_usage'] = True
+    report_columns_usage_cp_dct['fabric_name_usage'] = 1
     sw_connection_statistics_report_df = report.generate_report_dataframe(sw_connection_statistics_df, report_headers_df, 
                                                                     report_columns_usage_cp_dct, data_names[8])
     sw_connection_statistics_report_df = report.translate_values(sw_connection_statistics_report_df, report_headers_df, data_names[8])   

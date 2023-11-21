@@ -9,7 +9,7 @@ from tqdm import tqdm
 import utilities.database_operations as dbop
 import utilities.report_operations as report
 
-from .drop_connector_shape import drop_connector_shape, shape_font_change
+from .drop_connector_shape import drop_connector_shape, shape_font_size_change, multiline_shape_text_font_style_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
 
 
@@ -65,7 +65,10 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
 
     sw_quantity = len(switch_pair_sr['switchClass_mode'].split(', '))
     # all combinations of entry, middle and enterprise switch classes including duplicates
-    SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'MID', 'ENTP'], repeat=sw_quantity)]
+    SWITCH_CLASS_PRODUCT = [', '.join(switch_class) for switch_class in product(['ENTRY', 'ENTRY PRINCIPAL', 
+                                                                                 'MID', 'MID PRINCIPAL', 
+                                                                                 'ENTP', 'ENTP PRINCIPAL',
+                                                                                 'EXT', 'EXT PRINCIPAL'], repeat=sw_quantity)]
     
     # first drop second switch of the switch_pair_sr to make the first switch visually overlap to the second switch 
     # two ENT swtiches sw1 and sw2 -> [(0, 'ENT', 'sw2'), (1, 'ENT', 'sw1')]
@@ -91,7 +94,8 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
         # Director name, DID and model individually
         if 'DIR' in switch_pair_sr['switchClass_mode']:
             shape.Text = shape_text[i] + "\n" + switch_pair_sr['ModelName']
-            shape_font_change(shape, switch_font_size)
+            shape_font_size_change(shape, switch_font_size)
+            multiline_shape_text_font_style_change(shape, len(shape_text[i]))
         else:
             shape.Text = " "
     
@@ -103,9 +107,11 @@ def drop_switch_pair_shapes(switch_pair_sr, x_group_current, page, stn, visio_lo
             bottom_shape.Text = switch_pair_sr['switchName_DID'] + "\n" + switch_pair_sr['ModelName']
         else:
             bottom_shape.Text = switch_pair_sr['switchName_DID']
-        shape_font_change(bottom_shape, switch_font_size)
+        shape_font_size_change(bottom_shape, switch_font_size)
+        multiline_shape_text_font_style_change(bottom_shape, len(switch_pair_sr['switchName_DID']))
         # for entry, middle and enterprise class switches set textbox width 
         # so each switch description is on the separate line
+
         if switch_pair_sr['switchClass_mode'] in SWITCH_CLASS_PRODUCT:
             bottom_shape.Cells("TxtWidth").FormulaU = get_textbox_width(switch_pair_sr['switchName_DID'], n=sw_quantity)
         

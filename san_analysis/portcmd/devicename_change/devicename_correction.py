@@ -160,7 +160,8 @@ def create_device_rename_form(portshow_aggregated_df):
     manual_device_rename_df['Port_quantity'] = \
         manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index=False).Connected_portWwn.transform('count')
 
-    manual_device_rename_df['Group_Name'].fillna('nan', inplace=True)
+    manual_device_rename_df['Group_Name'] = manual_device_rename_df['Group_Name'].fillna('nan')
+    # manual_device_rename_df['Group_Name'].fillna('nan', inplace=True) #depricated method
 
     # join group names, aliases and pWwns for each Device_Host_Name
     manual_device_rename_df = manual_device_rename_df.groupby(['Fabric_name', 'Device_Host_Name'], as_index = False).\

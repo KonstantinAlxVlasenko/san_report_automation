@@ -54,7 +54,7 @@ def set_connector_attributes(connector, link_sr, fabric_label_colours_dct, link_
     else:
         connector.Text = ""
     
-    shape_font_change(connector, link_font_size)
+    shape_font_size_change(connector, link_font_size)
     
     # if link_font_size != default_font_size:
     #     connector.Cells("Char.Size").FormulaU = link_font_size
@@ -70,10 +70,27 @@ def set_connector_attributes(connector, link_sr, fabric_label_colours_dct, link_
         connector.Cells("LinePattern").FormulaU = LINE_PATTERN['4+']
 
 
-def shape_font_change(shape, font_size, default_font_size='12 pt'):
+def shape_font_size_change(shape, font_size, default_font_size='12 pt'):
     """Function modifies shape font if it differs from default"""
 
     font_size = str(font_size) + ' pt'
 
     if font_size != default_font_size:
         shape.Cells("Char.Size").FormulaU = font_size
+
+    
+def multiline_shape_text_font_style_change(shape, top_line_len):
+    """Function modifies shape font style.
+    Top line is bold, bottom line is regular font style"""
+
+    shape_chars = shape.Characters
+
+    # top line bold
+    shape_chars.Begin = 0
+    shape_chars.End = top_line_len
+    shape_chars.CharProps(2, 1)
+
+    # bottom line regular font
+    shape_chars.Begin = top_line_len + 1
+    shape_chars.End = len(shape.Text)
+    shape_chars.CharProps(2, 0)

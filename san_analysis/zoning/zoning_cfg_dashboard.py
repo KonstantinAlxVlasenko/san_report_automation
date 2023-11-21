@@ -103,6 +103,7 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         absent_columns = [column for column in absent_columns if column in zonelevel_statistics_effective_df.columns]
         if absent_columns:
             mask_zone_absent_zonemember = (zonelevel_statistics_effective_df[absent_columns] > 0).any(axis=1)
+            dfop.column_to_object(zonelevel_statistics_effective_df, 'zone_absent_zonemember_tag')
             zonelevel_statistics_effective_df.loc[mask_zone_absent_zonemember, 'zone_absent_zonemember_tag'] = 'zone_absent_zonemember_tag'
         else:
             zonelevel_statistics_effective_df['zone_absent_zonemember_tag'] = np.nan

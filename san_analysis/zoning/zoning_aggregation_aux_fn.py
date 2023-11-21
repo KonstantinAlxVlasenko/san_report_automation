@@ -98,7 +98,7 @@ def zonemember_connection(zoning_aggregated_df, alias_aggregated_df, portshow_ag
     mask_switch_native = portshow_aggregated_df['switchMode'] == 'Native'
     portcmd_join_df = portshow_aggregated_df.loc[mask_switch_native, port_columns_lst].copy()
     portcmd_join_df['Strict_Wwnp'] = np.nan
-    portcmd_join_df['Strict_Wwnp'].fillna(portcmd_join_df.PortName, inplace=True)
+    portcmd_join_df['Strict_Wwnp'] = portcmd_join_df['Strict_Wwnp'].fillna(portcmd_join_df['PortName'])
     # zonemember_Fabric_name and zonemember_Fabric_label show which fabric device connected to.
     # Fabric_name and Fabric_label show which Fabric zone is defined in.
     portcmd_join_df = portcmd_join_df.rename(

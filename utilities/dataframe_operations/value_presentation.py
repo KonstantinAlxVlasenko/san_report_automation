@@ -79,6 +79,11 @@ def extract_values_from_column(df, extracted_column: str, pattern_column_lst: li
         warnings.filterwarnings("ignore", 'This pattern has match groups')
         warnings.filterwarnings("ignore", 'This pattern is interpreted as a regular expression, and has match groups')
         mask = df[extracted_column].str.contains(pattern, regex=True, na=False)
+        for column in columns:
+            if column in df.columns:
+                df[column] = df[column].astype('object')
+            else:
+                df[column] = None
         df.loc[mask, columns] = df.loc[mask, extracted_column].str.extract(pattern).values
     return df
 
@@ -162,6 +167,17 @@ def sort_cell_values(df, *args, sep=', '):
             mask_notna = df[column].notna()
             df[column] = df.loc[mask_notna, column].str.split(sep).apply(sorted).str.join(sep).str.strip(',')
     return df
+
+
+def column_to_object(df, *args):
+    """Function converts series to the object type if column exist in DataFrame.
+    If column doesn't exist function creates it with None values"""
+
+    for column in args:
+        if column in df:
+            df[column] = df[column].astype('object')
+        else:
+            df[column] = None
 
 
 # auxiliary lambda function to combine two columns in DataFrame

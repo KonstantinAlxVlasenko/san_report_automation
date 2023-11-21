@@ -61,6 +61,7 @@ def modify_zoning(zoning_aggregated_df):
     # add qos zone tag
     if zoning_modified_df['zone_duplicates_free'].notna().any():
         mask_qos = zoning_modified_df['zone_duplicates_free'].str.contains(r'^QOS[LMH]\d?', na=False)
+        dfop.column_to_object(zoning_modified_df, 'qos_tag')
         zoning_modified_df.loc[~mask_zone_name & mask_qos, 'qos_tag'] = 'qos_tag'
 
     # verify duplicated zones (zones with the same set of PortWwns)
@@ -68,8 +69,6 @@ def modify_zoning(zoning_aggregated_df):
     zoning_duplicated_columns = ['Fabric_name', 'Fabric_label',  'cfg',  'cfg_type',  'zone_duplicates_free', 'zone_duplicated_tag']
     # add zone_duplicated_tag for each duplicated zone from zone_duplicates_free column (to count each zone only once further)
     
-    print(zoning_duplicated_df)
-    # if not zoning_duplicated_df.empty:
     zoning_modified_df = \
         dfop.dataframe_fillna(zoning_modified_df, zoning_duplicated_df, join_lst=zoning_duplicated_columns[:-1], filled_lst=[zoning_duplicated_columns[-1]])
 
@@ -292,6 +291,7 @@ def verify_pair_zones(zoning_aggregated_df):
                                             merge_columns=zone_paired_columns, sep=', ', drop_merge_columns=True)
     # add zone_paired_tag
     mask_zone_notna = zoning_pairs_df['zone_paired'].notna()
+    dfop.column_to_object(zoning_pairs_df, 'zone_paired_tag')
     zoning_pairs_df.loc[mask_zone_notna, 'zone_paired_tag'] = 'zone_paired_tag'
     zoning_pairs_df['zone_duplicates_free'] = zoning_pairs_df['zone']
     # verify if zonename related with pair zone name and device names included in each zone

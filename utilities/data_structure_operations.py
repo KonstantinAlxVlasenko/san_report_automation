@@ -43,3 +43,10 @@ def flatten(arg):
     return [x for sub in arg for x in flatten(sub)]
 
 
+def remove_diplicates_from_list(lst):
+    """Function to remove duplicates from list and preserve elements order"""
+
+    return list(dict.fromkeys(lst))
+
+
+

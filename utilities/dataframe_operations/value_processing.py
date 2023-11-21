@@ -36,7 +36,8 @@ def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list,
                                     join_lst=join_columns, 
                                     filled_lst=[wwnp_column], remove_duplicates=False)
     # when rows have empty values in wwnp_column mean wwn doesn't exist in fabric or it is wwnp
-    wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True)
+    wwn_df[wwnp_column] = wwn_df[wwnp_column].fillna(wwn_df[wwn_column])
+    # wwn_df[wwnp_column].fillna(wwn_df[wwn_column], inplace=True) # depricated method
     wwn_df.drop(columns=[wwnn_column], inplace=True)
     return wwn_df
 

@@ -79,6 +79,7 @@ def portshow_aggregated(portshow_df, switchshow_ports_df, switch_params_df, swit
     portshow_aggregated_df = oui_join(portshow_aggregated_df, oui_df, switchshow_ports_df)
     # preliminarily assisgn to all initiators type SRV
     mask_initiator = portshow_aggregated_df.Device_type.isin(['Physical Initiator', 'NPIV Initiator'])
+    dfop.column_to_object(portshow_aggregated_df, 'deviceType', 'deviceSubtype')
     portshow_aggregated_df.loc[mask_initiator, ['deviceType', 'deviceSubtype']] = ['SRV', 'SRV']
     # define oui for each connected device to identify device type
     switches_oui = switch_params_aggregated_df['switchWwn'].str.slice(start = 6)

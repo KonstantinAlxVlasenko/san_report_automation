@@ -6,6 +6,7 @@ import re
 import pandas as pd
 
 from .dataframe_details import verify_columns_in_dataframe
+import utilities.data_structure_operations as dsop 
 
 def dataframe_slice_concatenate(df, column: str, char: str=' '):
     """Function to create comparision DataFrame. 
@@ -113,3 +114,25 @@ def sort_fabric_swclass_swtype_swname(switch_df, switch_columns, fabric_columns=
     sort_columns = fabric_columns + ['switchClass_weight', 'switchType'] + switch_columns
     ascending_flags = [True] * len(fabric_columns) + [True, False] + [True] * len(switch_columns)
     switch_df.sort_values(by=sort_columns, ascending=ascending_flags, inplace=True)
+
+
+def concatenate_dataframes_vertically(*args):
+    """Function to concatenate DataFrames vertically.
+    Summary DataFrame have columns of all concatenated DataFrames"""
+
+    # concatenate all non empty DataFrames
+    non_empty_dfs_lst = [df for df in args if not df.empty]
+    if non_empty_dfs_lst:
+        concatenated_df = pd.concat([df for df in args if not df.empty])
+        concatenated_df.reset_index(drop=True, inplace=True)
+    else:
+        concatenated_df = pd.DataFrame()
+
+    # get columns of all DataFrames
+    dfs_columns_lst = [df.columns.to_list() for df in args]
+    dfs_columns_lst = dsop.flatten(dfs_columns_lst)
+    dfs_columns_lst = dsop.remove_diplicates_from_list(dfs_columns_lst)
+
+    # add absent columns if any DataFrame from args is empty
+    concatenated_df = concatenated_df.reindex(columns=dfs_columns_lst)
+    return concatenated_df

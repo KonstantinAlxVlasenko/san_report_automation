@@ -59,12 +59,14 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=
     filled_join_lst = [name+'_join' for name in filled_lst]
     right_join_df.rename(columns = dict(zip(filled_lst, filled_join_lst)), inplace = True)
     # left join left and right DataFrames on join_lst columns
-
     left_df = left_df.merge(right_join_df, how = 'left', on = join_lst)
     # for each columns pair (w/o (null values) and w _join prefix (filled values)
     for filled_name, filled_join_name in zip(filled_lst, filled_join_lst):
         # copy values from right DataFrame column to left DataFrame if left value ios null 
-        left_df[filled_name].fillna(left_df[filled_join_name], inplace = True)
+        
+        # left_df[filled_name].fillna(left_df[filled_join_name], inplace = True)
+
+        left_df[filled_name] = left_df[filled_name].fillna(left_df[filled_join_name])
         # drop column with _join prefix
         left_df.drop(columns = [filled_join_name], inplace = True)
     return left_df

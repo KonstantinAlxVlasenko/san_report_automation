@@ -56,6 +56,7 @@ def connection_statistics(df, connected_dev_columns, tag):
     switch_conn_total_df = dfop.verify_group_symmetry(switch_conn_total_df, symmetry_grp=['Fabric_name', 'switchPair_id'], symmetry_columns=connected_dev_columns[2:])
     # check if switch pair is present
     mask_connection_pair_absent = switch_conn_total_df.groupby(by=['Fabric_name', 'switchPair_id'])['switchWwn'].transform('count') < 2
+    dfop.column_to_object(switch_conn_total_df, 'Connection_pair_absence_note')
     switch_conn_total_df.loc[mask_connection_pair_absent , 'Connection_pair_absence_note'] = 'connection_pair_absent'
     switch_conn_total_df['Asymmetry_note'].fillna(switch_conn_total_df['Connection_pair_absence_note'], inplace=True)
     switch_conn_total_df.drop(columns=['Connection_pair_absence_note'], inplace=True)
@@ -171,6 +172,8 @@ def add_notes(sw_connection_statistics_df):
     """Function to add notes if Principal switch is not in core and
     if Principal FOS version is not recent in the fabic"""
 
+    dfop.column_to_object(sw_connection_statistics_df, 'Principal_core_note', 'Principal_fos_note')
+    
     # note if principal switch is not core switch
     mask_principal = sw_connection_statistics_df['switchRole'] == 'Principal'
     mask_not_core = sw_connection_statistics_df['Core_switch_note'].isna()

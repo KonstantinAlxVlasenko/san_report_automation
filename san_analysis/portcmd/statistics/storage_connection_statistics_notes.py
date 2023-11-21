@@ -1,5 +1,6 @@
 """Module to add notes to storage connection statistics based on connection details in DataFrame"""
 
+import utilities.dataframe_operations as dfop
 
 def add_notes(storage_connection_statistics_df, storage_ports_df):
     """Function to add notes to storage_connection_statistics_df DataFrame"""
@@ -104,6 +105,7 @@ def add_notes(storage_connection_statistics_df, storage_ports_df):
         mask_virtual_port_absence = storage_connection_statistics_df['Physical_virtual_unique_quantity'] == 1
         mask_virtual_port = storage_connection_statistics_df['Physical_virtual_unique_quantity'] > 1
         mask_physical_virtual = storage_connection_statistics_df['FLOGI'] == 'physical_virtual'
+        dfop.column_to_object(storage_connection_statistics_df, 'Virtual_port_note')
         storage_connection_statistics_df.loc[mask_virtual_port & mask_physical_virtual, 'Virtual_port_note'] = 'virtual_port_login'
 
         # storage_connection_statistics_df['Virtual_port_note'] = storage_connection_statistics_df['Physical_virtual_unique_quantity'].where(mask_virtual_port_absence, 'virtual_port_login')
@@ -115,7 +117,8 @@ def add_notes(storage_connection_statistics_df, storage_ports_df):
     fabric_lst = storage_ports_df['Fabric'].unique()
     mask_port_level = storage_connection_statistics_df['Group_type'].isin(['port'])
     # if value in All column is equal to value in one of fabrics columns then all ports with current index connected to single fabric
-    mask_port_fabric_connection = storage_connection_statistics_df[fabric_lst].isin(storage_connection_statistics_df['All']).any(axis=1)                        
+    mask_port_fabric_connection = storage_connection_statistics_df[fabric_lst].isin(storage_connection_statistics_df['All']).any(axis=1)
+    dfop.column_to_object(storage_connection_statistics_df, 'Port_note')
     storage_connection_statistics_df.loc[mask_port_level & ~mask_port_fabric_connection, 'Port_note'] = 'multiple fabrics connection'
 
     # symmetry and port parity connection are verified for each Fabric_name

@@ -9,7 +9,7 @@ import utilities.database_operations as dbop
 import utilities.report_operations as report
 from san_automation_constants import SERVER_DESC, STORAGE_DESC
 
-from .drop_connector_shape import drop_connector_shape, shape_font_change
+from .drop_connector_shape import drop_connector_shape, shape_font_size_change
 from .visio_document import activate_visio_page, get_tqdm_desc_indented
 
 
@@ -97,7 +97,7 @@ def drop_device_shape(device_sr, page, stn, x_coordinate, device_font_size):
         
     device_shape.Text = shape_text
     
-    shape_font_change(device_shape, device_font_size)
+    shape_font_size_change(device_shape, device_font_size)
 
     # if unknown server is found make text field wider
     if re.search('SRV ([\da-f:]+)', shape_text):

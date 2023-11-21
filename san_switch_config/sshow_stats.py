@@ -6,6 +6,8 @@ import re
 import numpy as np
 import pandas as pd
 
+import utilities.dataframe_operations as dfop
+
 SSHOW_SECTIONS = ['SSHOW_PLOG', 'SSHOW_OS', 'SSHOW_EX', 'SSHOW_FABRIC', 
                   'SSHOW_CONDB', 'SSHOW_SERVICE', 'SSHOW_SEC', 'SSHOW_NET', 
                   'SSHOW_SYS', 'SSHOW_FICON', 'SSHOW_ISWITCH', 'SSHOW_ISCSI', 'SSHOW_ASICDB', 
@@ -111,5 +113,6 @@ def update_ssave_sections_stats(ssave_sections_stats_df, ssave_sections_stats_cu
     mask_dropped_dirs = ssave_sections_stats_df['directory_path'].isin(ssave_sections_stats_current_df['directory_path'].unique())
     ssave_sections_stats_df.drop(ssave_sections_stats_df.index[mask_dropped_dirs], inplace = True)
     # add new statistics
-    ssave_sections_stats_df = pd.concat([ssave_sections_stats_df, ssave_sections_stats_current_df])
+    ssave_sections_stats_df = dfop.concatenate_dataframes_vertically(ssave_sections_stats_df, ssave_sections_stats_current_df)
+    # ssave_sections_stats_df = pd.concat([ssave_sections_stats_df, ssave_sections_stats_current_df]) #depricated method
     return ssave_sections_stats_df

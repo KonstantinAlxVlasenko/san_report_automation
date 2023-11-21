@@ -5,6 +5,8 @@ import re
 import numpy as np
 import pandas as pd
 
+import utilities.dataframe_operations as dfop
+
 
 def port_sfp_join(portshow_aggregated_df, sfpshow_df, sfp_model_df, pattern_dct):
     """Function to add sfp readings, sfp model details and find sfp redings intervals"""
@@ -94,6 +96,7 @@ def find_readings_intervals(portshow_sfp_aggregated_df, pattern_dct, readings_co
     
     # mark interval less then lower threshold
     mask_lower_threshold = portshow_sfp_aggregated_df[float_readings_column] < lower_threshold
+    dfop.column_to_object(portshow_sfp_aggregated_df, interval_readings_column)
     portshow_sfp_aggregated_df.loc[
         mask_filtered_ports & mask_lower_threshold, interval_readings_column] = 'x < ' + str(lower_threshold)
     
@@ -109,11 +112,16 @@ def find_readings_intervals(portshow_sfp_aggregated_df, pattern_dct, readings_co
             left=current_lower_threshold, right=current_upper_threshold, inclusive='left')
 
         # write values which fall into current interval to temporary column 
+        dfop.column_to_object(portshow_sfp_aggregated_df, interval_readings_tmp_column)
         portshow_sfp_aggregated_df.loc[mask_filtered_ports & mask_within_interval, interval_readings_tmp_column] = \
             str(current_lower_threshold) + ' <= x < ' + str(current_upper_threshold)     
+        
         # fill empty cells in interval redings column with values from temporary column
-        portshow_sfp_aggregated_df[interval_readings_column].fillna(
-            portshow_sfp_aggregated_df[interval_readings_tmp_column], inplace=True)
+        # portshow_sfp_aggregated_df[interval_readings_column].fillna(
+        #     portshow_sfp_aggregated_df[interval_readings_tmp_column], inplace=True) # depricated method
+        
+        portshow_sfp_aggregated_df[interval_readings_column] = \
+            portshow_sfp_aggregated_df[interval_readings_column].fillna(portshow_sfp_aggregated_df[interval_readings_tmp_column])
         current_lower_threshold += step
     
     # mark interval higher then upper threshold    

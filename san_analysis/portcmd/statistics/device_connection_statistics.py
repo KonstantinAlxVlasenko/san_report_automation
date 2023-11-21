@@ -64,7 +64,9 @@ def prior_preparation(portshow_aggregated_df):
     portshow_aggregated_modified_df = portshow_aggregated_df.loc[mask_complete, columns_lst].copy()
     
     # assign 'unknown' tag for na Device_Location for grouping and crosstab operations
-    portshow_aggregated_modified_df['Device_Location'].fillna('Unknown', inplace=True)
+    portshow_aggregated_modified_df['Device_Location'] = portshow_aggregated_modified_df['Device_Location'].fillna('Unknown')
+    # portshow_aggregated_modified_df['Device_Location'].fillna('Unknown', inplace=True) #depricated method
+    
     # set 'Virtual_Channel', 'speed' with Fabric_label tag
     portshow_aggregated_modified_df['Virtual_Channel'] = \
         portshow_aggregated_modified_df['Fabric_label'] + '_' + portshow_aggregated_modified_df['Virtual_Channel']

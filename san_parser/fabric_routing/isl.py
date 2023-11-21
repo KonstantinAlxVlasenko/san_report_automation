@@ -137,7 +137,10 @@ def fill_missing_values(san_isl_df, san_trunk_df, porttrunkarea_df):
     trunking group number for slave trunk links"""
 
     # fill missing trunk values with previous master trunk number
-    san_trunk_df['Trunking_GroupNumber'].fillna(method='ffill', inplace=True)
+    san_trunk_df['Trunking_GroupNumber'].ffill(inplace=True)
+
+    # san_trunk_df['Trunking_GroupNumber'].fillna(method='ffill', inplace=True) depricated method
+    
     if san_isl_df['Parameters'].notna().any():
         san_isl_df['Parameters'] = san_isl_df['Parameters'].str.replace(' +', ', ', regex=True)
 

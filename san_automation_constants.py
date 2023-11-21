@@ -1,6 +1,6 @@
 
 # software release number
-RELEASE = '0.83'
+RELEASE = '0.9'
 
 # information string
 LEFT_INDENT = 10

@@ -6,7 +6,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-# import utilities.dataframe_operations as dfop
+import utilities.dataframe_operations as dfop
 import utilities.report_operations as report
 
 # auxiliary global variables for auto_fabrics_labeling function
@@ -103,9 +103,7 @@ def fabricshow_porttype_state(switchshow_ports_df, switch_ls_type_df, fabricshow
     # crosstab DataFrame contains summary for port states for switches from switchshow
 
     mask_device_port = switchshow_df['portType'].str.contains('F-Port', na=False)
-    # TO_REMOVE
-    # mask_port_notna = switchshow_df['portType'].notna()
-    # switchshow_df.loc[mask_port_notna & mask_device_port,  ['device_port']] = 'Device_ports'
+    dfop.column_to_object(switchshow_df, 'device_port')
     switchshow_df.loc[mask_device_port,  ['device_port']] = 'Device_ports'
 
     port_state_df = pd.crosstab(index = [switchshow_df.chassis_name, switchshow_df.switchName, 

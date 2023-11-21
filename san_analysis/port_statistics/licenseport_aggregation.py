@@ -14,9 +14,7 @@ def licenseport_statisctics_aggregated(licenseport_df, portshow_aggregated_df,
                                        switch_params_aggregated_df, pattern_dct):
     """Function to create licenseport statistics DataFrame"""
 
-    print('\n')
-    print(licenseport_df)
-    
+
     if not licenseport_df.empty:
         # extract license port title, ports quantity related to the title and POD methiod
         licenseport_extracted_df = extract_licenseport_values(licenseport_df, pattern_dct)

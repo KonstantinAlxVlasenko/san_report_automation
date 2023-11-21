@@ -176,9 +176,13 @@ def remove_domain(df, domain_drop_lst, domain_keep_lst, hostname_column):
         df['Domain_free_tmp'] = df[hostname_domain_column].str.extract(drop_domain_pattern)
         # extract domain
         df['Domain_name_dropped_tmp'] = df[hostname_domain_column].str.extract(domain_pattern)
+        
         # fill empty values in hostname_column with values in tmp column
-        df[hostname_column].fillna(df['Domain_free_tmp'], inplace=True)
-        df['Domain_name_dropped'].fillna(df['Domain_name_dropped_tmp'], inplace=True)
+        df[hostname_column] = df[hostname_column].fillna(df['Domain_free_tmp'])
+        # df[hostname_column].fillna(df['Domain_free_tmp'], inplace=True) #depricated method
+        
+        df['Domain_name_dropped'] = df['Domain_name_dropped'].fillna(df['Domain_name_dropped_tmp'])
+        # df['Domain_name_dropped'].fillna(df['Domain_name_dropped_tmp'], inplace=True) #depricated method
     
     domain_drop_status(df, hostname_column, domain_drop_status_column, status='domain_dropped')
     # fill empty values in hostname_column with values with no domains or 
@@ -194,6 +198,7 @@ def domain_drop_status(df, hostname_column, domain_drop_status_column, status):
     
     mask_hostname_filled = df[hostname_column].notna()
     mask_domain_status_na = df[domain_drop_status_column].isna()
+    df[domain_drop_status_column] = df[domain_drop_status_column].astype('object')
     df.loc[mask_hostname_filled & mask_domain_status_na, domain_drop_status_column] = status
 
 

@@ -161,7 +161,10 @@ def errdump_filter(errdump_aggregated_df):
     
     # join multiple Device_Host_Name_Ports behind one port
     # groupby drop rows with nan values
-    errdump_filtered_df.fillna('na_cell', inplace=True)
+    for column in errdump_filtered_df.columns:
+        if errdump_filtered_df[column].isna().any():
+            errdump_filtered_df[column] = errdump_filtered_df[column].fillna('na_cell')
+    # errdump_filtered_df.fillna('na_cell', inplace=True) # depricated method
     errdump_filtered_df = errdump_filtered_df.groupby(by=errdump_grp_columns[:-5]).agg(', '.join)
     errdump_filtered_df.reset_index(inplace=True)
     
@@ -187,7 +190,7 @@ def raslog_report(raslog_frequent_df, data_names, report_headers_df, report_colu
         # if all switchnames and chassis names are not identical
         if not all(raslog_frequent_df.chassis_name == raslog_frequent_df.switchName):
             # change keep chassis_name column tag to True 
-            report_columns_usage_upd_sr['chassis_info_usage'] = True
+            report_columns_usage_upd_sr['chassis_info_usage'] = 1
 
     raslog_report_df = report.generate_report_dataframe(raslog_frequent_df, report_headers_df, report_columns_usage_upd_sr, data_names[2])
     raslog_report_df.dropna(axis=1, how = 'all', inplace=True)

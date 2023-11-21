@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 
+import utilities.dataframe_operations as dfop
 
 
 def note_zonemember_statistics(zonemember_zonelevel_stat_df):
@@ -69,6 +70,7 @@ def note_zonemember_statistics(zonemember_zonelevel_stat_df):
     # valid zones
     invalid_zone_tags = ['no_target', 'no_initiator', 'no_target, no_initiator', 'no_target, several_initiators']
     mask_valid_zone = ~zonemember_stat_notes_df['Target_Initiator_note'].isin(invalid_zone_tags)
+    dfop.column_to_object(zonemember_stat_notes_df, 'Pair_zone_note')
     zonemember_stat_notes_df.loc[mask_valid_zone & mask_device_connection & mask_no_pair_zone, 'Pair_zone_note'] = 'pair_zone_not_found'
     return zonemember_stat_notes_df
 

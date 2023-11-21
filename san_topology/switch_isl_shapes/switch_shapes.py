@@ -102,12 +102,13 @@ def concat_switch_class_mode(san_graph_switch_df):
 
     san_graph_switch_df['switchClass_mode'] = san_graph_switch_df['switchClass']
     
-    # # switchType for four slot directors
-    # dir_4slot_type = [77, 121, 165, 179]
     san_graph_switch_df['switchType'] = pd.to_numeric(san_graph_switch_df['switchType'], errors='ignore')
     # add dir_4slot
     mask_dir_4slot = san_graph_switch_df['switchType'].isin(DIR_4SLOTS_TYPE)
     san_graph_switch_df.loc[mask_dir_4slot, 'switchClass_mode'] = san_graph_switch_df['switchClass_mode'] + '_4SLOT'
+    # add PRINCIPAL label
+    mask_principal = san_graph_switch_df['switchRole'].str.contains('Principal', na=False)
+    san_graph_switch_df.loc[mask_principal, 'switchClass_mode'] = san_graph_switch_df['switchClass_mode'] + ' PRINCIPAL'
     # add AG label
     mask_ag = san_graph_switch_df['switchMode'].str.contains('Access Gateway', na=False)
     san_graph_switch_df.loc[mask_ag, 'switchClass_mode'] = san_graph_switch_df['switchClass_mode'] + ' AG'
@@ -129,15 +130,21 @@ def concat_switch_class_mode(san_graph_switch_df):
 
 
 def concat_switch_name_did(san_graph_switch_df, switch_params_aggregated_df):
-    """Function to create combination of switchname and switch domain ID.
-    This combination is used for shape Text in Visio diagram"""
+    """Function to create combination of switchname, switch domain ID and rack.
+    This combination is used for shape Text in Visio diagram."""
     
     # add domain ID and rack
     san_graph_switch_df = dfop.dataframe_fillna(san_graph_switch_df, switch_params_aggregated_df, 
                                                 join_lst=['switchWwn'], filled_lst=['Domain_ID', 'Device_Rack'])
     # add 'DID=' tag
     mask_domain_id = san_graph_switch_df['Domain_ID'].notna()
-    san_graph_switch_df.loc[mask_domain_id, 'Domain_ID_tagged'] = "DID=" + san_graph_switch_df['Domain_ID']    
+    san_graph_switch_df.loc[mask_domain_id, 'Domain_ID_tagged'] = "DID=" + san_graph_switch_df['Domain_ID']
+    
+    # switch role removed from information string
+    # # сut first symbol in swithRole
+    # mask_role_notna = san_graph_switch_df['switchRole'].notna()
+    # san_graph_switch_df.loc[mask_role_notna, 'switchRole'] = san_graph_switch_df['switchRole'].str[0]
+    
     # concatenate DID and rack
     san_graph_switch_df = dfop.merge_columns(san_graph_switch_df, 
                                                 summary_column='switchDetails', merge_columns=['Domain_ID_tagged', 'Device_Rack'])
@@ -148,23 +155,6 @@ def concat_switch_name_did(san_graph_switch_df, switch_params_aggregated_df):
     # copy switc names for values where DID value is not applicable (VC, AG, NPV)
     san_graph_switch_df['switchName_DID'].fillna(san_graph_switch_df['switchName'], inplace=True)
     return san_graph_switch_df
-
-
-
-# def concat_switch_name_did(san_graph_switch_df, switch_params_aggregated_df):
-#     """Function to create combination of switchname and switch domain ID.
-#     This combination is used for shape Text in Visio diagram"""
-    
-#     # add domain ID and rack
-#     san_graph_switch_df = dfop.dataframe_fillna(san_graph_switch_df, switch_params_aggregated_df, 
-#                                                 join_lst=['switchWwn'], filled_lst=['Domain_ID', 'Device_Rack'])    
-#     # concatenate switchName and Domain ID if DID value exist
-#     mask_domain_id = san_graph_switch_df['Domain_ID'].notna()
-#     san_graph_switch_df.loc[mask_domain_id, 'switchName_DID'] = \
-#         san_graph_switch_df['switchName'] + " (DID=" + san_graph_switch_df['Domain_ID'] + ")"
-#     # copy switc names for values where DID value is not applicable (VC, AG, NPV)
-#     san_graph_switch_df['switchName_DID'].fillna(san_graph_switch_df['switchName'], inplace=True)
-#     return san_graph_switch_df
 
 
 def sw_pair_model(series):

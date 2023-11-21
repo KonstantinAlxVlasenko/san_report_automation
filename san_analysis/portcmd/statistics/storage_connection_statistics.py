@@ -61,11 +61,13 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
         if mask_column_notna.any():
             storage_ports_df.loc[mask_column_notna, column] = column + '_' + storage_ports_df.loc[mask_column_notna, column]
     # create controller slot column to count statistics for each controller's slot individually
+    storage_ports_df['Controller_Slot'] = None
     mask_controller_slot = storage_ports_df[['Controller', 'Slot']].notna().all(axis=1)
     if mask_controller_slot.any():
         storage_ports_df.loc[mask_controller_slot, ['Controller_Slot']] = storage_ports_df['Controller'] + ' - ' + storage_ports_df['Slot']
-    else:
-        storage_ports_df['Controller_Slot'] = np.nan
+    # REMOVE column created before values concat 
+    # else:
+    #     storage_ports_df['Controller_Slot'] = np.nan
 
     # create storage column to count summary statistics for all storage ports
     storage_ports_df['Storage'] = 'Storage ' + storage_ports_df['Device_Host_Name']
@@ -127,7 +129,8 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
             storage_connection_statistics_df.rename(columns=rename_dct, inplace=True)
 
         # merge Port_note and Port_parity_note columns
-        storage_connection_statistics_df['Port_note'].fillna(storage_connection_statistics_df['Port_parity_note'], inplace=True)
+        storage_connection_statistics_df['Port_note'] = storage_connection_statistics_df['Port_note'].fillna(storage_connection_statistics_df['Port_parity_note'])
+        # storage_connection_statistics_df['Port_note'].fillna(storage_connection_statistics_df['Port_parity_note'], inplace=True) #depricated method
         storage_connection_statistics_df.drop(columns=['Port_parity_note'], inplace=True)
 
         # # move Group_type column

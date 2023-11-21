@@ -52,6 +52,7 @@ def sfp_prior_preparation(portshow_sfp_aggregated_df, pattern_dct):
     sfp_aggregated_modified_df['Port_quantity'] = 'Port_quantity'
     # transceiver quantity column
     mask_sfp_pn_notna = sfp_aggregated_modified_df['Transceiver_PN'].notna()
+    dfop.column_to_object(sfp_aggregated_modified_df, 'Transceiver_quantity')
     sfp_aggregated_modified_df.loc[mask_sfp_pn_notna, 'Transceiver_quantity'] = 'Transceiver_quantity'
     return sfp_aggregated_modified_df
 
@@ -95,10 +96,15 @@ def comment_sfp_support(sfp_aggregated_modified_df):
 
     mask_supported = sfp_aggregated_modified_df['Transceiver_Supported'] == 'Yes'
     mask_not_supported = sfp_aggregated_modified_df['Transceiver_Supported'] == 'No'
+    dfop.column_to_object(sfp_aggregated_modified_df, 'Transceiver_Supported_stats', 'Transceiver_Supported_stats')
     sfp_aggregated_modified_df.loc[mask_supported, 'Transceiver_Supported_stats'] = 'Supported SFP'
     sfp_aggregated_modified_df.loc[mask_not_supported, 'Transceiver_Supported_stats'] = 'Unsupported SFP'
-    sfp_aggregated_modified_df['Transceiver_Supported_stats'].fillna(
-        sfp_aggregated_modified_df['Transceiver_Supported'], inplace=True)
+    
+    sfp_aggregated_modified_df['Transceiver_Supported_stats'] = \
+        sfp_aggregated_modified_df['Transceiver_Supported_stats'].fillna(sfp_aggregated_modified_df['Transceiver_Supported'])
+    
+    # sfp_aggregated_modified_df['Transceiver_Supported_stats'].fillna(
+    #     sfp_aggregated_modified_df['Transceiver_Supported'], inplace=True) # depricated method
 
 
 def comment_specific_sfp(sfp_df, sfp_specification_column: str, sfp_specification_name: 

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
+import utilities.data_structure_operations as dsop
 
 
 def errdump_aggregated(errdump_df, switchshow_df, switch_params_aggregated_df, portshow_aggregated_df, pattern_dct):
@@ -75,6 +76,13 @@ def message_extract(errdump_aggregated_df, pattern_dct):
         [pattern_dct['sec_violation_login_failure'], ['Dashboard_category', 'Condition', 'IP_Address']],
         [pattern_dct['sec_violation_unauthorized_host'], ['Dashboard_category', 'Condition', 'IP_Address']],
         ]        
+    
+    # get unique columns to extract values to
+    extract_columns_lst = [extract_pattern_columns[1] for  extract_pattern_columns in extract_pattern_columns_lst]
+    extract_columns_lst = dsop.flatten(extract_columns_lst)
+    extract_columns_lst = dsop.remove_diplicates_from_list(extract_columns_lst)
+    dfop.column_to_object(errdump_aggregated_df, *extract_columns_lst)
+    
     # extract corresponding values if regex pattern applicable
     for pattern, extracted_columns in extract_pattern_columns_lst:
         # pattern contains groups but str.cotains used to identify mask
@@ -97,9 +105,10 @@ def message_extract(errdump_aggregated_df, pattern_dct):
     mask_condition_na = errdump_aggregated_df['Condition'].isna()
     mask_ignored_message = errdump_aggregated_df['Message_ID'].str.contains(pattern_dct['ignore_message'], regex=True)
     # mark messages with extracted, ingnored or copied tag
+    dfop.column_to_object(errdump_aggregated_df, 'Message_status')
     errdump_aggregated_df.loc[~mask_condition_na, 'Message_status'] = 'extracted'
     errdump_aggregated_df.loc[mask_ignored_message, 'Message_status'] = 'ignored'
-    errdump_aggregated_df['Message_status'].fillna('copied', inplace=True)
+    errdump_aggregated_df['Message_status'] = errdump_aggregated_df['Message_status'].fillna('copied')
     
     # copy messages which were not extracted but shouldn't be ignored to Condition column
     errdump_aggregated_df.loc[mask_condition_na & ~mask_ignored_message, 'Condition'] = \

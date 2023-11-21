@@ -32,8 +32,8 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         # trunkimg licence present on both switches
         mask_trunk_lic =  isl_statistics_df['Trunking_lic_both_switches'] == 'Yes'
         mask_trunk_absence = mask_port_quantity & mask_single_link_isl & mask_trunk_lic
-        # TO_REMOVE
-        # isl_statistics_df['Connection_note'] = np.where(mask_trunk_absence, 'trunk_missing', pd.NA)
+
+        dfop.column_to_object(isl_statistics_df, 'Connection_note')
         isl_statistics_df.loc[mask_trunk_absence, 'Connection_note'] = 'link(s)_out_of_trunk'
         
         """
@@ -141,8 +141,9 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
         """Function to verify if pair connection exist in another Fabric_label"""
     
         mask_connection_pair_absent = isl_statistics_df.groupby(by=['Fabric_name', 'switchPair_id', 'Connected_switchPair_id'])['switchWwn'].transform('count') < 2
+        dfop.column_to_object(isl_statistics_df, 'Connection_pair_absence_note')
         isl_statistics_df.loc[mask_connection_pair_absent , 'Connection_pair_absence_note'] = 'connection_pair_absent'
-        isl_statistics_df['Asymmetry_note'].fillna(isl_statistics_df['Connection_pair_absence_note'], inplace=True)
+        isl_statistics_df['Asymmetry_note'] = isl_statistics_df['Asymmetry_note'].fillna(isl_statistics_df['Connection_pair_absence_note'])
         isl_statistics_df.drop(columns=['Connection_pair_absence_note'], inplace=True)
         return isl_statistics_df
 

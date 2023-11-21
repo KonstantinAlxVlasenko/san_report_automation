@@ -51,6 +51,9 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     # change count columns values representation
     switch_params_cp_df['LS_type'] = switch_params_cp_df['LS_type'].str.capitalize() + '_sw'
 
+    # create notes columns
+    dfop.column_to_object(switch_params_cp_df, 'FC_Router_ON', 'Fabric_Vision_lic', 'Trunking_lic')
+
     mask_router = switch_params_cp_df['FC_Router'] == 'ON'
     switch_params_cp_df.loc[mask_router, 'FC_Router_ON'] = 'FC_Router'
 

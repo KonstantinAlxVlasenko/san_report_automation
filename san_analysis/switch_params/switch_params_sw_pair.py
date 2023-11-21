@@ -84,6 +84,7 @@ def add_notes(switch_params_aggregated_df):
 
         mask_duplicated_fabric_domain = switch_params_aggregated_df.groupby(by=['Fabric_name', 'switchDomain'])['switchWwn'].transform('count') > 1
         mask_native = switch_params_aggregated_df['switchDomain'].notna()
+        dfop.column_to_object(switch_params_aggregated_df, 'Fabric_domain_note')
         switch_params_aggregated_df.loc[mask_duplicated_fabric_domain & mask_native, 'Fabric_domain_note'] = 'duplicated_fabric_domain'
         return switch_params_aggregated_df
     
@@ -94,6 +95,7 @@ def add_notes(switch_params_aggregated_df):
         switch_params_aggregated_df['uptime_days'] = switch_params_aggregated_df['uptime_days'].apply(pd.to_numeric)
         mask_uptime_exceeded = switch_params_aggregated_df['uptime_days'] > 365
         mask_uptime_notna = switch_params_aggregated_df['uptime_days'].notna()
+        dfop.column_to_object(switch_params_aggregated_df, 'Uptime_note')
         switch_params_aggregated_df.loc[mask_uptime_notna & mask_uptime_exceeded, 'Uptime_note'] = 'uptime_exceeded'
         return switch_params_aggregated_df
 
@@ -102,6 +104,7 @@ def add_notes(switch_params_aggregated_df):
         """Function to verify if switch have paired switch"""
         
         mask_switch_pair_absent = switch_params_aggregated_df.groupby(by=['Fabric_name', 'switchPair_id'])['switchPair_id'].transform('count') < 2
+        dfop.column_to_object(switch_params_aggregated_df, 'Switch_pair_absence_note')
         switch_params_aggregated_df.loc[mask_switch_pair_absent , 'Switch_pair_absence_note'] = 'switch_pair_absent'
         return switch_params_aggregated_df
     
@@ -109,6 +112,7 @@ def add_notes(switch_params_aggregated_df):
         """Function to verify if switch pairs have same FOS"""
 
         mask_fos_different = switch_params_aggregated_df.groupby(by=['Fabric_name', 'switchPair_id'])['FOS_version'].transform('nunique') > 1
+        dfop.column_to_object(switch_params_aggregated_df, 'Switch_pair_FOS_note')
         switch_params_aggregated_df.loc[mask_fos_different , 'Switch_pair_FOS_note'] = 'different_fos_within_sw_pair'
         return switch_params_aggregated_df  
 

@@ -5,6 +5,7 @@ import pandas as pd
 
 import utilities.database_operations as dbop
 import utilities.dataframe_operations as dfop
+import utilities.data_structure_operations as dsop
 import utilities.module_execution as meop
 from san_automation_constants import \
     MIN_DEVICE_NUMBER_MATCH_RATIO as min_device_number_match_ratio
@@ -17,15 +18,10 @@ from .switch_pair_correction import create_wwn_name_match_series
 from .switch_pair_search import *
 from .switch_pair_verification import verify_switch_pair_match
 
-# # min connected device match ratio for the switch and the pair switch
-# min_device_number_match_ratio = 0.5
-# # min switch name match ratio for switch and the pair switch 
-# min_sw_name_match_ratio = 0.8
 
 sw_pair_columns = ['Connected_device_number', 'Device_number_match', 'Device_match_ratio', 
                    'Switch_pairing_type', 'switchName_pair', 'switchWwn_pair', 'switchName_pair_by_labels',
                    'switchName_pair_max_device_connected', 'switchWwn_pair_max_device_connected']
-
 
 
 def auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr_xd_proxydev_df):
@@ -43,11 +39,15 @@ def auto_switch_pairing(switch_params_aggregated_df, portshow_aggregated_df, fcr
     # vc and cisco pairs
     vc_cisco_pair_df, portshow_vc_cisco_devices_df = search_vc_cisco_pairs(portshow_aggregated_df, fabric_labels_lst)
     # devices connecetd to ag switches, npv switches and vc
-    npv_ag_connected_devices_df = pd.concat([portshow_npiv_devices_df, portshow_vc_cisco_devices_df])
+    npv_ag_connected_devices_df = dfop.concatenate_dataframes_vertically(portshow_npiv_devices_df, portshow_vc_cisco_devices_df)
+    # npv_ag_connected_devices_df = pd.concat([portshow_npiv_devices_df, portshow_vc_cisco_devices_df]) # depricated method
     npv_ag_connected_devices_df.sort_values(by=['Fabric_name', 'Fabric_label', 'switchType', 'switchName', 'switchWwn', 
                                                 'Connected_portId'], inplace=True, ignore_index=True)
 
-    switch_pair_df = pd.concat([switch_pair_brocade_df, switch_pair_fd_xd, vc_cisco_pair_df])
+    # concatenate all switch pairs DataFrames
+    switch_pair_df = dfop.concatenate_dataframes_vertically(switch_pair_brocade_df, switch_pair_fd_xd, vc_cisco_pair_df)
+    # switch_pair_df = pd.concat([switch_pair_brocade_df, switch_pair_fd_xd, vc_cisco_pair_df]) # depricated method
+
     switch_pair_df = verify_switch_pair_match(switch_pair_df)
     return switch_pair_df, npv_ag_connected_devices_df
     

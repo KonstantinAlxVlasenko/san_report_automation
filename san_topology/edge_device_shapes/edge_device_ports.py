@@ -29,7 +29,9 @@ def find_connected_devices(portshow_aggregated_df, npv_ag_connected_devices_df, 
     fcr_xd_proxydev_cp_df['speed'] = None
     # concatenate dataframes wwns connected to all switches except confirmed AG and NPV switches,
     # wwns connected to confirmed AG and NPV switches and wwns connected to translate domains
-    connected_devices_df = pd.concat([connected_devices_df, npv_ag_connected_devices_cp_df, fcr_xd_proxydev_cp_df])
+    connected_devices_df = dfop.concatenate_dataframes_vertically(connected_devices_df, npv_ag_connected_devices_cp_df, fcr_xd_proxydev_cp_df)
+    # connected_devices_df = pd.concat([connected_devices_df, npv_ag_connected_devices_cp_df, fcr_xd_proxydev_cp_df]) # depricated method
+    
     connected_devices_df.drop_duplicates(subset=['Fabric_name', 'Fabric_label', 'switchWwn', 'Connected_portWwn'], 
                                             inplace=True, ignore_index=True)
     return connected_devices_df
@@ -48,6 +50,7 @@ def tag_npiv_devices(connected_devices_df):
     """Function to tag NPIV devices"""
 
     mask_npiv = connected_devices_df['Device_type'].str.contains('NPIV', na=False)
+    dfop.column_to_object(connected_devices_df, 'port_NPIV')
     connected_devices_df.loc[mask_npiv, 'port_NPIV'] = 'NPIV'
     return connected_devices_df
 
