@@ -140,11 +140,6 @@ def concat_switch_name_did(san_graph_switch_df, switch_params_aggregated_df):
     mask_domain_id = san_graph_switch_df['Domain_ID'].notna()
     san_graph_switch_df.loc[mask_domain_id, 'Domain_ID_tagged'] = "DID=" + san_graph_switch_df['Domain_ID']
     
-    # switch role removed from information string
-    # # сut first symbol in swithRole
-    # mask_role_notna = san_graph_switch_df['switchRole'].notna()
-    # san_graph_switch_df.loc[mask_role_notna, 'switchRole'] = san_graph_switch_df['switchRole'].str[0]
-    
     # concatenate DID and rack
     san_graph_switch_df = dfop.merge_columns(san_graph_switch_df, 
                                                 summary_column='switchDetails', merge_columns=['Domain_ID_tagged', 'Device_Rack'])
