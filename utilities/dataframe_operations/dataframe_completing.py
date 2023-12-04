@@ -50,11 +50,11 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=
     right_join_df = right_df.loc[:, join_lst + filled_lst].copy()
     # drop rows with null values in columns to join on
     if drop_na:
-        right_join_df.dropna(subset = join_lst, inplace = True)
+        right_join_df.dropna(subset=join_lst, inplace = True)
     # if required (deafult) drop duplicates values from join columns 
     # to avoid rows duplication in left DataDrame
     if remove_duplicates:
-        right_join_df.drop_duplicates(subset = join_lst, inplace = True)
+        right_join_df.drop_duplicates(subset=join_lst, inplace = True)
     # rename columns with filled values for right DataFrame
     filled_join_lst = [name+'_join' for name in filled_lst]
     right_join_df.rename(columns = dict(zip(filled_lst, filled_join_lst)), inplace = True)

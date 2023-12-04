@@ -1,6 +1,6 @@
 
 # software release number
-RELEASE = '0.9'
+RELEASE = '0.92'
 
 # information string
 LEFT_INDENT = 10
@@ -41,3 +41,8 @@ MIN_SW_NAME_MATCH_RATIO = 0.8
 DIR_4SLOTS_TYPE = [77, 121, 165, 179]
 # All directors (8-slots, 4-slots)
 DIRECTOR_TYPE = [42, 62, 77, 120, 121, 165, 166, 179, 180]
+
+# raslog statistics period in months
+RASLOG_PERIOD = 6
+# filter raslog message occurance for a month 
+RASLOG_REPEATER_THRESHOLD = 3
