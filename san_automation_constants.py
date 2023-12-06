@@ -1,6 +1,6 @@
 
 # software release number
-RELEASE = '0.92'
+RELEASE = '0.93'
 
 # information string
 LEFT_INDENT = 10
@@ -36,6 +36,8 @@ COLOUR_PALETTE = HPE_PALETTE
 MIN_DEVICE_NUMBER_MATCH_RATIO = 0.5
 # min switch name match ratio for switch and the pair switch 
 MIN_SW_NAME_MATCH_RATIO = 0.8
+# filter off or on npiv ports to count physical links of switch -> device connection on Visio drawing
+FILTER_NPIV_LINKS = True
 
 # Direcotors with 4 slots
 DIR_4SLOTS_TYPE = [77, 121, 165, 179]
@@ -44,5 +46,5 @@ DIRECTOR_TYPE = [42, 62, 77, 120, 121, 165, 166, 179, 180]
 
 # raslog statistics period in months
 RASLOG_PERIOD = 6
-# filter raslog message occurance for a month 
+# filter raslog message occurance during the month 
 RASLOG_REPEATER_THRESHOLD = 3

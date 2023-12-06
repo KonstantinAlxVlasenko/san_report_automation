@@ -4,9 +4,10 @@
 import pandas as pd
 
 import utilities.dataframe_operations as dfop
-from san_automation_constants import FILTER_NPIV_LINKS
 
 from ..shape_details import create_shape_name
+
+CLEAR_NPIV_LINKS = True
 
 
 def create_device_link_description(connected_devices_df, switch_pair_df, pattern_dct):
@@ -14,31 +15,9 @@ def create_device_link_description(connected_devices_df, switch_pair_df, pattern
     Each switch -> device_name row contains link description for fabric_name level
     (all switch pairs -> device name connection in the fabric_name)"""
     
-    # count physical links quantity between switch and device
-    count_physical_link_quantity(connected_devices_df)    
-    # create switch shape name
-    create_shape_name(connected_devices_df, "switchName", "switchWwn", "switch_shapeName")
-    # add switchPair_Id
-    connected_devices_df = dfop.dataframe_fillna(connected_devices_df, switch_pair_df, join_lst=['switchWwn'], filled_lst=['switchPair_id'])
-    # align subtype for srv and lib
-    align_device_type(connected_devices_df)
-    # extract Enclosure and slot
-    connected_devices_df = extract_enclosure_slot(connected_devices_df, pattern_dct)
-    # speed and NPIV link description for switch -> device_name level with switchPair_id and fabric_label ('2A: 2xN16, 2x16G, 2xNPIV')
-    device_links_df = create_sw_device_link_description(connected_devices_df)
-    # speed and NPIV link description for switch -> device_name connection in fabric_name level 
-    # ('2A: 2xN16, 2x16G, 2xNPIV', '2B: 2xN16, 2x16G, 2xNPIV', '3A: 2xN16', '3B: 2x16G')
-    connected_devices_df = create_fabric_swpair_device_link_description(connected_devices_df, device_links_df)
-    return connected_devices_df
-
-
-def count_physical_link_quantity(connected_devices_df):
-    """Function to count physical links quantity between switch and device.
-    Physical links quantity is counted as number of unique wwpn on the switch port"""
-
-    # if FILTER_NPIV_LINKS option is on then npiv connections behind the switch port are filtered off
+    
     connected_devices_df['Connected_portWwn_npiv_free'] = connected_devices_df['Connected_portWwn']
-    if FILTER_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
+    if CLEAR_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
         mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
         phys_link_count_column = 'Connected_portWwn_npiv_free'
         connected_devices_df.loc[mask_npiv, 'Connected_portWwn_npiv_free'] = None
@@ -49,9 +28,29 @@ def count_physical_link_quantity(connected_devices_df):
     connected_devices_df['Physical_link_quantity'] = connected_devices_df.groupby(
         by=['Fabric_name', 'Fabric_label', 'switchWwn', 
             'Device_Host_Name', 'deviceType'])[phys_link_count_column].transform('count') # link_quantity
-    # drop column to avoid link duplication on link description for switch -> device_name connection in fabric_name level
-    connected_devices_df.drop(columns='Connected_portWwn_npiv_free', inplace=True)
+    
+    # connected_devices_df.drop(columns='Connected_portWwn_npiv_free', inplace=True)
+    
+    
+    # create switch shape name
+    create_shape_name(connected_devices_df, "switchName", "switchWwn", "switch_shapeName")
+    # add switchPair_Id
+    connected_devices_df = dfop.dataframe_fillna(connected_devices_df, switch_pair_df, join_lst=['switchWwn'], filled_lst=['switchPair_id'])
+    
+    # align subtype for srv and lib
+    align_device_type(connected_devices_df)
+    
+    # extract Enclosure and slot
+    connected_devices_df = extract_enclosure_slot(connected_devices_df, pattern_dct)
+    # speed and NPIV link description for switch -> device_name level with switchPair_id and fabric_label ('2A: 2xN16, 2x16G, 2xNPIV')
+    device_links_df = create_sw_device_link_description(connected_devices_df, phys_link_count_column)
+    
+    # speed and NPIV link description for switch -> device_name connection in fabric_name level 
+    # ('2A: 2xN16, 2x16G, 2xNPIV', '2B: 2xN16, 2x16G, 2xNPIV', '3A: 2xN16', '3B: 2x16G')
+    connected_devices_df = create_fabric_swpair_device_link_description(connected_devices_df, device_links_df)
     return connected_devices_df
+
+
 
 
 def align_device_type(connected_devices_df):
@@ -84,14 +83,15 @@ def extract_enclosure_slot(connected_devices_df, pattern_dct):
     return connected_devices_df
 
 
-def create_sw_device_link_description(connected_devices_df):
+def create_sw_device_link_description(connected_devices_df, phys_link_count_column):
     """Function to create speed and NPIV link description for switch -> device_name level
     with switchPair_id and fabric_label. Each row is inique switch -> device_name level coneection
     with 'Link_description' presented as combination of 'switchPair_id', 'Fabric_label', 
     'Link_description_speed', 'Link_description_port_NPIV'  ('2A: 2xN16, 2x16G, 2xNPIV')"""
 
+
     # create speed link description for switch -> device_name level  (2xN16, 2x16G)
-    link_description_speed_df = create_sw_device_link_speed_description(connected_devices_df)
+    link_description_speed_df = create_sw_device_link_speed_description(connected_devices_df, phys_link_count_column)
     # create npiv link description for switch -> device_name level (2xNPIV)
     link_description_npiv_df = create_sw_device_link_npiv_description(connected_devices_df)
 
@@ -99,7 +99,7 @@ def create_sw_device_link_description(connected_devices_df):
     device_links_df = pd.merge(link_description_speed_df, link_description_npiv_df, how='left', 
                                on=['Fabric_name', 'Fabric_label', 'switchWwn', 'switchPair_id', 'Device_Host_Name', 'deviceType'])
     # create Link description column as combination of speed and npiv details
-    sep = ' + ' if FILTER_NPIV_LINKS else ', '
+    sep = ' + ' if CLEAR_NPIV_LINKS else ', '
     device_links_df = dfop.merge_columns(device_links_df, summary_column='Link_description', 
                                          merge_columns=['Link_description_speed', 'Link_description_port_NPIV'], sep=sep)
     # link description as combination of switchPair_id, fabric_label and link description
@@ -110,24 +110,37 @@ def create_sw_device_link_description(connected_devices_df):
     return device_links_df
 
 
-def create_sw_device_link_speed_description(connected_devices_df):
+def create_sw_device_link_speed_description(connected_devices_df, phys_link_count_column):
     """Function to create speed link description for switch -> device_name level  (2xN16, 2x16G)"""
 
-    # if FILTER_NPIV_LINKS is on filter off npiv ports to cound link speed for real links only
-    if FILTER_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
+    if CLEAR_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
         mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
-        connected_devices_speed_df = connected_devices_df.loc[~mask_npiv].copy()
-    else:
-        connected_devices_speed_df = connected_devices_df.copy()
-    
+        connected_devices_df.loc[mask_npiv, 'speed'] = None
+
     # count values in 'speed' columns for fabric_name -> fabric_label -> switch -> device_name level
-    link_description_speed_df = count_links_with_values_in_column(connected_devices_speed_df, 'speed')
+    link_description_speed_df = count_links_with_values_in_column(connected_devices_df, count_column='speed', count_value=phys_link_count_column)
+    link_description_speed_df.drop(columns=['Connected_portWwn_npiv_free', 'Connected_portWwn'], errors='ignore', inplace=True)
+
+    # print('\n')
+    # print(link_description_speed_df)
+    # print(link_description_speed_df['Link_description_speed'].unique())
+    # mask_zero = link_description_speed_df['Link_description_speed'] == '0x'
+    # print(link_description_speed_df.loc[mask_zero])
+    # mask_netapp = link_description_speed_df['Device_Host_Name'].str.lower().str.contains('netapp25')
+    # print(link_description_speed_df.loc[mask_netapp])
+    # exit()
+
+    # mask_zero = link_description_speed_df['Link_description_speed'].str.contains('0x', na=False)
+    # link_description_speed_df.loc[mask_zero, 'Link_description_speed'] = None
+    # link_description_speed_df.dropna(subset='Link_description_speed', inplace=True)
+
     # create link description for each switch->device 
     # join and port speed for switch->device (device ports connected to the same switch might have different speed )
     link_description_speed_df = link_description_speed_df.groupby(
         by=['Fabric_name', 'Fabric_label', 'switchWwn', 'switchPair_id', 
             'Device_Host_Name', 'deviceType'])['Link_description_speed'].agg(', '.join).to_frame()
     link_description_speed_df.reset_index(inplace=True)
+
     dfop.sort_cell_values(link_description_speed_df, 'Link_description_speed')
     return link_description_speed_df
 
@@ -135,21 +148,33 @@ def create_sw_device_link_speed_description(connected_devices_df):
 def create_sw_device_link_npiv_description(connected_devices_df):
     """Function to create NPIV link description for switch -> device_name level  (2xNPIV)"""
     
-    # filter off real links to count npiv ports only
+    connected_devices_df['Connected_portWwn_npiv_free'] = None
     if connected_devices_df['port_NPIV'].notna().any():
         mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
-        connected_devices_npiv_df = connected_devices_df.loc[mask_npiv].copy()
-    else:
-        connected_devices_npiv_df = connected_devices_df.copy()
+        connected_devices_df.loc[mask_npiv, 'Connected_portWwn_npiv'] = connected_devices_df.loc[mask_npiv, 'Connected_portWwn']
+
+
     
     # count values in port_NPIV' columns for fabric_name -> fabric_label -> switch -> device_name level
-    link_description_npiv_df = count_links_with_values_in_column(connected_devices_npiv_df, 'port_NPIV')    
-    # drop empty npiv rows to avoid duplication if device have normal and npiv connections
-    link_description_npiv_df.dropna(subset='Link_description_port_NPIV', inplace=True)
+    link_description_npiv_df = count_links_with_values_in_column(connected_devices_df, count_column='port_NPIV', count_value='Connected_portWwn_npiv')
+    link_description_npiv_df.drop(columns=['Connected_portWwn_npiv', 'Connected_portWwn'], errors='ignore', inplace=True)
+
+
+    # print('\n')
+    # print(link_description_npiv_df)
+    # print(link_description_npiv_df['Link_description_port_NPIV'].unique())
+    # mask_zero = link_description_npiv_df['Link_description_port_NPIV'] == '0x'
+    # print(link_description_npiv_df.loc[mask_zero])
+
+    # mask_zero = link_description_npiv_df['Link_description_port_NPIV'].str.contains('0x', na=False)
+    # link_description_npiv_df.loc[mask_zero, 'Link_description_port_NPIV'] = None
+    # # drop empty npiv rows to avoid duplication if device have normal and npiv connections
+    # link_description_npiv_df.dropna(subset='Link_description_port_NPIV', inplace=True)
+    
     return link_description_npiv_df
        
 
-def count_links_with_values_in_column(connected_devices_df, count_column):
+def count_links_with_values_in_column(connected_devices_df, count_column, count_value):
     """Function to count values in count_column column for
     fabric_name -> fabric_label -> switch -> device_name level.
     Result column presented as string 'number X value'. Each unique value for the 
@@ -159,18 +184,35 @@ def count_links_with_values_in_column(connected_devices_df, count_column):
     link_description_column = 'Link_description_' + count_column
     # count links number with identical parameters (values) for each switch -> device connection
     group_columns = ['Fabric_name', 'Fabric_label', 'switchWwn', 'switchPair_id', 'Device_Host_Name', count_column, 'deviceType']
-    device_links_df = connected_devices_df.groupby(by=group_columns, dropna=False)['Connected_portWwn'].agg('count').to_frame()
+
+
+    # device_links_df = connected_devices_df.groupby(by=group_columns, dropna=False)['Connected_portWwn'].agg('count').to_frame()
+
+    device_links_df = connected_devices_df.groupby(by=group_columns, dropna=False)[count_value].agg('count').to_frame()
+
     device_links_df.reset_index(inplace=True)
-    device_links_df.rename(columns={'Connected_portWwn': 'Link_quantity'}, inplace=True)
+    # device_links_df.rename(columns={'Connected_portWwn': 'Link_quantity'}, inplace=True)
+    device_links_df.rename(columns={count_value: 'Link_quantity'}, inplace=True)
     
+
     # present result link_description_column as string 'counted number X value'
     device_links_df['Link_quantity'] = device_links_df['Link_quantity'].astype('str')
     device_links_df = dfop.merge_columns(device_links_df, summary_column=link_description_column, merge_columns=['Link_quantity', count_column], sep='x')
     # add 'x' to device XD links (separator 'x' on prev step was not added for XD links)
     device_links_df.loc[device_links_df[link_description_column].str.contains('^\d+$'), link_description_column] = device_links_df[link_description_column] + 'x'
-    # # for NPIV link_description_column clean link description if theris no npiv
+    
+    mask_zero = device_links_df[link_description_column].str.contains('0x', na=False)
+    device_links_df.loc[mask_zero, link_description_column] = None
+    device_links_df.dropna(subset=link_description_column, inplace=True)
+
+
+
+    
+    # for NPIV link_description_column clean link description if theris no npiv
     # if 'npiv' in count_column.lower():
     #     device_links_df.loc[~device_links_df[link_description_column].str.contains('NPIV', na=False), link_description_column] = None
+
+
     return device_links_df
 
 
@@ -184,7 +226,11 @@ def create_fabric_swpair_device_link_description(connected_devices_df, device_li
     ('2A: 2xN16, 2x16G, 2xNPIV', '2B: 2xN16, 2x16G, 2xNPIV', '3A: 2xN16', '3B: 2x16G')."""
 
     # drop duplicated link so each row represents device connection to the switch
-    connected_devices_df.drop(columns=['Connected_portWwn', 'Connected_portId', 'speed', 'port_NPIV'], inplace=True)
+    for column in ['Connected_portWwn', 'Connected_portWwn_npiv_free', 'Connected_portWwn_npiv', 
+                   'Connected_portId', 'speed', 'port_NPIV']:
+        if column in connected_devices_df.columns:
+            connected_devices_df.drop(columns=column, inplace=True)
+    # connected_devices_df.drop(columns=['Connected_portWwn', 'Connected_portId', 'speed', 'port_NPIV'], inplace=True)
     connected_devices_df.drop_duplicates(inplace=True, ignore_index=True)
     # add link description ('2A: 2xN16, 2x16G, 2xNPIV')
     sw_device_connection_columns = ['Fabric_name', 'Fabric_label', 'switchWwn', 'switchPair_id', 'Device_Host_Name', 'deviceType']
@@ -196,6 +242,5 @@ def create_fabric_swpair_device_link_description(connected_devices_df, device_li
     dfop.sort_cell_values(connected_devices_df, 'Link_description_fabric_name_level', sep='; ')
     # sort for future group in the correct order
     connected_devices_df.sort_values(
-        by=['Fabric_name', 'deviceType', 'Enclosure', 'slot_int', 
-            'Device_Host_Name', 'switchPair_id', 'Fabric_label'], inplace=True)
+        by=['Fabric_name', 'deviceType', 'Enclosure', 'slot_int', 'Device_Host_Name', 'switchPair_id', 'Fabric_label'], inplace=True)
     return connected_devices_df

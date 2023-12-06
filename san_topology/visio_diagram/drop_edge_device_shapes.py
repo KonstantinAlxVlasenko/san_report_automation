@@ -55,7 +55,7 @@ def add_visio_device_shapes(san_links_df, visio, stn, fabric_label_colours,
         drop_device_shape(device_sr, page, stn, x_coordinate, device_font_size)
         # filter device_shapename links for the dropped shape
         # each row is switch -> device_shapename link with link quantity
-        # device_shapename is single device or list of devices groped on fabric connection description
+        # device_shapename is single device or list of devices grouped on fabric connection description
         shape_links_df = find_device_shape_links(device_sr, san_links_df)
         report.add_log_entry(visio_log_file, shape_links_df.to_string())
         

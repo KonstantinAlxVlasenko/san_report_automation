@@ -7,4 +7,5 @@ v0.82 - OceanStor host extract for 5500 series correction
 v0.83 - All ports are licensed verification and sfp missing port parsing correction
 v0.9 - Code refactoring for pandas 2.1, Primary switch on Visio scheme
 v0.91 - Visio scheme sw_entry and sw_middle access gateway shapes added
-v0.92 - Raslog sid and did device information resolve 
+v0.92 - Raslog sid and did device information resolve
+v0.93 - FILTER_NPIV_LINKS off and on option for Visio drawing
