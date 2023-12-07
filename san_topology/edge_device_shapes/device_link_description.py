@@ -39,7 +39,7 @@ def count_physical_link_quantity(connected_devices_df):
     # if FILTER_NPIV_LINKS option is on then npiv connections behind the switch port are filtered off
     connected_devices_df['Connected_portWwn_npiv_free'] = connected_devices_df['Connected_portWwn']
     if FILTER_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
-        mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
+        mask_npiv = connected_devices_df['port_NPIV'].str.contains('npiv', case=False, na=False)
         phys_link_count_column = 'Connected_portWwn_npiv_free'
         connected_devices_df.loc[mask_npiv, 'Connected_portWwn_npiv_free'] = None
     else:
@@ -113,9 +113,9 @@ def create_sw_device_link_description(connected_devices_df):
 def create_sw_device_link_speed_description(connected_devices_df):
     """Function to create speed link description for switch -> device_name level  (2xN16, 2x16G)"""
 
-    # if FILTER_NPIV_LINKS is on filter off npiv ports to cound link speed for real links only
+    # if FILTER_NPIV_LINKS is on filter off npiv ports to count link speed for real links only
     if FILTER_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
-        mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
+        mask_npiv = connected_devices_df['port_NPIV'].str.contains('npiv', case=False, na=False)
         connected_devices_speed_df = connected_devices_df.loc[~mask_npiv].copy()
     else:
         connected_devices_speed_df = connected_devices_df.copy()
@@ -137,13 +137,13 @@ def create_sw_device_link_npiv_description(connected_devices_df):
     
     # filter off real links to count npiv ports only
     if connected_devices_df['port_NPIV'].notna().any():
-        mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
+        mask_npiv = connected_devices_df['port_NPIV'].str.contains('npiv', case=False, na=False)
         connected_devices_npiv_df = connected_devices_df.loc[mask_npiv].copy()
     else:
-        connected_devices_npiv_df = connected_devices_df.copy()
-    
+        connected_devices_npiv_df = pd.DataFrame(columns=connected_devices_df.columns).copy()
+
     # count values in port_NPIV' columns for fabric_name -> fabric_label -> switch -> device_name level
-    link_description_npiv_df = count_links_with_values_in_column(connected_devices_npiv_df, 'port_NPIV')    
+    link_description_npiv_df = count_links_with_values_in_column(connected_devices_npiv_df, 'port_NPIV')
     # drop empty npiv rows to avoid duplication if device have normal and npiv connections
     link_description_npiv_df.dropna(subset='Link_description_port_NPIV', inplace=True)
     return link_description_npiv_df
@@ -168,6 +168,7 @@ def count_links_with_values_in_column(connected_devices_df, count_column):
     device_links_df = dfop.merge_columns(device_links_df, summary_column=link_description_column, merge_columns=['Link_quantity', count_column], sep='x')
     # add 'x' to device XD links (separator 'x' on prev step was not added for XD links)
     device_links_df.loc[device_links_df[link_description_column].str.contains('^\d+$'), link_description_column] = device_links_df[link_description_column] + 'x'
+    # TO_REMOVE regular links (not npiv) dropped before transmit connected_devices_df as parameter
     # # for NPIV link_description_column clean link description if theris no npiv
     # if 'npiv' in count_column.lower():
     #     device_links_df.loc[~device_links_df[link_description_column].str.contains('NPIV', na=False), link_description_column] = None

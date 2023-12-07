@@ -18,7 +18,7 @@ def create_device_link_description(connected_devices_df, switch_pair_df, pattern
     
     connected_devices_df['Connected_portWwn_npiv_free'] = connected_devices_df['Connected_portWwn']
     if CLEAR_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
-        mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
+        mask_npiv = connected_devices_df['port_NPIV'].str.contains('npiv', case=False, na=False)
         phys_link_count_column = 'Connected_portWwn_npiv_free'
         connected_devices_df.loc[mask_npiv, 'Connected_portWwn_npiv_free'] = None
     else:
@@ -114,7 +114,7 @@ def create_sw_device_link_speed_description(connected_devices_df, phys_link_coun
     """Function to create speed link description for switch -> device_name level  (2xN16, 2x16G)"""
 
     if CLEAR_NPIV_LINKS and connected_devices_df['port_NPIV'].notna().any():
-        mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
+        mask_npiv = connected_devices_df['port_NPIV'].str.contains('npiv', case=False, na=False)
         connected_devices_df.loc[mask_npiv, 'speed'] = None
 
     # count values in 'speed' columns for fabric_name -> fabric_label -> switch -> device_name level
@@ -150,7 +150,7 @@ def create_sw_device_link_npiv_description(connected_devices_df):
     
     connected_devices_df['Connected_portWwn_npiv_free'] = None
     if connected_devices_df['port_NPIV'].notna().any():
-        mask_npiv = connected_devices_df['port_NPIV'].str.lower().str.contains('npiv', na=False)
+        mask_npiv = connected_devices_df['port_NPIV'].str.contains('npiv', case=False, na=False)
         connected_devices_df.loc[mask_npiv, 'Connected_portWwn_npiv'] = connected_devices_df.loc[mask_npiv, 'Connected_portWwn']
 
 

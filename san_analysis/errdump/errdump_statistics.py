@@ -102,8 +102,10 @@ def raslog_counter_filter(raslog_counter_df):
     mask_not_info = raslog_frequent_df['Severity'] != 'INFO'
     mask_sec_violation_condition = raslog_frequent_df['Condition'].str.contains('security violation', case=False, na=False)
     mask_sec_violation_dashboard = raslog_frequent_df['Dashboard_category'].str.contains('security violation', case=False, na=False)
-    mask_message_filter = mask_not_info | mask_sec_violation_condition | mask_sec_violation_dashboard
-    raslog_frequent_df = raslog_frequent_df.loc[mask_not_info].copy()
+    mask_clock_server_rplcmnt = raslog_frequent_df['Condition'].str.contains('used instead of', case=False, na=False)
+    mask_message_filter = mask_not_info | mask_sec_violation_condition | mask_sec_violation_dashboard | mask_clock_server_rplcmnt
+    # filter messages
+    raslog_frequent_df = raslog_frequent_df.loc[mask_message_filter].copy()
     raslog_frequent_df.reset_index(drop=True, inplace=True)
     return raslog_frequent_df
 
