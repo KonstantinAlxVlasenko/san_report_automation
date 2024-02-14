@@ -14,7 +14,7 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, patte
         """Function to verify if any links out of trunk present 
         (if trunking licences are on both switches) and if connection is redundant"""
         
-        npiv_statistics_df['Connection_note'] = np.nan
+        npiv_statistics_df['Connection_note'] = None
         # connection have single link only
         mask_single_link_connection = npiv_statistics_df['Port_quantity'] == 1
         # trunking licence present on both switches

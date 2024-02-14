@@ -10,9 +10,8 @@ import san_parser
 import san_switch_config
 import san_topology
 import utilities.dataframe_operations as dfop
-from service_init import service_initialization
 import utilities.report_operations as report
-
+from service_init import service_initialization
 
 
 def main():

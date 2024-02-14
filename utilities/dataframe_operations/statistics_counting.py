@@ -148,7 +148,7 @@ def verify_group_symmetry(statistics_df, symmetry_grp, symmetry_columns, summary
     # temporary ineqaulity_notes columns for  connection_symmetry_columns
     symmetry_notes = [column + '_inequality' for column in symmetry_columns]
     for column, column_note in zip(symmetry_columns, symmetry_notes):
-        symmetry_df[column_note] = np.nan
+        symmetry_df[column_note] = None
         # if fabrics are symmetric then number of unique values in groups should be equal to one 
         # mask_values_nonuniformity = symmetry_df[column] == 1
         mask_values_uniformity = symmetry_df[column].isin([0, 1])
@@ -156,8 +156,7 @@ def verify_group_symmetry(statistics_df, symmetry_grp, symmetry_columns, summary
         symmetry_df[column_note].where(mask_values_uniformity, column.lower(), inplace=True)
         
     # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
-    symmetry_df = concatenate_columns(symmetry_df, summary_column, 
-                                                 merge_columns=symmetry_notes)
+    symmetry_df = concatenate_columns(symmetry_df, summary_column, merge_columns=symmetry_notes)
     # drop columns with quantity of unique values
     symmetry_df.drop(columns=symmetry_columns, inplace=True)
     # add Asymmetry_note column to statistics_df

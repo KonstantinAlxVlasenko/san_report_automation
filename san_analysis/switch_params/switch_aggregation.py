@@ -218,6 +218,8 @@ def add_chassis_sn_oemid(chassis_params_df, chassisshow_df):
     chassis_params_df = chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column='Factory_Serial_Num', filled_column='factory_sn')
     # add OEM_ID
     chassis_params_df = chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column='OEM_ID', filled_column='OEM_ID')
+    # add part_number
+    chassis_params_df = chassis_param_fillna(chassis_params_df, chassisshow_wwn_df, chassisshow_column='Part_Num', filled_column='part_num')
     return chassis_params_df
 
 

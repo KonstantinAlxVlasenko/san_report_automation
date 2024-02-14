@@ -98,12 +98,13 @@ def raslog_counter_filter(raslog_counter_df):
     mask_frequent = raslog_counter_df['Message_occured_quantity_multiple'] > RASLOG_REPEATER_THRESHOLD
     raslog_frequent_df = raslog_counter_df.loc[mask_frequent].copy()
     
-    # remove INFO Messages for report DataFrame except security violations messages
+    # remove INFO Messages for report DataFrame except security violation, clock issue and frame detected messages
     mask_not_info = raslog_frequent_df['Severity'] != 'INFO'
     mask_sec_violation_condition = raslog_frequent_df['Condition'].str.contains('security violation', case=False, na=False)
     mask_sec_violation_dashboard = raslog_frequent_df['Dashboard_category'].str.contains('security violation', case=False, na=False)
     mask_clock_server_rplcmnt = raslog_frequent_df['Condition'].str.contains('used instead of', case=False, na=False)
-    mask_message_filter = mask_not_info | mask_sec_violation_condition | mask_sec_violation_dashboard | mask_clock_server_rplcmnt
+    mask_frame_detected = raslog_frequent_df['Condition'].str.contains('frame.+detected', case=False, na=False, regex=True)
+    mask_message_filter = mask_not_info | mask_sec_violation_condition | mask_sec_violation_dashboard | mask_clock_server_rplcmnt | mask_frame_detected
     # filter messages
     raslog_frequent_df = raslog_frequent_df.loc[mask_message_filter].copy()
     raslog_frequent_df.reset_index(drop=True, inplace=True)

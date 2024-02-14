@@ -44,8 +44,18 @@ errdump_aggregated_df['Message_triggered_times'] = errdump_aggregated_df['Messag
 errdump_aggregated_df['Message_repeated_times_filled'] = errdump_aggregated_df['Message_repeated_times'].fillna(0)
 errdump_aggregated_df['Message_triggered_times_filled'] = errdump_aggregated_df['Message_triggered_times'].fillna(1)
 
-errdump_aggregated_df['Message_triggered_times_total']
 
+
+
+
+errdump_aggregated_df['Message_triggered_times_total'] = errdump_aggregated_df['Message_triggered_times_filled'] + errdump_aggregated_df['Message_triggered_times_filled'] * errdump_aggregated_df['Message_repeated_times_filled']
+errdump_aggregated_df['Message_triggered_times_unique'] = 1 + errdump_aggregated_df['Message_repeated_times_filled']
+
+errdump_aggregated_df = dfop.move_column(errdump_aggregated_df, cols_to_move=['Message_triggered_times_single', 'Message_triggered_times_total'], ref_col='Message_triggered_times')
+
+
+
+errdump_aggregated_df.drop(columns=['Message_repeated_times_filled', 'Message_triggered_times_filled'], inplace=True)
 
 
 
