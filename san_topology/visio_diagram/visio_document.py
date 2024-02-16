@@ -2,10 +2,12 @@
 """Module contains functions related with visio document and tqdm progress bar operations"""
 
 import os
+import sys
 
 import pandas as pd
 import win32com.client
 
+import utilities.filesystem_operations as fsop
 import utilities.module_execution as meop
 from san_automation_constants import LEFT_INDENT
 
@@ -15,9 +17,7 @@ def visio_document_init(software_path_sr, fabric_name_lst, report_requisites_sr)
     add fabric_name pages and add page notes: customer, project title,
     fabric_name"""
 
-    # visio template and visio stencil path
-    visio_template_path = software_path_sr['visio_template_path']
-    visio_stencil_path = software_path_sr['visio_stencil_path']
+    visio_template_path, visio_stencil_path = get_visio_entries(software_path_sr)
     
     visio = win32com.client.Dispatch("Visio.Application")
     visio.Visible = 1
@@ -34,6 +34,34 @@ def visio_document_init(software_path_sr, fabric_name_lst, report_requisites_sr)
     set_visio_page_note(visio, customer=report_requisites_sr['customer_name'], 
                                 project=report_requisites_sr['project_title'])
     return visio, stn
+
+
+def get_visio_entries(software_path_sr):
+    """Function to get Visio template and stencil.
+    If any of Visio entries are missing the program execution is stopped"""
+
+    # # visio template and visio stencil path
+    # visio_template_path = software_path_sr['visio_template_path']
+    # visio_stencil_path = software_path_sr['visio_stencil_path']
+
+    visio_entries_lst = []
+    incorrect_visio_entries_lst = []
+    # check if template and stencil both exist
+    for visio_entry in ['visio_template_path', 'visio_stencil_path']:
+        if pd.isna(software_path_sr[visio_entry]):
+            incorrect_visio_entries_lst.append((visio_entry, 'Path is not defined'))
+        elif not fsop.validate_path_isfile(software_path_sr[visio_entry]):
+            incorrect_visio_entries_lst.append((visio_entry, software_path_sr[visio_entry]))
+        else:
+            visio_entries_lst.append(software_path_sr[visio_entry])
+
+    # exit if stencil or template doesn't exist
+    if incorrect_visio_entries_lst:
+        print(f"\nVisio entries are set incorrectly or missing in software tab of the report_info file.\n")
+        for visio_entry_name, visio_entry_path in incorrect_visio_entries_lst:
+                print(" "*4, f"{visio_entry_name}: {visio_entry_path}")
+        sys.exit()
+    return visio_entries_lst
 
 
 def set_visio_page_note(visio, customer=None, project=None):
