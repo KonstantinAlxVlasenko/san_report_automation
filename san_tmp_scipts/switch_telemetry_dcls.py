@@ -22,7 +22,7 @@ from typing import ClassVar
 @dataclass
 class BrocadeSwitchTelemetry:
     
-    USERNAME: ClassVar[str] = 'rest_api'
+    USERNAME: ClassVar[str] = '***'
     PASSWORD: ClassVar[str] = '***'
     HEADERS: ClassVar[dict] = {
         'Accept': 'application/yang-data+json', 
