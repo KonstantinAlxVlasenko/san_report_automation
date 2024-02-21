@@ -6,11 +6,11 @@ Created on Mon Feb 12 16:57:29 2024
 """
 
 
-import os
+# import os
 
-script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
-# Change the current working directory
-os.chdir(script_dir)
+# script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
+# # Change the current working directory
+# os.chdir(script_dir)
 # from switch_telemetry_cls import BrocadeSwitchTelemetry
 
 
@@ -22,10 +22,9 @@ from switch_telemetry_httpx_cls import BrocadeSwitchTelemetry
 
 class BrocadeRequestStatus:
     """
-    Class used to create request status dictionaries for all http telemetry requests.
+    Class to create request status dictionaries for all http telemetry requests.
 
 
-    
     Attributes:
         sw_telemetry: set of switch telemetry retrieved from the switch
         date: date sw_telemetry verification perpormed

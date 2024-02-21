@@ -17,7 +17,7 @@ from urllib3.exceptions import NewConnectionError, MaxRetryError
 class BrocadeSwitchTelemetry:
     
     USERNAME = 'rest_api'
-    PASSWORD = 'REST-api2023'
+    PASSWORD = '***'
     HEADERS = {
         'Accept': 'application/yang-data+json', 
         'Content-Type': 'application/yang-data+json',

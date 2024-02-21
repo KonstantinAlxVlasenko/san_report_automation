@@ -12,13 +12,15 @@ import os
 import re
 from copy import copy, deepcopy
 
-script_dir = r'C:\Users\kavlasenko\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
+script_dir = r'E:\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
 # Change the current working directory
 os.chdir(script_dir)
 # from switch_telemetry_cls import BrocadeSwitchTelemetry
 from switch_telemetry_httpx_cls import BrocadeSwitchTelemetry
 # from switch_telemetry_httpx_async_cls import BrocadeSwitchTelemetry
-from switch_telemetry_parser_cls import BrocadeChassisParser
+# from switch_telemetry_parser_cls import BrocadeChassisParser
+from switch_telemetry_chassis_parser_cls import BrocadeChassisParser
+
 from switch_telemetry_sensor_parser_cls import BrocadeFRUParser
 from switch_telemetry_maps_parser_cls import BrocadeMAPSParser
 from switch_telemetry_switch_parser_cls import BrocadeSwitchParser
@@ -111,8 +113,6 @@ severity_level = {'OK': 0,
                   'CRITICAL': 2}
 
 
-
-
 gauge_ch_name = Gauge('chassis_name', 'Chassis name', ['chassis_name'])
 gauge_sw_sn = Gauge('switch_sn', 'Switch serial number', ['switch_sn'])
 gauge_sw_datetime = Gauge('switch_datetime', 'Swicth datetime', ['switch_datetime'])
@@ -142,9 +142,10 @@ gauge_license = Gauge('licenses', 'Licenses installed on the switch', ['license_
 
 # sw_telemetry = ost_6510_07_f1
 # sw_telemetry = copy(o3_g630_003_vc01_f1)
-sw_telemetry = copy(san03_nord)
+# sw_telemetry = copy(san03_nord)
 # sw_telemetry = copy(n3_g620_005_vc5_f1)
 # sw_telemetry = o3_g620_107_vc01_f1
+sw_telemetry = san49_nord
 
 
 ch_parser = BrocadeChassisParser(sw_telemetry)

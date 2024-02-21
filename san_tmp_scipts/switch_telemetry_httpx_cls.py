@@ -70,7 +70,7 @@ def main() -> None:
 class BrocadeSwitchTelemetry:
     
     USERNAME = 'rest_api'
-    PASSWORD = 'REST-api2023'
+    PASSWORD = '***'
     HEADERS = {
         'Accept': 'application/yang-data+json', 
         'Content-Type': 'application/yang-data+json',
@@ -94,6 +94,7 @@ class BrocadeSwitchTelemetry:
         self._chassis = {}
         self._fc_logical_switch = {}
         self._ts_timezone = {}
+        self._clock_server = {}
         self._fru_ps = {}
         self._fru_fan = {}
         self._fru_sensor = {}
@@ -106,6 +107,7 @@ class BrocadeSwitchTelemetry:
             [self._chassis, ('brocade-chassis', 'chassis')],
             [self._fc_logical_switch, ('brocade-fibrechannel-logical-switch', 'fibrechannel-logical-switch')],
             [self._ts_timezone, ('brocade-time', 'time-zone')],
+            [self._clock_server, ('brocade-time', 'clock-server')],
             [self._fru_ps, ('brocade-fru', 'power-supply')],
             [self._fru_fan, ('brocade-fru', 'fan')],
             [self._fru_sensor, ('brocade-fru', 'sensor')],
@@ -340,6 +342,16 @@ class BrocadeSwitchTelemetry:
     def ts_timezone(self):
         """The time zone parameters."""
         return self._ts_timezone
+    
+        self._clock_server = {}
+        self._ntp_clock_server = {}
+    
+    @property
+    def clock_server(self):
+        """The NTP colck server parameters."""
+        return self._clock_server
+    
+    
     
     @property
     def fru_ps(self):
