@@ -12,9 +12,14 @@ import os
 import re
 from copy import copy, deepcopy
 
+
+
 script_dir = r'E:\Documents\05.PYTHON\Projects\san_report_automation\san_tmp_scipts'
 # Change the current working directory
 os.chdir(script_dir)
+
+from dotenv import load_dotenv, dotenv_values
+
 # from switch_telemetry_cls import BrocadeSwitchTelemetry
 from switch_telemetry_httpx_cls import BrocadeSwitchTelemetry
 # from switch_telemetry_httpx_async_cls import BrocadeSwitchTelemetry
@@ -37,6 +42,16 @@ def get_error_message(sw_telemetry_dct: dict):
         return None
     
 
+
+load_dotenv()
+
+config_dev = dotenv_values(".env")
+
+
+USERNAME = os.getenv("USERNAME")
+PASSWORD = os.getenv("PASSWORD")
+
+print(USERNAME, PASSWORD)
 
 print('\n')    
 st = time.time()
