@@ -125,15 +125,19 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct):
     for column in ['HBA_Driver', 'HBA_Firmware', 'Host_OS']:
         # pattern contains groups but str.cotains used to identify mask
         # supress warning message
-        warnings.filterwarnings("ignore", 'This pattern has match groups')
-        current_mask = fdmi_labeled_df[column].str.contains(pattern_dct['perenthesis_remove'], regex=True, na=False)
-        fdmi_labeled_df.loc[current_mask, column] = \
-            fdmi_labeled_df.loc[current_mask, column].str.extract(pattern_dct['perenthesis_remove']).values
+        # warnings.filterwarnings("ignore", "has match groups")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            current_mask = fdmi_labeled_df[column].str.contains(pattern_dct['perenthesis_remove'], regex=True, na=False)
+            fdmi_labeled_df.loc[current_mask, column] = \
+                fdmi_labeled_df.loc[current_mask, column].str.extract(pattern_dct['perenthesis_remove']).values
     # release_remove_comp
-    warnings.filterwarnings("ignore", 'This pattern has match groups')
-    mask_release = fdmi_labeled_df['Host_OS'].str.contains(pattern_dct['release_remove'], regex=True, na=False)
-    fdmi_labeled_df.loc[mask_release, 'Host_OS'] = \
-        fdmi_labeled_df.loc[mask_release, 'Host_OS'].str.extract(pattern_dct['release_remove']).values
+    # warnings.filterwarnings("ignore", "has match groups")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        mask_release = fdmi_labeled_df['Host_OS'].str.contains(pattern_dct['release_remove'], regex=True, na=False)
+        fdmi_labeled_df.loc[mask_release, 'Host_OS'] = \
+            fdmi_labeled_df.loc[mask_release, 'Host_OS'].str.extract(pattern_dct['release_remove']).values
 
     # drop duplcate WWNs in labeled fdmi DataFrame
     fdmi_labeled_df.drop_duplicates(subset = ['Fabric_name', 'Fabric_label', 'PortName'], inplace = True)

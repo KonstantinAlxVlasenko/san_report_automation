@@ -55,7 +55,7 @@ def count_month_message_occurrence(errdump_filtered_df, connected_device_columns
                            'switchName', 'switchWwn',
                            'Fabric_name', 'Fabric_label', 'config_collection_date',
                            'Message_ID', 'Severity', 'Message_portIndex', 'Message_portType','slot', 'port',
-                           'Condition', 'Dashboard_category', 'obj', 'Message_status',
+                           'Condition', 'Rule_name', 'Dashboard_category', 'obj', 'Message_status',
                            'portIndex', 'Index_slot_port', 'portType', 'portState', 'speed',
                            'tx_port', 'rx_port', 'sid', 'did', 'wwn', 'IP_Address']
 
@@ -98,16 +98,28 @@ def raslog_counter_filter(raslog_counter_df):
     mask_frequent = raslog_counter_df['Message_occured_quantity_multiple'] > RASLOG_REPEATER_THRESHOLD
     raslog_frequent_df = raslog_counter_df.loc[mask_frequent].copy()
     
+    absent_columns = []
+    for column in ['Severity', 'Condition', 'Dashboard_category']:
+        if column not in raslog_counter_df.columns:
+            absent_columns.append(column)
+            raslog_frequent_df[column] = ''
+
+    
     # remove INFO Messages for report DataFrame except security violation, clock issue and frame detected messages
     mask_not_info = raslog_frequent_df['Severity'] != 'INFO'
     mask_sec_violation_condition = raslog_frequent_df['Condition'].str.contains('security violation', case=False, na=False)
     mask_sec_violation_dashboard = raslog_frequent_df['Dashboard_category'].str.contains('security violation', case=False, na=False)
     mask_clock_server_rplcmnt = raslog_frequent_df['Condition'].str.contains('used instead of', case=False, na=False)
     mask_frame_detected = raslog_frequent_df['Condition'].str.contains('frame.+detected', case=False, na=False, regex=True)
-    mask_message_filter = mask_not_info | mask_sec_violation_condition | mask_sec_violation_dashboard | mask_clock_server_rplcmnt | mask_frame_detected
+    mask_quarantine = raslog_frequent_df['Condition'].str.contains('quarantined', case=False, na=False, regex=True)
+    mask_message_filter = mask_not_info | mask_sec_violation_condition | mask_sec_violation_dashboard | mask_clock_server_rplcmnt | mask_frame_detected | mask_quarantine
     # filter messages
     raslog_frequent_df = raslog_frequent_df.loc[mask_message_filter].copy()
     raslog_frequent_df.reset_index(drop=True, inplace=True)
+
+    if absent_columns:
+        raslog_frequent_df.drop(columns=absent_columns, inplace=True)
+
     return raslog_frequent_df
 
 
@@ -133,7 +145,7 @@ def join_message_devices(errdump_filtered_df, connected_device_columns, sid_did_
                            'Security_audit_flag', 'Severity',
                            'switchName', 'Message', 'switchWwn', 'Fabric_name', 'Fabric_label',
                            'config_collection_date', 'Message_portIndex', 'Message_portType',
-                           'slot', 'port', 'Condition', 'Current_value', 'Dashboard_category',
+                           'slot', 'port', 'Condition', 'Current_value', 'Rule_name', 'Dashboard_category',
                            'obj', 'Message_status', 'portIndex', 'Index_slot_port', 'portType', 'portState',
                            'speed', 'tx_port', 'rx_port', 'sid', 'did', 'wwn', 'IP_Address']
                            

@@ -42,13 +42,15 @@ def edge_device_shapes_compilation_init(portshow_aggregated_df, npv_ag_connected
         
         # current operation information string
         info = f'Generating edge device link shapes table'
-        print(info, end =" ") 
 
         connected_devices_df, storage_shape_links_df, server_shape_links_df, \
             san_graph_sw_pair_group_df, fabric_name_duplicated_sr, fabric_name_dev_sr = \
                 edge_device_shapes_compilation(portshow_aggregated_df, npv_ag_connected_devices_df, fcr_xd_proxydev_df, 
                                                 switch_pair_df, san_graph_sw_pair_df,
                                                 san_graph_grid_df, pattern_dct, san_topology_constantants_sr)
+        
+        
+        print(info, end =" ") 
         # after finish display status
         meop.status_info('ok', max_title, len(info))    
         # create list with partitioned DataFrames

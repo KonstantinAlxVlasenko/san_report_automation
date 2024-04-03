@@ -90,6 +90,8 @@ def message_extract(errdump_aggregated_df, pattern_dct):
         [pattern_dct['port_idx_slot_number'], ['Message_portIndex', 'Message_portType', 'slot', 'port']],
         [pattern_dct['pid'], ['Message_portId']],
         [pattern_dct['flow_sid_did'], ['sid', 'did', 'port']],
+
+        [pattern_dct['domainid_portidx_pid'], ['Condition', 'Message_domainID', 'did']],
         [pattern_dct['repeated_times'], ['Message_repeated_times']],
         [pattern_dct['triggered_times'], ['Message_triggered_times']],
         [pattern_dct['event_portidx'], ['Condition', 'Message_portIndex']],
@@ -97,7 +99,7 @@ def message_extract(errdump_aggregated_df, pattern_dct):
         [pattern_dct['bottleneck_detected'], ['Condition', 'slot', 'port', 'Current_value']],
         [pattern_dct['bottleneck_cleared'], ['slot', 'port', 'Condition']],
         [pattern_dct['severe_bottleneck'], ['Condition', 'Message_portType', 'slot', 'port']],
-        [pattern_dct['maps_current_value'],  ['Condition', 'Current_value', 'Dashboard_category']],
+        [pattern_dct['maps_current_value'],  ['Condition', 'Current_value', 'Rule_name', 'Dashboard_category']],
         [pattern_dct['maps_object'], ['Condition', 'obj']],
         [pattern_dct['c2_message_1'], ['Condition', 'slot', 'port', 'Message_portIndex', 'Message_portId']],
         [pattern_dct['slow_drain_device'], ['Condition','slot', 'port', 'Message_portIndex']],
@@ -129,8 +131,10 @@ def message_extract(errdump_aggregated_df, pattern_dct):
 
     # add empty columns if they were not extracted
     extracted_columns = [column for _, columns in extract_pattern_columns_lst for column in columns]
+
     extracted_columns = list(set(extracted_columns))
     add_empty_columns = [column for column in extracted_columns if not column in errdump_aggregated_df.columns]
+
     errdump_aggregated_df[add_empty_columns] = np.nan       
     
     # masks for labeleing messages with tags

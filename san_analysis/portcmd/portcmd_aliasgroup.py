@@ -19,7 +19,8 @@ def group_name_fillna(portshow_aggregated_df):
     portshow_aggregated_df['Group_Name'] = None
 
     portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, storage_grp_df, ['NodeName'], ['Group_Name'])
-    portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Group_Name, inplace= True)
+    # portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Group_Name, inplace= True)
+    portshow_aggregated_df['Device_Host_Name'] = portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Group_Name'])
     portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, library_sn_grp_df, ['Device_SN'], ['Group_Name'])
     portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, library_grp_df, ['NodeName'], ['Group_Name'])
 

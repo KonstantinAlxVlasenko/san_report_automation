@@ -15,7 +15,9 @@ def create_device_link_description(connected_devices_df, switch_pair_df, pattern
     (all switch pairs -> device name connection in the fabric_name)"""
     
     # count physical links quantity between switch and device
-    count_physical_link_quantity(connected_devices_df)    
+    count_physical_link_quantity(connected_devices_df)
+    # filter pure NPIV connections wo prhysiacal links (probably virtual machines)
+    connected_devices_df = filter_pure_npiv(connected_devices_df)
     # create switch shape name
     create_shape_name(connected_devices_df, "switchName", "switchWwn", "switch_shapeName")
     # add switchPair_Id
@@ -51,6 +53,22 @@ def count_physical_link_quantity(connected_devices_df):
             'Device_Host_Name', 'deviceType'])[phys_link_count_column].transform('count') # link_quantity
     # drop column to avoid link duplication on link description for switch -> device_name connection in fabric_name level
     connected_devices_df.drop(columns='Connected_portWwn_npiv_free', inplace=True)
+    return connected_devices_df
+
+
+
+def filter_pure_npiv(connected_devices_df):
+    """Function to filter pure NPIV connections (wo physical links).
+    Pure NPIV connections might be virtual machines (VMs) behind in physical hosts."""
+
+    mask_pure_npiv = connected_devices_df['Physical_link_quantity'] == 0
+    if FILTER_NPIV_LINKS and mask_pure_npiv.any():
+        pure_npiv_devices = connected_devices_df.loc[mask_pure_npiv, 'Device_Host_Name'].unique()
+        print('\n')
+        print("WARNING. Pure NPIV connections (wo physical links) are detected and removed. Probably they are virtual machines (VMs) behind physical hosts.")
+        print(f"REMOVED DEVICES: {', '.join(pure_npiv_devices)}.")
+        print("If you want to keep pure NPIV connections set FILTER_NPIV_LINKS in san_automation_constants.py file to False.\n")
+        connected_devices_df = connected_devices_df.loc[~mask_pure_npiv].copy()
     return connected_devices_df
 
 
@@ -94,7 +112,6 @@ def create_sw_device_link_description(connected_devices_df):
     link_description_speed_df = create_sw_device_link_speed_description(connected_devices_df)
     # create npiv link description for switch -> device_name level (2xNPIV)
     link_description_npiv_df = create_sw_device_link_npiv_description(connected_devices_df)
-
     # join speed and npiv details
     device_links_df = pd.merge(link_description_speed_df, link_description_npiv_df, how='left', 
                                on=['Fabric_name', 'Fabric_label', 'switchWwn', 'switchPair_id', 'Device_Host_Name', 'deviceType'])
@@ -184,6 +201,19 @@ def create_fabric_swpair_device_link_description(connected_devices_df, device_li
     Result each switch -> device_name connection has link description of all links to this device_name in the fabric_name
     ('2A: 2xN16, 2x16G, 2xNPIV', '2B: 2xN16, 2x16G, 2xNPIV', '3A: 2xN16', '3B: 2x16G')."""
 
+    
+    
+    # print('\n')
+    # print(connected_devices_df)
+
+    # print(connected_devices_df['Physical_link_quantity'].unique())
+    # # exit()
+    
+    # print('\n')
+    # print(device_links_df)
+    # exit()
+    
+    
     # drop duplicated link so each row represents device connection to the switch
     connected_devices_df.drop(columns=['Connected_portWwn', 'Connected_portId', 'speed', 'port_NPIV'], inplace=True)
     connected_devices_df.drop_duplicates(inplace=True, ignore_index=True)
@@ -191,6 +221,12 @@ def create_fabric_swpair_device_link_description(connected_devices_df, device_li
     sw_device_connection_columns = ['Fabric_name', 'Fabric_label', 'switchWwn', 'switchPair_id', 'Device_Host_Name', 'deviceType']
     connected_devices_df = pd.merge(connected_devices_df, device_links_df, how='left', on=sw_device_connection_columns)
     # join link_description for all device connections to find devices with the samelink_description in the fabric_name
+    
+    # print('\n')
+    # print(connected_devices_df)
+    # exit()
+    
+    
     connected_devices_df['Link_description_fabric_name_level'] = connected_devices_df.groupby(
         by=['Fabric_name', 'deviceType', 'Device_Host_Name'])['Link_description_sw_pair_level'].transform('; '.join)
     # sort values in Link_description_fabric_name string

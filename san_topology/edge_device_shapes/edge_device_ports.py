@@ -73,7 +73,7 @@ def specify_npiv_port_speed(npv_ag_connected_devices_df, portshow_aggregated_df)
                                                             join_lst=['Fabric_name', 'Fabric_label', 'Connected_portWwn'], 
                                                             filled_lst=['speed'])
     # fill empty values from orignal speed column
-    npv_ag_connected_devices_cp_df['speed'].fillna(npv_ag_connected_devices_cp_df['speed_cp'], inplace=True)
+    npv_ag_connected_devices_cp_df['speed'] = npv_ag_connected_devices_cp_df['speed'].fillna(npv_ag_connected_devices_cp_df['speed_cp'])
     npv_ag_connected_devices_cp_df.drop(columns='speed_cp', inplace=True)
     return npv_ag_connected_devices_cp_df
 
