@@ -48,8 +48,8 @@ def storage_oceanstor_extract(project_constants_lst):
         
         # data imported from init file to extract values from config file
         pattern_dct, re_pattern_df = sfop.regex_pattern_import('oceanstor', max_title)
-        system_params, system_params_add, fcport_params, host_params = dfop.list_from_dataframe(
-            re_pattern_df, 'system_params', 'system_params_add', 'fcport_params', 'host_params')
+        system_params, system_params_add, fcport_params, host_params, hostid_name_params = dfop.list_from_dataframe(
+            re_pattern_df, 'system_params', 'system_params_add', 'fcport_params', 'host_params', 'hostid_name_params')
 
         if hw_oceanstor_folder:    
             print('\nEXTRACTING HUAWEI OCEANSTOR STORAGE INFORMATION ...\n')  
@@ -67,7 +67,7 @@ def storage_oceanstor_extract(project_constants_lst):
                     print(info, end =" ")
                     # extract params from the current config file
                     storage_oceanstore_lst, info, duplicated_configname  = storage_params_extract(storage_config, san_extracted_oceanstor_dct,
-                                                                                                    system_params, system_params_add, fcport_params, host_params, 
+                                                                                                    system_params, system_params_add, fcport_params, host_params, hostid_name_params,
                                                                                                     pattern_dct, info)                    
                     # add current storage config data to the total storage configs
                     for current_storage_lst, san_storage_lst in zip(storage_oceanstore_lst, 

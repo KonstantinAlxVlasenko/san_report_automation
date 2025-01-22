@@ -168,10 +168,11 @@ def identify_huawei_4u_controller(storage_ports_df, pattern_dct):
 
 
     mask_4u_enclosure = storage_ports_df['Device_Port'].str.contains(pat=pattern_dct['oceanstor_iom_port'])
+
     if mask_4u_enclosure.any():
         # extract quadrant location (high or low) and slot number
         storage_ports_df.loc[mask_4u_enclosure, ['Quadrant_location', 'Quadrant_slot']] = \
-            storage_ports_df.loc[mask_4u_enclosure, 'ID'].str.extract(pat='(H|L)(\d+)').values
+            storage_ports_df.loc[mask_4u_enclosure, 'Device_Port'].str.extract(pat='(H|L)(\d+)').values
         storage_ports_df['Quadrant_slot'] = storage_ports_df['Quadrant_slot'].astype('float', errors='ignore').astype('int', errors='ignore')
 
         # identify quadrant labels (controllers)

@@ -162,7 +162,11 @@ def fabricshow_summary(group):
     # calculate total device ports
     device_sum = group.Device_ports.sum()
     # domain ids list
-    domain_ids = ', '.join(str(i) for i in group.Domain_ID.tolist())
+    domain_ids_lst = sorted(group.Domain_ID.tolist())
+    if len(domain_ids_lst) == 1:
+        domain_ids = domain_ids_lst[0]
+    else:
+        domain_ids = ', '.join(str(i) for i in domain_ids_lst)
     # switch names list
     names = ', '.join(group.Name.tolist())
     # ls switch types in fabric

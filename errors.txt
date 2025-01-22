@@ -1,0 +1,8 @@
+e:\Documents\05.PYTHON\Projects\san_report_automation\san_topology\edge_device_shapes\edge_device_ports.py:76: FutureWarning: Setting an item of incompatible dtype is deprecated and will raise in a future error of pandas. Value '['N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8'
+ 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8' 'N8'
+ 'N8' 'N8' 'N8' 'N8']' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
+  npv_ag_connected_devices_cp_df['speed'].fillna(npv_ag_connected_devices_cp_df['speed_cp'], inplace=True)
+
+npv_ag_connected_devices_cp_df['speed'] = npv_ag_connected_devices_cp_df['speed'].fillna(npv_ag_connected_devices_cp_df['speed_cp'])
+
+

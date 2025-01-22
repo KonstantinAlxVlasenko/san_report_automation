@@ -9,7 +9,7 @@ import utilities.regular_expression_operations as reop
 
 
 def storage_params_extract(storage_config, san_extracted_oceanstor_dct, 
-                           system_params, system_params_add, fcport_params, host_params, 
+                           system_params, system_params_add, fcport_params, host_params, hostid_name_params,
                            pattern_dct, info):
     """Function to extract values from current switch confguration file. 
     Returns list with extracted values"""
@@ -108,6 +108,7 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                             fcport_lst.append([configname] + [fcport_dct.get(param) for param in fcport_params])
             # hosts section start
             elif re.search(pattern_dct['host_header'], line):
+                i = 0
                 line = file.readline()
                 collected['host'] = True
                 # while not re.search(pattern_dct['hostgroup_or_power_header'], line):
@@ -115,7 +116,7 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                     line = file.readline()
                     if not line:
                         break
-                    # host id, name, os section start
+                    # host id, name, os by single line section start
                     if re.search(pattern_dct['host_id_name_line'], line):
                 
                         line = reop.extract_list_from_line(host_id_name_lst, pattern_dct, 
@@ -123,6 +124,17 @@ def storage_params_extract(storage_config, san_extracted_oceanstor_dct,
                                                     extract_pattern_name= 'host_id_name_line', 
                                                     stop_pattern_name='blank_line', 
                                                     first_line_skip=False, line_add_values=configname)
+                    # host id, name, os by miltiple lines section start
+                    elif re.search(pattern_dct['host_name_header'], line):
+                        # host parameters collection
+                        host_details_dct = {}
+                        # extract host os, name, os
+                        line = reop.extract_key_value_from_line(host_details_dct, pattern_dct, line, file, 
+                                                        extract_pattern_name='parameter_value_pair', 
+                                                        stop_pattern_name='blank_line',
+                                                        first_line_skip=True)
+                        host_details_lst = [configname] + [host_details_dct.get(param) for param in hostid_name_params]
+                        host_id_name_lst.append(host_details_lst)
                     # single host section start
                     elif re.search(pattern_dct['host_id_header'], line):
                         # host parameters collection

@@ -32,10 +32,13 @@ def export_tar_file(tar_filepath, dest_filepath):
     with tarfile.open(tar_filepath, "r:gz") as tf:
         # get list of all files in archive ignoring directories
         tarfile_lst = [tarinfo.name for tarinfo in tf if tarinfo.isreg()]
+        tarfile_lst = [filename for filename in tarfile_lst if not filename.endswith('.ss')]
         if not tarfile_lst:
             print('WARNING. No configuration in tar archive.')
         elif len(tarfile_lst) > 1:
             print('WARNING. Multiple files in tar archive.')
+            print(tar_filepath)
+            print(tarfile_lst)
         # read content of the first file
         tar_file_content = tf.extractfile(tarfile_lst[0]).read().decode("utf-8", errors='ignore')
         # write content to the dest_filepath

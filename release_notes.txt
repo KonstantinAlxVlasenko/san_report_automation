@@ -10,3 +10,4 @@ v0.91 - Visio scheme sw_entry and sw_middle access gateway shapes added
 v0.92 - Raslog sid and did device information resolve
 v0.93 - FILTER_NPIV_LINKS off and on option for Visio drawing
 v0.94 - 'Clock server changed' counter added in raslog analysis
+v0.95 - Huawei Dorado config parser host multiple lines
