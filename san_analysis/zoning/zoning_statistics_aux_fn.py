@@ -39,14 +39,18 @@ def active_vs_configured_ports(portshow_zoned_aggregated_df, configuration_type)
     portshow_zoned_aggregated_cp_df['Total_no_alias_ports'] = \
         np.where(mask_no_alias & mask_device_type, 'Total_no_alias_ports', pd.NA)
         
-    portshow_zoned_aggregated_cp_df.fillna(np.nan, inplace=True)
+    # portshow_zoned_aggregated_cp_df.fillna(np.nan, inplace=True)
+    # portshow_zoned_aggregated_cp_df = portshow_zoned_aggregated_cp_df.fillna(np.nan)
+    with pd.option_context("future.no_silent_downcasting", True):
+        portshow_zoned_aggregated_cp_df = portshow_zoned_aggregated_cp_df.fillna(np.nan).infer_objects(copy=False)
+
+
     
     if configuration_type == 'cfg_effective':
        summary_df = \
            dfop.count_frequency(portshow_zoned_aggregated_cp_df, count_columns=['Total_unzoned_ports', 'Total_device_ports'])
     elif configuration_type == 'alias':
         summary_df = dfop.count_frequency(portshow_zoned_aggregated_cp_df, count_columns=['Total_no_alias_ports', 'Total_device_ports'])
-    
     return summary_df
 
 

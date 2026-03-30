@@ -135,7 +135,8 @@ def get_portquantity(licenseport_extracted_df):
 
     licenseport_num_df = licenseport_extracted_df.copy()
     licenseport_num_df.dropna(subset=['Value'], inplace=True)
-    licenseport_num_df['Value'] = pd.to_numeric(licenseport_num_df['Value'], errors='ignore')
+    # licenseport_num_df['Value'] = pd.to_numeric(licenseport_num_df['Value'], errors='ignore')
+    licenseport_num_df['Value'] = licenseport_num_df['Value'].apply(dfop.to_numeric_future_proof)
     # sum license reservations
     licenseport_num_df = licenseport_num_df.groupby(['configname', 'chassis_name', 'Name'])['Value'].sum()
     licenseport_num_df = licenseport_num_df.reset_index()

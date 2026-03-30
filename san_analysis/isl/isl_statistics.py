@@ -76,7 +76,9 @@ def prior_prepearation(isl_aggregated_df, pattern_dct):
     isl_aggregated_modified_df = isl_aggregated_df[columns_lst].copy()
     
     # clean port settings defined as '..' (indicate 'OFF' value)
-    isl_aggregated_modified_df.replace(regex=[r'^\.\.$'], value=np.nan, inplace=True)
+    # isl_aggregated_modified_df.replace(regex=[r'^\.\.$'], value=np.nan, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        isl_aggregated_modified_df = isl_aggregated_modified_df.replace(regex=[r'^\.\.$'], value=np.nan).infer_objects(copy=False)
     
     # transceiver speed and mode extraction
     sfp_speed_re = pattern_dct['transceiver_speed']
@@ -84,9 +86,11 @@ def prior_prepearation(isl_aggregated_df, pattern_dct):
     sfp_mode_re = pattern_dct['transceiver_mode']
     isl_aggregated_modified_df['Transceiver_mode'] = isl_aggregated_modified_df['Transceiver_mode'].str.extract(sfp_mode_re)
     # max and reduced speed tags
-    isl_aggregated_modified_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)
+    # isl_aggregated_modified_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)
+    isl_aggregated_modified_df['Link_speedActualMax'] = isl_aggregated_modified_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'})
     # auto and fixed speed tags
-    isl_aggregated_modified_df['Speed_Cfg'].replace(regex={r'AN': 'Speed_Auto', r'\d+G': 'Speed_Fixed'}, inplace=True)
+    # isl_aggregated_modified_df['Speed_Cfg'].replace(regex={r'AN': 'Speed_Auto', r'\d+G': 'Speed_Fixed'}, inplace=True)
+    isl_aggregated_modified_df['Speed_Cfg'] = isl_aggregated_modified_df['Speed_Cfg'].replace(regex={r'AN': 'Speed_Auto', r'\d+G': 'Speed_Fixed'})
     # port_quantity tag
     isl_aggregated_modified_df['port'] = 'Port_quantity'
     # physical_link quantity
@@ -94,9 +98,11 @@ def prior_prepearation(isl_aggregated_df, pattern_dct):
     # port settings
     isl_aggregated_modified_df.rename(columns={'ISL_number': 'ISL', 'IFL_number': 'IFL', 'Trunk_Port': 'TRUNK', 'QOS_Port': 'QOS'}, inplace=True)
     # merge QOS and QOS_E_Port port settings
-    isl_aggregated_modified_df['QOS'].fillna(isl_aggregated_modified_df['QOS_E_Port'], inplace=True)
+    # isl_aggregated_modified_df['QOS'].fillna(isl_aggregated_modified_df['QOS_E_Port'], inplace=True)
+    isl_aggregated_modified_df['QOS'] = isl_aggregated_modified_df['QOS'].fillna(isl_aggregated_modified_df['QOS_E_Port'])
     # merge FEC and 10G/16G_FEC port settings
-    isl_aggregated_modified_df['FEC'].fillna(isl_aggregated_modified_df['10G/16G_FEC'], inplace=True)
+    # isl_aggregated_modified_df['FEC'].fillna(isl_aggregated_modified_df['10G/16G_FEC'], inplace=True)
+    isl_aggregated_modified_df['FEC'] = isl_aggregated_modified_df['FEC'].fillna(isl_aggregated_modified_df['10G/16G_FEC'])
     
     port_settings_columns = ['Distance', 'Transceiver_speed', 'Transceiver_mode', 'ISL', 'IFL', 'TRUNK',  'Encryption', 
                              'Compression', 'QOS', 'FEC', 'Long_Distance', 'VC_Link_Init', 'ISL_R_RDY_Mode', 'Credit_Recovery']
@@ -116,7 +122,8 @@ def prior_prepearation(isl_aggregated_df, pattern_dct):
 
     # logical_link quantity tag
     isl_aggregated_modified_df['ISL_IFL'] = isl_aggregated_modified_df['ISL']
-    isl_aggregated_modified_df['ISL_IFL'].fillna(isl_aggregated_modified_df['IFL'], inplace=True)
+    # isl_aggregated_modified_df['ISL_IFL'].fillna(isl_aggregated_modified_df['IFL'], inplace=True)
+    isl_aggregated_modified_df['ISL_IFL'] = isl_aggregated_modified_df['ISL_IFL'].fillna(isl_aggregated_modified_df['IFL'])
     isl_aggregated_modified_df = dfop.remove_duplicates_from_column(isl_aggregated_modified_df, column='ISL_IFL', 
                                                                 duplicates_subset=['Fabric_name', 'Fabric_label', 'switchWwn', 'ISL_IFL'],
                                                                 duplicates_free_column_name='logical_link', drop_orig_column=True)

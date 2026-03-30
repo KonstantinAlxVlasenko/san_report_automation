@@ -101,7 +101,8 @@ def remove_substring(df, column, pattern):
     df = extract_values_from_column(df, extracted_column=column, 
                                     pattern_column_lst=[(pattern, [cleaned_column])])
     # copy values which don't contain removed substring
-    df[cleaned_column].fillna(df[column], inplace=True)
+    # df[cleaned_column].fillna(df[column], inplace=True)
+    df[cleaned_column] = df[cleaned_column].fillna(df[column])
     # swap locations of the original column and column with removed substring
     df = swap_columns(df, column, cleaned_column)
     # drop original column

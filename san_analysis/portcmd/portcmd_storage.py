@@ -44,7 +44,8 @@ def storage_3par_fillna(portshow_aggregated_df, system_3par_df, port_3par_df):
                                                             note_column='Storage_Port_Partner_Fabric_equal')
     # if 3PAR configuration was not extracted apply reserved name (3PAR model and SN combination)
     if 'Device_Name_reserved' in portshow_aggregated_df.columns:
-        portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Device_Name_reserved'], inplace = True)
+        # portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Device_Name_reserved'], inplace = True)
+        portshow_aggregated_df['Device_Host_Name'] = portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df['Device_Name_reserved'])
     return portshow_aggregated_df
 
 

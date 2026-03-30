@@ -47,10 +47,12 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     
     # remove uninfomative values from switch DataFrame
     maps_clean_pattern = pattern_dct['maps_clean']
-    switch_params_cp_df.replace(to_replace={maps_clean_pattern: np.nan} , regex=True, inplace=True)
+    # switch_params_cp_df.replace(to_replace={maps_clean_pattern: np.nan} , regex=True, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        switch_params_cp_df = switch_params_cp_df.replace(to_replace={maps_clean_pattern: np.nan} , regex=True).infer_objects(copy=False)
+
     # change count columns values representation
     switch_params_cp_df['LS_type'] = switch_params_cp_df['LS_type'].str.capitalize() + '_sw'
-
     # create notes columns
     dfop.column_to_object(switch_params_cp_df, 'FC_Router_ON', 'Fabric_Vision_lic', 'Trunking_lic')
 
@@ -63,9 +65,14 @@ def prior_prepearation(switch_params_aggregated_df, pattern_dct):
     switch_params_cp_df.loc[mask_fv_lic, 'Fabric_Vision_lic'] = 'Fabric_Vision_lic'
     switch_params_cp_df.loc[mask_trunking_lic, 'Trunking_lic'] = 'Trunking_lic'
 
-    switch_params_cp_df['ModelName'].fillna('Unknown_model', inplace=True)
-    switch_params_cp_df['Generation'].fillna('Uknown_Gen', inplace=True)
-    switch_params_cp_df['SwitchMode'].fillna('Uknown_Mode', inplace=True)
+    # switch_params_cp_df['ModelName'].fillna('Unknown_model', inplace=True)
+    # switch_params_cp_df['Generation'].fillna('Uknown_Gen', inplace=True)
+    # switch_params_cp_df['SwitchMode'].fillna('Uknown_Mode', inplace=True)
+
+    switch_params_cp_df['ModelName'] = switch_params_cp_df['ModelName'].fillna('Unknown_model')
+    switch_params_cp_df['Generation'] = switch_params_cp_df['Generation'].fillna('Uknown_Gen')
+    switch_params_cp_df['SwitchMode'] = switch_params_cp_df['SwitchMode'].fillna('Uknown_Mode')
+
 
     mask_switch_pair_found = switch_params_cp_df.groupby(by=['Fabric_name', 'switchPair_id'])['switchPair_id'].transform('count') > 1
     switch_params_cp_df['switchPaired'] = 'Unpaired_switch'

@@ -39,7 +39,9 @@ def device_connection_statistics(portshow_aggregated_df):
     device_columns = ['Fabric_name', 'Device_Host_Name', 'Device_Location', 'deviceType', 'deviceSubtype']	
     reorder_stat_columns = [*device_columns, *stat_columns[5:]]
     device_connection_statistics_df = device_connection_statistics_df[reorder_stat_columns]
-    device_connection_statistics_df.fillna(np.nan, inplace=True)
+    # device_connection_statistics_df.fillna(np.nan, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        device_connection_statistics_df = device_connection_statistics_df.fillna(np.nan).infer_objects(copy=False)
     return device_connection_statistics_df
 
 

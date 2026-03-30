@@ -25,7 +25,8 @@ def verify_switch_pair_match(switch_pair_df):
     # for column in sw_pair_match_columns[1:3]:
     #     switch_pair_df[column].fillna(0, inplace=True)
 
-    switch_pair_df['switchWwn_occurrence_in_switchWwn_pair'].fillna(0, inplace=True)    
+    # switch_pair_df['switchWwn_occurrence_in_switchWwn_pair'].fillna(0, inplace=True)
+    switch_pair_df['switchWwn_occurrence_in_switchWwn_pair'] = switch_pair_df['switchWwn_occurrence_in_switchWwn_pair'].fillna(0)    
 
     return switch_pair_df
 

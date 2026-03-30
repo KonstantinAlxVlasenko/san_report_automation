@@ -123,7 +123,8 @@ def remove_duplicates_from_string(df, *args, sep=', '):
         if df[column].notna().any() and df[column].str.contains(sep).any():
             df[column].fillna('nan_value', inplace=True)
             df[column] = df[column].str.split(sep).apply(set).str.join(sep)
-            df[column].replace({'nan_value': np.nan}, inplace=True)
+            # df[column].replace({'nan_value': np.nan}, inplace=True)
+            df[column] = df[column].replace({'nan_value': np.nan})
     return df
 
 
@@ -132,7 +133,8 @@ def remove_value_from_string(df, removed_value: str, *args, sep=', '):
 
     for column in args:
         if df[column].notna().any():
-            df[column].replace(f'{removed_value}(?:{sep})?', value='', regex=True, inplace=True)
+            # df[column].replace(f'{removed_value}(?:{sep})?', value='', regex=True, inplace=True)
+            df[column] = df[column].replace(f'{removed_value}(?:{sep})?', value='', regex=True)
             df[column] = df[column].str.rstrip(sep)
     return df
 

@@ -11,3 +11,5 @@ v0.92 - Raslog sid and did device information resolve
 v0.93 - FILTER_NPIV_LINKS off and on option for Visio drawing
 v0.94 - 'Clock server changed' counter added in raslog analysis
 v0.95 - Huawei Dorado config parser host multiple lines
+v0.951 - Timezone parsing added to the logtime regex (FOS 9.x)
+v1.0 - Code refacatoring to correspond Pandas 3.0 requirements 

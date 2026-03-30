@@ -50,7 +50,8 @@ def blade_server_fillna(portshow_aggregated_df, blade_servers_df, synergy_server
         # fillna portshow_aggregated_df null values with values from blade_servers_join_df
         portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, blade_servers_join_df, ['Connected_portWwn'], blade_columns_lst)
         # fillna null values in Device_Host_Name from Host_Name
-        portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)
+        # portshow_aggregated_df.Device_Host_Name.fillna(portshow_aggregated_df.Host_Name, inplace = True)
+        portshow_aggregated_df['Device_Host_Name'] = portshow_aggregated_df['Device_Host_Name'].fillna(portshow_aggregated_df.Host_Name)
 
     if not synergy_servers_df.empty:
         # columns with null values to fill

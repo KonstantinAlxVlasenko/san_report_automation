@@ -1,6 +1,7 @@
 """ """
 
 import numpy as np
+import pandas as pd
 
 def dataframe_join(left_df, right_df, columns_lst, columns_join_index=None):
     """
@@ -62,11 +63,11 @@ def dataframe_fillna(left_df, right_df, join_lst, filled_lst, remove_duplicates=
     left_df = left_df.merge(right_join_df, how = 'left', on = join_lst)
     # for each columns pair (w/o (null values) and w _join prefix (filled values)
     for filled_name, filled_join_name in zip(filled_lst, filled_join_lst):
-        # copy values from right DataFrame column to left DataFrame if left value ios null 
-        
+        # copy values from right DataFrame column to left DataFrame if left value ios null
         # left_df[filled_name].fillna(left_df[filled_join_name], inplace = True)
-
-        left_df[filled_name] = left_df[filled_name].fillna(left_df[filled_join_name])
+        # left_df[filled_name] = left_df[filled_name].fillna(left_df[filled_join_name])
+        with pd.option_context("future.no_silent_downcasting", True):
+            left_df[filled_name] = left_df[filled_name].fillna(left_df[filled_join_name]).infer_objects(copy=False)
         # drop column with _join prefix
         left_df.drop(columns = [filled_join_name], inplace = True)
     return left_df
@@ -106,5 +107,9 @@ def add_swclass_weight(swclass_df):
     switchClass_weight_dct = {'DIR': 1, 'ENTP': 2, 'MID': 3, 'ENTRY': 4, 'EMB': 5, 'EXT': 6}
     mask_assigned_switch_class = swclass_df['switchClass'].isin(switchClass_weight_dct.keys())
     swclass_df.loc[~mask_assigned_switch_class, 'switchClass_weight'] = np.nan
-    swclass_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
-    swclass_df['switchClass_weight'].fillna(7, inplace=True)
+    # swclass_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
+    # swclass_df['switchClass_weight'] = swclass_df['switchClass_weight'].replace(switchClass_weight_dct)
+    with pd.option_context("future.no_silent_downcasting", True):
+        swclass_df['switchClass_weight'] = swclass_df['switchClass_weight'].replace(switchClass_weight_dct).infer_objects(copy=False)
+    # swclass_df['switchClass_weight'].fillna(7, inplace=True)
+    swclass_df['switchClass_weight'] = swclass_df['switchClass_weight'].fillna(7)

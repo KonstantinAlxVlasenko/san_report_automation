@@ -72,12 +72,13 @@ def verify_ls_type(switch_params_df):
     switch_ls_type_df['LS_type'] = np.select([mask_base, mask_default, mask_not_base & mask_logical, mask_non_ls_mode],
                                             ['base', 'default', 'logical', 'physical'], default='unknown')
 
-    switch_ls_type_df['Allow_XISL_Use'].replace(to_replace={'ON': 'xisl_on'}, inplace=True) 
+    switch_ls_type_df['Allow_XISL_Use'] = switch_ls_type_df['Allow_XISL_Use'].replace(to_replace={'ON': 'xisl_on'})
+    # switch_ls_type_df['Allow_XISL_Use'].replace(to_replace={'ON': 'xisl_on'}, inplace=True) 
     switch_ls_type_df.drop(columns=switchtype_columns[5:], inplace=True)
     switch_ls_type_df.drop_duplicates(subset=switchtype_columns[:3], inplace=True)
     switch_ls_type_df.set_index(switchtype_columns[:3], inplace=True)
-    switch_ls_type_df['Fabric_Name'].fillna('Not assigned', inplace=True)
-
+    switch_ls_type_df['Fabric_Name'] = switch_ls_type_df['Fabric_Name'].fillna('Not assigned')
+    # switch_ls_type_df['Fabric_Name'].fillna('Not assigned', inplace=True)
     return switch_ls_type_df
 
 

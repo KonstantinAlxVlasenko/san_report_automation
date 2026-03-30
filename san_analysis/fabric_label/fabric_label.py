@@ -67,8 +67,8 @@ def fabric_label_analysis(switchshow_ports_df, switch_params_df, fabricshow_df, 
         # takes all switches working in Native and AG switches
         # merge the in one DataFrame and identify which Fabrics they belong too with fabricshow_summary DataFrame
         fabricshow_ag_labels_df = native_ag_labeling(fabricshow_df, ag_principal_df, fabricshow_summary_df)
-        fabricshow_ag_labels_df['Fabric_name'].fillna('x', inplace=True)
-        fabricshow_ag_labels_df['Fabric_label'].fillna('x', inplace=True)
+        fabricshow_ag_labels_df['Fabric_name'] = fabricshow_ag_labels_df['Fabric_name'].fillna('x')
+        fabricshow_ag_labels_df['Fabric_label'] = fabricshow_ag_labels_df['Fabric_label'].fillna('x')
         
         info = f'Fabric name and label setting'
         print(info, end =" ")

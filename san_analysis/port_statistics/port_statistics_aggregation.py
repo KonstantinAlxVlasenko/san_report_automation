@@ -24,7 +24,8 @@ def port_statisctics_aggregated(portshow_aggregated_df, licenseport_statistics_d
     # mark device_class with npiv tag for devices connected via npiv
     mask_npiv = portshow_aggregated_df['Device_type'].str.contains('NPIV', na=False)
     portshow_aggregated_df['deviceType_npiv']  = portshow_aggregated_df.loc[mask_npiv, 'deviceType'] + '_NPIV'
-    portshow_aggregated_df['deviceType_npiv'].fillna(portshow_aggregated_df['deviceType'], inplace=True)
+    # portshow_aggregated_df['deviceType_npiv'].fillna(portshow_aggregated_df['deviceType'], inplace=True)
+    portshow_aggregated_df['deviceType_npiv'] = portshow_aggregated_df['deviceType_npiv'].fillna(portshow_aggregated_df['deviceType'])
 
     # count statistics for columns
     stat_columns = ['portState', 'portPhys', 'speed', 'deviceType_npiv', 'Device_type', 'portType', 'zoning_enforcement']

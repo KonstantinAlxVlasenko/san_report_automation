@@ -15,10 +15,10 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, chassisshow_df,
 
     # complete fabric DataFrame with information from switch_params DataFrame
     switch_params_aggregated_df = fabric_clean_df.merge(switch_params_df, how = 'left', on = ['switchWwn', 'switchName'])
-    switch_params_aggregated_df['SwitchName'].fillna(switch_params_aggregated_df['switchName'], inplace=True)
-    switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'], inplace=True)
-    switch_params_aggregated_df['boot.ipa'].fillna(switch_params_aggregated_df['Enet_IP_Addr'], inplace=True)
-    switch_params_aggregated_df['switchMode'].fillna(switch_params_aggregated_df['SwitchMode'], inplace=True)
+    switch_params_aggregated_df['SwitchName'] = switch_params_aggregated_df['SwitchName'].fillna(switch_params_aggregated_df['switchName'])
+    switch_params_aggregated_df['switchName'] = switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'])
+    switch_params_aggregated_df['boot.ipa'] = switch_params_aggregated_df['boot.ipa'].fillna(switch_params_aggregated_df['Enet_IP_Addr'])
+    switch_params_aggregated_df['switchMode'] = switch_params_aggregated_df['switchMode'].fillna(switch_params_aggregated_df['SwitchMode'])
     # fill empty sn, add factory sn and oem id
     chassis_params_df = add_chassis_sn_oemid(chassis_params_df, chassisshow_df)
     # complete DataFrame with information from chassis_params DataFrame
@@ -44,7 +44,8 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, chassisshow_df,
     # count sddq ports and verify if sddq limit has been reached
     switch_params_aggregated_df = verify_sddq_reserve(switch_params_aggregated_df, pattern_dct)
     # maps.activePolicy is in configshow,  Active_policy is in AMS_MAPS file. 
-    switch_params_aggregated_df['maps.activePolicy'].fillna(switch_params_aggregated_df['Active_policy'], inplace=True)
+    # switch_params_aggregated_df['maps.activePolicy'].fillna(switch_params_aggregated_df['Active_policy'], inplace=True)
+    switch_params_aggregated_df['maps.activePolicy'] = switch_params_aggregated_df['maps.activePolicy'].fillna(switch_params_aggregated_df['Active_policy'])
     # convert switchType to the same type
     switch_params_aggregated_df.switchType = switch_params_aggregated_df.switchType.astype('float64', errors='ignore')
     # remove fractional part from switchType
@@ -58,8 +59,10 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, chassisshow_df,
                                                         remove_duplicates=True, drop_na=True)
     # create column with switch models (hpe or brocade model)
     switch_params_aggregated_df['ModelName'] = switch_params_aggregated_df['HPE_modelName']
-    switch_params_aggregated_df['ModelName'].replace(to_replace={'-': np.nan}, inplace=True)
-    switch_params_aggregated_df['ModelName'].fillna(switch_params_aggregated_df['Brocade_modelName'], inplace=True)
+    # switch_params_aggregated_df['ModelName'].replace(to_replace={'-': np.nan}, inplace=True)
+    switch_params_aggregated_df['ModelName'] = switch_params_aggregated_df['ModelName'].replace(to_replace={'-': np.nan})
+    # switch_params_aggregated_df['ModelName'].fillna(switch_params_aggregated_df['Brocade_modelName'], inplace=True)
+    switch_params_aggregated_df['ModelName'] = switch_params_aggregated_df['ModelName'].fillna(switch_params_aggregated_df['Brocade_modelName'])
     # sorting DataFrame
     sort_switches(switch_params_aggregated_df)
     # add empty column FOS suuported to fill manually 
@@ -70,7 +73,8 @@ def switch_param_aggregation(fabric_clean_df, chassis_params_df, chassisshow_df,
     for lic_check, lic_name in license_dct.items():
         switch_params_aggregated_df[lic_check] = \
             switch_params_aggregated_df.loc[switch_params_aggregated_df['licenses'].notnull(), 'licenses'].apply(lambda x: lic_name in x)
-        switch_params_aggregated_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
+        # switch_params_aggregated_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
+        switch_params_aggregated_df[lic_check] = switch_params_aggregated_df[lic_check].replace(to_replace={True: 'Да', False: 'Нет'})
 
     # check if chassis_name and switch_name columns are equal
     # if yes then no need to use chassis information in tables
@@ -97,8 +101,11 @@ def sort_switches(switch_params_aggregated_df):
     switchClass_weight_dct = {'DIR': 1, 'ENTP': 2, 'MID': 3, 'ENTRY': 4, 'EMB': 5, 'EXT': 6}
     mask_assigned_switch_class = switch_params_aggregated_df['switchClass'].isin(switchClass_weight_dct.keys())
     switch_params_aggregated_df.loc[~mask_assigned_switch_class, 'switchClass_weight'] = np.nan
-    switch_params_aggregated_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
-    switch_params_aggregated_df['switchClass_weight'].fillna(7, inplace=True)
+    # switch_params_aggregated_df['switchClass_weight'].replace(switchClass_weight_dct, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        switch_params_aggregated_df['switchClass_weight'] = switch_params_aggregated_df['switchClass_weight'].replace(switchClass_weight_dct).infer_objects(copy=False)
+    # switch_params_aggregated_df['switchClass_weight'].fillna(7, inplace=True)
+    switch_params_aggregated_df['switchClass_weight'] = switch_params_aggregated_df['switchClass_weight'].fillna(7)
     switch_params_aggregated_df.sort_values(by=['Fabric_name', 'Fabric_label', 
                                                 'switchClass_weight', 'switchType', 
                                                 'chassis_name', 'switch_index'], \
@@ -135,7 +142,9 @@ def verify_sddq_reserve(switch_params_aggregated_df, pattern_dct):
         switch_params_aggregated_df['Quarantined_Ports_clean'] = switch_params_aggregated_df['Quarantined_Ports']
         
         if switch_params_aggregated_df['Quarantined_Ports_clean'].notna().any():
-            switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={maps_clean_pattern: np.nan}, regex=True, inplace=True)
+            # switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={maps_clean_pattern: np.nan}, regex=True, inplace=True)
+            with pd.option_context("future.no_silent_downcasting", True):
+                switch_params_aggregated_df['Quarantined_Ports_clean'] = switch_params_aggregated_df['Quarantined_Ports_clean'].replace(to_replace={maps_clean_pattern: np.nan}, regex=True).infer_objects(copy=False)
         # check after replacement
         if switch_params_aggregated_df['Quarantined_Ports_clean'].notna().any():
             # count sddq port quantity
@@ -169,13 +178,16 @@ def verify_base_in_chassis(switch_params_aggregated_df):
     grp_columns = ['configname', 'chassis_name', 'chassis_wwn']
 
     switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df['Base_Switch']
-    switch_params_aggregated_df['Base_switch_in_chassis'].fillna('_', inplace=True)
+    # switch_params_aggregated_df['Base_switch_in_chassis'].fillna('_', inplace=True)
+    switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df['Base_switch_in_chassis'].fillna('_')
     # join base switch tags for all logical switches in chassis
     switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df.groupby(by=grp_columns, dropna=False)['Base_switch_in_chassis'].transform(', '.join)
     # if base switch tag present on any switch in chassis then 'Base_switch_in_chassis' tag is 'Yes'
     mask_base_in_chassis =  switch_params_aggregated_df['Base_switch_in_chassis'].str.contains('Yes')
     switch_params_aggregated_df['Base_switch_in_chassis'] = np.where(mask_base_in_chassis, 'Yes', pd.NA)
-    switch_params_aggregated_df['Base_switch_in_chassis'].fillna(np.nan, inplace=True)
+    # switch_params_aggregated_df['Base_switch_in_chassis'].fillna(np.nan, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        switch_params_aggregated_df['Base_switch_in_chassis'] = switch_params_aggregated_df['Base_switch_in_chassis'].fillna(np.nan).infer_objects(copy=False)
     return switch_params_aggregated_df
 
 

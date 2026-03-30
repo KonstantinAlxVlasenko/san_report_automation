@@ -58,7 +58,8 @@ def translate_values(df, headers_df=None, df_name=None, translated_columns=None,
     # translate values in column if column in DataFrame
     for column in translated_columns:
         if column in translated_df.columns:
-            translated_df[column] = translated_df[column].replace(to_replace=translate_dct)
+            with pd.option_context("future.no_silent_downcasting", True):
+                translated_df[column] = translated_df[column].replace(to_replace=translate_dct).infer_objects(copy=False)
     return translated_df
 
 

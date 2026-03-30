@@ -82,7 +82,10 @@ def verify_isl_cfg_equality(isl_aggregated_df):
 
     isl_cp_df = isl_aggregated_df.copy()
     # '..' means service or setting is in OFF state
-    isl_cp_df.replace(to_replace='..', value='OFF', inplace=True)
+    # isl_cp_df.replace(to_replace='..', value='OFF', inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        isl_cp_df = isl_cp_df.replace(to_replace='..', value='OFF').infer_objects(copy=False)
+
     # join QOS_Port and QOS_E_Port columns
     isl_cp_df['QOS_Port'] = isl_cp_df['QOS_Port'].fillna(isl_cp_df['QOS_E_Port'])
     isl_cp_df['Connected_QOS_Port'] = isl_cp_df['Connected_QOS_Port'].fillna(isl_cp_df['Connected_QOS_E_Port'])

@@ -132,7 +132,7 @@ def import_project_steps(max_title):
         project_steps_df.loc[mask_force_run, column] = 1
 
     numeric_columns = ['export_to_excel', 'force_run', 'sort_weight']
-    project_steps_df[numeric_columns] = project_steps_df[numeric_columns].apply(pd.to_numeric, errors='ignore')
+    project_steps_df[numeric_columns] = project_steps_df[numeric_columns].apply(pd.to_numeric, errors='coerce')
 
     info = "Global export report key"
     print(info, end =" ") 

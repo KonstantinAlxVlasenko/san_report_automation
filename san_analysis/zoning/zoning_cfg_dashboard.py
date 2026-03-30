@@ -185,8 +185,8 @@ def cfg_dashborad(zonemember_statistics_df, portshow_zoned_aggregated_df, zoning
         mask_effective = zoning_aggregated_df['cfg_type'] =='effective'
         zoned_ports_total_df = zoning_aggregated_df.loc[mask_effective].copy()
         zoned_ports_total_df['alias_member_PortName'] = zoned_ports_total_df['PortName']
-        zoned_ports_total_df['alias_member_PortName'].fillna(zoned_ports_total_df['alias_member'], inplace=True)
-
+        # zoned_ports_total_df['alias_member_PortName'].fillna(zoned_ports_total_df['alias_member'], inplace=True)
+        zoned_ports_total_df['alias_member_PortName'] = zoned_ports_total_df['alias_member_PortName'].fillna(zoned_ports_total_df['alias_member'])
         zoned_ports_total_df.drop_duplicates(subset=['Fabric_name', 'Fabric_label', 'alias_member_PortName'], inplace=True)
         zoned_ports_total_df['Total_zoned_ports'] = 'Total_zoned_ports'
 

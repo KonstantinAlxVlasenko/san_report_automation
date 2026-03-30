@@ -90,7 +90,8 @@ def group_device_on_name(connected_devices_df, san_graph_grid_df, pattern_dct):
     # shape name for devices with a known name (device_name without wwn)
     device_shape_links_df.loc[~mask_wwn_in_name, 'Device_shapeName'] = device_shape_links_df['deviceType'] + " " + device_shape_links_df['Device_Host_Name']
     # shape name for devices with a unknown name (device_name with wwn)
-    device_shape_links_df['Device_shapeName'].fillna(device_shape_links_df['Device_Host_Name'], inplace=True)
+    # device_shape_links_df['Device_shapeName'].fillna(device_shape_links_df['Device_Host_Name'], inplace=True)
+    device_shape_links_df['Device_shapeName'] = device_shape_links_df['Device_shapeName'].fillna(device_shape_links_df['Device_Host_Name'])
     
     # add link shape name (shape_name + connected switch shape_name)
     device_shape_links_df = dfop.merge_columns(device_shape_links_df, summary_column='Link_shapeName', 
@@ -109,7 +110,8 @@ def add_device_master_shape_details(device_shape_links_df, san_graph_grid_df):
     # add san graph details (device master shape details for visio draw)
     # 'switchClass_mode' is device tag based on which master shape is assigned
     device_shape_links_df['switchClass_mode'] = device_shape_links_df['deviceType']
-    device_shape_links_df['switchClass_mode'].replace({'UNKNOWN': 'UNKNOWN_DEV'}, inplace=True)
+    # device_shape_links_df['switchClass_mode'].replace({'UNKNOWN': 'UNKNOWN_DEV'}, inplace=True)
+    device_shape_links_df['switchClass_mode'] = device_shape_links_df['switchClass_mode'].replace({'UNKNOWN': 'UNKNOWN_DEV'})
     device_shape_links_df = dfop.dataframe_fillna(device_shape_links_df, san_graph_grid_df, 
                                                   join_lst=['switchClass_mode'], 
                                                   filled_lst=['switchClass_weight', 'master_shape', 'y_graph_level', 'x_group_offset'])

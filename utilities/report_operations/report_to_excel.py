@@ -40,7 +40,11 @@ def dataframe_to_excel(df, sheet_title, project_constants_lst,
     if (force_flag or export_flag) and not df.empty:
         fsop.create_folder(report_requisites_sr['today_report_folder'], max_title, display_status=False)
         file_mode = 'a' if os.path.isfile(file_path) else 'w'
-        df = df.apply(pd.to_numeric, errors='ignore')
+        # df = df.apply(pd.to_numeric, errors='ignore')
+        for column in df.columns:
+            # df[column] = (df[column].apply(pd.to_numeric, errors="coerce").fillna(df[column]))
+            with pd.option_context("future.no_silent_downcasting", True):
+                df[column] = (df[column].apply(pd.to_numeric, errors="coerce").fillna(df[column])).infer_objects(copy=False)
         try:
             if_sheet_exists_param = 'replace' if file_mode == 'a' else None
             content_df, item_exist = generate_table_of_contents(file_path, file_mode, sheet_title, df_decription)
@@ -49,7 +53,7 @@ def dataframe_to_excel(df, sheet_title, project_constants_lst,
             with pd.ExcelWriter(file_path, mode=file_mode, if_sheet_exists=if_sheet_exists_param, engine='openpyxl') as writer:
                 if file_mode == 'w' or not item_exist:
                     content_df.to_excel(writer, sheet_name='Содержание', index=False)
-                df_flat.to_excel(writer, sheet_name=sheet_title,  startrow=2, index=False)
+                df_flat.to_excel(writer, sheet_name=sheet_title, startrow=2, index=False)
             # format table of contents and data worksheets
             workbook = openpyxl.load_workbook(file_path)
             format_workbook(workbook, sheet_title, df_decription, freeze_column)
@@ -73,7 +77,7 @@ def dataframe_to_excel(df, sheet_title, project_constants_lst,
 def generate_table_of_contents(file_path, file_mode, sheet_title, df_decription):
     """"Function to create or recreate table of contents if file is newly created or new sheet added"""
 
-    item_exist = None 
+    item_exist = None
     # if file exists and there is no sheet_title in contents add new item to the existing content
     if  file_mode == 'a':
         existing_content_df = pd.read_excel(file_path, sheet_name='Содержание')
@@ -88,6 +92,8 @@ def generate_table_of_contents(file_path, file_mode, sheet_title, df_decription)
     # if file is newly created then create contents with single sheet_title
     elif file_mode == 'w':
         content_df = pd.DataFrame([[sheet_title, df_decription]], columns=['Закладка', 'Название таблицы'])
+    else:
+        content_df = pd.DataFrame()
     return content_df, item_exist
 
 
@@ -131,7 +137,7 @@ def report_format_completion(project_constants_lst, current_date=str(date.today(
             # create hyperlinks for all items of table of contents
             hyperlink_content(workbook)
             # sort worksheets
-            workbook._sheets.sort(key=lambda ws: project_steps_df.loc[ws.title, 'sort_weight'])
+            workbook._sheets.sort(key=lambda ws: project_steps_df.loc[ws.title, 'sort_weight']) # type:ignore
             workbook.save(file_path)
         except PermissionError:
             status_info('fail', max_title, len(info))

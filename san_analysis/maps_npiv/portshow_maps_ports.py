@@ -22,9 +22,13 @@ def maps_db_ports(portshow_sfp_aggregated_df, switch_params_aggregated_df, patte
 
     portshow_cp_df = portshow_sfp_aggregated_df.copy()
     switch_params_cp_df = switch_params_aggregated_df.copy()
-    switch_params_cp_df['switchName'].fillna(switch_params_cp_df['SwitchName'], inplace=True)
+    # switch_params_cp_df['switchName'].fillna(switch_params_cp_df['SwitchName'], inplace=True)
+    switch_params_cp_df['switchName'] = switch_params_cp_df['switchName'].fillna(switch_params_cp_df['SwitchName'])
     # remove uninfomative values from switch DataFrame
-    switch_params_cp_df.replace(to_replace={pattern_dct['maps_clean']: np.nan} , regex=True, inplace=True)
+    # switch_params_cp_df.replace(to_replace={pattern_dct['maps_clean']: np.nan} , regex=True, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        switch_params_cp_df = switch_params_cp_df.replace(to_replace={pattern_dct['maps_clean']: np.nan} , regex=True).infer_objects(copy=False)
+
     # explode ports so that each port presented as separate row
     maps_ports_df, top_zoned_ports_df = explode_maps_ports(switch_params_cp_df)
     # extract slot, port, pid and it-flows

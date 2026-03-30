@@ -31,8 +31,8 @@ def create_shape_name(df, device_name_column, device_wwn_column, shape_name_colu
     warnings.filterwarnings("ignore", 'This pattern is interpreted as a regular expression, and has match groups')
     mask_wwn_in_name = df[device_name_column].str.contains("([0-9a-f]{2}:){7}[0-9a-f]{2}")
     df.loc[~mask_wwn_in_name, shape_name_column] = df[device_name_column] + " " + df[device_wwn_column]
-    df[shape_name_column].fillna(df[device_name_column], inplace=True)
-
+    # df[shape_name_column].fillna(df[device_name_column], inplace=True)
+    df[shape_name_column] = df[shape_name_column].fillna(df[device_name_column])
 
 def count_trunk_links(series, columns):
     """Function to count number of trunks in the connection.

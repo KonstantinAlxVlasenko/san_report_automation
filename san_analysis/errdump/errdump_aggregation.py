@@ -109,6 +109,7 @@ def message_extract(errdump_aggregated_df, pattern_dct):
         [pattern_dct['sec_violation_login_failure'], ['Dashboard_category', 'Condition', 'IP_Address']],
         [pattern_dct['sec_violation_unauthorized_host'], ['Dashboard_category', 'Condition', 'IP_Address']],
         [pattern_dct['clock_server_used_insted'],  ['Condition', 'Current_value']],
+        [pattern_dct['flow_from_to_quarantined device'], ['sid', 'did']],
         ]        
     
     # get unique columns to extract values to

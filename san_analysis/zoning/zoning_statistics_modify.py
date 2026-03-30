@@ -19,7 +19,8 @@ def modify_zoning(zoning_aggregated_df):
     # changes in zoning_aggregated_df DataFrame
     zoning_modified_df = zoning_aggregated_df.copy()
     # All classes of servers are considered to be SRV class
-    zoning_modified_df.deviceType.replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV', 'SRV_BLADE': 'SRV', 'SRV_SYNERGY': 'SRV'}, inplace=True)
+    # zoning_modified_df.deviceType.replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV', 'SRV_BLADE': 'SRV', 'SRV_SYNERGY': 'SRV'}, inplace=True)
+    zoning_modified_df['deviceType'] = zoning_modified_df['deviceType'].replace(to_replace={'BLADE_SRV': 'SRV', 'SYNERGY_SRV': 'SRV', 'SRV_BLADE': 'SRV', 'SRV_SYNERGY': 'SRV'})
     # deviceType transformed to be combination if device class and device type
     zoning_modified_df.deviceSubtype = zoning_modified_df['deviceType'] + ' ' + zoning_modified_df['deviceSubtype']
     # servers device type is not important for zonemember analysis
@@ -87,8 +88,9 @@ def modify_zoning(zoning_aggregated_df):
     zoning_modified_df = \
         dfop.dataframe_fillna(zoning_modified_df, zoning_pairs_df, join_lst=zoning_pairs_columns[:-1], filled_lst=[zoning_pairs_columns[-1]]) 
 
-    zoning_modified_df.replace(to_replace='nan', value=np.nan, inplace=True)
-
+    # zoning_modified_df.replace(to_replace='nan', value=np.nan, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        zoning_modified_df = zoning_modified_df.replace(to_replace='nan', value=np.nan).infer_objects(copy=False)
     return zoning_modified_df, zoning_duplicated_df, zoning_pairs_df, zoning_absorbed_df
 
 

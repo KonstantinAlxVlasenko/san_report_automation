@@ -64,8 +64,10 @@ def replace_wwnn(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_
     # alias_member contain WWNP values. 
     # fillna copies those WWNP values to the Strict_Wwnp columns thus this column
     # contains WWNP values only
-    zoning_aggregated_df.Strict_Wwnp.fillna(zoning_aggregated_df.alias_member, inplace=True)
-    alias_aggregated_df.Strict_Wwnp.fillna(alias_aggregated_df.alias_member, inplace=True)
+    # zoning_aggregated_df.Strict_Wwnp.fillna(zoning_aggregated_df.alias_member, inplace=True)
+    zoning_aggregated_df['Strict_Wwnp'] = zoning_aggregated_df['Strict_Wwnp'].fillna(zoning_aggregated_df['alias_member'])
+    # alias_aggregated_df.Strict_Wwnp.fillna(alias_aggregated_df.alias_member, inplace=True)
+    alias_aggregated_df['Strict_Wwnp'] = alias_aggregated_df['Strict_Wwnp'].fillna(alias_aggregated_df['alias_member'])
 
     return zoning_aggregated_df, alias_aggregated_df
 
@@ -73,7 +75,10 @@ def replace_wwnn(zoning_aggregated_df, alias_aggregated_df, portshow_aggregated_
 def replace_domain_index(aggregated_df, portshow_aggregated_df):
     """Function to replace Domain_Index with Wwpn"""
 
-    aggregated_df['Strict_Wwnp'].replace(to_replace='\d+,\d+', value=np.nan, regex=True, inplace=True)
+    # aggregated_df['Strict_Wwnp'].replace(to_replace='\d+,\d+', value=np.nan, regex=True, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        aggregated_df['Strict_Wwnp'] = aggregated_df['Strict_Wwnp'].replace(to_replace='\d+,\d+', value=np.nan, regex=True).infer_objects(copy=False)
+    
     portshow_cp = portshow_aggregated_df.copy()
     portshow_cp.rename(columns={'PortName': 'Strict_Wwnp', 'Domain_Index': 'alias_member'}, inplace=True)
     aggregated_df = dfop.dataframe_fillna(aggregated_df, portshow_cp, join_lst=['Fabric_name', 'Fabric_label', 'alias_member'], 
@@ -131,7 +136,10 @@ def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
             (zoning_aggregated_df['Fabric_label'] == zoning_aggregated_df['zonemember_Fabric_label'])
     
     zoning_aggregated_df['Fabric_device_status'] = np.nan
-    zoning_aggregated_df['Fabric_device_status'] = zoning_aggregated_df['Fabric_device_status'].fillna(zoning_aggregated_df['Member_in_cfg_Fabric'])
+    # zoning_aggregated_df['Fabric_device_status'] = zoning_aggregated_df['Fabric_device_status'].fillna(zoning_aggregated_df['Member_in_cfg_Fabric'])
+    with pd.option_context("future.no_silent_downcasting", True):
+        zoning_aggregated_df['Fabric_device_status'] = zoning_aggregated_df['Fabric_device_status'].fillna(zoning_aggregated_df['Member_in_cfg_Fabric']).infer_objects(copy=False)
+
     # remove False values for devices which are not connected to any fabric (leave blank)
     zoning_aggregated_df['Member_in_cfg_Fabric'] = \
         zoning_aggregated_df['Member_in_cfg_Fabric'].where(pd.notna(zoning_aggregated_df.zonemember_Fabric_name), np.nan)
@@ -140,10 +148,14 @@ def zonemember_in_cfg_fabric_verify(zoning_aggregated_df, lsan=True):
         zoning_aggregated_df['Fabric_device_status'].where(pd.notna(zoning_aggregated_df.zonemember_Fabric_name), 'absent')
 
     # Replace 0 and 1 with Yes and No
-    zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={1: 'Да', 0: 'Нет'}, inplace = True)
-    zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
-    zoning_aggregated_df['Fabric_device_status'].replace(to_replace={1: 'local', 0: 'remote_na', True: 'local'}, inplace = True)
-    zoning_aggregated_df['Fabric_device_status'].replace(to_replace={True: 'local', False: 'remote_na'}, inplace = True)
+    # zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={1: 'Да', 0: 'Нет'}, inplace = True)
+    zoning_aggregated_df['Member_in_cfg_Fabric'] = zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={1: 'Да', 0: 'Нет'})
+    # zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={True: 'Да', False: 'Нет'}, inplace = True)
+    zoning_aggregated_df['Member_in_cfg_Fabric'] = zoning_aggregated_df['Member_in_cfg_Fabric'].replace(to_replace={True: 'Да', False: 'Нет'})
+    # zoning_aggregated_df['Fabric_device_status'].replace(to_replace={1: 'local', 0: 'remote_na', True: 'local'}, inplace = True)
+    zoning_aggregated_df['Fabric_device_status'] = zoning_aggregated_df['Fabric_device_status'].replace(to_replace={1: 'local', 0: 'remote_na', True: 'local'})
+    # zoning_aggregated_df['Fabric_device_status'].replace(to_replace={True: 'local', False: 'remote_na'}, inplace = True)
+    zoning_aggregated_df['Fabric_device_status'] = zoning_aggregated_df['Fabric_device_status'].replace(to_replace={True: 'local', False: 'remote_na'})
 
     # mark devices which are not in the same fabric with principal switch where configiguration defined
     # but which is part of LSAN zone for that fabric and device status is Imported as Yes 
@@ -302,7 +314,8 @@ def zone_using_alias(zoning_aggregated_df, alias_aggregated_df):
     alias_zone_number_df = zoning_effective_defined_duplicates_free_df.groupby(zone_count_columns, as_index = False).agg({'zone': 'count'})
     alias_zone_number_df.rename(columns={'zone': 'zone_number_alias_used_in'}, inplace=True)
     alias_aggregated_df = alias_aggregated_df.merge(alias_zone_number_df, how='left', on=zone_count_columns)
-    alias_aggregated_df['zone_number_alias_used_in'].fillna(0, inplace=True)
+    # alias_aggregated_df['zone_number_alias_used_in'].fillna(0, inplace=True)
+    alias_aggregated_df['zone_number_alias_used_in'] = alias_aggregated_df['zone_number_alias_used_in'].fillna(0)
     return alias_aggregated_df
 
 

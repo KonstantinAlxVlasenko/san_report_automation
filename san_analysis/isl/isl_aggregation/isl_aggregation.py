@@ -91,8 +91,9 @@ def number_isl(isl_aggregated_df):
     """Function to number ISL links"""
 
     # add ISL number in case of trunk presence and remove ifl tag
-    isl_aggregated_df['ISL_number'].ffill(inplace=True)
+    # isl_aggregated_df['ISL_number'].ffill(inplace=True)
     # isl_aggregated_df['ISL_number'].fillna(method='ffill', inplace=True) depricated method
+    isl_aggregated_df['ISL_number'] = isl_aggregated_df['ISL_number'].ffill()
     
     if isl_aggregated_df['ISL_number'].notna().any():
         mask_ifl = isl_aggregated_df['ISL_number'].str.contains('ifl', case=False, na=False)

@@ -37,7 +37,8 @@ def port_sfp_join(portshow_aggregated_df, sfpshow_df, sfp_model_df, pattern_dct)
         # fill empty RX, TX with Not Available
         if re.search(pwr_column_pattern, readings_column[0]):
             na_power_column = re.search(pwr_column_pattern, readings_column[0]).group(1)
-            port_complete_df[readings_column[0]].fillna(port_complete_df[na_power_column], inplace=True)
+            # port_complete_df[readings_column[0]].fillna(port_complete_df[na_power_column], inplace=True)
+            port_complete_df[readings_column[0]] = port_complete_df[readings_column[0]].fillna(port_complete_df[na_power_column])
         find_readings_intervals(port_complete_df, pattern_dct, *readings_column)
     
     port_complete_df.drop_duplicates(inplace=True)
@@ -130,14 +131,13 @@ def find_readings_intervals(portshow_sfp_aggregated_df, pattern_dct, readings_co
     portshow_sfp_aggregated_df.loc[
         mask_filtered_ports & mask_upper_threshold, interval_readings_tmp_column] = 'x >= ' + str(upper_threshold)
     # fill empty cells in the interval column with values from the tmp column
-    portshow_sfp_aggregated_df[interval_readings_column].fillna(
-        portshow_sfp_aggregated_df[interval_readings_tmp_column], inplace=True)
+    # portshow_sfp_aggregated_df[interval_readings_column].fillna(portshow_sfp_aggregated_df[interval_readings_tmp_column], inplace=True)
+    portshow_sfp_aggregated_df[interval_readings_column] = portshow_sfp_aggregated_df[interval_readings_column].fillna(portshow_sfp_aggregated_df[interval_readings_tmp_column])
     
     # fill empty cells in the interval column with values for filtered ports from the readings column (not float values)
-    portshow_sfp_aggregated_df[interval_readings_tmp_column] = \
-        portshow_sfp_aggregated_df.loc[mask_filtered_ports, interval_readings_tmp_column]
-    portshow_sfp_aggregated_df[interval_readings_column].fillna(
-        portshow_sfp_aggregated_df[interval_readings_tmp_column], inplace=True)
+    portshow_sfp_aggregated_df[interval_readings_tmp_column] = portshow_sfp_aggregated_df.loc[mask_filtered_ports, interval_readings_tmp_column]
+    # portshow_sfp_aggregated_df[interval_readings_column].fillna(portshow_sfp_aggregated_df[interval_readings_tmp_column], inplace=True)
+    portshow_sfp_aggregated_df[interval_readings_column] = portshow_sfp_aggregated_df[interval_readings_column].fillna(portshow_sfp_aggregated_df[interval_readings_tmp_column])
     
     # drop tmp column
     portshow_sfp_aggregated_df.drop(columns=interval_readings_tmp_column, inplace=True)

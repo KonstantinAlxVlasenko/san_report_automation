@@ -63,7 +63,12 @@ def zonemember_statistics(zoning_aggregated_df):
     zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = zonemember_zonelevel_stat_df.groupby(by=grp_columns)['cfg_type'].transform(lambda x: ', '.join(set(x)))
     mask_non_effective = ~zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].str.contains('effective')
     zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = np.where(mask_non_effective, 'unused_zone', pd.NA)
-    zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].fillna(np.nan, inplace=True)
+    # zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].fillna(np.nan, inplace=True)
+    # zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].fillna(np.nan)
+    with pd.option_context("future.no_silent_downcasting", True):
+        zonemember_zonelevel_stat_df['Effective_cfg_usage_note'] = zonemember_zonelevel_stat_df['Effective_cfg_usage_note'].fillna(np.nan).infer_objects(copy=False)
+
+
 
     # remove duplicated and paired zones list if current zone is non-working zone (duplication of working zones only required)
     # list of duplicated zones is removed but duplication tag remains  

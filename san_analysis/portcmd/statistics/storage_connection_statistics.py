@@ -110,8 +110,8 @@ def storage_connection_statistics(portshow_aggregated_df, pattern_dct):
         # sort port groups levels in corresponding order
         sort_priority = {'storage': 1, 'port_parity': 2, 'port': 3, 'controller': 4, 
                          'controller_slot': 5, 'slot': 6, 'device_type': 7}
-        storage_connection_statistics_df.sort_values(by=['deviceSubtype', 'Device_Host_Name', 'Group_type', 'Group_level'], 
-                                                    key=lambda col: col.replace(sort_priority), inplace=True)
+        with pd.option_context("future.no_silent_downcasting", True):
+            storage_connection_statistics_df.sort_values(by=['deviceSubtype', 'Device_Host_Name', 'Group_type', 'Group_level'], key=lambda col: col.replace(sort_priority), inplace=True)
         storage_connection_statistics_df.reset_index(drop=True, inplace=True)
 
         # add notes (if connections are symmetrical on each port group level, 

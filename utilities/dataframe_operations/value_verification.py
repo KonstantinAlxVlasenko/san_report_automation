@@ -51,7 +51,10 @@ def verify_lic(df, lic_column: str, lic_name: str):
     for licenses_column, verified_lic_column in lic_columns_dct.items():
         df[verified_lic_column] = \
             df.loc[df[licenses_column].notnull(), licenses_column].apply(lambda x: lic_name.lower() in x.lower())
-        df[verified_lic_column].replace(to_replace={True: 'Yes', False: 'No'}, inplace = True)
+        # df[verified_lic_column].replace(to_replace={True: 'Yes', False: 'No'}, inplace = True)
+        # df[verified_lic_column] = df[verified_lic_column].replace(to_replace={True: 'Yes', False: 'No'})
+        with pd.option_context("future.no_silent_downcasting", True):
+            df[verified_lic_column] = df[verified_lic_column].replace(to_replace={True: 'Yes', False: 'No'}).infer_objects(copy=False)
         
     # verify lic installed on both switches
     lic_both_switches_column = lic_name + '_lic_both_switches'    

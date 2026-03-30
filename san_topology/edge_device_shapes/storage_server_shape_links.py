@@ -41,7 +41,8 @@ def count_fabric_storage(connected_devices_df):
     storage_number_df = connected_storages_df.groupby(
         by=['Fabric_name'])['Device_Host_Name'].nunique().to_frame(name='Storage_lib_number_in_fabric')
     connected_devices_df = pd.merge(connected_devices_df, storage_number_df, how='left', on='Fabric_name')
-    connected_devices_df['Storage_lib_number_in_fabric'].fillna(0, inplace=True)
+    # connected_devices_df['Storage_lib_number_in_fabric'].fillna(0, inplace=True)
+    connected_devices_df['Storage_lib_number_in_fabric'] = connected_devices_df['Storage_lib_number_in_fabric'].fillna(0)
     return connected_devices_df
 
 
@@ -69,13 +70,15 @@ def create_device_fabric_name(connected_devices_df, san_graph_sw_pair_df, san_to
     fabric_name_dev_lst = [fabric_name + DEVICE_FABRIC_NAME_TAG for fabric_name in fabric_name_duplicated_lst]
     # rename fabric_name in connecetd_devices_df
     connected_devices_df['Fabric_name_cp'] = connected_devices_df['Fabric_name']
-    connected_devices_df['Fabric_name'].replace(to_replace=fabric_name_duplicated_lst, value=fabric_name_dev_lst, inplace=True)
+    # connected_devices_df['Fabric_name'].replace(to_replace=fabric_name_duplicated_lst, value=fabric_name_dev_lst, inplace=True)
+    connected_devices_df['Fabric_name'] = connected_devices_df['Fabric_name'].replace(to_replace=fabric_name_duplicated_lst, value=fabric_name_dev_lst)
     
     # update san_graph_sw_pair
     # filter fabirc_names which are need to be copied
     san_graph_sw_pair_duplicated_df = san_graph_sw_pair_df.loc[san_graph_sw_pair_df['Fabric_name'].isin(fabric_name_duplicated_lst)].copy()
     # change fabric_names to the new names
-    san_graph_sw_pair_duplicated_df['Fabric_name'].replace(to_replace=fabric_name_duplicated_lst, value=fabric_name_dev_lst, inplace=True)
+    # san_graph_sw_pair_duplicated_df['Fabric_name'].replace(to_replace=fabric_name_duplicated_lst, value=fabric_name_dev_lst, inplace=True)
+    san_graph_sw_pair_duplicated_df['Fabric_name'] = san_graph_sw_pair_duplicated_df['Fabric_name'].replace(to_replace=fabric_name_duplicated_lst, value=fabric_name_dev_lst)
     # add renamed fabic_names to original one to use later to group master shapes in pure switches and switches + edge devices graphs
     san_graph_sw_pair_group_df = pd.concat([san_graph_sw_pair_df, san_graph_sw_pair_duplicated_df])
     return connected_devices_df, san_graph_sw_pair_group_df, fabric_name_duplicated_lst, fabric_name_dev_lst

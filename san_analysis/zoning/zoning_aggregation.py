@@ -100,10 +100,13 @@ def zoning_from_configuration(switch_params_aggregated_df, cfg_df, cfg_effective
     alias_join_df.rename(columns = {'alias': 'zone_member'}, inplace = True)
     zoning_aggregated_df = zoning_aggregated_df.merge(alias_join_df, how='left', on = ['Fabric_name', 'Fabric_label', 'zone_member'])
     # fill empty cfg and cfg_type
-    zoning_aggregated_df['cfg'].fillna('-', inplace=True)
-    zoning_aggregated_df['cfg_type'].fillna('defined', inplace=True)
+    # zoning_aggregated_df['cfg'].fillna('-', inplace=True)
+    zoning_aggregated_df['cfg'] = zoning_aggregated_df['cfg'].fillna('-')
+    # zoning_aggregated_df['cfg_type'].fillna('defined', inplace=True)
+    zoning_aggregated_df['cfg_type'] = zoning_aggregated_df['cfg_type'].fillna('defined')
     # if zonemember defined directly through wwn omitting alias then copy wwn to alias_member column
-    zoning_aggregated_df.alias_member.fillna(zoning_aggregated_df.zone_member, inplace=True)
+    # zoning_aggregated_df.alias_member.fillna(zoning_aggregated_df.zone_member, inplace=True)
+    zoning_aggregated_df['alias_member'] = zoning_aggregated_df['alias_member'].fillna(zoning_aggregated_df['zone_member'])
     # add peerzones zonemember type (Property, Principal, Peer)
     peerzone_join_df['peerzone_member_type'] = peerzone_join_df['peerzone_member_type'].str.lower()
     zoning_aggregated_df = zoning_aggregated_df.merge(peerzone_join_df, how='left', on = ['Fabric_name', 'Fabric_label', 'zone', 'zone_member'])

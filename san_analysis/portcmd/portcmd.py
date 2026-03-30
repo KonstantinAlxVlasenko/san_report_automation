@@ -282,7 +282,8 @@ def device_names_per_port(portshow_aggregated_df):
     portshow_aggregated_df.loc[mask_device_host_name_empty, 'Device_Host_Name_Port'] = np.nan
     # create column with list containing all devices connected to the port
     switch_port_columns = ['configname', 'chassis_name', 'chassis_wwn', 'switchName', 'switchWwn','portIndex', 'slot', 'port']
-    portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device', inplace=True)
+    # portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device', inplace=True)
+    portshow_aggregated_df['Device_Host_Name_Port'] = portshow_aggregated_df['Device_Host_Name_Port'].fillna('nan_device')
     
     portshow_aggregated_df['Device_Host_Name_Port_group'] = portshow_aggregated_df.groupby(by=switch_port_columns)['Device_Host_Name_Port'].transform(', '.join)
     dfop.remove_duplicates_from_string(portshow_aggregated_df, 'Device_Host_Name_Port_group')
@@ -302,7 +303,9 @@ def device_names_per_port(portshow_aggregated_df):
 def sort_portshow(portshow_aggregated_df):
     """Function to sort portshow_aggregated_df"""
 
-    portshow_aggregated_df['portIndex_int'] = pd.to_numeric(portshow_aggregated_df['portIndex'], errors='ignore')
+    # portshow_aggregated_df['portIndex_int'] = pd.to_numeric(portshow_aggregated_df['portIndex'], errors='ignore')
+    # portshow_aggregated_df['portIndex_int'] = (portshow_aggregated_df['portIndex'].apply(pd.to_numeric, errors="coerce").fillna(portshow_aggregated_df['portIndex_int']))
+    portshow_aggregated_df['portIndex_int'] = portshow_aggregated_df['portIndex'].apply(dfop.to_numeric_future_proof)
     # sorting DataFrame
     sort_columns = ['Fabric_name', 'Fabric_label', 'chassis_wwn', 'chassis_name', 
                     'switchWwn', 'switchName', 'portIndex_int', 'Connected_portId']

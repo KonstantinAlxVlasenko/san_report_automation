@@ -41,13 +41,16 @@ def connection_statistics(df, connected_dev_columns, tag):
     # drop summary rows (switch to switch connection statistics)
     switch_conn_df = df.loc[~mask_fabric_summary, stat_columns].copy()
     # convert connection quantity to numeric type 
-    switch_conn_df[connected_dev_columns[2:]] = switch_conn_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
+    # switch_conn_df[connected_dev_columns[2:]] = switch_conn_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
+    # switch_conn_df[connected_dev_columns[2:]] = switch_conn_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='coerce')
+    switch_conn_df[connected_dev_columns[2:]] = switch_conn_df[connected_dev_columns[2:]].apply(dfop.to_numeric_future_proof)
     # summary rows are not changed and concatenated with connection statistics after calculation. 
     # Conneceted device (switch) name and it's wwn are dropped since connection statistics counted for entire switch
     summary_columns = [*sw_columns, *connected_dev_columns[2:]]
     # summary for fabric_name and fabric_label level
     switch_conn_fabric_summary_df = df.loc[mask_fabric_summary, summary_columns].copy()
-    switch_conn_fabric_summary_df[connected_dev_columns[2:]] = switch_conn_fabric_summary_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
+    # switch_conn_fabric_summary_df[connected_dev_columns[2:]] = switch_conn_fabric_summary_df[connected_dev_columns[2:]].apply(pd.to_numeric, errors='ignore')
+    switch_conn_fabric_summary_df[connected_dev_columns[2:]] = switch_conn_fabric_summary_df[connected_dev_columns[2:]].apply(dfop.to_numeric_future_proof)
     # verify if fabric A and B are symmetrical from Native ang AG connection point of view
     switch_conn_fabric_summary_df = dfop.verify_group_symmetry(switch_conn_fabric_summary_df, symmetry_grp=['Fabric_name'], symmetry_columns=connected_dev_columns[2:])
     # sum up connections, links, ports and bandwidth for each switch (summary for switch level)
@@ -58,7 +61,8 @@ def connection_statistics(df, connected_dev_columns, tag):
     mask_connection_pair_absent = switch_conn_total_df.groupby(by=['Fabric_name', 'switchPair_id'])['switchWwn'].transform('count') < 2
     dfop.column_to_object(switch_conn_total_df, 'Connection_pair_absence_note')
     switch_conn_total_df.loc[mask_connection_pair_absent , 'Connection_pair_absence_note'] = 'connection_pair_absent'
-    switch_conn_total_df['Asymmetry_note'].fillna(switch_conn_total_df['Connection_pair_absence_note'], inplace=True)
+    # switch_conn_total_df['Asymmetry_note'].fillna(switch_conn_total_df['Connection_pair_absence_note'], inplace=True)
+    switch_conn_total_df['Asymmetry_note'] = switch_conn_total_df['Asymmetry_note'].fillna(switch_conn_total_df['Connection_pair_absence_note'])
     switch_conn_total_df.drop(columns=['Connection_pair_absence_note'], inplace=True)
 
     # switch quantity are not summed up and each row represents single switch
@@ -123,7 +127,10 @@ def find_core_switch(sw_connection_statistics_df):
     # drop summry rows
     mask_fabric_summary = sw_connection_statistics_df[sw_columns[2:]].isna().all(axis=1)
     core_sw_df = sw_connection_statistics_df.loc[~mask_fabric_summary].copy()
-    core_sw_df.fillna(0, inplace=True)
+    # core_sw_df.fillna(0, inplace=True)
+    # core_sw_df = core_sw_df.fillna(0)
+    with pd.option_context("future.no_silent_downcasting", True):
+        core_sw_df = core_sw_df.fillna(0).infer_objects(copy=False)
 
     """
     possible parameters columns  
@@ -158,7 +165,8 @@ def find_max_fabric_fos(sw_connection_statistics_df, pattern_dct):
     # sw_connection_statistics_df['FOS_version_clean'] = sw_connection_statistics_df['FOS_version'].str.extract('v?(\d+\.\d+\.\d+[a-z]?\d?)')
     sw_connection_statistics_df['FOS_version_clean'] = sw_connection_statistics_df['FOS_version'].str.extract(pattern_dct['fos'])
     # fill nan values with char 0 to find maximum
-    sw_connection_statistics_df['FOS_version_clean'].fillna('0', inplace=True)
+    # sw_connection_statistics_df['FOS_version_clean'].fillna('0', inplace=True)
+    sw_connection_statistics_df['FOS_version_clean'] = sw_connection_statistics_df['FOS_version_clean'].fillna('0')
     # find most recent FOS veriosn for each fabric
     sw_connection_statistics_df['FOS_fabric_max'] = \
         sw_connection_statistics_df.groupby(by=['Fabric_name', 'Fabric_label'])['FOS_version_clean'].transform('max')

@@ -94,7 +94,8 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     based on combination of connected oui and switch main board seral number (oui_board_sn)
     """
     
-    switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'], inplace=True)
+    # switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'], inplace=True)
+    switch_params_aggregated_df['switchName'] = switch_params_aggregated_df['switchName'].fillna(switch_params_aggregated_df['SwitchName'])
 
     # generate combination of oui and switch main board seral number based on Connected port WWN
     portshow_aggregated_df['oui_board_sn'] = portshow_aggregated_df.Connected_portWwn_switchshow_filled.str.slice(start = 6)
@@ -106,9 +107,11 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
                                 'ssn', 'FOS_version',
                                 'Brocade_modelName', 'HPE_modelName', 'Device_Location']
     switch_params_join_df = switch_params_aggregated_df.loc[:, switch_params_columns_lst].copy()
-    switch_params_join_df['HPE_modelName'].replace('^-$', np.nan, regex=True, inplace=True)
+    # switch_params_join_df['HPE_modelName'].replace('^-$', np.nan, regex=True, inplace=True)
     # switch_params_join_df['HPE_modelName'].replace('-', np.nan, inplace=True)
-    switch_params_join_df['HPE_modelName'].fillna(switch_params_join_df['Brocade_modelName'], inplace=True)
+    switch_params_join_df['HPE_modelName'] = switch_params_join_df['HPE_modelName'].replace('^-$', np.nan, regex=True)
+    # switch_params_join_df['HPE_modelName'].fillna(switch_params_join_df['Brocade_modelName'], inplace=True)
+    switch_params_join_df['HPE_modelName'] = switch_params_join_df['HPE_modelName'].fillna(switch_params_join_df['Brocade_modelName'])
     switch_params_join_df.drop(columns=['Brocade_modelName'], inplace=True)
 
     # rename columns to correspond columns in portshow_aggregated_df
@@ -121,8 +124,8 @@ def fill_switch_info(portshow_aggregated_df, switch_params_df, switch_params_agg
     
     # # fill empty values in portshow_aggregated_df from switch_params_join_df
     switch_join_columns_lst = switch_params_join_df.columns.to_list()
-    portshow_aggregated_df['Device_Model'].replace('^-$', np.nan, regex=True, inplace=True)
     # portshow_aggregated_df['Device_Model'].replace('^-$', np.nan, regex=True, inplace=True)
+    portshow_aggregated_df['Device_Model'] = portshow_aggregated_df['Device_Model'].replace('^-$', np.nan, regex=True)
     portshow_aggregated_df = dfop.dataframe_fillna(portshow_aggregated_df, switch_params_join_df, 
                                                 join_lst = switch_join_columns_lst[:3], filled_lst = switch_join_columns_lst[3:])
     portshow_aggregated_df = switch_name_correction(portshow_aggregated_df, switch_params_aggregated_df)

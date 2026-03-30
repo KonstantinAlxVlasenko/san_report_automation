@@ -61,10 +61,13 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df, portshow
     # fill empty cells in WWNn -> WWNp column with alias_member WWNp values thus filtering off all WWNn values
     alias_wwnp_df = alias_wwnn_wwnp_df.copy()
     # alias_wwnp_df.PortName.fillna(alias_join_df['alias_member'], inplace = True)
-    alias_wwnp_df.PortName.fillna(alias_wwnp_df['alias_member'], inplace = True)
+    # alias_wwnp_df.PortName.fillna(alias_wwnp_df['alias_member'], inplace = True)
+    alias_wwnp_df['PortName'] = alias_wwnp_df['PortName'].fillna(alias_wwnp_df['alias_member'])
     
     # replace domain, index with WWpn
-    alias_wwnp_df['PortName'].replace(to_replace='\d+,\d+', value=np.nan, regex=True, inplace=True)
+    # alias_wwnp_df['PortName'].replace(to_replace='\d+,\d+', value=np.nan, regex=True, inplace=True)
+    alias_wwnp_df['PortName'] = alias_wwnp_df['PortName'].replace(to_replace='\d+,\d+', value=np.nan, regex=True)
+    
     portshow_cp = portshow_aggregated_df.copy()
     portshow_cp.rename(columns={'Connected_portWwn': 'PortName', 'Domain_Index': 'alias_member'}, inplace=True)
     alias_wwnp_df = dfop.dataframe_fillna(alias_wwnp_df, portshow_cp, join_lst=['Fabric_name', 'Fabric_label', 'alias_member'], 
@@ -75,7 +78,6 @@ def alias_preparation(nsshow_df, alias_df, switch_params_aggregated_df, portshow
     # if severeal aliases for one wwnp then combine all into one alias or
     # if in the same alias wwnn and wwnp from single device present thenn unique aliases arr joined (set usage) 
     alias_wwnp_df = alias_wwnp_df.groupby(['Fabric_name', 'Fabric_label', 'PortName'], as_index = False).agg(lambda x: ', '.join(sorted(set(x))))
-
     return alias_wwnp_df, alias_wwnn_wwnp_df, fabric_labels_df
 
 
@@ -177,7 +179,7 @@ def alias_serial_group(portshow_aggregated_df):
     return lib_sn_group_df
 
 
-def find_grp_name(aliases):
+def find_grp_name(aliases) -> str:
     """Function to find find longest common string in the set of strings"""
     
     aliases = aliases.split(', ')

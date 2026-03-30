@@ -35,7 +35,8 @@ def switch_details_join(switch_params_aggregated_df, isl_sfp_connected_df):
     switch_trunking_dct = {'licenses' : 'Trunking_license', 'Connected_licenses' : 'Connected_Trunking_license'}
     for lic, trunking_lic in switch_trunking_dct.items():
         isl_aggregated_df[trunking_lic] = isl_aggregated_df.loc[isl_aggregated_df[lic].notnull(), lic].apply(lambda x: 'Trunking' in x)
-        isl_aggregated_df[trunking_lic].replace(to_replace={True: 'Yes', False: 'No'}, inplace = True)
+        # isl_aggregated_df[trunking_lic].replace(to_replace={True: 'Yes', False: 'No'}, inplace = True)
+        isl_aggregated_df[trunking_lic] = isl_aggregated_df[trunking_lic].replace(to_replace={True: 'Yes', False: 'No'})
     return isl_aggregated_df
 
 

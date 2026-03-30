@@ -187,7 +187,8 @@ def remove_domain(df, domain_drop_lst, domain_keep_lst, hostname_column):
     domain_drop_status(df, hostname_column, domain_drop_status_column, status='domain_dropped')
     # fill empty values in hostname_column with values with no domains or 
     # with domains which are not in the domain_lst
-    df[hostname_column].fillna(df[hostname_domain_column], inplace=True)
+    # df[hostname_column].fillna(df[hostname_domain_column], inplace=True)
+    df[hostname_column] = df[hostname_column].fillna(df[hostname_domain_column])
     domain_drop_status(df, hostname_column, domain_drop_status_column, status='domain_absent')
     # remove tmp column
     df.drop(columns=['Domain_free_tmp', 'Domain_name_dropped_tmp'], inplace=True)

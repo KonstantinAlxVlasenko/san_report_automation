@@ -83,7 +83,10 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
             nonuniformity_notes_df[note_column] = np.where(mask_nonuniformity, note, pd.NA)
         
         # replace pd.NA with np.nan
-        nonuniformity_notes_df.fillna(np.nan, inplace=True)
+        # nonuniformity_notes_df.fillna(np.nan, inplace=True)
+        with pd.option_context("future.no_silent_downcasting", True):
+            nonuniformity_notes_df = nonuniformity_notes_df.fillna(np.nan).infer_objects(copy=False)
+
         # merge logically related note columns
         nonuniformity_notes_df = dfop.concatenate_columns(nonuniformity_notes_df, 
                                                   summary_column='Transceiver_nonuniformity_note', merge_columns=note_columns[3:5])
@@ -175,7 +178,9 @@ def add_notes(isl_statistics_df, isl_aggregated_modified_df, isl_group_columns, 
                                                     symmetry_columns=['Logical_link_quantity', 'Physical_link_quantity', 'Port_quantity', 'Bandwidth_Gbps'])
     isl_statistics_df = single_connection_asymmetry_note(isl_statistics_df)
     isl_statistics_df = connection_pair_absent_note(isl_statistics_df)
-    isl_statistics_df.fillna(np.nan, inplace=True)
+    # isl_statistics_df.fillna(np.nan, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        isl_statistics_df = isl_statistics_df.fillna(np.nan).infer_objects(copy=False)
 
     if (isl_statistics_df['LISL'] == 0).all():
         isl_statistics_df.drop(columns=['LISL'], inplace=True)

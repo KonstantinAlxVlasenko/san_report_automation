@@ -27,9 +27,6 @@ def create_san_graph_switch(switch_params_aggregated_df, switch_pair_df, isl_sta
     san_graph_switch_df = concat_switch_name_did(san_graph_switch_df, switch_params_aggregated_df)
     # create combination of switchName and switchWwn for shape Name
     create_shape_name(san_graph_switch_df, 'switchName', 'switchWwn', 'switchName_Wwn')
-    
-
-
     return san_graph_switch_df
 
 
@@ -102,7 +99,9 @@ def concat_switch_class_mode(san_graph_switch_df):
 
     san_graph_switch_df['switchClass_mode'] = san_graph_switch_df['switchClass']
     
-    san_graph_switch_df['switchType'] = pd.to_numeric(san_graph_switch_df['switchType'], errors='ignore')
+    # san_graph_switch_df['switchType'] = pd.to_numeric(san_graph_switch_df['switchType'], errors='ignore')
+    # san_graph_switch_df['switchType'] = pd.to_numeric(san_graph_switch_df['switchType'], errors='coerce')
+    san_graph_switch_df['switchType'] = san_graph_switch_df['switchType'].apply(dfop.to_numeric_future_proof)
     # add dir_4slot
     mask_dir_4slot = san_graph_switch_df['switchType'].isin(DIR_4SLOTS_TYPE)
     san_graph_switch_df.loc[mask_dir_4slot, 'switchClass_mode'] = san_graph_switch_df['switchClass_mode'] + '_4SLOT'
@@ -125,7 +124,8 @@ def concat_switch_class_mode(san_graph_switch_df):
     mask_xd = san_graph_switch_df['LS_type_report'] == 'translate_domain'
     san_graph_switch_df.loc[mask_xd, 'switchClass_mode'] = 'XD'
     # fill rest with UNKNOWN
-    san_graph_switch_df['switchClass_mode'].fillna('UNKNOWN', inplace=True)
+    # san_graph_switch_df['switchClass_mode'].fillna('UNKNOWN', inplace=True)
+    san_graph_switch_df['switchClass_mode'] = san_graph_switch_df['switchClass_mode'].fillna('UNKNOWN')
     return san_graph_switch_df
 
 
@@ -148,7 +148,8 @@ def concat_switch_name_did(san_graph_switch_df, switch_params_aggregated_df):
     san_graph_switch_df.loc[mask_sw_details, 'switchName_DID'] = \
         san_graph_switch_df['switchName'] + " (" + san_graph_switch_df['switchDetails'] + ")"
     # copy switc names for values where DID value is not applicable (VC, AG, NPV)
-    san_graph_switch_df['switchName_DID'].fillna(san_graph_switch_df['switchName'], inplace=True)
+    # san_graph_switch_df['switchName_DID'].fillna(san_graph_switch_df['switchName'], inplace=True)
+    san_graph_switch_df['switchName_DID'] = san_graph_switch_df['switchName_DID'].fillna(san_graph_switch_df['switchName'])
     return san_graph_switch_df
 
 

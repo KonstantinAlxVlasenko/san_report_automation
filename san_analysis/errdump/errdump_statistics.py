@@ -60,9 +60,8 @@ def count_month_message_occurrence(errdump_filtered_df, connected_device_columns
                            'tx_port', 'rx_port', 'sid', 'did', 'wwn', 'IP_Address']
 
     # group log messages by month, device and message and sum occurance values
-    errdump_grouper = errdump_filtered_df.groupby([pd.Grouper(freq='M', kind='period'), 
-                                                   *(errdump_grp_columns + connected_device_columns + sid_did_device_columns
-                                                     )])[message_quantity_columns].sum()
+    errdump_grouper = errdump_filtered_df.groupby(
+        [pd.Grouper(freq='ME', kind='period'), *(errdump_grp_columns + connected_device_columns + sid_did_device_columns)])[message_quantity_columns].sum()
     raslog_counter_df = errdump_grouper.copy()
     raslog_counter_df.reset_index(inplace=True)
     return raslog_counter_df
@@ -73,9 +72,14 @@ def sort_raslog_counter(raslog_counter_df):
     sort raslog message occurrance by month and occurrance quantity"""
 
     # clean 'na_cell' values 
-    raslog_counter_df.replace({'na_cell': np.nan}, inplace=True)
+    # raslog_counter_df.replace({'na_cell': np.nan}, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        raslog_counter_df = raslog_counter_df.replace({'na_cell': np.nan}).infer_objects(copy=False)
+
     if raslog_counter_df['alias'].notna().any():
-        raslog_counter_df['alias'].replace('na_cell(?:, )?', value='', regex=True, inplace=True)
+        # raslog_counter_df['alias'].replace('na_cell(?:, )?', value='', regex=True, inplace=True)
+        with pd.option_context("future.no_silent_downcasting", True):
+            raslog_counter_df['alias'] = raslog_counter_df['alias'].replace('na_cell(?:, )?', value='', regex=True).infer_objects(copy=False)
         raslog_counter_df['alias'] = raslog_counter_df['alias'].str.rstrip(', ')
 
     # apply date format to remove day and time

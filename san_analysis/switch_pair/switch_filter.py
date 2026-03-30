@@ -1,5 +1,6 @@
 """Module to get list of switches and VC modulues to find it pairs later"""
 
+import pandas as pd
 import numpy as np
 import utilities.dataframe_operations as dfop
 
@@ -53,11 +54,16 @@ def create_sw_npv_dataframe(portshow_aggregated_df):
     
     # add switchType, switchMode, configname columns for run function to find pair switch (pair candidate must have same switcType and switchMode)
     vc_cisco_pair_df['switchType'] = vc_cisco_pair_df['deviceSubtype']
-    vc_cisco_pair_df['switchType'].replace(to_replace={'VC FC': 501, 'VC FLEX': 502, 'CISCO': 503, 'HUAWEI': 504}, inplace=True)
+    # vc_cisco_pair_df['switchType'].replace(to_replace={'VC FC': 501, 'VC FLEX': 502, 'CISCO': 503, 'HUAWEI': 504}, inplace=True)
+    # vc_cisco_pair_df['switchType'] = vc_cisco_pair_df['switchType'].replace(to_replace={'VC FC': 501, 'VC FLEX': 502, 'CISCO': 503, 'HUAWEI': 504})
     
-    vc_cisco_pair_df['switchMode'] = vc_cisco_pair_df['deviceSubtype']
-    vc_cisco_pair_df['switchMode'].replace(to_replace={'VC FC': 'Access Gateway Mode', 'VC FLEX': 'Access Gateway Mode', 'CISCO': 'NPV', 'HUAWEI': 'NPV'}, inplace=True)
-    
+    with pd.option_context("future.no_silent_downcasting", True):
+        vc_cisco_pair_df['switchType'] = vc_cisco_pair_df['switchType'].replace(to_replace={'VC FC': 501, 'VC FLEX': 502, 'CISCO': 503, 'HUAWEI': 504}).infer_objects(copy=False)
+        vc_cisco_pair_df['switchMode'] = vc_cisco_pair_df['deviceSubtype']
+        # vc_cisco_pair_df['switchMode'].replace(to_replace={'VC FC': 'Access Gateway Mode', 'VC FLEX': 'Access Gateway Mode', 'CISCO': 'NPV', 'HUAWEI': 'NPV'}, inplace=True)
+        vc_cisco_pair_df['switchMode'] = vc_cisco_pair_df['switchMode'].replace(to_replace={'VC FC': 'Access Gateway Mode', 'VC FLEX': 'Access Gateway Mode', 'CISCO': 'NPV', 'HUAWEI': 'NPV'}).infer_objects(copy=False)
+
+    # vc_cisco_pair_df['switchMode'] = vc_cisco_pair_df['switchMode'].replace(to_replace={'VC FC': 'Access Gateway Mode', 'VC FLEX': 'Access Gateway Mode', 'CISCO': 'NPV', 'HUAWEI': 'NPV'})    
     vc_cisco_pair_df['configname'] = np.nan
     vc_cisco_pair_df['switchWwn_pair'] = np.nan
     return vc_cisco_pair_df

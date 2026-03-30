@@ -5,6 +5,7 @@ Auxiliary to analysis_portcmd module."""
 import warnings
 
 import numpy as np
+import pandas as pd
 
 import utilities.dataframe_operations as dfop
 
@@ -24,7 +25,8 @@ def nsshow_analysis(nsshow_df, nscamshow_df, nsshow_dedicated_df, fdmi_df, fabri
     # fillna hba information
     nsshow_join_df = hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct)
     # fill Device_Host_Name for libs, storages, switches
-    nsshow_join_df.Device_Host_Name.fillna(nsshow_join_df.Device_Name, inplace = True)
+    # nsshow_join_df.Device_Host_Name.fillna(nsshow_join_df.Device_Name, inplace = True)
+    nsshow_join_df['Device_Host_Name'] = nsshow_join_df['Device_Host_Name'].fillna(nsshow_join_df.Device_Name)
     return nsshow_join_df, nsshow_unsplit_df
 
 
@@ -87,7 +89,9 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
         ]
 
     nsshow_join_df = nsshow_labeled_df.loc[:, nsshow_lst]
-    nsshow_join_df.fillna(np.nan, inplace=True)
+    # nsshow_join_df.fillna(np.nan, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        nsshow_join_df = nsshow_join_df.fillna(np.nan).infer_objects(copy=False)
     
     # columns to clean
     symb_columns = ['PortSymb', 'NodeSymb']
@@ -101,14 +105,17 @@ def nsshow_clean(nsshow_labeled_df, pattern_dct):
             nsshow_join_df.loc[mask_symb_clean, symb_column] = \
                 nsshow_join_df.loc[mask_symb_clean, symb_column].str.extract(pattern_dct['symb_clean']).values
             # replace multiple whitespaces with single whitespace
-            nsshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
+            # nsshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True, inplace = True)
+            nsshow_join_df[symb_column] = nsshow_join_df[symb_column].replace(to_replace = r' +', value = r' ', regex = True)
             # replace cells with one digit or whatespaces only with None value
-            nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
+            # nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True, inplace = True)
+            nsshow_join_df[symb_column] = nsshow_join_df[symb_column].replace(to_replace = r'^\d$|^\s*$', value = np.nan, regex = True)
             # remove whitespace from the right and left side
             if nsshow_join_df[symb_column].notna().any():
                 nsshow_join_df[symb_column] = nsshow_join_df[symb_column].str.strip()
             # hostname_clean_comp
-            nsshow_join_df[symb_column].replace(to_replace = pattern_dct['hostname_clean'], value = np.nan, regex=True, inplace = True)
+            # nsshow_join_df[symb_column].replace(to_replace = pattern_dct['hostname_clean'], value = np.nan, regex=True, inplace = True)
+            nsshow_join_df[symb_column] = nsshow_join_df[symb_column].replace(to_replace = pattern_dct['hostname_clean'], value = np.nan, regex=True)
     return nsshow_join_df
 
 
@@ -116,7 +123,8 @@ def hba_fillna(nsshow_join_df, fdmi_labeled_df, pattern_dct):
     """Function to fillna values in HBA related columns of local Name Server (NS) DataFrame"""
 
     # fill empty cells in PortName column with values from WWNp column
-    fdmi_labeled_df.PortName.fillna(fdmi_labeled_df.WWNp, inplace = True)
+    # fdmi_labeled_df.PortName.fillna(fdmi_labeled_df.WWNp, inplace = True)
+    fdmi_labeled_df['PortName'] = fdmi_labeled_df['PortName'].fillna(fdmi_labeled_df.WWNp)
     # hostname_clean_comp
     fdmi_labeled_df.Host_Name = fdmi_labeled_df.Host_Name.replace(pattern_dct['hostname_clean'], np.nan, regex=True)
     # remove point at the end

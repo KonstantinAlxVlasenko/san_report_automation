@@ -41,3 +41,11 @@ def replace_wwnn(wwn_df, wwn_column: str, wwnn_wwnp_df, wwnn_wwnp_columns: list,
     wwn_df.drop(columns=[wwnn_column], inplace=True)
     return wwn_df
 
+
+def to_numeric_future_proof(s):
+    try:
+        # The default behavior of to_numeric is errors='raise'
+        return pd.to_numeric(s)
+    except ValueError:
+        # If an error occurs, return the original series (or handle otherwise)
+        return s

@@ -2,6 +2,7 @@
 filter ports for which the error threshold has been exceeded"""
 
 import pandas as pd
+import utilities.dataframe_operations as dfop
 
 
 def port_cfg_join(portshow_aggregated_df, portcfgshow_df):
@@ -49,7 +50,9 @@ def port_error_filter(portshow_sfp_aggregated_df, error_threshhold_num: int=100,
 
     # convert error and received frames columns to numeric type
     errors_flat = [error for error_grp in [*critical_errors, *medium_errors] for error in error_grp]
-    portshow_sfp_aggregated_df[[stat_frx, *errors_flat]] = portshow_sfp_aggregated_df[[stat_frx, *errors_flat]].apply(pd.to_numeric, errors='ignore')
+    # portshow_sfp_aggregated_df[[stat_frx, *errors_flat]] = portshow_sfp_aggregated_df[[stat_frx, *errors_flat]].apply(pd.to_numeric, errors='ignore')
+    # portshow_sfp_aggregated_df[[stat_frx, *errors_flat]] = portshow_sfp_aggregated_df[[stat_frx, *errors_flat]].apply(pd.to_numeric, errors='coerce')
+    portshow_sfp_aggregated_df[[stat_frx, *errors_flat]] = portshow_sfp_aggregated_df[[stat_frx, *errors_flat]].apply(dfop.to_numeric_future_proof)
 
     # create column with medium error percentage from number of received frames
     medium_errors_flat = [error for error_grp in medium_errors for error in error_grp]

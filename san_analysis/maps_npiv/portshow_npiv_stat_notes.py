@@ -123,7 +123,10 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, patte
             nonuniformity_notes_df[note_column] = np.where(mask_nonuniformity, note, pd.NA)
         
         # replace pd.NA with np.nan
-        nonuniformity_notes_df.fillna(np.nan, inplace=True)
+        # nonuniformity_notes_df.fillna(np.nan, inplace=True)
+        # nonuniformity_notes_df = nonuniformity_notes_df.fillna(np.nan)
+        with pd.option_context("future.no_silent_downcasting", True):
+            nonuniformity_notes_df = nonuniformity_notes_df.fillna(np.nan).infer_objects(copy=False)
         # merge logically related note columns
         for tag in ('Native_', 'AG_'):
             # columns with transceiver category and speed
@@ -204,7 +207,10 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, patte
     
         mask_connection_pair_absent = npiv_statistics_df.groupby(by=['Fabric_name', 'switchPair_id', 'Connected_switchPair_id'])['switchWwn'].transform('count') < 2
         npiv_statistics_df.loc[mask_connection_pair_absent , 'Connection_pair_absence_note'] = 'connection_pair_absent'
-        npiv_statistics_df['Asymmetry_note'].fillna(npiv_statistics_df['Connection_pair_absence_note'], inplace=True)
+        # npiv_statistics_df['Asymmetry_note'].fillna(npiv_statistics_df['Connection_pair_absence_note'], inplace=True)
+        # npiv_statistics_df['Asymmetry_note'] = npiv_statistics_df['Asymmetry_note'].fillna(npiv_statistics_df['Connection_pair_absence_note'])
+        with pd.option_context("future.no_silent_downcasting", True):
+            npiv_statistics_df['Asymmetry_note'] = npiv_statistics_df['Asymmetry_note'].fillna(npiv_statistics_df['Connection_pair_absence_note']).infer_objects(copy=False)
         npiv_statistics_df.drop(columns=['Connection_pair_absence_note'], inplace=True)
         return npiv_statistics_df 
 
@@ -217,5 +223,8 @@ def add_notes(npiv_statistics_df, portshow_npiv_cp_df, link_group_columns, patte
     npiv_statistics_df = dfop.verify_group_symmetry(npiv_statistics_df, symmetry_grp=['Fabric_name','switchPair_id', 'Connected_switchPair_id'], 
                                                     symmetry_columns=['Logical_link_quantity', 'Physical_link_quantity', 'Port_quantity', 'Bandwidth_Gbps'])
     npiv_statistics_df = connection_pair_absent_note(npiv_statistics_df)
-    npiv_statistics_df.fillna(np.nan, inplace=True)
+    # npiv_statistics_df.fillna(np.nan, inplace=True)
+    # npiv_statistics_df = npiv_statistics_df.fillna(np.nan)
+    with pd.option_context("future.no_silent_downcasting", True):
+        npiv_statistics_df = npiv_statistics_df.fillna(np.nan).infer_objects(copy=False)
     return npiv_statistics_df

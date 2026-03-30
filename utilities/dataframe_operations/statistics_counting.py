@@ -153,7 +153,8 @@ def verify_group_symmetry(statistics_df, symmetry_grp, symmetry_columns, summary
         # mask_values_nonuniformity = symmetry_df[column] == 1
         mask_values_uniformity = symmetry_df[column].isin([0, 1])
         # use current column name as value in column_note for rows where number of unique values exceeds one 
-        symmetry_df[column_note].where(mask_values_uniformity, column.lower(), inplace=True)
+        # symmetry_df[column_note].where(mask_values_uniformity, column.lower(), inplace=True)
+        symmetry_df[column_note] = symmetry_df[column_note].where(mask_values_uniformity, column.lower())
         
     # merge temporary ineqaulity_notes columns to Asymmetry_note column and drop temporary columns
     symmetry_df = concatenate_columns(symmetry_df, summary_column, merge_columns=symmetry_notes)
@@ -213,7 +214,8 @@ def count_frequency(df, count_columns: list, group_columns=['Fabric_name', 'Fabr
 
     for column, (margin_column, margin_row) in zip(count_columns, margin_column_row):
         if column in df.columns and df[column].notna().any():
-            df[column].fillna(np.nan, inplace=True)
+            # df[column].fillna(np.nan, inplace=True)
+            df[column] = df[column].fillna(np.nan)
             current_df = pd.crosstab(index=index_lst, columns=df[column], margins=any((margin_column, margin_row)))
             current_df = current_df.sort_index()
             if any((margin_column, margin_row)):

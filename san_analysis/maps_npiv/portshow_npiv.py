@@ -51,7 +51,11 @@ def npiv_link_aggregated(portshow_sfp_aggregated_df, switch_params_aggregated_df
                          '10G/16G_FEC', 'FEC_cfg']
 
     # portshow DataFrame with replaced port setting OFF (presented as '..') as np.nan
-    portshow_sfp_cp_df = portshow_sfp_aggregated_df.replace(to_replace='^\.\.$', value=np.nan, regex=True).copy()
+    # portshow_sfp_cp_df = portshow_sfp_aggregated_df.replace(to_replace='^\.\.$', value=np.nan, regex=True).copy()
+    with pd.option_context("future.no_silent_downcasting", True):
+        portshow_sfp_cp_df = portshow_sfp_aggregated_df.replace(to_replace='^\.\.$', value=np.nan, regex=True).infer_objects(copy=False).copy()
+
+
     # DataFrame contaning devices (switches, VC modules) connected through NPIV
     mask_npiv = portshow_sfp_aggregated_df['Connected_NPIV'] == 'yes'
     portshow_npiv_df = portshow_sfp_cp_df.loc[mask_npiv, npiv_link_columns].copy()
@@ -127,7 +131,11 @@ def prior_prepearation(portshow_npiv_df, pattern_dct):
     ag_tag = 'AG_'
     
     # max and reduced speed tags
-    portshow_npiv_cp_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)
+    # portshow_npiv_cp_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}, inplace=True)
+    with pd.option_context("future.no_silent_downcasting", True):
+        portshow_npiv_cp_df['Link_speedActualMax'] = portshow_npiv_cp_df['Link_speedActualMax'].replace(to_replace={'Yes': 'Speed_Max', 'No': 'Speed_Reduced'}).infer_objects(copy=False)
+
+
     # auto and fixed speed tags
     portshow_npiv_cp_df[['Speed_Cfg', 'Connected_Speed_Cfg']] = \
         portshow_npiv_cp_df[['Speed_Cfg', 'Connected_Speed_Cfg']].replace(regex={r'AN': 'Speed_Auto', r'\d+G': 'Speed_Fixed'})
