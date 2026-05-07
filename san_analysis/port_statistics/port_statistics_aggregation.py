@@ -21,6 +21,8 @@ def port_statisctics_aggregated(portshow_aggregated_df, licenseport_statistics_d
     # verify if all switch ports in san have licenses 
     all_ports_licensed = verify_all_ports_licensed(licenseport_statistics_df)
     
+    portshow_aggregated_df = portshow_aggregated_df.copy()
+
     # mark device_class with npiv tag for devices connected via npiv
     mask_npiv = portshow_aggregated_df['Device_type'].str.contains('NPIV', na=False)
     portshow_aggregated_df['deviceType_npiv']  = portshow_aggregated_df.loc[mask_npiv, 'deviceType'] + '_NPIV'

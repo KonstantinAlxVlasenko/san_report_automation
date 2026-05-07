@@ -151,7 +151,8 @@ def verify_sddq_reserve(switch_params_aggregated_df, pattern_dct):
             switch_params_aggregated_df['SDDQ_switch_quantity'] = \
                 switch_params_aggregated_df['Quarantined_Ports_clean'].str.split(',').str.len()
             # if there is no sddq port than value is 0
-            switch_params_aggregated_df['SDDQ_switch_quantity'].fillna(0, inplace=True)
+            # switch_params_aggregated_df['SDDQ_switch_quantity'].fillna(0, inplace=True)
+            switch_params_aggregated_df['SDDQ_switch_quantity'] = switch_params_aggregated_df['SDDQ_switch_quantity'].fillna(0)
         else:
             switch_params_aggregated_df['SDDQ_switch_quantity'] = 0
         switch_params_aggregated_df.drop(columns=['Quarantined_Ports_clean'], inplace=True)        

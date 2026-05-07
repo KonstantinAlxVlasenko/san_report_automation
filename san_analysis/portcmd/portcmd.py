@@ -94,6 +94,9 @@ def portcmd_analysis(portshow_df, switchshow_ports_df, switch_params_df,
         portshow_aggregated_df = device_names_per_port(portshow_aggregated_df)
         # count Device_Host_Name instances for fabric_label, label and total in fabric
         portshow_aggregated_df = device_ports_per_group(portshow_aggregated_df)
+        
+        
+        
         # sort rows
         portshow_aggregated_df = sort_portshow(portshow_aggregated_df)
         validate_report_columns_to_drop(portshow_aggregated_df, report_columns_usage_sr)

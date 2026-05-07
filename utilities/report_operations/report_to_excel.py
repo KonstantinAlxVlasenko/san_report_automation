@@ -42,6 +42,8 @@ def dataframe_to_excel(df, sheet_title, project_constants_lst,
         file_mode = 'a' if os.path.isfile(file_path) else 'w'
         # df = df.apply(pd.to_numeric, errors='ignore')
         for column in df.columns:
+            if column in ['FCID','Connected_portId']:
+                continue
             # df[column] = (df[column].apply(pd.to_numeric, errors="coerce").fillna(df[column]))
             with pd.option_context("future.no_silent_downcasting", True):
                 df[column] = (df[column].apply(pd.to_numeric, errors="coerce").fillna(df[column])).infer_objects(copy=False)

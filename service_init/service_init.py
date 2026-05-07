@@ -83,7 +83,8 @@ def create_service_folders(report_requisites_sr, max_title):
     print(f'Project folder {project_path}')
     
     # define folder and subfolders to save configuration data (supportsave and ams_maps files)
-    santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
+    # santoolbox_parsed_dir = f'santoolbox_parsed_data_{customer_title}'
+    santoolbox_parsed_dir = f'brocade_parsed_ssave_{customer_title}'
     sshow_export_path = os.path.join(project_path, santoolbox_parsed_dir, 'supportshow')
     other_export__path = os.path.join(project_path, santoolbox_parsed_dir, 'others')
     fsop.create_folder(sshow_export_path, max_title)

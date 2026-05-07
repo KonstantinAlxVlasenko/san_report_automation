@@ -62,7 +62,8 @@ def extract_exploded_ports(maps_ports_df, top_zoned_ports_df, pattern_dct):
     slot_port_pattern = pattern_dct['slot_port']
     if not maps_ports_df.empty:
         maps_ports_df[slot_port_columns] = maps_ports_df['Exploded_values'].str.extract(slot_port_pattern)
-        maps_ports_df['slot'].fillna('0', inplace=True)
+        # maps_ports_df['slot'].fillna('0', inplace=True)
+        maps_ports_df['slot'] = maps_ports_df['slot'].fillna('0')
     
     # pid_flow_pattern = '0x([0-9a-f]{6})\((\d+)\)'
     pid_flow_pattern = pattern_dct['pid_flow']
